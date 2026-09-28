@@ -15,6 +15,14 @@
 
 ##  1. What's New: Recent Enhancements, Bug Fixes & Stability Updates
 
+* **Sentry Mode v2: Dual-Mode Surveillance (MONITOR) & Distraction Defense (FOCUS)**:
+  * **Dual-Mode Sentry Architecture**: Replaced single-terminal screen checks with an extensible dual-mode vigilance architecture coordinated by `core/sentry/mode_manager.py`.
+  * **MONITOR Mode (Passive Surveillance)**: Generalized across 5 targets (`terminal`, `build`, `download`, `test`, `screen`) to observe long-running external work without polling loops. Features an 8-second conversational `AnswerWindow` for seamless STT un-gating upon task completion or anomaly alerts.
+  * **FOCUS Mode (Proactive Distraction Defense)**: Independent 1 Hz session loop (`core/sentry/focus/engine.py`) locking onto specific applications or browser tabs. Features an 800ms grace window, 3 progressive escalation tiers (subtle reminder, firm pushback, blunt intervention), and customizable cadences (`normal`, `gentle`, `drill_sergeant`).
+  * **Ergonomic Settle Rule & Deferred Lock**: Allows starting focus sessions directly from the ALFRED HUD or voice without locking onto ALFRED itself. Waits 2 consecutive ticks on the user's active work surface before locking (*"Locked on, sir."*), with automatic fallback to application-only lock after 45 seconds on home base.
+  * **OS Lock Collision Guard & Card Trap**: Intercepts phrases like *"lock on this tab"* ahead of OS workstation lock (`Win+L`) in `actions/computer_settings.py`, and utilizes native window enumeration (`_find_top_browser_window`) to acquire the underlying browser tab when clicked from the HUD.
+  * **Floating Desktop Countdown Card & Mini HUD Indicators**: Introduces a high-tech 170x48 px translucent draggable widget (`core/sentry/focus/card.py`) featuring a cyan progress arc ring, digital `mm:ss` timer, pulsing red excursion warning border, screen-boundary clamping, and right-click tactical context menu (Snooze, Lock on this tab, Extend, Excuse, Pause/Resume, End). `MinimizedHudOverlay` dynamically displays `MON ●` (green/yellow) and `FOC mm:ss` countdown pills.
+  * **Spoken Report Card & Structural Privacy Ledger**: Delivers spoken completion summaries with clean streak tracking, atomically persisting strictly numeric totals to `data/focus_ledger.json`. Zero URLs, window titles, or private strings are ever stored or logged.
 * **Tactical Audio Core Voice Control**: Introduced dedicated `actions/audio_core.py` action tool and UI methods (`pause_audio_core`, `resume_audio_core`), allowing users to control the ambient TRON Legacy score directly (*"pause audio core"*, *"resume audio core"*, *"audio core volume to 25%"*) without conflicting with Spotify routing.
 * **Audio Starvation & Microphone Breakup Fix**: Reconfigured `sd.RawOutputStream` in `main.py` with `blocksize=0` for hardware-native buffer sizing, implemented dynamic jitter pre-buffering on utterance starts, and added a 3-count debounce grace period on `is_speaking`. This eliminates PortAudio buffer starvation on Windows, crackling, and mic self-collision flip-flops.
 * **News Reading Interruption Leak Elimination**: Implemented strict cancellation flags (`self._briefing_cancelled = True`) and active background task cancellation in `main.py`. Interrupting ALFRED during the morning briefing or background topic monitoring now instantly silences playback and permanently prevents residual news paragraphs from resuming minutes later.
@@ -226,6 +234,13 @@ ALFRED is infused with the personality, dry British wit, and unwavering dignity 
 
 ##  4. Security, Privacy & Defensive Architecture
 
+### 🛡️ Structural Privacy Law for Sentry Mode
+ALFRED treats human privacy as an absolute structural invariant rather than a policy toggle:
+* **URL Domain Anonymization**: Full URL paths, query parameters, authorization tokens, and fragments are stripped immediately in memory upon active window inspection. Only the domain host is extracted and hashed via `sha256(host)[:16]`.
+* **Zero Persistence**: No raw URLs, domain names, window titles, or spoken distraction labels are ever written to disk, saved in logs, or exposed to the model.
+* **Transient Distraction Labels**: Distraction category labels exist in RAM for exactly one engine tick to formulate the spoken callout before being discarded.
+* **Numeric Ledger Only**: `data/focus_ledger.json` strictly tracks numerical aggregates (`total_sessions`, `total_planned_seconds`, `total_on_target_seconds`, `total_drift_count`, `clean_streak`, `best_clean_streak`, and daily buckets).
+
 ALFRED is designed around uncompromising principles of system integrity, process containment, and self-preservation:
 
 * **The Heavenly Restriction**: ALFRED is strictly and irrevocably forbidden from accessing, opening, reading, listing, modifying, or executing files inside `D:\Projects\Personal-Assistant` and all subpaths. If instructed, ALFRED delivers the explicit non-negotiable denial:
@@ -245,6 +260,26 @@ ALFRED is designed around uncompromising principles of system integrity, process
 ## 🎙️ 5. Master Tactical Voice Command Codex & Operational Handbook
 
 ALFRED is engineered for fluid, natural conversational operations across all desktop domains. Below is a categorized reference of the most useful voice commands, trigger patterns, and operational descriptions:
+
+### 🛡️ 0. Sentry Mode v2: Passive Surveillance & Focus Enforcement
+*Tactical vigilance, background surveillance, and proactive distraction defense (`actions/sentry_monitor.py`, `actions/sentry_focus.py`)*
+
+| Voice Command / Trigger | Operational Description & Behavior | Context / Parameters |
+|---|---|---|
+| *"Watch this terminal"* / *"Keep an eye on this build"* | Engages MONITOR mode on long-running terminal builds or compilations, alerting on completion, error, or silence. | Target: `terminal` or `build` |
+| *"Watch the screen until it's done"* / *"Monitor download"* | Passively inspects screen regions or active downloads, un-gating an 8s voice window upon task completion. | Target: `screen` or `download` |
+| *"Monitor status"* / *"Stop monitoring"* | Queries active surveillance telemetry or terminates the active monitoring session. | Mode query & shutdown |
+| *"Focus on this tab for 25 minutes"* / *"Lock me in for an hour"* | Initiates a timed FOCUS session with deferred lock, settle rule, and progressive excursion monitoring. | Planned duration: 1 to 180 mins |
+| *"Lock on this tab"* / *"Lock this tab"* | Explicitly locks focus to the current browser tab domain, forgiving pending drift excursions. | URL host hash lock |
+| *"Drill sergeant mode"* | Arms maximum accountability: blunt, unvarnished verbal callouts on drift excursions. | Cadence: `drill_sergeant` |
+| *"Gentle mode"* / *"Normal cadence"* | Toggles calm, supportive focus reminders or balanced British-butler guidance. | Cadence: `gentle` / `normal` |
+| *"Snooze"* / *"Snooze for 30 seconds"* | Temporarily silences drift alerts for a quick verification, lookup, or credential check. | Default: 15s |
+| *"Extend 10 minutes"* / *"Extend focus"* | Extends the active focus countdown timer without breaking clean streak tracking. | Extends duration |
+| *"Excuse: Research"* / *"Excuse this detour"* | Grants a temporary research/reference pass, forgiving current excursion before escalation. | Excursion waiver |
+| *"Pause focus"* / *"Resume focus"* / *"Stop focus"* | Controls focus session lifecycle; stopping at duration triggers the spoken report card. | Session lifecycle |
+| *"Focus status"* | Spoken telemetry report on remaining time, target lock, and current session drift count. | Live session metrics |
+
+---
 
 ### 👁️ 1. Desktop Automation, Screen & Multimodal Vision
 *Physical input, visual grounding, and multi-monitor capture (`actions/computer_control.py`, `actions/screen_find.py`, `actions/screen_processor.py`)*
@@ -597,6 +632,18 @@ ALFRED-MK-VI/
 ├── ui_overlay.py               # Minimalist floating HUD widget for telemetry display
 ├── setup.py                    # OS-aware package and dependency installer
 ├── core/
+│   ├── sentry/                       # Sentry Mode v2 Subsystem
+│   │   ├── mode_manager.py           # Centralized singleton coordinating MONITOR and FOCUS
+│   │   ├── answer_window.py          # 8-second conversational timeout window for voice follow-ups
+│   │   └── focus/                    # Proactive distraction defense engine
+│   │       ├── engine.py             # 1 Hz session loop with settle rule & deferred lock
+│   │       ├── reader.py             # Cross-platform window reader & SHA-256 host hashing
+│   │       ├── labels.py             # Transient distraction label resolution
+│   │       ├── lines.py              # Escalation tiers & canned speech pools
+│   │       ├── ledger.py             # Atomic focus_ledger.json storage & report card generator
+│   │       ├── card.py               # FloatingFocusCard draggable 170x48 desktop countdown widget
+│   │       ├── state.py              # Whitelisted FocusState dataclass (booleans & numbers only)
+│   │       └── platform/             # OS implementations (win.py, mac.py, linux.py)
 │   ├── prompt.txt              # Master persona directives, execution rules & Heavenly Restriction
 │   ├── llm_client.py           # Dual-backend local LLM connector (Ollama / OpenAI-compatible / LM Studio)
 │   ├── action_loader.py        # Dynamic action discovery, parameter validation & Heavenly Restriction guard
@@ -756,6 +803,8 @@ This codebase is indexed with a persistent **GraphRAG Knowledge Graph** located 
 ---
 
 ##  21. Mark VI Enhancements
+
+* **Dual-Mode Sentry v2 (MONITOR + FOCUS)**: Autonomous background surveillance across builds, terminals, and downloads, coupled with proactive distraction defense locking onto applications or tabs, progressive excursion escalation, floating desktop countdown card, and privacy-preserving clean streak ledger.
 
 ### Prompt Engine Overhaul (`core/prompt.txt`)
 - Stripped double-blank-line formatting bloat — **token cost reduced by ~50%** with zero content loss.
