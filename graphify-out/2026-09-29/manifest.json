@@ -276,9 +276,9 @@
     "semantic_hash": ""
   },
   "ui.py": {
-    "mtime": 1790607142.6340094,
-    "seen": 1790607191.1575723,
-    "ast_hash": "74dfbd952d7746d8a716d452736000d1",
+    "mtime": 1790608355.057016,
+    "seen": 1790620787.126534,
+    "ast_hash": "5d04cdc333ebf28fc2f6e8124fefeb4d",
     "semantic_hash": ""
   },
   ".agents/rules/graphify.md": {
@@ -438,9 +438,9 @@
     "semantic_hash": "0c2178c383f8edcbe38ee55ce1b8bc8e"
   },
   "config/music_playlist.json": {
-    "mtime": 1790607020.7743423,
-    "seen": 1790607191.156559,
-    "ast_hash": "90aa95fb761b12ec35851062aa0ca3dc",
+    "mtime": 1790619206.978808,
+    "seen": 1790620787.126534,
+    "ast_hash": "1f9e15365dde86f74ae7aef8fd3a130b",
     "semantic_hash": ""
   },
   "core/path_guard.py": {
@@ -648,9 +648,9 @@
     "semantic_hash": ""
   },
   "actions/spotify_control.py": {
-    "mtime": 1790519273.6397986,
-    "seen": 1790530515.9747248,
-    "ast_hash": "ccb164a43d2d5f22abcdc4344058aa96",
+    "mtime": 1790608488.6403701,
+    "seen": 1790620787.126534,
+    "ast_hash": "f178ad0917d066719d3de8735c6b0945",
     "semantic_hash": ""
   },
   "actions/audio_core.py": {
@@ -666,8 +666,8 @@
     "semantic_hash": ""
   },
   "config/device_sessions.json": {
-    "mtime": 1790526747.5273921,
-    "seen": 1790530515.9747248,
+    "mtime": 1790620755.7736156,
+    "seen": 1790620787.126534,
     "ast_hash": "77288a1ab9e0de11a118756aeb987c29",
     "semantic_hash": ""
   },
@@ -801,6 +801,18 @@
     "mtime": 1790606760.0099633,
     "seen": 1790607191.1575723,
     "ast_hash": "e854f7395ae6bcb5b579e76361ed5619",
+    "semantic_hash": ""
+  },
+  "tests/test_spotify_audio_core.py": {
+    "mtime": 1790608479.5797882,
+    "seen": 1790620787.126534,
+    "ast_hash": "a19ddf17f150dfbb6304aee10a79e897",
+    "semantic_hash": ""
+  },
+  "graphify-out/memory/query_20260928_145312_0331edfe_the_hud_text_is_quite_hard_to_see.md": {
+    "mtime": 1790607192.0571308,
+    "seen": 1790620787.126534,
+    "ast_hash": "0e1e3a2b79ad42beb0173611004b426f",
     "semantic_hash": ""
   }
 }

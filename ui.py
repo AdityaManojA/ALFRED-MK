@@ -1158,10 +1158,12 @@ class HudCanvas(QWidget):
         # Rescaled-face cache: the smooth rescale is expensive, so we keep the
         # last result and only rebuild it when the (quantised) size changes.
 
-        # Static grid-dot layer, pre-rendered once per size/theme into a pixmap
-        # so paintEvent blits it in one call instead of thousands of drawPoint()s.
-        self._grid_cache: QPixmap | None = None
-        self._grid_key = None
+        # Static HUD decoration is cached per size/theme. Rebuilding the grid,
+        # scanlines and watermark in every paint consumed most of a frame on the
+        # software QPainter backend and could starve the audio writer under load.
+        self._static_layers: dict[tuple, QPixmap] = {}
+        self._emblem_cache_key = None
+        self._emblem_cache: QPixmap | None = None
         # Repaint throttle counter (idle frames drop to ~20 Hz — see _step()).
         self._paint_tick = 0
 
@@ -1304,6 +1306,14 @@ class HudCanvas(QWidget):
                 gp.drawPoint(x, y)
         gp.end()
         return pm
+
+    def _remember_static_layer(self, key: tuple, layer: QPixmap) -> None:
+        """Keep a small LRU-like set of full-canvas layers."""
+        self._static_layers.pop(key, None)
+        self._static_layers[key] = layer
+        while len(self._static_layers) > 8:
+            oldest = next(iter(self._static_layers))
+            self._static_layers.pop(oldest, None)
 
     def _step(self):
         self._tick += 1
@@ -1778,6 +1788,18 @@ class HudCanvas(QWidget):
         main, _ = self._core_colours()
         bg = qcol(C.BG)
 
+        width, height = max(1, int(W)), max(1, int(H))
+        key = ("crt-grid", width, height, int(main.rgba()), int(bg.rgba()))
+        cached = self._static_layers.get(key)
+        if cached is not None:
+            p.drawPixmap(0, 0, cached)
+            return
+
+        layer = QPixmap(width, height)
+        layer.fill(Qt.GlobalColor.transparent)
+        lp = QPainter(layer)
+        lp.setRenderHint(QPainter.RenderHint.Antialiasing, False)
+
         def blend(col: QColor, a: float) -> QColor:
             k = max(0.0, min(1.0, a))
             return QColor(int(bg.red()   + (col.red()   - bg.red())   * k),
@@ -1785,20 +1807,28 @@ class HudCanvas(QWidget):
                           int(bg.blue()  + (col.blue()  - bg.blue())  * k))
 
         step = 44
-        p.setPen(QPen(blend(main, 0.07), 1))
-        for x in range(0, int(W) + step, step):
-            p.drawLine(x, 0, x, int(H))
-        for y in range(0, int(H) + step, step):
-            p.drawLine(0, y, int(W), y)
+        lp.setPen(QPen(blend(main, 0.07), 1))
+        for x in range(0, width + step, step):
+            lp.drawLine(x, 0, x, height)
+        for y in range(0, height + step, step):
+            lp.drawLine(0, y, width, y)
 
         # Crosshairs at intersections
-        p.setPen(QPen(blend(main, 0.18), 1))
+        lp.setPen(QPen(blend(main, 0.18), 1))
         crosshairs = []
-        for x in range(0, int(W) + step, step):
-            for y in range(0, int(H) + step, step):
+        for x in range(0, width + step, step):
+            for y in range(0, height + step, step):
                 crosshairs.append(QLineF(x - 3, y, x + 3, y))
                 crosshairs.append(QLineF(x, y - 3, x, y + 3))
-        p.drawLines(crosshairs)
+        lp.drawLines(crosshairs)
+        lp.end()
+
+        self._static_layers = {
+            cache_key: pixmap for cache_key, pixmap in self._static_layers.items()
+            if cache_key[1:3] == (width, height)
+        }
+        self._remember_static_layer(key, layer)
+        p.drawPixmap(0, 0, layer)
 
     def _paint_3d_vector_globe(self, p: QPainter, cx: float, cy: float, r: float, W: float, H: float):
         """
