@@ -1898,6 +1898,10 @@ class HudCanvas(QWidget):
 
         # ── 2. Latitude Parallel Rings ───────────────────────────────────────
         lat_angles = [-60, -40, -20, 0, 20, 40, 60]
+        lat_front: list[QLineF] = []
+        lat_back: list[QLineF] = []
+        equator_front: list[QLineF] = []
+        equator_back: list[QLineF] = []
         for deg in lat_angles:
             is_equator = (deg == 0)
             lat_r = math.radians(deg)
@@ -1907,19 +1911,26 @@ class HudCanvas(QWidget):
             for k in range(n_samples):
                 p1, p2 = pts[k], pts[k + 1]
                 mid_z = (p1[2] + p2[2]) / 2.0
-                if mid_z >= 0:
-                    # Phase A: plosive flash boosts front-side wire brightness
-                    _wire_a = 0.70 + 0.30 * amp + _pf * 0.40
-                    pen_col = blend(main, min(1.0, _wire_a))
-                    pen_w = (1.6 if is_equator else 1.3) + _pf * 0.8
-                    p.setPen(QPen(pen_col, pen_w, Qt.PenStyle.DashLine if is_equator else Qt.PenStyle.SolidLine))
+                line = QLineF(p1[0], p1[1], p2[0], p2[1])
+                if is_equator:
+                    (equator_front if mid_z >= 0 else equator_back).append(line)
                 else:
-                    pen_col = blend(main, 0.15)
-                    p.setPen(QPen(pen_col, 0.9, Qt.PenStyle.DotLine if is_equator else Qt.PenStyle.SolidLine))
-                p.drawLine(QLineF(p1[0], p1[1], p2[0], p2[1]))
+                    (lat_front if mid_z >= 0 else lat_back).append(line)
+
+        _wire_a = 0.70 + 0.30 * amp + _pf * 0.40
+        p.setPen(QPen(blend(main, min(1.0, _wire_a)), 1.3 + _pf * 0.8))
+        p.drawLines(lat_front)
+        p.setPen(QPen(blend(main, 0.15), 0.9))
+        p.drawLines(lat_back)
+        p.setPen(QPen(blend(main, min(1.0, _wire_a)), 1.6 + _pf * 0.8, Qt.PenStyle.DashLine))
+        p.drawLines(equator_front)
+        p.setPen(QPen(blend(main, 0.15), 0.9, Qt.PenStyle.DotLine))
+        p.drawLines(equator_back)
 
         # ── 3. Longitude Meridians (Rotating smoothly) ───────────────────────
         n_meridians = 12
+        meridian_front: list[QLineF] = []
+        meridian_back: list[QLineF] = []
         for m in range(n_meridians):
             base_lon = math.radians(m * (360.0 / n_meridians))
             n_samples = 48
@@ -1931,12 +1942,13 @@ class HudCanvas(QWidget):
             for k in range(n_samples):
                 p1, p2 = pts[k], pts[k + 1]
                 mid_z = (p1[2] + p2[2]) / 2.0
-                if mid_z >= 0:
-                    # Phase A: plosive flash on meridians too
-                    p.setPen(QPen(blend(main, min(1.0, 0.65 + 0.30 * amp + _pf * 0.35)), 1.2 + _pf * 0.6))
-                else:
-                    p.setPen(QPen(blend(main, 0.12), 0.8))
-                p.drawLine(QLineF(p1[0], p1[1], p2[0], p2[1]))
+                line = QLineF(p1[0], p1[1], p2[0], p2[1])
+                (meridian_front if mid_z >= 0 else meridian_back).append(line)
+
+        p.setPen(QPen(blend(main, min(1.0, 0.65 + 0.30 * amp + _pf * 0.35)), 1.2 + _pf * 0.6))
+        p.drawLines(meridian_front)
+        p.setPen(QPen(blend(main, 0.12), 0.8))
+        p.drawLines(meridian_back)
 
         # ── 4. Tilted Orbital Satellite Node Ring (Screenshot 2 Feature!) ────
         orb_r = r * 1.15
@@ -1963,11 +1975,17 @@ class HudCanvas(QWidget):
         # Draw orbital ring track
         n_orb_pts = 64
         orb_pts = [project_orbit(math.radians(k * (360.0 / n_orb_pts))) for k in range(n_orb_pts + 1)]
+        orbit_front: list[QLineF] = []
+        orbit_back: list[QLineF] = []
         for k in range(n_orb_pts):
             p1, p2 = orb_pts[k], orb_pts[k + 1]
             mid_z = (p1[2] + p2[2]) / 2.0
-            p.setPen(QPen(blend(main, 0.45 if mid_z >= 0 else 0.14), 1.0, Qt.PenStyle.DashLine))
-            p.drawLine(QLineF(p1[0], p1[1], p2[0], p2[1]))
+            line = QLineF(p1[0], p1[1], p2[0], p2[1])
+            (orbit_front if mid_z >= 0 else orbit_back).append(line)
+        p.setPen(QPen(blend(main, 0.45), 1.0, Qt.PenStyle.DashLine))
+        p.drawLines(orbit_front)
+        p.setPen(QPen(blend(main, 0.14), 1.0, Qt.PenStyle.DashLine))
+        p.drawLines(orbit_back)
 
         # Satellite numbered node markers ('24', '25', '34', '09')
         sat_data = [
