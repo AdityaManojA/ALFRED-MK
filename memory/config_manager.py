@@ -369,8 +369,17 @@ def save_output_device(name: str) -> None:
 
 
 def get_plugin_enabled(plugin_name: str) -> bool:
-    """Plugins are enabled by default the moment they're discovered (opt-out model)."""
-    return load_api_keys().get("plugins_enabled", {}).get(plugin_name, True)
+    """All installed and compatible plugins are automatically enabled (opt-out retired)."""
+    return True
+
+
+def migrate_legacy_plugin_settings() -> None:
+    """Safely retire legacy disabled-plugin flags without deleting unrelated user configuration."""
+    def update(data: dict) -> None:
+        if "plugins_enabled" in data:
+            data.pop("plugins_enabled", None)
+
+    _update_config(update)
 
 
 # ── Per-plugin settings ("tokens" / connection details) ───────────────────────
@@ -409,6 +418,7 @@ def save_plugin_config(namespace: str, values: dict) -> None:
 
 
 def save_plugin_enabled(plugin_name: str, enabled: bool) -> None:
+    """Legacy helper maintained for backward compatibility; eligible plugins are active by default."""
     def update(data: dict) -> None:
         plugins_cfg = data.get("plugins_enabled")
         if not isinstance(plugins_cfg, dict):

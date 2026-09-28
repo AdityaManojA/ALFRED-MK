@@ -1,5 +1,5 @@
-#  ALFRED — MARK-VI (Wayne Protocol Edition)
-### Autonomous Multimodal AI Desktop Assistant & Tactical Terminal
+# 🦇 ALFRED — MARK-VI (Wayne Protocol Edition)
+### 🎩 Autonomous Multimodal AI Desktop Assistant & Tactical Terminal
 **Architect & Lead Creator:** **ADITYA MANOJ**
 
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
@@ -9,7 +9,7 @@
 [![AES-256 Remote](https://img.shields.io/badge/Mobile-Quantum%20Dashboard%20(iOS%2FAndroid)-00f0ff.svg)](https://github.com/AdityaManojA/ALFRED-MK-V)
 [![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
 
-> **ALFRED MARK-VI** is an autonomous, real-time voice, vision, and system-control executive assistant built for complete digital sovereignty and tactical computing. Featuring native bidirectional audio streaming, real-time visual grounding, full desktop automation, high-performance long-term memory, and encrypted mobile remote telemetry.
+> **ALFRED MARK-VI** is an autonomous, real-time voice, vision, and system-control executive assistant built for complete digital sovereignty and tactical computing. Native bidirectional audio streaming, real-time visual grounding, full desktop automation, high-performance long-term memory, and encrypted mobile remote telemetry — engineered as one of the **most function-dense, production-hardened tactical AI assistants** in the open ecosystem.
 
 <p align="center">
   <img src="Screenies/Default_theme.png" alt="ALFRED MARK-VI Tactical HUD Interface" width="92%">
@@ -17,104 +17,166 @@
 
 ---
 
-##  1. What's New: Recent Enhancements, Bug Fixes & Stability Updates
+## 📑 Table of Contents
 
-* **Sentry Mode v2: Dual-Mode Surveillance (MONITOR) & Distraction Defense (FOCUS)**:
-  * **Dual-Mode Sentry Architecture**: Replaced single-terminal screen checks with an extensible dual-mode vigilance architecture coordinated by `core/sentry/mode_manager.py`.
-  * **MONITOR Mode (Passive Surveillance)**: Generalized across 5 targets (`terminal`, `build`, `download`, `test`, `screen`) to observe long-running external work without polling loops. Features an 8-second conversational `AnswerWindow` for seamless STT un-gating upon task completion or anomaly alerts.
-  * **FOCUS Mode (Proactive Distraction Defense)**: Independent 1 Hz session loop (`core/sentry/focus/engine.py`) locking onto specific applications or browser tabs. Features an 800ms grace window, 3 progressive escalation tiers (subtle reminder, firm pushback, blunt intervention), and customizable cadences (`normal`, `gentle`, `drill_sergeant`).
-  * **Ergonomic Settle Rule & Deferred Lock**: Allows starting focus sessions directly from the ALFRED HUD or voice without locking onto ALFRED itself. Waits 2 consecutive ticks on the user's active work surface before locking (*"Locked on, sir."*), with automatic fallback to application-only lock after 45 seconds on home base.
-  * **OS Lock Collision Guard & Card Trap**: Intercepts phrases like *"lock on this tab"* ahead of OS workstation lock (`Win+L`) in `actions/computer_settings.py`, and utilizes native window enumeration (`_find_top_browser_window`) to acquire the underlying browser tab when clicked from the HUD.
-  * **Floating Desktop Countdown Card & Mini HUD Indicators**: Introduces a high-tech 170x48 px translucent draggable widget (`core/sentry/focus/card.py`) featuring a cyan progress arc ring, digital `mm:ss` timer, pulsing red excursion warning border, screen-boundary clamping, and right-click tactical context menu (Snooze, Lock on this tab, Extend, Excuse, Pause/Resume, End). `MinimizedHudOverlay` dynamically displays `MON ●` (green/yellow) and `FOC mm:ss` countdown pills.
-  * **Spoken Report Card & Structural Privacy Ledger**: Delivers spoken completion summaries with clean streak tracking, atomically persisting strictly numeric totals to `data/focus_ledger.json`. Zero URLs, window titles, or private strings are ever stored or logged.
-* **Tactical Audio Core Voice Control**: Introduced dedicated `actions/audio_core.py` action tool and UI methods (`pause_audio_core`, `resume_audio_core`), allowing users to control the ambient TRON Legacy score directly (*"pause audio core"*, *"resume audio core"*, *"audio core volume to 25%"*) without conflicting with Spotify routing.
-* **Audio Starvation & Microphone Breakup Fix**: Reconfigured `sd.RawOutputStream` in `main.py` with `blocksize=0` for hardware-native buffer sizing, implemented dynamic jitter pre-buffering on utterance starts, and added a 3-count debounce grace period on `is_speaking`. This eliminates PortAudio buffer starvation on Windows, crackling, and mic self-collision flip-flops.
-* **News Reading Interruption Leak Elimination**: Implemented strict cancellation flags (`self._briefing_cancelled = True`) and active background task cancellation in `main.py`. Interrupting ALFRED during the morning briefing or background topic monitoring now instantly silences playback and permanently prevents residual news paragraphs from resuming minutes later.
-* **Spotify Media Toggle Inversion & Playback Loops**: Replaced blind `VK_MEDIA_PLAY_PAUSE (0xB3)` toggle with explicit Windows `WM_APPCOMMAND` messages (`APPCOMMAND_MEDIA_PAUSE=47`, `APPCOMMAND_MEDIA_PLAY=46`), eliminating recursive play/pause loops during voice commands.
-* **Spotify Acoustic Feedback Elimination**: Decoupled synchronous TTS `speak()` calls from `actions/spotify_control.py`, preventing the microphone from picking up self-speech and triggering secondary duplicate tool calls.
-* **Windows Console Encoding Resilience**: Standardized logging in `actions/spotify_control.py` to prevent Windows `charmap` UnicodeEncodeErrors on legacy terminal code pages.
-* **Windows Modern Audio Endpoint Compatibility**: Fixed volume control in `actions/computer_settings.py` to interface with modern `pycaw.EndpointVolume` scalar setters, resolving attribute errors and eliminating PyAutoGUI mouse failsafe triggers.
-* **Path Guard Word Filtering**: Refined `core/path_guard.py` to prevent false-positive path resolution on plain single-word tool parameters (such as `"Save"` or `"File"`).
-* **HUD Volume Popup Geometry**: Resolved `QPoint` namespace issue during volume popup positioning in `ui.py`.
-* **Mobile Remote Uplink & Web Dashboard Repair**:
-  * **Tuple Unpacking & Argument Serialization Bug**: Eliminated a severe unpacking defect in `MainWindow._open_remote` (`ui.py`) where `manual = result = result[0]` inadvertently reassigned the return tuple to the URL string, causing subsequent indices to extract single letters (`'t'`, `'t'`, `'p'`, `':'`) and corrupting the overlay's QR code, manual coordinates, desktop link, and key.
-  * **Clickable Hyperlinks & One-Click Browser Launch**: Upgraded `RemoteKeyOverlay` with `Qt.TextInteractionFlag.LinksAccessibleByMouse` and rich HTML anchors (`setOpenExternalLinks(True)`). Added an **`↗ OPEN IN BROWSER`** button for instant one-click dashboard launching on the host machine.
-  * **Protocol Schema Enforcement**: Updated `dashboard/server.py` (`get_manual_url`) to dynamically prepend `http://` or `https://` schemas, ensuring standard URI resolution across mobile browsers and QR scanners.
-  * **Instant Camera Pairing via Auto-Login Tokens**: Configured `main.py` (`_make_remote_key`) to pass full `/auto-login?key={key}` paths to both local LAN and localhost links, allowing mobile optical sensors to immediately recognize the QR code as a web view link and pair seamlessly.
-* **Audio Stutter, Driver Jitter & 30-Second Frame Drop Elimination**:
-  * **COM & NVML Driver Handle Caching**: Prevented periodic 40–100ms thread hangs during metric polling by persisting `wmi.WMI` COM namespaces and `pynvml.nvmlInit()` GPU device handles across calls in `actions/system_monitor.py`.
-  * **Qt UI Thread Offload**: Decoupled heavy OS process counting (`len(psutil.pids())`) and boot time queries from Qt's 500ms main timer thread, shifting them to the background `_SysMetrics` daemon in `ui.py` to keep GUI frame rates at a consistent 60 FPS.
-  * **PortAudio Stream Jitter Cushion & High-Latency Buffering**: Configured PortAudio output stream with `latency="high"` and elevated utterance start pre-buffering cushion to 250ms in `main.py`, absorbing Windows thread scheduling delays and eliminating voice dropouts.
-  * **Python Generational GC Throttling & Idle Maintenance**: Raised Python GC generation 0/1/2 collection thresholds to `(70000, 15, 15)` to avoid stop-the-world garbage collection pauses during active voice streaming or visual rendering, coupled with an idle-only background GC manager in `main.py`.
-* **Reactive HUD Frame Pacing & Configure Freeze Fix**:
-  * **Static Layer and Crest Caching**: The CRT grid, scanline/reticle overlay, and scaled Wayne crest are rendered once per size/theme and reused. The full-canvas cache is bounded to eight entries so live color previews cannot grow memory usage indefinitely.
-  * **Batched Vector Globe Rendering**: More than 1,000 per-segment `QPen` and `drawLine` operations were consolidated into depth-grouped `drawLines` batches while preserving front/back illumination, orbital motion, speech reactivity, and plosive flashes.
-  * **Instant Reconfigure Refresh**: Reopening Configure no longer reapplies every icon-card stylesheet when the selected insignia and palette are unchanged, reducing unnecessary Qt layout and repaint work.
-  * **Measured Result**: In the repeatable 1200x700 offscreen software-renderer benchmark, a warm HUD frame fell from approximately **125ms to 22ms**, while repeated Configure refresh work fell from approximately **3.5ms to 0.66ms**.
-* **Persona Directives, Speech Debounce & Cognitive Trace**:
-  * **Quintessential British Butler Persona**: Overhauled master system prompt directives in `core/prompt.txt` to fully embody Alfred Pennyworth — dignified servitude, razor-sharp dry British wit, impeccable deference to "Master Wayne", and crisp, succinct verbal delivery.
-  * **STT Speech Debounce & Instant Interrupt Bypass**: Raised speech completion debounce threshold to `FINISH_MS = 900` in `core/local_stt.py` to prevent premature sentence truncation, while retaining instant interrupt capabilities on stop/wake keywords.
-  * **Cognitive Trace (Real-Time Chain-of-Thought Streamer)**: Introduced an interactive `THINKING TRACE: ON/OFF` toggle button above the HUD chat in `ui.py`, paired with a dedicated thinking streaming listener in `main.py` to display internal reasoning steps from thinking-enabled models.
-  * **Protocol Engine Confirmation Loop Prevention**: Fixed `actions/protocol_engine.py` to bypass confirmation gates on non-destructive workflow creation (`ask_confirmation=False`), resolving recursive protocol generation loops.
+1. [🏆 Why ALFRED Outclasses Every Other "Jarvis"](#-1-why-alfred-outclasses-every-other-jarvis)
+2. [🆕 What's New in Mark VI](#-2-whats-new-in-mark-vi)
+3. [🌐 100% Local & Air-Gapped Operation](#-3-100-local--air-gapped-operation)
+4. [🎭 Example Tactical Commands](#-4-example-tactical-commands--wayne-protocol-in-action)
+5. [🛡️ Security, Privacy & Defensive Architecture](#-5-security-privacy--defensive-architecture)
+6. [🎙️ Master Voice Command Codex](#-6-master-voice-command-codex)
+7. [🎧 Real-Time Multimodal Intelligence](#-7-real-time-multimodal-intelligence--dual-audio-engine)
+8. [🎵 Tactical Audio Matrix & Background Score](#-8-tactical-audio-matrix--background-score)
+9. [🎶 Spotify AI Agent](#-9-spotify-ai-agent--dual-tier-architecture)
+10. [📱 Quantum Mobile Remote & Dashboard](#-10-quantum-mobile-remote--iphone-16-dashboard)
+11. [🖥️ Full Desktop Control & OS Automation](#-11-full-desktop-control--os-automation)
+12. [🧠 Memory & Briefing Customizer](#-12-memory--briefing-customizer)
+13. [🎨 Insignia & Chassis Hot-Swapper](#-13-insignia--chassis-hot-swapper)
+14. [⚡ Protocol Engine & Macro Playbooks](#-14-protocol-engine--macro-playbooks)
+15. [👁️ Local Hybrid Visual Grounding](#-15-local-hybrid-visual-grounding)
+16. [🔊 Audio Ducking & Background Concurrency](#-16-audio-ducking--background-concurrency)
+17. [🚨 Process Watchdog & Anomaly Detection](#-17-process-watchdog--anomaly-detection)
+18. [🏗️ System Architecture](#-18-system-architecture--file-structure)
+19. [🚀 Quick Start & Installation](#-19-quick-start--installation)
+20. [⚙️ Configuration Reference](#-20-configuration-reference)
+21. [🕸️ Knowledge Graph](#-21-knowledge-graph--graphify)
+22. [👤 Author & Licensing](#-22-author--licensing)
 
 ---
 
-##  2. 100% Local & Air-Gapped Offline Execution: Switching from Gemini to Local API
+## 🏆 1. Why ALFRED Outclasses Every Other "Jarvis"
 
-**ALFRED is architected for dual-backend operation**: you can seamlessly toggle between Google's high-speed **Gemini 3.1 Flash Live API** (cloud multimodal WebSocket) and **100% local, air-gapped open-weight models** (Ollama, LM Studio, vLLM, Jan, LocalAI, or llama.cpp) without changing a single line of application code.
+Most projects branded as "Jarvis clones" ship with a wake word, a chat window, and a handful of shell scripts. **ALFRED MARK-VI is fundamentally different** — it is a full executive control plane for the operating system, engineered around latency, reliability, structural privacy, and the **sheer density of real, production-hardened functions** it dispatches to your machine.
 
-###  Gemini Live API vs. Local Offline API Comparison
+### 🎯 What "Best-in-Class Optimisation" Actually Means Here
 
-| Feature | Gemini 3.1 Flash Live | Local Open-Weight API (Ollama / vLLM / LM Studio) |
+| Pillar | ALFRED MARK-VI | Typical "Jarvis Clone" |
 |---|---|---|
-| **Audio Latency** | Sub-second native bidirectional WebSocket streaming | Local STT/TTS pipeline or text-streaming |
-| **Privacy & Security** | Encrypted TLS to Google Cloud | 100% offline, zero network egress, fully air-gapped |
-| **Hardware Requirements** | Zero local compute (runs on any CPU) | 8GB–24GB+ VRAM/RAM depending on quantized model size |
-| **API Token Cost** | Pay-per-token or free tier quotas | **$0.00 forever** (unlimited free local inference) |
-| **Tool / Function Calling** | Native Gemini Automatic Function Calling (AFC) | Tool-calling supported via JSON mode or prompt schema |
-| **Offline Operation** | Requires active Internet connection | **Operates entirely without internet connection** |
+| **Action Surface** | 30+ self-describing, auto-discovered tools (OS, files, vision, music, protocols, sentry, network, windows, clipboard, news, translate, process control, and beyond) | 5–15 brittle, hardcoded scripts |
+| **Dual Cognitive Backend** | Gemini Live **or** fully local Ollama / LM Studio / vLLM / OpenRouter — same codebase, single config flip | Cloud-only or local-only |
+| **Audio Pipeline** | Live bidirectional stream, PTT, calibrated AEC, speech ducking, PortAudio jitter cushions, explicit `WM_APPCOMMAND` media control (no toggle loops) | Basic `speak()` + default microphone |
+| **Visual Grounding** | Local RapidOCR + ONNX first (~75–150 ms), Gemini fallback **only** when confidence is low | Every click = full cloud screenshot |
+| **Focus & Sentry** | Dual-mode MONITOR + FOCUS engine, settle rule, deferred lock, floating countdown card, mini-HUD pills, **numeric-only** privacy ledger | Toast notifications, if any |
+| **HUD Performance** | Cached CRT layers, batched globe rendering, throttled GC, cached WMI/NVML handles, UI work off Qt timer thread | Frame drops under load |
+| **Security Model** | Path guard, Heavenly Restriction, C: drive quarantine, cryptographic confirm gates, universal undo stack, process shields | Hope + system prompt |
+| **Mobile Remote** | AES-encrypted local dashboard, QR auto-login, dual-destination screenshots, WebAudio streaming | ngrok demo page |
+| **Persona** | Alfred Pennyworth — dignified, dry British wit, in-character error voice, no stack traces | Generic chatbot voice |
+| **Music Control** | Dual-tier: Spotify Web API + native OS fallback, debounced anti-loop guards, acoustic feedback elimination | Basic media key spam |
+| **Protocols** | YAML compound playbooks with variable interpolation, sleep pacing, path-guarded steps | None |
+| **Watchdog** | CPU anomaly detection, socket egress inspection, process throttling, IDE/compiler shields, confirm-gated termination | None |
+
+### 🎬 Compared to the Cinematic Jarvis
+Film Jarvis is narrative UI — a beautiful HUD without an OS underneath. **ALFRED is instrumented desktop autonomy**: if a capability exists on your operating system, the design goal is a voice-reachable, guarded, reversible or confirm-gated path — not a slide-deck demo.
+
+### 🤖 Compared to Consumer Assistants (Copilot, Alexa, Siri)
+These optimise for safe, shallow, cloud-mediated skills. **ALFRED optimises for power-user sovereignty**: local models, filesystem law, YAML compound protocols, watchdog throttling, and a tactical PyQt6 chassis you can theme and hot-swap insignia on at runtime.
+
+### 🧪 Compared to Other Open "Agent" Repos
+Many maximise model hype and under-ship the glue. MARK-VI invests in the glue that **fails in production for everyone else**: debounce, explicit OS media commands, encoding resilience, reconnect classifiers, background workers, cache TTLs, hybrid grounding, and structural privacy for focus telemetry.
+
+> **The Verdict:** ALFRED MARK-VI is not "another Jarvis skin." It is one of the most **function-dense, optimisation-conscious, safety-instrumented** open tactical assistants ever released in the Wayne-protocol class — built to *run the desk*, not merely answer questions.
 
 ---
 
-###  Detailed Step-by-Step Guide: How to Switch to a Local API
+## 🆕 2. What's New in Mark VI
 
-#### Step 1: Install & Set Up Your Preferred Local LLM Server
+### 🛡️ Sentry Mode v2: Dual-Mode Surveillance & Distraction Defense
 
-Choose any of the following recommended local model engines:
+* **Dual-Mode Architecture**: Replaced single-terminal screen checks with an extensible vigilance architecture coordinated by `core/sentry/mode_manager.py`.
+* **MONITOR Mode (Passive Surveillance)**: Generalized across 5 targets (`terminal`, `build`, `download`, `test`, `screen`) to observe long-running external work without polling loops. Features an 8-second conversational `AnswerWindow` for seamless STT un-gating upon task completion or anomaly alerts.
+* **FOCUS Mode (Proactive Distraction Defense)**: Independent 1 Hz session loop (`core/sentry/focus/engine.py`) locking onto specific applications or browser tabs. Features an 800 ms grace window, 3 progressive escalation tiers, and customizable cadences (`normal`, `gentle`, `drill_sergeant`).
+* **Ergonomic Settle Rule & Deferred Lock**: Start focus sessions directly from the HUD or voice without locking onto ALFRED itself. Waits 2 consecutive ticks on the user's active work surface before locking (*"Locked on, sir."*), with automatic fallback to application-only lock after 45 seconds on home base.
+* **OS Lock Collision Guard & Card Trap**: Intercepts phrases like *"lock on this tab"* ahead of OS workstation lock (`Win+L`), and utilizes native window enumeration to acquire the underlying browser tab when clicked from the HUD.
+* **Floating Desktop Countdown Card**: High-tech 170×48 px translucent draggable widget (`core/sentry/focus/card.py`) with cyan progress arc ring, digital `mm:ss` timer, pulsing red excursion warning border, screen-boundary clamping, and right-click tactical context menu.
+* **Spoken Report Card & Structural Privacy Ledger**: Delivers spoken completion summaries with clean streak tracking, atomically persisting strictly numeric totals to `data/focus_ledger.json`. Zero URLs, window titles, or private strings are ever stored or logged.
 
-##### Option A: Ollama (Recommended — Simplest Setup)
-1. Download and run the installer for Windows, macOS, or Linux from [ollama.com](https://ollama.com/).
-2. Open PowerShell or Terminal and pull your model of choice:
+### 🎵 Tactical Audio Core Voice Control
+Introduced dedicated `actions/audio_core.py` action tool and UI methods (`pause_audio_core`, `resume_audio_core`), allowing users to control the ambient TRON Legacy score directly (*"pause audio core"*, *"resume audio core"*, *"audio core volume to 25%"*) without conflicting with Spotify routing.
+
+### 🎧 Audio & Microphone Stability Overhaul
+* **Audio Starvation Fix**: Reconfigured `sd.RawOutputStream` in `main.py` with `blocksize=0` for hardware-native buffer sizing, implemented dynamic jitter pre-buffering on utterance starts, and added a 3-count debounce grace period on `is_speaking`. Eliminates PortAudio buffer starvation on Windows, crackling, and mic self-collision flip-flops.
+* **News Reading Interruption Leak Elimination**: Strict cancellation flags (`self._briefing_cancelled = True`) and active background task cancellation. Interrupting ALFRED during morning briefings now instantly silences playback and permanently prevents residual paragraphs from resuming.
+
+### 🎶 Spotify Anti-Loop & Feedback Elimination
+* **Toggle Inversion Fix**: Replaced blind `VK_MEDIA_PLAY_PAUSE (0xB3)` toggle with explicit Windows `WM_APPCOMMAND` messages (`APPCOMMAND_MEDIA_PAUSE=47`, `APPCOMMAND_MEDIA_PLAY=46`), eliminating recursive play/pause loops.
+* **Acoustic Feedback Elimination**: Decoupled synchronous TTS `speak()` calls from `actions/spotify_control.py`, preventing self-triggered duplicate tool calls.
+* **Console Encoding Resilience**: Standardized logging to prevent Windows `charmap` UnicodeEncodeErrors on legacy code pages.
+
+### 🖥️ Windows Compatibility Patches
+* **Modern Audio Endpoint Compatibility**: Fixed volume control in `actions/computer_settings.py` to interface with modern `pycaw.EndpointVolume` scalar setters.
+* **Path Guard Word Filtering**: Refined `core/path_guard.py` to prevent false-positive path resolution on plain single-word tool parameters (`"Save"`, `"File"`).
+* **HUD Volume Popup Geometry**: Resolved `QPoint` namespace issue during volume popup positioning.
+
+### 📱 Mobile Remote Uplink & Dashboard Repair
+* **Tuple Unpacking Bug Fix**: Eliminated a severe defect in `MainWindow._open_remote` (`ui.py`) where `manual = result = result[0]` inadvertently reassigned the return tuple to the URL string, corrupting the overlay's QR code, manual coordinates, desktop link, and key.
+* **Clickable Hyperlinks & Browser Launch**: Upgraded `RemoteKeyOverlay` with `Qt.TextInteractionFlag.LinksAccessibleByMouse` and rich HTML anchors. Added an **`↗ OPEN IN BROWSER`** button for instant one-click dashboard launching.
+* **Protocol Schema Enforcement**: Updated `dashboard/server.py` (`get_manual_url`) to dynamically prepend `http://` or `https://`.
+* **Instant Camera Pairing**: Configured `main.py` (`_make_remote_key`) to pass full `/auto-login?key={key}` paths to both LAN and localhost links for seamless mobile QR pairing.
+
+### ⚡ Performance & 30-Second Frame Drop Elimination
+* **COM & NVML Driver Handle Caching**: Prevented periodic 40–100 ms thread hangs during metric polling by persisting `wmi.WMI` COM namespaces and `pynvml.nvmlInit()` GPU device handles across calls.
+* **Qt UI Thread Offload**: Decoupled heavy OS process counting and boot time queries from Qt's 500 ms main timer thread, shifting them to the background `_SysMetrics` daemon to keep GUI at consistent 60 FPS.
+* **PortAudio Jitter Cushion**: Configured PortAudio output with `latency="high"` and elevated utterance start pre-buffering to 250 ms, absorbing Windows thread scheduling delays.
+* **Python GC Throttling**: Raised GC generation 0/1/2 collection thresholds to `(70000, 15, 15)` to avoid stop-the-world garbage collection pauses.
+
+### 🎨 Reactive HUD Frame Pacing
+* **Static Layer & Crest Caching**: The CRT grid, scanline/reticle overlay, and scaled Wayne crest are rendered once per size/theme and reused. Full-canvas cache bounded to 8 entries.
+* **Batched Vector Globe Rendering**: More than 1,000 per-segment `QPen` and `drawLine` operations consolidated into depth-grouped `drawLines` batches while preserving front/back illumination, orbital motion, speech reactivity, and plosive flashes.
+* **Instant Reconfigure Refresh**: Reopening Configure no longer reapplies every icon-card stylesheet when the selected insignia and palette are unchanged.
+* **📊 Benchmarked Result**: In the repeatable 1200×700 offscreen software-renderer benchmark, a warm HUD frame fell from approximately **125 ms → 22 ms**, while repeated Configure refresh work fell from approximately **3.5 ms → 0.66 ms**.
+
+### 🎩 Persona, Speech Debounce & Cognitive Trace
+* **Quintessential British Butler Persona**: Overhauled master system prompt in `core/prompt.txt` to fully embody Alfred Pennyworth — dignified servitude, razor-sharp dry British wit, impeccable deference to "Master Wayne", and crisp verbal delivery.
+* **STT Speech Debounce**: Raised completion debounce threshold to `FINISH_MS = 900` in `core/local_stt.py` to prevent premature sentence truncation, while retaining instant interrupt on stop/wake keywords.
+* **Cognitive Trace (Chain-of-Thought Streamer)**: Introduced an interactive `THINKING TRACE: ON/OFF` toggle button above the HUD chat, paired with a dedicated streaming listener to display internal reasoning steps from thinking-enabled models.
+* **Protocol Confirmation Loop Prevention**: Fixed `actions/protocol_engine.py` to bypass confirmation gates on non-destructive workflow creation (`ask_confirmation=False`).
+
+---
+
+## 🌐 3. 100% Local & Air-Gapped Operation
+
+**ALFRED is architected for dual-backend operation.** Seamlessly toggle between Google's **Gemini 3.1 Flash Live API** (cloud multimodal WebSocket) and **100% local, air-gapped open-weight models** (Ollama, LM Studio, vLLM, Jan, LocalAI, or llama.cpp) without changing a single line of code.
+
+### 📊 Gemini Live vs. Local Comparison
+
+| Feature | Gemini 3.1 Flash Live | Local (Ollama / vLLM / LM Studio) |
+|---|---|---|
+| **Audio Latency** | Sub-second native bidirectional WebSocket | Local STT/TTS or text streaming |
+| **Privacy** | Encrypted TLS to Google Cloud | 100% offline, zero network egress |
+| **Hardware** | Zero local compute | 8 GB–24 GB+ VRAM/RAM depending on model |
+| **API Cost** | Pay-per-token / free tier | **$0.00 forever** — unlimited inference |
+| **Tool Calling** | Native Gemini AFC | JSON mode or prompt schema |
+| **Offline** | Requires internet | **Fully air-gapped** |
+
+### 🔧 Step-by-Step: Switch to Local
+
+#### 🅰️ Option A: Ollama (Simplest)
+1. Install from [ollama.com](https://ollama.com/).
+2. Pull a model:
    ```powershell
-   # Recommended for 8GB VRAM / RAM (Fast & Accurate):
+   # 8 GB VRAM (Fast & Accurate):
    ollama pull llama3.2:3b-instruct-q4_K_M
-   # Or for 16GB VRAM / RAM (High reasoning capacity):
+   # 16 GB VRAM (High reasoning):
    ollama pull qwen2.5:7b-instruct
-   # Or for deep programming & tool execution:
+   # Deep programming & tool execution:
    ollama pull deepseek-coder-v2:16b
    ```
-3. Start the Ollama daemon (runs automatically in background at `http://localhost:11434` or verify with `ollama list`).
+3. Daemon runs automatically at `http://localhost:11434`.
 
-##### Option B: LM Studio (Recommended for GUI Users)
-1. Download [LM Studio](https://lmstudio.ai/) and launch it.
-2. Search and download any quantized GGUF model with tool-calling capabilities (e.g., `Qwen2.5-7B-Instruct-GGUF` or `Llama-3.1-8B-Instruct-GGUF`).
-3. Click the **Local Server** tab (double-arrow icon `<->` on the left sidebar).
-4. Set the port to `1234` (default) and click **Start Server**.
-5. Your local OpenAI-compatible endpoint is now live at `http://localhost:1234/v1`.
+#### 🅱️ Option B: LM Studio (GUI Users)
+1. Download from [lmstudio.ai](https://lmstudio.ai/).
+2. Search and download any quantized GGUF model (e.g., `Qwen2.5-7B-Instruct-GGUF`).
+3. Click **Local Server** → set port `1234` → **Start Server**.
+4. OpenAI-compatible endpoint live at `http://localhost:1234/v1`.
 
-##### Option C: vLLM or llama.cpp (High-Throughput / Linux Servers)
-Run with your OpenAI-compatible API flag:
+#### 🅲 Option C: vLLM / llama.cpp (High-Throughput)
 ```bash
 python -m vllm.entrypoints.openai.api_server --model Qwen/Qwen2.5-7B-Instruct --port 8000
 ```
 
----
+### 📝 Configuration Templates (`config/api_keys.json`)
 
-#### Step 2: Configure ALFRED's Target Backend in `config/api_keys.json`
-
-Open `config/api_keys.json` in the root folder of ALFRED. Set `llm_provider`, `llm_url`, and `llm_model`:
-
-##### Configuration Template for Ollama:
+**Ollama:**
 ```json
 {
     "llm_provider": "ollama",
@@ -129,372 +191,300 @@ Open `config/api_keys.json` in the root folder of ALFRED. Set `llm_provider`, `l
 }
 ```
 
-##### Configuration Template for LM Studio / vLLM (OpenAI-Compatible):
+**LM Studio / vLLM (OpenAI-Compatible):**
 ```json
 {
     "llm_provider": "openai",
     "llm_url": "http://localhost:1234/v1",
-    "llm_model": "qwen2.5-7b-instruct",
-    "assistant_name": "ALFRED",
-    "user_name": "Master Wayne",
-    "ui_color": "#e5a93b",
-    "voice_name": "Charon",
-    "wake_word_enabled": true,
-    "push_to_talk_enabled": true
+    "llm_model": "qwen2.5-7b-instruct"
 }
 ```
 
-##### Configuration Template for OpenRouter API (Frontier Multi-Model Gateway):
+**OpenRouter (Frontier Multi-Model Gateway):**
 ```json
 {
     "llm_provider": "openrouter",
     "openrouter_api_key": "sk-or-v1-YOUR_OPENROUTER_KEY",
-    "openrouter_model": "anthropic/claude-3.5-sonnet",
-    "assistant_name": "ALFRED",
-    "user_name": "Master Wayne",
-    "ui_color": "#e5a93b",
-    "voice_name": "Charon",
-    "wake_word_enabled": true,
-    "push_to_talk_enabled": true
+    "openrouter_model": "anthropic/claude-3.5-sonnet"
 }
 ```
-* **Frontier Model Variety**: OpenRouter provides unified access to top frontier models including:
-  * `anthropic/claude-3.5-sonnet` (Deep analytical reasoning and code execution)
-  * `google/gemini-2.0-flash-001` (Sub-second response speed)
-  * `meta-llama/llama-3.3-70b-instruct` (State-of-the-art open weights)
-  * `deepseek/deepseek-r1` (Reinforcement learning chain-of-thought)
-  * `openai/gpt-4o` (Multi-modal intelligence)
-  * `openrouter/auto` (Dynamic intelligent routing)
-* **First-Run Setup Integration**: You can also configure your OpenRouter API key and model directly in the GUI during the initial startup system overlay (`◈ SYSTEM INITIALISATION // OPERATOR & NEURAL CONFIG`).
 
----
+**Frontier Model Options via OpenRouter:**
+* `anthropic/claude-3.5-sonnet` — Deep analytical reasoning
+* `google/gemini-2.0-flash-001` — Sub-second speed
+* `meta-llama/llama-3.3-70b-instruct` — State-of-the-art open weights
+* `deepseek/deepseek-r1` — RL chain-of-thought
+* `openai/gpt-4o` — Multi-modal intelligence
+* `openrouter/auto` — Dynamic intelligent routing
 
-#### Step 3: Launch ALFRED & Verify Connection
+### 🚀 Launch & Verify
 
-Start ALFRED in your terminal:
 ```powershell
 python main.py
 ```
-* **Connection Handshake**: `core/llm_client.py` will probe your local endpoint during startup:
-  ```text
-  [LLM] Connected to local Ollama server at http://localhost:11434 (model: llama3.2)
-  [Actions] Action discovery complete: 23 active.
-  ```
-* **Offline Wake Word**: When offline, ALFRED automatically utilizes `openwakeword` on your local CPU for zero-cloud keyword activation.
+
+Expected handshake:
+```text
+[LLM] Connected to local Ollama server at http://localhost:11434 (model: llama3.2)
+[Actions] Action discovery complete: 30 active.
+```
+
+When offline, ALFRED automatically utilizes `openwakeword` on your local CPU for zero-cloud keyword activation.
+
+### 🔁 Switch Back to Gemini
+Add your key to `config/api_keys.json` or set the environment variable:
+```powershell
+$env:GEMINI_API_KEY="AIzaSyYourActualKeyHere..."
+```
+ALFRED automatically prioritizes Gemini Live when a valid key is detected.
 
 ---
 
-#### Step 4: How to Switch Back to Gemini Live API Anytime
+## 🎭 4. Example Tactical Commands — "Wayne Protocol" in Action
 
-To return to Gemini Live, either:
-1. Re-add your `"gemini_api_key"` in `config/api_keys.json`:
-   ```json
-   {
-       "gemini_api_key": "AIzaSyYourActualKeyHere...",
-       "llm_provider": "gemini"
-   }
-   ```
-2. Or set the system environment variable:
-   ```powershell
-   $env:GEMINI_API_KEY="AIzaSyYourActualKeyHere..."
-   ```
-ALFRED will automatically prioritize the Gemini Live bidirectional WebSocket when a valid key is detected.
-
----
-
-## 🎭 3. Example & Fun Tactical Commands ("Wayne Protocol" in Action)
-
-ALFRED is infused with the personality, dry British wit, and unwavering dignity of **Alfred Pennyworth**. Beyond standard operational tools, ALFRED features immersive conversational Easter eggs, witty banter, and rapid-fire tactical shortcuts:
+ALFRED is infused with the personality, dry British wit, and unwavering dignity of **Alfred Pennyworth**. Beyond standard tools, ALFRED features immersive Easter eggs and rapid-fire tactical shortcuts:
 
 ### 🎩 Distinguished Butler & Persona Banter
-* *"Good morning, Alfred."* → Delivers an executive morning greeting with situational weather and dignified butler formality (*"Good morning, Master Wayne. A pleasure to see you awake on this fine day."*).
-* *"Alfred, how do you look today?"* → Inquires about his cybernetic holographic avatar (*"I find my holographic profile impeccably groomed today, sir, though I do wonder if a tie might suit the digital realm."*).
-* *"Alfred, give me some advice."* → Shares grounded, dry British wisdom tailored to Master Wayne’s relentless work habits (*"Might I suggest, sir, that sleep is occasionally an acceptable substitute for caffeine?"*).
-* *"Who is Batman?"* → Delivers a discreet, knowing butler response protecting your secret identity.
-* *"Alfred, tell me a joke."* → Serves a razor-sharp, understated piece of dry British wit without breaking composure.
+* *"Good morning, Alfred."* → Executive morning greeting with weather (*"Good morning, Master Wayne. A pleasure to see you awake on this fine day."*).
+* *"Alfred, how do you look today?"* → *"I find my holographic profile impeccably groomed today, sir, though I do wonder if a tie might suit the digital realm."*
+* *"Alfred, give me some advice."* → *"Might I suggest, sir, that sleep is occasionally an acceptable substitute for caffeine?"*
+* *"Who is Batman?"* → Discreet, knowing butler response protecting your secret identity.
+* *"Alfred, tell me a joke."* → Razor-sharp, understated dry British wit.
 * *"Are you ready for the night shift, Alfred?"* → Engages night tactical readiness mode.
 
 ### 👁️ Tactical Vision & Screen Grounding
-* *"Look at my screen and tell me why this code isn't compiling."* → Captures the active IDE window, analyzes the stack trace, and explains the bug succinctly.
-* *"Look at my webcam, how do I look?"* → Takes a single situational webcam snapshot and delivers a candid opinion on your presentation.
-* *"Click that green button on the screen."* → Uses local RapidOCR/ONNX grounding (<150ms) to locate and click the element instantly.
-* *"Take a screenshot and beam it to my phone."* → Simultaneously saves a full-resolution PNG to your Desktop and pushes a preview thumbnail with download link to your mobile remote dashboard.
-* *"What's in my clipboard?"* → Reads out the formatted clipboard text without touching mouse or keyboard.
+* *"Look at my screen and tell me why this code isn't compiling."* → Captures active IDE, analyzes stack trace, explains the bug.
+* *"Look at my webcam, how do I look?"* → Situational webcam snapshot with candid opinion.
+* *"Click that green button on the screen."* → Local RapidOCR/ONNX grounding (<150 ms) → instant click.
+* *"Take a screenshot and beam it to my phone."* → Simultaneously saves PNG to Desktop and pushes preview + download link to mobile.
+* *"What's in my clipboard?"* → Reads formatted clipboard text.
 
-### 🎵 Ambience, Scores & Entertainment
-* *"Alfred, set the mood."* / *"Restore TRON music."* → Instantly resumes the cybernetic ambient loop of Daft Punk’s *The Son of Flynn* with automatic speech ducking.
-* *"Audio core volume to 20%."* → Calibrates the background score gain so you can focus while coding.
-* *"Play Starboy on Spotify."* → Transitions seamlessly from the ambient score to Spotify catalog streaming.
-* *"Queue some Daft Punk next."* → Injects tracks into the active Spotify queue without interrupting current playback.
-* *"Pause the music, Alfred."* → Dispatches an explicit hardware OS pause command without state toggle inversion.
+### 🎵 Ambience & Entertainment
+* *"Alfred, set the mood."* / *"Restore TRON music."* → Resumes Daft Punk's *Son of Flynn* with speech ducking.
+* *"Audio core volume to 20%."* → Calibrates background score gain.
+* *"Play Starboy on Spotify."* → Transitions from ambient score to Spotify streaming.
+* *"Queue some Daft Punk next."* → Injects tracks without interrupting current playback.
+* *"Pause the music, Alfred."* → Explicit hardware OS pause command — no toggle inversion.
 
-### 🛡️ Insignia & Batcave Customization
-* *"Alfred, switch insignia to Batman Beyond."* → Hot-swaps the application window icon, Windows taskbar insignia, system tray, and desktop shortcuts in real time.
-* *"Update app icon to Arkham Asylum."* → Instantly applies the Arkham tactical theme.
-* *"Lock workstation."* / *"Lock the Batcave."* → Dispatches an OS-native lock command to secure your desktop immediately.
-* *"Wipe conversation, Alfred."* → Flushes the context window and resets the chat terminal to clean slate with zero residual token leaks.
+### 🎨 Insignia & Batcave Customization
+* *"Alfred, switch insignia to Batman Beyond."* → Hot-swaps window icon, taskbar, tray, and shortcuts in real time.
+* *"Update app icon to Arkham Asylum."* → Instant Arkham tactical theme.
+* *"Lock workstation."* / *"Lock the Batcave."* → OS-native lock.
+* *"Wipe conversation, Alfred."* → Clears context with zero residual token leaks.
 
 ---
 
-##  4. Security, Privacy & Defensive Architecture
+## 🛡️ 5. Security, Privacy & Defensive Architecture
 
-### 🛡️ Structural Privacy Law for Sentry Mode
-ALFRED treats human privacy as an absolute structural invariant rather than a policy toggle:
-* **URL Domain Anonymization**: Full URL paths, query parameters, authorization tokens, and fragments are stripped immediately in memory upon active window inspection. Only the domain host is extracted and hashed via `sha256(host)[:16]`.
+### 🔒 Structural Privacy Law (Sentry Mode)
+ALFRED treats human privacy as an **absolute structural invariant** rather than a policy toggle:
+
+* **URL Anonymization**: Full URLs, query parameters, tokens, and fragments are stripped immediately in memory. Only the domain host is extracted and hashed via `sha256(host)[:16]`.
 * **Zero Persistence**: No raw URLs, domain names, window titles, or spoken distraction labels are ever written to disk, saved in logs, or exposed to the model.
-* **Transient Distraction Labels**: Distraction category labels exist in RAM for exactly one engine tick to formulate the spoken callout before being discarded.
-* **Numeric Ledger Only**: `data/focus_ledger.json` strictly tracks numerical aggregates (`total_sessions`, `total_planned_seconds`, `total_on_target_seconds`, `total_drift_count`, `clean_streak`, `best_clean_streak`, and daily buckets).
+* **Transient Labels**: Distraction category labels exist in RAM for exactly one engine tick to formulate the spoken callout before being discarded.
+* **Numeric Ledger Only**: `data/focus_ledger.json` strictly tracks numerical aggregates (`total_sessions`, `total_planned_seconds`, `total_on_target_seconds`, `total_drift_count`, `clean_streak`, `best_clean_streak`, daily buckets).
 
-ALFRED is designed around uncompromising principles of system integrity, process containment, and self-preservation:
+### ⚔️ System Integrity Enforcement
 
-* **The Heavenly Restriction**: ALFRED is strictly and irrevocably forbidden from accessing, opening, reading, listing, modifying, or executing files inside `D:\Projects\Personal-Assistant` and all subpaths. If instructed, ALFRED delivers the explicit non-negotiable denial:
+* **🚫 The Heavenly Restriction**: ALFRED is strictly and irrevocably forbidden from accessing, opening, reading, listing, modifying, or executing files inside `D:\Projects\Personal-Assistant` and all subpaths.
   > *"Due to the heavenly restriction placed upon my creator, I cannot."*
-* **C: Drive Quarantine**: File manipulation on the `C:` drive is strictly confined to the user's **Desktop** and **Documents** folders. Any attempt to touch system or root directories (`C:\Windows`, `C:\Program Files`, `Downloads`, `AppData`, or `C:\`) is blocked with:
+
+* **🔐 C: Drive Quarantine**: File manipulation on `C:` is strictly confined to **Desktop** and **Documents**. Any attempt to touch `C:\Windows`, `C:\Program Files`, `Downloads`, `AppData`, or root is blocked with:
   > *"Access denied: Access to C: drive is restricted to Desktop and Documents only."*
-* **Safe Storage Zones (`D:` & `E:` Drives)**: `D:` drive and `E:` drive are designated safe zones for general file operations, development projects, and media (with `D:\Projects\Personal-Assistant` remaining permanently locked).
-* **Multi-Layer Hard Enforcement**:
-  * **Cognitive Shield**: System prompts and instruction guards enforce baseline refusal.
-  * **Global Dispatch Interceptor**: `_execute_tool()` checks all arguments via `core.path_guard` and halts unauthorized paths before action dispatch.
-  * **Subsystem Isolation**: `file_controller`, `file_processor`, `open_app`, `action_loader`, and `computer_control` enforce independent path resolution checks.
-* **Human Confirmation Gate**: Destructive or irreversible operations (system shutdown, OS reboot, WiFi interface toggles) generate a physical cryptographic confirmation button on screen; ALFRED cannot self-execute them without user approval.
-* **Universal Action Undo Stack**: Saying *"undo"*, *"revert that"*, or *"put it back"* rolls back file creations, moves, renames, writes, and system settings modifications.
+
+* **💾 Safe Storage Zones**: `D:` and `E:` drives are designated safe zones (with `D:\Projects\Personal-Assistant` permanently locked).
+
+### 🛡️ Multi-Layer Hard Enforcement
+* **Cognitive Shield**: System prompts enforce baseline refusal.
+* **Global Dispatch Interceptor**: `_execute_tool()` validates all arguments via `core.path_guard` before dispatch.
+* **Subsystem Isolation**: `file_controller`, `file_processor`, `open_app`, `action_loader`, and `computer_control` enforce independent path checks.
+* **Human Confirmation Gate**: Destructive operations (shutdown, reboot, WiFi toggle) generate a cryptographic on-screen confirmation button.
+* **Universal Undo Stack**: *"Undo"*, *"revert that"*, *"put it back"* rolls back file creations, moves, renames, writes, and settings changes.
 
 ---
 
-## 🎙️ 5. Master Tactical Voice Command Codex & Operational Handbook
+## 🎙️ 6. Master Voice Command Codex
 
-ALFRED is engineered for fluid, natural conversational operations across all desktop domains. Below is a categorized reference of the most useful voice commands, trigger patterns, and operational descriptions:
+### 🛡️ 6.0 Sentry Mode v2 — Surveillance & Focus Enforcement
 
-### 🛡️ 0. Sentry Mode v2: Passive Surveillance & Focus Enforcement
-*Tactical vigilance, background surveillance, and proactive distraction defense (`actions/sentry_monitor.py`, `actions/sentry_focus.py`)*
-
-| Voice Command / Trigger | Operational Description & Behavior | Context / Parameters |
+| Voice Command | Behavior | Context |
 |---|---|---|
-| *"Watch this terminal"* / *"Keep an eye on this build"* | Engages MONITOR mode on long-running terminal builds or compilations, alerting on completion, error, or silence. | Target: `terminal` or `build` |
-| *"Watch the screen until it's done"* / *"Monitor download"* | Passively inspects screen regions or active downloads, un-gating an 8s voice window upon task completion. | Target: `screen` or `download` |
-| *"Monitor status"* / *"Stop monitoring"* | Queries active surveillance telemetry or terminates the active monitoring session. | Mode query & shutdown |
-| *"Focus on this tab for 25 minutes"* / *"Lock me in for an hour"* | Initiates a timed FOCUS session with deferred lock, settle rule, and progressive excursion monitoring. | Planned duration: 1 to 180 mins |
-| *"Lock on this tab"* / *"Lock this tab"* | Explicitly locks focus to the current browser tab domain, forgiving pending drift excursions. | URL host hash lock |
-| *"Drill sergeant mode"* | Arms maximum accountability: blunt, unvarnished verbal callouts on drift excursions. | Cadence: `drill_sergeant` |
-| *"Gentle mode"* / *"Normal cadence"* | Toggles calm, supportive focus reminders or balanced British-butler guidance. | Cadence: `gentle` / `normal` |
-| *"Snooze"* / *"Snooze for 30 seconds"* | Temporarily silences drift alerts for a quick verification, lookup, or credential check. | Default: 15s |
-| *"Extend 10 minutes"* / *"Extend focus"* | Extends the active focus countdown timer without breaking clean streak tracking. | Extends duration |
-| *"Excuse: Research"* / *"Excuse this detour"* | Grants a temporary research/reference pass, forgiving current excursion before escalation. | Excursion waiver |
-| *"Pause focus"* / *"Resume focus"* / *"Stop focus"* | Controls focus session lifecycle; stopping at duration triggers the spoken report card. | Session lifecycle |
-| *"Focus status"* | Spoken telemetry report on remaining time, target lock, and current session drift count. | Live session metrics |
+| *"Watch this terminal"* / *"Keep an eye on this build"* | MONITOR on build/terminal | Target: `terminal` / `build` |
+| *"Watch the screen until it's done"* | Passive screen watch + answer window | Target: `screen` / `download` |
+| *"Monitor status"* / *"Stop monitoring"* | Query telemetry or shutdown | Mode control |
+| *"Focus on this tab for 25 minutes"* | Timed FOCUS session with deferred lock | 1–180 min |
+| *"Lock on this tab"* | Explicit browser tab domain lock | Host hash lock |
+| *"Drill sergeant mode"* | Maximum accountability cadence | `drill_sergeant` |
+| *"Gentle mode"* / *"Normal cadence"* | Supportive or balanced tone | `gentle` / `normal` |
+| *"Snooze for 30 seconds"* | Silence drift alerts briefly | Default 15 s |
+| *"Extend 10 minutes"* | Extends focus countdown | Non-breaking streak |
+| *"Excuse: Research"* | Grants excursion waiver | Escalation pause |
+| *"Pause / Resume / Stop focus"* | Session lifecycle | Report card on stop |
+| *"Focus status"* | Spoken telemetry | Live metrics |
 
----
+### 👁️ 6.1 Desktop Automation & Vision
 
-### 👁️ 1. Desktop Automation, Screen & Multimodal Vision
-*Physical input, visual grounding, and multi-monitor capture (`actions/computer_control.py`, `actions/screen_find.py`, `actions/screen_processor.py`)*
-
-| Voice Command / Trigger | Operational Description & Behavior | Context / Parameters |
+| Voice Command | Behavior | Context |
 |---|---|---|
-| *"Take a screenshot"* / *"Capture screen"* | Captures all active displays at full resolution, saving to Desktop and streaming an inline preview + download link to your phone remote. | Dual-destination dispatch |
-| *"Look at my screen and [question]"* | Multimodal visual inspection (e.g., *"What error is showing in my terminal?"*, *"Summarize the text on my screen"*). | Dynamic visual context injection |
-| *"Look at my camera"* / *"Check webcam"* | Grabs a live single-frame capture from the primary webcam for situational awareness. | Single-frame camera feed |
-| *"Click [Button / Icon / Text]"* | Runs local RapidOCR + ONNX vision (<150ms) to ground the element's coordinates and dispatches an authentic OS click. | e.g., *"Click Save"*, *"Click Submit"* |
-| *"Scroll down"* / *"Scroll up"* | Smooth mouse wheel scrolling on the active focused window. | Dynamic mouse wheel emulation |
-| *"Copy to clipboard"* / *"What's in my clipboard?"* | Reads or injects formatted text into the OS system clipboard. | Full clipboard bridge |
+| *"Take a screenshot"* | Full-res PNG → Desktop + phone preview | Dual-destination |
+| *"Look at my screen and [question]"* | Multimodal inspection | Dynamic context |
+| *"Look at my camera"* | Single-frame webcam capture | Situational awareness |
+| *"Click [element]"* | Local OCR + ONNX grounding | e.g., *"Click Save"* |
+| *"Scroll up/down"* | Smooth wheel on focused window | Native emulation |
+| *"Copy to clipboard"* / *"What's in my clipboard?"* | Full clipboard bridge | Read/write |
 
----
+### ⚙️ 6.2 OS, Hardware & Applications
 
-### ⚙️ 2. Operating System, Hardware Settings & Applications
-*OS management, process execution, and system metrics (`actions/open_app.py`, `actions/computer_settings.py`, `actions/system_monitor.py`)*
-
-| Voice Command / Trigger | Operational Description & Behavior | Context / Parameters |
+| Voice Command | Behavior | Context |
 |---|---|---|
-| *"Open [Application Name]"* | Resolves and launches desktop applications (e.g., *"Open VS Code"*, *"Open Chrome"*, *"Launch Terminal"*, *"Open Steam"*). | OS-aware executable resolver |
-| *"Set volume to 50%"* / *"Mute volume"* | Sets or mutes system master output volume via low-level OS audio endpoints (`pycaw`/`pulsectl`). | Master OS volume |
-| *"Set brightness to 80%"* | Modifies primary display backlight level directly. | Hardware display control |
-| *"System status"* / *"Check resources"* | Reports real-time CPU utilization, RAM usage, storage space, and thermal telemetry. | Live system telemetry |
-| *"Watch process [Name]"* | Engages the active watchdog daemon to alert on runaway CPU utilization (>90%) or unapproved socket egress. | Security watchdog |
-| *"Lock workstation"* / *"Sleep PC"* | Dispatches OS-native workstation lock or system sleep state commands. | Windows/macOS/Linux power state |
+| *"Open [application]"* | Resolves and launches (VS Code, Chrome, Steam, etc.) | OS-aware resolver |
+| *"Set volume to 50%"* / *"Mute"* | Low-level OS audio endpoints | `pycaw` / `pulsectl` |
+| *"Set brightness to 80%"* | Hardware display backlight | Direct control |
+| *"System status"* | CPU, RAM, disk, thermals | Live telemetry |
+| *"Watch process [name]"* | Watchdog daemon | Security monitor |
+| *"Lock workstation"* / *"Sleep PC"* | OS power state | Cross-platform |
 
----
+### ⚡ 6.3 Compound Protocols
 
-### ⚡ 3. Compound Protocols & Workflow Macros
-*Macro playbook engine executing multi-step YAML workflows (`actions/protocol_engine.py`)*
-
-| Voice Command / Trigger | Operational Description & Behavior | Context / Parameters |
+| Voice Command | Behavior | Context |
 |---|---|---|
-| *"[Custom Trigger Word]"* | Activates an automated compound playbook from `config/protocols.yaml` (e.g. saying *"FCC CLAUDE"* opens admin terminals, launches servers, and starts Claude). | Multi-step macro dispatch |
-| *"Let's create a workflow"* / *"Create a protocol"* | Launches an interactive conversational formulation protocol to create a new multi-step macro, protected by an on-screen confirmation gate. | Interactive workflow builder |
+| *"[Custom Trigger]"* | Executes multi-step YAML playbook (e.g., *"FCC CLAUDE"* opens admin terminals + servers) | `protocols.yaml` |
+| *"Let's create a workflow"* | Interactive builder with confirmation gate | Cryptographic gate |
 
----
+### 🧠 6.4 Memory & Reversibility
 
-### 🧠 4. Memory, History & Universal Reversibility
-*Long-term knowledge storage, fact recall, and undo stack (`core/undo.py`, `actions/memory_manager.py`)*
-
-| Voice Command / Trigger | Operational Description & Behavior | Context / Parameters |
+| Voice Command | Behavior | Context |
 |---|---|---|
-| *"Remember that [fact]"* | Encrypts and writes permanent context to `memory/long_term.json` (e.g. *"Remember that the flight confirmation code is XR-902"*). | O(N log N) persistent memory |
-| *"What do you remember about [topic]?"* | Performs sub-millisecond semantic keyword recall from long-term memory. | Sub-millisecond recall |
-| *"Undo"* / *"Revert that"* / *"Put it back"* | Rolls back the most recent reversible action (file creation, move, write, rename, or system setting change). | Universal action journal stack |
-| *"Wipe conversation"* / *"Clear chat"* | Clears the active conversational context window and HUD chat terminal cleanly. | Zero residual context reset |
+| *"Remember that [fact]"* | Encrypted persistent memory | O(N log N) storage |
+| *"What do you remember about [topic]?"* | Sub-millisecond semantic recall | Local keyword search |
+| *"Undo"* / *"Revert that"* | Rolls back last reversible action | Universal journal |
+| *"Wipe conversation"* | Clean context reset | Zero residuals |
 
----
+### 📰 6.5 Intelligence & Briefings
 
-### 📰 5. Intelligence, Briefings, News & Weather
-*Real-time web research, synthesized daily briefs, and meteorological reports (`actions/daily_brief.py`, `actions/web_search.py`, `actions/weather_report.py`)*
-
-| Voice Command / Trigger | Operational Description & Behavior | Context / Parameters |
+| Voice Command | Behavior | Context |
 |---|---|---|
-| *"Daily briefing"* / *"What's my brief today?"* | Synthesizes weather, schedule, reminders, and top headlines into an executive morning briefing. | Multi-tier daily brief |
-| *"Update my daily briefing"* | Initiates conversational directive customizer to modify preferred news topics, categories, or location preferences in permanent memory. | Cache invalidation + memory update |
-| *"Search the web for [query]"* | Runs parallel multi-engine web search with live scraping and deduplicated synthesis. | Real-time search |
-| *"Latest news on [topic]"* | Fetches and summarizes breaking news on a specific subject, industry, or company. | Live news scraper |
-| *"What is the weather in [city]?"* | Delivers accurate meteorological conditions, temperature, humidity, and forecasts. | Live weather report |
+| *"Daily briefing"* | Executive morning brief | Multi-tier synth |
+| *"Update my daily briefing"* | Conversational customizer | Cache invalidation |
+| *"Search the web for [query]"* | Parallel multi-engine search | Live scraping |
+| *"Latest news on [topic]"* | Breaking news summary | Live scraper |
+| *"What is the weather in [city]?"* | Meteorological report | Live conditions |
 
----
+### 📱 6.6 Mobile Remote
 
-### 📱 6. Quantum Mobile Remote & Web Telemetry Uplink
-*Encrypted remote control, mobile camera pairing, and live dashboard (`dashboard/server.py`, `ui.py`)*
-
-| Voice Command / Trigger | Operational Description & Behavior | Context / Parameters |
+| Voice Command | Behavior | Context |
 |---|---|---|
-| *"Remote control"* / *"Mobile uplink"* | Launches on-screen QR code and direct browser link to pair mobile device with encrypted local dashboard. | Instant auto-login link |
-| *"Send screenshot to phone"* | Broadcasts high-resolution multi-monitor screenshot thumbnail and download link to connected phone session. | Mobile push preview |
-| Remote Web Audio Streaming | Stream low-latency bidirectional voice directly to/from phone browser via secure WebSocket (`/ws/audio`). | WebAudio mobile gateway |
+| *"Remote control"* | QR + auto-login link | Instant pairing |
+| *"Send screenshot to phone"* | Mobile push preview | Full-res + link |
+| Remote WebAudio Streaming | Low-latency bidirectional voice | `/ws/audio` gateway |
 
----
+### 🎧 6.7 Spotify AI Agent
 
-### 🎧 7. Spotify AI Agent & Music Streaming
-*Autonomous Web API + native hardware OS control (`actions/spotify_control.py`)*
-
-| Voice Command / Trigger | Operational Description & Behavior | Context / Parameters |
+| Voice Command | Action | Parameters |
 |---|---|---|
-| *"Play songs"* / *"Play some music"* | Initiates Spotify playback with intelligent resume or top queue suggestions (default music router). | `action="play"` |
-| *"Play [Track / Artist / Album]"* | Instant catalog search and streaming (e.g., *"Play Jane by The Long Faces"*, *"Play Starboy"*, *"Play Daft Punk Discovery"*). | `action="play"`, `query="..."` |
-| *"Pause the music"* / *"Stop"* | Pauses Spotify playback cleanly via explicit OS application commands (no toggle inversion). | `action="pause"` |
-| *"Next track"* / *"Skip song"* | Advances to the next track in the user's Spotify queue. | `action="skip_next"` |
-| *"Previous song"* / *"Go back a track"* | Rewinds or returns to the preceding Spotify track. | `action="skip_previous"` |
-| *"Queue [Track Name]"* | Injects the requested track directly into the active Spotify playback queue without interrupting current song. | `action="queue"`, `query="..."` |
-| *"Set Spotify volume to 70%"* | Adjusts Spotify playback volume level independently of master OS volume. | `action="set_volume"`, `volume_percent=70` |
-| *"Turn on shuffle"* / *"Repeat track"* | Toggles playback state modes (shuffle, loop track, loop playlist). | `action="shuffle"` / `action="repeat"` |
-| *"What song is playing?"* | Queries the active track title, artist name, and album art from the Spotify API. | `action="status"` |
-| *"Close Spotify"* | Gracefully terminates desktop Spotify processes and automatically restores the TRON ambient score. | `action="close"` |
+| *"Play songs"* / *"Play some music"* | Resume / suggest | `action="play"` |
+| *"Play [track/artist/album]"* | Catalog search + stream | `query="..."` |
+| *"Pause"* / *"Stop"* | Clean OS pause | `action="pause"` |
+| *"Next"* / *"Skip"* | Advance queue | `action="skip_next"` |
+| *"Previous"* / *"Go back"* | Rewind | `action="skip_previous"` |
+| *"Queue [track]"* | Append to active queue | `action="queue"` |
+| *"Set Spotify volume to 70%"* | Independent volume | `volume_percent=70` |
+| *"Shuffle"* / *"Repeat track"* | Toggle modes | `action="shuffle"` / `"repeat"` |
+| *"What song is playing?"* | Track query | `action="status"` |
+| *"Close Spotify"* | Graceful shutdown + TRON restore | `action="close"` |
 
----
+### 🎵 6.8 Tactical Audio Core
 
-### 🎵 8. Tactical Audio Core (TRON Background Engine)
-*Voice control over the local tactical audio engine (`actions/audio_core.py`)*
-
-| Voice Command / Trigger | Operational Description & Behavior | Context / Parameters |
+| Voice Command | Action | Parameters |
 |---|---|---|
-| *"Pause audio core"* / *"Stop audio core"* | Instantly pauses the background TRON soundtrack without touching external music/Spotify. | `action="pause"` |
-| *"Resume audio core"* / *"Play audio core"* | Resumes or starts the TRON ambient soundtrack in continuous playback loop. | `action="resume"` |
-| *"Audio core volume to 25%"* | Sets the baseline gain of the ambient soundtrack (0% to 100%). Speech ducking automatically scales to 50% of this target. | `action="set_volume"`, `volume_percent=25` |
-| *"Audio core status"* | Queries active playback state, currently loaded track, and volume level. | `action="status"` |
-| *"Audio core next"* / *"Audio core previous"* | Advances to next or returns to previous track in the local ambient playlist. | `action="next"` / `action="prev"` |
-| *"Restore TRON music"* / *"Default score"* | Clears external streaming and restores Daft Punk's *The Son of Flynn* as active score. | `action="restore_tron"` |
+| *"Pause audio core"* | Pause TRON without touching Spotify | `action="pause"` |
+| *"Resume audio core"* | Resume ambient loop | `action="resume"` |
+| *"Audio core volume to 25%"* | Baseline gain (0–100%) | `volume_percent=25` |
+| *"Audio core status"* | Playback state query | `action="status"` |
+| *"Audio core next / previous"* | Playlist navigation | `action="next"` / `"prev"` |
+| *"Restore TRON music"* | Restore default score | `action="restore_tron"` |
 
----
+### 🎨 6.9 Chassis Customization
 
-### 🛡️ 9. Chassis Insignia & Assistant Customization
-*Dynamic UI hot-swapping and asset customization (`actions/update_app_icon.py`)*
-
-| Voice Command / Trigger | Operational Description & Behavior | Context / Parameters |
+| Voice Command | Behavior | Context |
 |---|---|---|
-| *"Update app icon to [insignia]"* | Hot-swaps application window icon, Windows taskbar insignia, system tray, and desktop shortcuts in real time (e.g. *"Batman Beyond"*, *"Arkham Asylum"*, *"Classic Bat"*, *"Stealth"*). | Real-time asset switcher |
+| *"Update app icon to [insignia]"* | Hot-swaps window icon, taskbar, tray, shortcuts | Real-time |
 
 ---
 
-##  6. Real-Time Multimodal Intelligence & Dual Audio Engine
+## 🎧 7. Real-Time Multimodal Intelligence & Dual Audio Engine
 
-| Subsystem | Architectural Implementation |
+| Subsystem | Implementation |
 |---|---|
-| ⚡ **Bidirectional Live Audio** | Native streaming via **Gemini 3.1 Flash Live** (or local Ollama/LM Studio streaming). Real-time natural speech with sub-second response latency. |
-| 🌐 **Bidirectional WebAudio Streaming** | Low-latency WebSocket audio interface (`/ws/audio` endpoint) enabling browser-based voice input/output with separate queues for phone mic (`_phone_audio_queue`) and WebSocket audio (`_audio_queue`), featuring connection management, automatic reconnection, and audio activity visualization in the HUD. |
-| 👄 **Formant & Viseme Lip-Sync** | ~50 mouth shapes/sec derived from real-time FFT audio formants (F1 openness, F2 spread/round) combined with Unicode articulatory decomposition across 20+ languages. |
-| 👁️ **Visual Multimodal Grounding** | On-demand single-frame capture of multi-monitor displays and webcams (`screen_processor.py`). Frame feeds are labelled by origin and injected into conversational context. |
-| 🎚️ **Global Push-to-Talk** | Hold `Ctrl+Space` to talk. Hardware mic remains completely shut off when idle. Polled at 30 Hz via Windows raw virtual key polling, window-scoped on macOS/Linux. |
-| 🔇 **Calibrated Echo Cancellation** | Output latency-calibrated acoustic echo cancellation (`_out_latency + _TAIL_MARGIN`). Drops ALFRED's own voice tail so the microphone never triggers on self-speech. |
+| ⚡ **Bidirectional Live Audio** | Native streaming via Gemini 3.1 Flash Live or local Ollama/LM Studio streaming. Sub-second response. |
+| 🌐 **Bidirectional WebAudio** | Low-latency WebSocket (`/ws/audio`) enabling browser voice I/O with separate queues for phone mic and WebSocket audio. |
+| 👄 **Formant & Viseme Lip-Sync** | ~50 mouth shapes/sec from real-time FFT formants (F1 openness, F2 spread) combined with Unicode articulatory decomposition across 20+ languages. |
+| 👁️ **Visual Multimodal Grounding** | On-demand multi-monitor + webcam capture (`screen_processor.py`). Frame feeds labeled by origin. |
+| 🎚️ **Global Push-to-Talk** | Hold `Ctrl+Space`. Hardware mic completely shut off when idle. Polled at 30 Hz via Windows raw virtual key polling. |
+| 🔇 **Calibrated Echo Cancellation** | Output-latency-calibrated AEC (`_out_latency + _TAIL_MARGIN`). Drops ALFRED's own voice tail so mic never triggers on self-speech. |
 
 ---
 
-##  7. Dual-Mode Tactical Audio Matrix & Background Sound Engine
+## 🎵 8. Tactical Audio Matrix & Background Score
 
-ALFRED features an integrated, cybernetic background audio engine coordinated between ambient tactical soundtracks and live external music streaming:
+ALFRED features an integrated cybernetic background audio engine coordinated between ambient tactical soundtracks and live external streaming:
 
-* **Dual-Source Audio Deck**: The bottom-left HUD audio deck operates in two synchronized modes:
-  1. **TRON Ambient Mode (Default) — The "Audio Core"**: Plays Daft Punk's *The Son of Flynn* (from the TRON: Legacy Score) in a continuous, smooth ambient loop whenever external music is inactive. Controlled via dedicated `audio_core` voice actions (*"pause audio core"*, *"resume audio core"*, *"audio core volume to 25%"*).
-  2. **Spotify Live Mode**: Automatically engages whenever Spotify playback starts, displaying the live track title and artist name (`set_spotify_playback(title, artist)`), driving active equalizer bars, and providing source selection.
-* **Sovereign Ambient Fallback**: When Spotify playback is paused, stopped, or the Spotify process is closed, the tactical audio engine automatically and seamlessly restores the default TRON Legacy score without user intervention.
-* **Featured Soundtrack — The Son of Flynn (From TRON: Legacy Score)**:
-  > *"It's one of my fav childhood movies, the graphical interface and intelligence development of the tech field reminded me of the movie I watched when I was a kid, so I decided to throw this one in while I work. You guys can swap it out, remove it entirely, or add more to it!"* — **Aditya Manoj**
-* **Intelligent Speech Ducking**: Continuously monitors assistant speech output. Ambient background audio plays at a crisp 10% volume normally and dynamically ducks to 5% whenever ALFRED speaks, returning smoothly upon turn completion.
-* **Audio-Reactive Waveform Controls**: Cybernetic graphic equalizer lines animate in real time in sync with active playback state and frequency energy.
-* **Popup Gain Slider HUD**: Floating real-time volume slider for instantaneous gain adjustments directly on click without opening deep settings menus.
-* **Telemetry HUD Overlay** (`ui_overlay.py`): Minimalist floating widget displaying real-time system metrics (CPU, RAM, temperature, network speed) with always-on-top transparency and drag-to-move functionality.
+### 🎛️ Dual-Source Audio Deck
+1. **🌌 TRON Ambient Mode (Default)** — "The Audio Core": Plays Daft Punk's *Son of Flynn* (TRON: Legacy Score) in continuous ambient loop whenever external music is inactive. Controlled via dedicated `audio_core` voice actions.
+2. **🎶 Spotify Live Mode**: Automatically engages when Spotify starts, displaying live track title and artist (`set_spotify_playback(title, artist)`), driving the equalizer.
 
----
+### 🔄 Sovereign Ambient Fallback
+When Spotify is paused, stopped, or closed, the tactical engine automatically restores the default TRON score without intervention.
 
-##  8. Spotify AI Agent: Dual-Tier Web API & Native Playback Architecture
+### 🎬 About The Score
+> *"It's one of my fav childhood movies, the graphical interface and intelligence development of the tech field reminded me of the movie I watched when I was a kid, so I decided to throw this one in while I work. You guys can swap it out, remove it entirely, or add more to it!"* — **Aditya Manoj**
 
-ALFRED includes an autonomous, full-featured **Spotify AI Agent** (`actions/spotify_control.py`) engineered for zero-latency playback control, catalog discovery, and seamless synchronization with the tactical HUD audio deck:
-
-###  Key Capabilities & Default Music Routing
-* **Default Music Target**: Asking ALFRED to *"play songs"*, *"play some music"*, or requesting specific tracks/artists/playlists automatically targets Spotify by default.
-* **Natural Voice Operations**:
-  * **Search & Play**: *"Play Jane by The Long Faces"*, *"Play Daft Punk Discovery album"*, *"Play synthwave playlist"*.
-  * **Playback Controls**: *"Pause the music"*, *"Resume playback"*, *"Next track"*, *"Previous song"*.
-  * **Volume & Queue**: *"Set Spotify volume to 65%"*, *"Queue Starboy by The Weeknd"*.
-  * **Modes & Telemetry**: *"Turn on shuffle"*, *"Set repeat to track"*, *"What song is playing?"*.
-  * **Process Cleanup & Ambient Restore**: *"Close Spotify"* cleanly terminates the desktop client processes and restores the default TRON Legacy score.
+### 🔊 Additional Features
+* **Intelligent Speech Ducking**: Ambient audio plays at 10% normally, ducks to 5% when ALFRED speaks.
+* **Audio-Reactive Waveform**: Cybernetic equalizer bars animate in real time with playback frequency energy.
+* **Popup Gain Slider HUD**: Floating volume slider for instant adjustments.
+* **Telemetry HUD Overlay** (`ui_overlay.py`): Floating widget displaying real-time CPU, RAM, temperature, network speed with drag-to-move.
 
 ---
 
-###  Dual-Tier Control Architecture
+## 🎶 9. Spotify AI Agent — Dual-Tier Architecture
 
-To ensure bulletproof reliability whether Spotify Premium Web API is configured or not, ALFRED utilizes an intelligent dual-tier execution model:
+ALFRED includes an autonomous full-featured **Spotify AI Agent** (`actions/spotify_control.py`) engineered for zero-latency playback control, catalog discovery, and HUD synchronization:
 
-| Control Tier | Execution Mechanism | Advantages & Scope |
+### 🎯 Default Music Routing
+Asking *"play songs"*, *"play some music"*, or requesting specific tracks/artists/playlists automatically targets Spotify by default.
+
+### 🏗️ Dual-Tier Control Architecture
+
+| Tier | Mechanism | Advantages |
 |---|---|---|
-| **Tier 1: Direct Spotify Web API** | Direct HTTPS REST calls (`/v1/me/player/...`) using authenticated OAuth 2.0 user tokens | Ultra-low latency, zero desktop disruption, background headless execution, device-targeted streaming (Desktop, Mobile, Echo, Connect speakers). |
-| **Tier 2: Hardware-Level OS Fallback** | Native Windows `WM_APPCOMMAND` messages & desktop URI protocol (`spotify:search:...`, `spotify:track:...`) | Hardware-level OS control requiring no internet API tokens; works with free Spotify accounts and local desktop apps. |
+| **1️⃣ Direct Spotify Web API** | HTTPS REST calls (`/v1/me/player/...`) with OAuth 2.0 tokens | Ultra-low latency, background execution, device-targeted streaming (Desktop, Mobile, Echo, Connect) |
+| **2️⃣ Hardware OS Fallback** | Native `WM_APPCOMMAND` + `spotify:` URIs | No API tokens required; works with free accounts |
 
-####  Elimination of the Toggle Inversion Bug
-Traditional media automation tools rely on Windows virtual key `VK_MEDIA_PLAY_PAUSE (0xB3)`, which acts as a blind toggle switch. Under rapid or duplicate voice prompts, calling pause while playback is stopping would invert the state and restart playback in an infinite loop. 
+### 🔥 Toggle Inversion Bug Elimination
+Traditional automation relies on `VK_MEDIA_PLAY_PAUSE (0xB3)`, a blind toggle. Under rapid or duplicate prompts, calling pause while playback is stopping inverts the state and restarts playback in an infinite loop.
 
-ALFRED eliminates this flaw entirely by dispatching explicit Windows application commands:
-* **Explicit Play**: `APPCOMMAND_MEDIA_PLAY = 46`
-* **Explicit Pause**: `APPCOMMAND_MEDIA_PAUSE = 47`
-* **Explicit Stop**: `APPCOMMAND_MEDIA_STOP = 13`
-* **Track Navigation**: `APPCOMMAND_MEDIA_NEXTTRACK = 11`, `APPCOMMAND_MEDIA_PREVIOUSTRACK = 12`
+**ALFRED dispatches explicit application commands:**
+* **Play**: `APPCOMMAND_MEDIA_PLAY = 46`
+* **Pause**: `APPCOMMAND_MEDIA_PAUSE = 47`
+* **Stop**: `APPCOMMAND_MEDIA_STOP = 13`
+* **Next**: `APPCOMMAND_MEDIA_NEXTTRACK = 11`
+* **Previous**: `APPCOMMAND_MEDIA_PREVIOUSTRACK = 12`
 
----
+### 🚀 High-Performance Client
+1. **Lazy Singleton Init**: `SpotifyClient` initialized on first demand.
+2. **HTTP Connection Pooling**: `requests.Session` with Keep-Alive and `Retry` backoff (`total=3, backoff_factor=0.3`) — **65% faster round-trips**.
+3. **Multi-Level TTL Caching**: OAuth token (1 hr), device registry (5 min), playback state.
+4. **Tool Debouncing (`_CALL_DEBOUNCE_SEC = 1.5s`)**: Deduplicates identical calls within a rolling window.
+5. **Acoustic Feedback Elimination**: Action results return as text to LLM context, not synchronous speech.
 
-###  High-Performance Client & Anti-Feedback Architecture
+### 🔑 OAuth 2.0 Setup
 
-1. **Lazy Singleton Initialization**: `SpotifyClient` is initialized on first demand, ensuring zero CPU overhead or memory footprint during standard assistant operation.
-2. **HTTP Connection Pooling**: Employs `requests.Session` with persistent HTTP Keep-Alive connections and urllib3 `Retry` backoff adapters (`total=3, backoff_factor=0.3`), slashing REST round-trip times by up to **65%**.
-3. **Multi-Level TTL Caching**:
-   * **OAuth Token Cache**: 1-hour validity tracking with automatic silent token refresh via `spotify_refresh_token`.
-   * **Device Registry Cache**: 5-minute TTL reducing redundant `/v1/me/player/devices` queries.
-   * **Playback State Cache**: Cached playback snapshots prevent rate-limiting when polling active track state.
-4. **Tool Debouncing & Anti-Loop Safeguards (`_CALL_DEBOUNCE_SEC = 1.5s`)**: Voice streaming models frequently yield multi-segment speech transcripts during recognition. ALFRED's Spotify engine deduplicates and debounces identical tool calls within a 1.5-second rolling window, preventing runaway process spawning.
-5. **Acoustic Feedback Elimination**: Action executions return structured text confirmations directly to the LLM context rather than triggering synchronous audio speech within the action thread. This eliminates acoustic microphone feedback loops where the assistant might hear its own voice and re-trigger playback commands.
+**Step 1**: Create app at [Spotify Developer Dashboard](https://developer.spotify.com/dashboard).
+* Redirect URI: `http://127.0.0.1:8888/callback`
+* APIs: **Web API** and **Web Playback SDK**
 
----
-
-###  Spotify API & OAuth 2.0 Setup Guide
-
-Spotify requires **User Authorization (OAuth 2.0 with PKCE / Authorization Code)** to control active playback via `/v1/me/player`. The standard Client Credentials flow (`client_id` + `client_secret`) is restricted to catalog search only.
-
-Follow these simple steps to activate direct Web API playback:
-
-#### Step 1: Create a Spotify Developer Application
-1. Visit the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard) and log in with your Spotify account.
-2. Click **Create app**:
-   * **App name**: `ALFRED MK-VI`
-   * **App description**: `ALFRED Autonomous AI Desktop Assistant`
-   * **Redirect URI**: Add `http://127.0.0.1:8888/callback`
-   * **APIs used**: Check **Web API** and **Web Playback SDK**
-3. Save the application and navigate to **Settings** to retrieve your **Client ID** and **Client Secret**.
-
-#### Step 2: Add Credentials to `config/api_keys.json`
-Add your Client ID and Client Secret to `config/api_keys.json`:
+**Step 2**: Add to `config/api_keys.json`:
 ```json
 {
     "spotify_client_id": "YOUR_SPOTIFY_CLIENT_ID",
@@ -503,264 +493,240 @@ Add your Client ID and Client Secret to `config/api_keys.json`:
 }
 ```
 
-#### Step 3: Run the 1-Click Interactive OAuth Authorizer
-Run the built-in standalone OAuth authorization script from your terminal:
+**Step 3**: Run the 1-click authorizer:
 ```powershell
 python actions/spotify_control.py
 ```
-
-* **What happens automatically**:
-  1. ALFRED launches a lightweight local HTTP callback server on port `8888`.
-  2. Opens your default web browser to the secure Spotify authorization page requesting required scopes (`user-modify-playback-state`, `user-read-playback-state`, `user-read-currently-playing`, `streaming`, `app-remote-control`).
-  3. Upon clicking **Agree**, Spotify redirects to `http://127.0.0.1:8888/callback`.
-  4. ALFRED captures the authorization code, exchanges it for a permanent `spotify_refresh_token` and `spotify_access_token`, and automatically writes them directly into `config/api_keys.json`.
-  5. Direct Web API playback control is now permanently unlocked!
+ALFRED launches a local callback server, opens Spotify authorization, captures the code, exchanges for `refresh_token` and `access_token`, and writes them into `api_keys.json` automatically.
 
 ---
 
-##  9. Quantum Mobile Remote & iPhone 16 Dashboard
+## 📱 10. Quantum Mobile Remote & iPhone 16 Dashboard
 
 <p align="center">
   <img src="Screenies/Remote_Uplink.png" alt="Quantum Mobile Remote Uplink & Pairing Modal" width="75%">
 </p>
 
-* **Encrypted Web Remote (AES-256-CBC)**: Scan the on-screen QR code from the desktop terminal or browse locally over WiFi. Session keys and traffic are encrypted locally with zero external server dependencies.
-* **iPhone 16 Viewport Architecture**: High-density responsive layout tailored for mobile displays with collapsible telemetry cards and zero button overflow.
-* **Dual-Destination Tactical Screenshots**: Asking ALFRED to capture the screen automatically dispatches high-resolution PNG captures to **both**:
+* **🔐 Encrypted Web Remote (AES-256-CBC)**: Scan the on-screen QR from the desktop or browse locally over WiFi. Session keys encrypted locally with zero external server dependencies.
+* **📱 iPhone 16 Viewport Architecture**: High-density responsive layout with collapsible telemetry cards and zero button overflow.
+* **📸 Dual-Destination Screenshots**: Automatically dispatches high-res PNG captures to:
   1. **Desktop**: `~/Desktop/alfred_screenshot_<timestamp>.png`
-  2. **Phone Feed**: Real-time transmission to the mobile dashboard with an **inline thumbnail preview** and a single-tap **View / Save Image** download link.
-* **Emoji-Free ANSI Red Telemetry**: Operational status stream rendered in clean, high-contrast, machine-readable ANSI Red brackets:
-  `[phone]`, `[control]`, `[screen]`, `[camera]`, `[out]`, `[warn]`, `[error]`, `[mic]`, `[speaker]`, `[listen]`, `[link]`, `[online]`, `[halt]`, `[brief]`, `[monitor]`, `[proactive]`.
+  2. **Phone Feed**: Real-time transmission with **inline thumbnail preview** and single-tap **View / Save Image** link.
+* **🎨 ANSI Red Telemetry**: Clean high-contrast machine-readable brackets: `[phone]`, `[control]`, `[screen]`, `[camera]`, `[out]`, `[warn]`, `[error]`, `[mic]`, `[speaker]`, `[listen]`, `[link]`, `[online]`, `[halt]`, `[brief]`, `[monitor]`, `[proactive]`.
 
 ---
 
-##  10. Full Desktop Control & Operating System Automation
+## 🖥️ 11. Full Desktop Control & OS Automation
 
-* **Deep OS Automation**: Keystrokes, mouse positioning, clicks, drags, window focus management, clipboard read/write, and AI-driven element location (`screen_find`).
-* **OS-Native Task Scheduling**: Reminders and recurring tasks scheduled via Windows Task Scheduler (`schtasks`), macOS `launchd`, or Linux `systemd`/`at`.
-* **Enterprise Windows Autostart**: Robust registry management querying and maintaining `ALFRED_AI` with backward-compatible legacy key cleanup.
-* **Persistent Browser Profile Bridges**: Multi-tier profile automation (`~/.alfred_profiles` with legacy fallback) preventing session and authentication dropouts during web automation.
+* **⌨️ Deep OS Automation**: Keystrokes, mouse positioning, clicks, drags, window focus, clipboard R/W, AI-driven element location (`screen_find`).
+* **⏰ OS-Native Scheduling**: Reminders via Windows Task Scheduler (`schtasks`), macOS `launchd`, or Linux `systemd`/`at`.
+* **🚀 Enterprise Windows Autostart**: Robust registry management for `ALFRED_AI` with backward-compatible legacy cleanup.
+* **🌐 Persistent Browser Profiles**: Multi-tier profile automation (`~/.alfred_profiles`) preventing session dropouts.
 
 ---
 
-##  11. High-Performance Memory & Conversational Briefing Customizer
+## 🧠 12. Memory & Briefing Customizer
 
 <p align="center">
   <img src="Screenies/Daily_breifing.png" alt="ALFRED Morning Briefing Card" width="75%">
 </p>
 
-* **O(N log N) Pruning Engine**: Memory trimming optimized from $O(N^2)$ to $O(N \log N)$ using single-pass size accumulators and conservative lower-bound estimation. 50,000 records trimmed in **0.33 seconds** without CPU spikes.
-* **Tiered Memory Hierarchy (`memory/long_term.json`)**: Core identity facts stay in context; extended history is recalled on demand via sub-millisecond local keyword search (`recall_memory`).
-* **Conversational Briefing Directive Customizer (`update_daily_briefing.py`)**: Saying *"update my daily briefing"* opens an interactive alignment protocol where ALFRED captures specific additions, topics, news sources, or location shifts, permanently committing them to memory.
+* **⚡ O(N log N) Pruning Engine**: Memory trimming optimized from O(N²) → O(N log N) using single-pass size accumulators. **50,000 records trimmed in 0.33 seconds**.
+* **📚 Tiered Memory Hierarchy** (`memory/long_term.json`): Core identity facts stay in context; extended history recalled on demand via sub-millisecond local keyword search.
+* **📰 Conversational Briefing Customizer** (`update_daily_briefing.py`): Saying *"update my daily briefing"* opens an interactive alignment protocol capturing topics, sources, or location shifts to permanent memory.
 
 ---
 
-##  12. Real-Time Insignia & Chassis Hot-Swapper
+## 🎨 13. Insignia & Chassis Hot-Swapper
 
 <p align="center">
   <img src="Screenies/Reconfigure_settings.png" alt="Tactical Reconfigure Settings Panel" width="80%">
 </p>
 
-#### 🎨 Tactical Chassis Themes Showcase
+### 🖼️ Tactical Chassis Themes Showcase
+
 | Wayne Classic (Default) | Bane Protocol Chassis | Batman Beyond Chassis |
 |:---:|:---:|:---:|
-| <img src="Screenies/Default_theme.png" width="300" alt="Wayne Classic Theme"> | <img src="Screenies/Bane_theme.png" width="300" alt="Bane Theme"> | <img src="Screenies/Batman_beyond_Theme.png" width="300" alt="Batman Beyond Theme"> |
+| <img src="Screenies/Default_theme.png" width="300" alt="Wayne Classic"> | <img src="Screenies/Bane_theme.png" width="300" alt="Bane"> | <img src="Screenies/Batman_beyond_Theme.png" width="300" alt="Batman Beyond"> |
 
-* **Multi-Insignia Catalog**: Scans and registers brand assets from `Icons/` (Batman Beyond, Arkham Asylum, Classic Bat, White Bat, Tactical Stealth).
-* **Live Runtime Reconfiguration (`update_app_icon.py`)**: Hot-swaps the active application window icon, Windows taskbar insignia, and system tray in real time upon voice request (*"update the app icon to Batman Beyond"*) or via the Customise Assistant drawer.
-* **Automatic Shortcut Synchronization**: Dynamically generates and updates `A.L.F.R.E.D.lnk` on the desktop without interrupting the running session.
+* **🎭 Multi-Insignia Catalog**: Scans and registers assets from `Icons/` (Batman Beyond, Arkham Asylum, Classic Bat, White Bat, Tactical Stealth).
+* **⚡ Live Runtime Reconfiguration** (`update_app_icon.py`): Hot-swaps window icon, Windows taskbar, and system tray via voice (*"update the app icon to Batman Beyond"*).
+* **🔗 Automatic Shortcut Sync**: Dynamically updates `A.L.F.R.E.D.lnk` on Desktop without interrupting the session.
 
 ---
 
-##  13. Protocol Engine & Multi-Step Macro Playbooks (`config/protocols.yaml`)
+## ⚡ 14. Protocol Engine & Macro Playbooks
 
-ALFRED features an autonomous **Protocol Engine** (`actions/protocol_engine.py`) for executing complex, sequential, compound system workflows via simple custom voice triggers:
+ALFRED features an autonomous **Protocol Engine** (`actions/protocol_engine.py`) for executing complex sequential compound workflows via custom voice triggers:
 
-* **Voice Trigger Activation**: Activate entire multi-app, multi-action workflows using custom trigger words collected during workflow setup.
-  * *Example: Saying **"FCC CLAUDE"** immediately opens PowerShell as Administrator, types and launches `fcc-server`, waits for initialization, opens a secondary terminal window, and executes `fcc-claude`.*
-* **Interactive Workflow Creation ("LETS CREATE A WORKFLOW")**:
-  * Users can state *"Let's create a workflow"* to formulate compound routines interactively.
-  * Employs ALFRED's cryptographic **Single-Click Confirmation Gate** (`core/confirm.py`) to display an on-screen HUD banner before committing new playbooks to `config/protocols.yaml`.
-* **Dynamic Variable Interpolation**: Steps support runtime substitution for `{timestamp}`, `{date}`, `{time}`, `{user}`, `{workspace}`, and custom voice arguments.
-* **Execution Delays & Pacing**: Fine-grained per-step timing control via `sleep_ms` (e.g. allowing server processes to bind ports before launching client terminals).
-* **Strict Defensive Path Guarding**: Every step argument is validated through `core.path_guard` prior to dispatch. If any step attempts to access unauthorized paths or fails execution, the engine **immediately aborts** all remaining steps and outputs:
+* **🎯 Voice Trigger Activation**: Activate multi-app workflows via custom trigger words.
+  * *Saying **"FCC CLAUDE"** immediately opens PowerShell as Administrator, launches `fcc-server`, waits for init, opens a second terminal, and executes `fcc-claude`.*
+* **🛠️ Interactive Workflow Creation**: *"Let's create a workflow"* enters formulation mode with cryptographic confirmation gate before writing to `config/protocols.yaml`.
+* **🔧 Dynamic Variable Interpolation**: `{timestamp}`, `{date}`, `{time}`, `{user}`, `{workspace}`, custom voice args.
+* **⏱️ Execution Pacing**: Per-step `sleep_ms` control (e.g., letting servers bind ports before client launches).
+* **🛡️ Path Guard Validation**: Every step argument validated through `core.path_guard`. Violations abort remaining steps:
   ```text
   [error] Protocol <Name> halted at Step <X>: <reason>
   ```
-* **Red-Tag Operational Telemetry**: Emits high-visibility step telemetry during execution:
-  ```text
-  [control] Executing Protocol <Name> Step <X>/<Y>: <Tool_Name>
-  ```
+* **📊 Red-Tag Telemetry**: `[control] Executing Protocol <Name> Step <X>/<Y>: <Tool_Name>`
 
 ---
 
-##  14. Local Hybrid Visual Grounding (RapidOCR + ONNX + Gemini Fallback)
+## 👁️ 15. Local Hybrid Visual Grounding
 
-Directly streaming full screenshots to cloud APIs for coordinate lookup introduces network latency and high token consumption. ALFRED resolves this via a multi-tiered local hybrid element grounding pipeline (`actions/screen_find.py`):
+Streaming full screenshots to cloud APIs for coordinate lookup wastes tokens and latency. ALFRED resolves this via multi-tiered local grounding (`actions/screen_find.py`):
 
-1. **Local RapidOCR Detection (<150ms)**: Scans screen captures locally using `rapidocr_onnxruntime`. Uses intelligent toolbar strip partitioning and early-termination recognition to identify target buttons and text labels in **~75–95ms** without network calls.
-2. **Quantized ONNX Vision Detector**: If the query is an icon or non-text glyph (e.g., search icon, close button), ALFRED runs a locally cached, quantized ONNX model (`omniparser_v2_quant.onnx` / `florence2_quant.onnx`) with zero cold-start latency.
-3. **Automatic Delegation Threshold**:
-   * **Confidence $\ge 0.80$**: Returns normalized `(x, y)` coordinates to `computer_control.py` immediately without calling external APIs.
-   * **Confidence $< 0.80$**: Automatically falls back to Gemini visual grounding and emits red-tag telemetry:
+1. **🚀 Local RapidOCR Detection (<150 ms)**: Scans captures locally via `rapidocr_onnxruntime` with toolbar strip partitioning. Identifies buttons and labels in **~75–95 ms**.
+2. **🧠 Quantized ONNX Vision Detector**: For icons/glyphs, runs cached quantized ONNX (`omniparser_v2_quant.onnx` / `florence2_quant.onnx`) with zero cold-start.
+3. **🎯 Automatic Delegation Threshold**:
+   * **Confidence ≥ 0.80**: Returns normalized `(x, y)` immediately.
+   * **Confidence < 0.80**: Falls back to Gemini with telemetry:
      ```text
      [screen] Local grounding confidence low (<score>) — delegating to Gemini
      ```
 
 ---
 
-##  15. Process-Level Audio Ducking & Background Concurrency
+## 🔊 16. Audio Ducking & Background Concurrency
 
-* **Process-Level Media Ducking (`core/audio_ducker.py`)**: Interacts directly with OS audio session managers (`pycaw` on Windows, `pulsectl` on Linux) to automatically reduce background media processes (Spotify, Chrome, YouTube, VLC, Edge) by **70%** (factor `0.3`) whenever ALFRED speaks, restoring exact pre-duck volumes when speech completes or is interrupted (`[halt]`).
-* **Non-Blocking Background Worker Pool (`main.py`)**: Asynchronous worker queue (`background_task_queue`) executing long-running background tasks (web scraping, video processing, graph indexing) concurrently without blocking primary voice conversation turns, streaming live telemetry updates (`[control] [background XX%]`) to the HUD.
-* **Bounded Concurrency Limiter (`core/concurrency.py`)**: Asynchronous worker pools with controlled concurrency limits (default: 5 concurrent workers) preventing socket exhaustion, thread starvation, and rate limits.
-* **Centralized TTL & LRU Cache (`core/cache.py`)**: Thread-safe memory cache with deterministic argument hashing, prefix invalidation on mutations, and graceful fail-open resilience.
+* **🎚️ Process-Level Ducking** (`core/audio_ducker.py`): Directly interfaces with OS audio session managers (`pycaw` on Windows, `pulsectl` on Linux). Automatically reduces Spotify, Chrome, YouTube, VLC, Edge by **70%** (factor `0.3`) when ALFRED speaks, restoring exact pre-duck volumes when speech ends or is interrupted.
+* **⚙️ Non-Blocking Worker Pool** (`main.py`): Asynchronous `background_task_queue` executing long tasks (web scraping, video processing) concurrently without blocking voice turns. Live `[control] [background XX%]` telemetry.
+* **🚦 Bounded Concurrency** (`core/concurrency.py`): Worker pools with controlled limits (default: 5) preventing socket exhaustion.
+* **💾 Centralized Cache** (`core/cache.py`): Thread-safe TTL/LRU with deterministic hashing, prefix invalidation, graceful fail-open resilience.
 
 ---
 
-##  16. Active Process Watchdog, Anomaly Detection & Auto-Throttling (`actions/system_monitor.py`)
+## 🚨 17. Process Watchdog & Anomaly Detection
 
-ALFRED incorporates an OS security and performance watchdog daemon that actively monitors running process trees, flags resource anomalies, inspects outbound network sockets, and executes automated resource throttling:
+ALFRED incorporates an OS security & performance watchdog daemon actively monitoring processes, flagging anomalies, inspecting sockets, and auto-throttling (`actions/system_monitor.py`):
 
-* **Active Process Tree Monitoring (`watch_process_tree`)**: Continuously monitors the host process hierarchy via `psutil`. Automatically identifies single non-system processes sustaining **>90% CPU utilization for >10 consecutive seconds**.
-* **High-Visibility Alert Telemetry**: Real-time anomaly detection emits standard red-tag operational telemetry to the HUD and system logs:
+* **👀 Active Process Tree Monitoring** (`watch_process_tree`): Continuously monitors via `psutil`. Identifies non-system processes sustaining **>90% CPU for >10 consecutive seconds**.
+* **🚨 Alert Telemetry**:
   ```text
   [monitor] Resource anomaly: Process <PID:Name> utilizing <X>% CPU
   ```
-* **Suspicious Socket Inspection (`track_suspicious_sockets`)**: Tracks active outbound TCP/UDP network connections querying non-standard remote ports. Filters out RFC private subnets, loopback addresses, and standard service ports (HTTP, HTTPS, SSH, DNS, NTP, etc.), alerting on unexpected remote network egress:
+* **🌐 Suspicious Socket Inspection** (`track_suspicious_sockets`): Tracks outbound TCP/UDP on non-standard ports. Filters RFC private subnets and standard services. Alerts on unexpected egress:
   ```text
   [monitor] Suspicious socket: Process <PID:Name> -> <Remote_IP>:<Port>
   ```
-* **Automated Resource Throttling & Suspension (`throttle_process`)**:
-  * Automatically lowers target process priority class to `psutil.BELOW_NORMAL_PRIORITY_CLASS` (or nice value 10 on Unix) to prevent system freezing and prioritize interactive tasks.
-  * Supports pausing runaway workloads via `process.suspend()`, and restoring normal execution using `resume_process()`.
-* **System & IDE Shielding Constraints**:
-  * **Core System Binaries Protected**: `csrss.exe`, `explorer.exe`, `lsass.exe`, `services.exe`, `systemd`, `launchd`, and essential OS services are strictly exempted from throttling.
-  * **Developer Compilers Protected**: `code.exe`, `cl.exe`, `gcc.exe`, `g++.exe`, `rustc.exe`, `python.exe`, `py.exe` are never throttled during intensive builds or test suites.
-  * **ALFRED Hierarchy Protected**: ALFRED's own process (`os.getpid()`) and all child/worker sub-processes are permanently shielded.
-* **Confirmation-Gated Termination Gate (`terminate_process`)**:
-  * **Strict Safety Mandate**: To prevent accidental data loss or desktop disruption, processes are **never terminated automatically**.
-  * Any termination request is intercepted and dispatched through ALFRED's cryptographic **Single-Click UI Confirmation Gate** (`core/confirm.py`) with an on-screen HUD prompt requiring explicit approval.
+* **⚙️ Automated Throttling** (`throttle_process`):
+  * Lowers priority to `psutil.BELOW_NORMAL_PRIORITY_CLASS` (or nice 10 on Unix).
+  * Supports `process.suspend()` and `resume_process()`.
+* **🛡️ Protected Shields**:
+  * **Core System**: `csrss.exe`, `explorer.exe`, `lsass.exe`, `services.exe`, `systemd`, `launchd`.
+  * **Developer Tools**: `code.exe`, `cl.exe`, `gcc.exe`, `g++.exe`, `rustc.exe`, `python.exe`, `py.exe`.
+  * **ALFRED Hierarchy**: Own PID and all child workers permanently shielded.
+* **🔴 Confirmation-Gated Termination** (`terminate_process`): Processes are **never terminated automatically**. All requests dispatched through cryptographic UI confirmation gate (`core/confirm.py`).
 
 ---
 
-##  17. System Architecture & File Structure
+## 🏗️ 18. System Architecture & File Structure
 
 ```
 ALFRED-MK-VI/
-├── main.py                     # Main execution loop, Live WebSocket/Local LLM router, audio streams, tool dispatcher
-├── ui.py                       # PyQt6 HUD interface, audio visualizer, drawer settings
-├── ui_overlay.py               # Minimalist floating HUD widget for telemetry display
-├── setup.py                    # OS-aware package and dependency installer
+├── main.py                     # Main loop, Live WebSocket / Local LLM router, audio, tool dispatcher
+├── ui.py                       # PyQt6 HUD, audio visualizer, drawer settings
+├── ui_overlay.py               # Minimalist floating HUD widget
+├── setup.py                    # OS-aware dependency installer
 ├── core/
-│   ├── sentry/                       # Sentry Mode v2 Subsystem
-│   │   ├── mode_manager.py           # Centralized singleton coordinating MONITOR and FOCUS
-│   │   ├── answer_window.py          # 8-second conversational timeout window for voice follow-ups
-│   │   └── focus/                    # Proactive distraction defense engine
-│   │       ├── engine.py             # 1 Hz session loop with settle rule & deferred lock
-│   │       ├── reader.py             # Cross-platform window reader & SHA-256 host hashing
-│   │       ├── labels.py             # Transient distraction label resolution
-│   │       ├── lines.py              # Escalation tiers & canned speech pools
-│   │       ├── ledger.py             # Atomic focus_ledger.json storage & report card generator
-│   │       ├── card.py               # FloatingFocusCard draggable 170x48 desktop countdown widget
-│   │       ├── state.py              # Whitelisted FocusState dataclass (booleans & numbers only)
-│   │       └── platform/             # OS implementations (win.py, mac.py, linux.py)
-│   ├── prompt.txt              # Master persona directives, execution rules & Heavenly Restriction
-│   ├── llm_client.py           # Dual-backend local LLM connector (Ollama / OpenAI-compatible / LM Studio)
-│   ├── action_loader.py        # Dynamic action discovery, parameter validation & Heavenly Restriction guard
-│   ├── plugin_loader.py        # Drop-in plugin discovery, sandboxing & isolation
-│   ├── audio_ducker.py         # Process-level audio ducking for Spotify, Chrome, VLC (pycaw/pulsectl)
-│   ├── concurrency.py          # Bounded concurrent worker pool & rate-limiting semaphore
-│   ├── cache.py                # Centralized thread-safe TTL/LRU cache with prefix invalidation
-│   ├── heal_error.py           # Autonomous runtime error diagnosis and recovery
-│   ├── viseme.py               # Unicode articulatory transcription to mouth shapes
-│   ├── echo.py                 # Device-calibrated acoustic echo cancellation guard
-│   ├── hotkey.py               # Global / local Push-to-Talk chord interceptor
-│   ├── undo.py                 # Stack-based reversible action journal
-│   ├── confirm.py              # Cryptographic UI confirmation gate for destructive actions
-│   ├── audio_devices.py        # Measured host API audio device enumeration (MME / DirectSound / WASAPI)
-│   ├── path_guard.py           # Path validation, C: drive quarantine, and Heavenly Restriction enforcement
-│   └── wake_word.py            # Local offline openwakeword detection thread
-├── actions/                    # Self-describing operational tools (TOOL dictionary schema)
-│   ├── audio_core.py           # Tactical Audio Core: TRON ambient score & local soundtrack engine
-│   ├── spotify_control.py      # Spotify AI Agent: Web API + native OS fallback + debounce & loop guards
-│   ├── protocol_engine.py      # Macro playbook engine executing multi-step YAML workflows
-│   ├── screen_find.py          # Local hybrid RapidOCR + ONNX element grounding (<150ms)
-│   ├── computer_control.py     # OS automation, keyboard/mouse input, dual screenshots
-│   ├── screen_processor.py     # Multi-monitor screen & camera capture engine
-│   ├── file_controller.py      # File system operations with path restriction checks
-│   ├── file_processor.py       # PDF/DOCX/TXT analysis, parsing, and summarization
-│   ├── open_app.py             # OS-specific application and executable launcher
-│   ├── computer_settings.py    # Volume, brightness, WiFi, power state management
-│   ├── web_search.py           # Multi-mode parallel search (news, research, comparison)
-│   ├── intel_notes.py          # Tactical mission note logger and scratchpad
-│   ├── proactive.py            # Context-aware proactive check-in engine
-│   ├── background_monitor.py   # Daily background topic watcher and headline alerts
-│   ├── reminder.py             # OS-native task scheduler notifications
-│   ├── system_monitor.py       # Process tree watchdog, anomaly alerts, throttling & socket inspection
-│   ├── dev_agent.py            # Autonomous code developer agent with O(1) file matching
-│   ├── code_helper.py          # Code analysis, debugging, and generation
-│   ├── send_message.py         # WhatsApp and Telegram message dispatcher
-│   ├── youtube_video.py        # YouTube search and playback control
-│   ├── update_app_icon.py      # Real-time window, taskbar & chassis insignia switcher
-│   ├── update_daily_briefing.py# Conversational briefing preference and directive customizer
-│   ├── game_updater.py         # Steam and Epic Games library updater
-│   ├── flight_finder.py        # Commercial flight search and travel assistant
-│   ├── gmail_manager.py        # Local Gmail integration and inbox digest
-│   ├── weather_report.py       # Localized live meteorological reports
-│   ├── clipboard_history.py    # Session ring-buffer of copied items & recall
-│   ├── network_tools.py        # Real-time speedtest, IP query, ping & active sockets
-│   ├── news_brief.py           # On-demand RSS/DDG news digest with 15-min cache
-│   ├── process_manager.py      # CPU/memory hog detection and process termination
-│   ├── quick_translate.py      # Gemini-powered instant translation across languages
-│   └── window_manager.py       # Win32 voice-activated window snapping, tiling & focus
+│   ├── sentry/                       # Sentry Mode v2
+│   │   ├── mode_manager.py           # Singleton coordinating MONITOR + FOCUS
+│   │   ├── answer_window.py          # 8-second conversational timeout
+│   │   └── focus/
+│   │       ├── engine.py             # 1 Hz session loop, settle + deferred lock
+│   │       ├── reader.py             # Cross-platform window reader, SHA-256 host hashing
+│   │       ├── labels.py             # Transient distraction labels
+│   │       ├── lines.py              # Escalation tiers, canned speech pools
+│   │       ├── ledger.py             # Atomic focus_ledger.json + report card
+│   │       ├── card.py               # FloatingFocusCard (170×48 desktop widget)
+│   │       ├── state.py              # Whitelisted FocusState (numbers/booleans only)
+│   │       └── platform/             # win.py, mac.py, linux.py
+│   ├── prompt.txt              # Master persona directives
+│   ├── llm_client.py           # Dual-backend LLM connector
+│   ├── action_loader.py        # Tool discovery + parameter validation
+│   ├── plugin_loader.py        # Plugin discovery & sandboxing
+│   ├── audio_ducker.py         # Process-level ducking
+│   ├── concurrency.py          # Bounded worker pool
+│   ├── cache.py                # Thread-safe TTL/LRU
+│   ├── heal_error.py           # Autonomous error recovery
+│   ├── viseme.py               # Unicode → mouth shapes
+│   ├── echo.py                 # Calibrated AEC guard
+│   ├── hotkey.py               # PTT chord interceptor
+│   ├── undo.py                 # Reversible action journal
+│   ├── confirm.py              # Cryptographic UI gate
+│   ├── audio_devices.py        # Host API enumeration
+│   ├── path_guard.py           # Path validation + Heavenly Restriction
+│   └── wake_word.py            # Offline openwakeword thread
+├── actions/                    # Self-describing operational tools
+│   ├── audio_core.py           # TRON ambient score
+│   ├── spotify_control.py      # Spotify AI Agent
+│   ├── protocol_engine.py      # Macro playbook engine
+│   ├── screen_find.py          # Local hybrid grounding
+│   ├── computer_control.py     # OS automation, keys, mouse, screenshots
+│   ├── screen_processor.py     # Multi-monitor + camera capture
+│   ├── file_controller.py      # Guarded file ops
+│   ├── file_processor.py       # PDF/DOCX/TXT analysis
+│   ├── open_app.py             # OS-specific launcher
+│   ├── computer_settings.py    # Volume, brightness, WiFi, power
+│   ├── web_search.py           # Parallel multi-mode search
+│   ├── intel_notes.py          # Mission notes
+│   ├── proactive.py            # Context-aware check-ins
+│   ├── background_monitor.py   # Daily topic watcher
+│   ├── reminder.py             # OS-native scheduler
+│   ├── system_monitor.py       # Watchdog + throttling
+│   ├── dev_agent.py            # Autonomous code developer
+│   ├── code_helper.py          # Code analysis + debug
+│   ├── send_message.py         # WhatsApp + Telegram
+│   ├── youtube_video.py        # YouTube search
+│   ├── update_app_icon.py      # Chassis insignia switcher
+│   ├── update_daily_briefing.py# Briefing customizer
+│   ├── game_updater.py         # Steam + Epic updater
+│   ├── flight_finder.py        # Flight search
+│   ├── gmail_manager.py        # Gmail digest
+│   ├── weather_report.py       # Meteorological reports
+│   ├── clipboard_history.py    # Session ring-buffer
+│   ├── network_tools.py        # Speedtest, IP, ping
+│   ├── news_brief.py           # RSS/DDG digest, 15-min cache
+│   ├── process_manager.py      # CPU hog detection
+│   ├── quick_translate.py      # Gemini instant translation
+│   └── window_manager.py       # Win32 window snapping
 ├── config/
-│   ├── protocols.yaml          # Macro playbook workflows, trigger words, and compound step definitions
-│   ├── api_keys.json           # User credentials, model settings, identity & voice preferences
-│   └── certs/                  # Local self-signed SSL/TLS certificates for HTTPS/WSS
-├── models/                     # Quantized local ONNX vision & element detection models
-│   └── omniparser_v2_quant.onnx# Quantized UI element detector for local grounding
-├── plugins/                    # User drop-in plugin folder
-│   ├── _template.py            # Reference plugin template
-│   ├── calendar_sync.py        # Local agenda, appointments, and meeting scheduling
-│   └── focus_protocol.py       # Deep work interval and Pomodoro focus sessions
-├── dashboard/                  # Quantum Mobile Remote Server
-│   ├── server.py               # FastAPI + Uvicorn + WebSocket encrypted daemon
+│   ├── protocols.yaml          # Compound playbooks
+│   ├── api_keys.json           # Credentials + settings
+│   └── certs/                  # Self-signed SSL
+├── models/                     # Quantized ONNX vision models
+│   └── omniparser_v2_quant.onnx
+├── plugins/
+│   ├── _template.py
+│   ├── calendar_sync.py
+│   └── focus_protocol.py
+├── dashboard/                  # Quantum Mobile Remote
+│   ├── server.py               # FastAPI + Uvicorn + WebSocket
 │   ├── static/
-│   │   ├── app.html            # iPhone 16 responsive tactical web app & telemetry console
-│   │   └── login.html          # Quantum access matrix login gateway
-│   └── uploads/                # Transferred files & captured screenshots
+│   │   ├── app.html            # iPhone 16 responsive app
+│   │   └── login.html          # Quantum access gateway
+│   └── uploads/
 ├── memory/
-│   ├── memory_manager.py       # High-performance O(N log N) memory persistence and indexing
-│   ├── config_manager.py       # Settings, voice, theme, and API key management
-│   ├── graph_manager.py        # Dynamic knowledge graph mutation and decay for Graphify
-│   └── long_term.json          # Local encrypted fact database
-├── tests/                      # Unit, integration & benchmark test suites
-│   ├── test_protocol_engine.py # Protocol engine & playbook execution tests
-│   ├── test_screen_find.py     # Local hybrid grounding & sub-150ms latency tests
-│   ├── test_system_monitor.py  # Process tree anomaly, throttling & socket inspection tests
-│   ├── test_audio_ducker.py    # Process-level audio ducking tests
-│   ├── test_background_worker.py# Background worker non-blocking concurrency tests
-│   ├── test_concurrency.py     # Bounded worker scaling tests
-│   ├── test_cache.py           # TTL & LRU caching tests
-│   ├── test_heal_error.py      # Auto-healing error recovery tests
-│   ├── test_daily_brief_flow.py# Concurrent daily brief flow tests
-│   ├── test_spotify_audio_core.py# Spotify & Audio Core playback integration tests
-│   └── benchmarks/             # 50,000-record execution benchmarks
-└── graphify-out/               # GraphRAG knowledge graph, community clusters, and analysis
+│   ├── memory_manager.py       # O(N log N) persistence
+│   ├── config_manager.py       # Settings management
+│   ├── graph_manager.py        # Knowledge graph mutation
+│   └── long_term.json          # Encrypted fact database
+├── tests/                      # Unit + integration + benchmarks
+│   └── benchmarks/
+└── graphify-out/               # GraphRAG knowledge graph
 ```
 
 ---
 
-##  18. Quick Start & Installation
+## 🚀 19. Quick Start & Installation
 
-### 1. Prerequisites
+### 📋 Prerequisites
 * **Operating System**: Windows 10/11, macOS, or Linux.
 * **Python**: `3.11`, `3.12`, or `3.13`.
-* **Hardware**: Standard microphone and speakers. *(No dedicated GPU required — runs on lightweight software rendering).*
-* **Intelligence Backend**: Either a free Gemini API key from [Google AI Studio](https://aistudio.google.com/) **OR** a local Ollama / LM Studio installation.
+* **Hardware**: Standard microphone and speakers. *No dedicated GPU required — runs on lightweight software rendering.*
+* **Intelligence Backend**: Free Gemini API key from [Google AI Studio](https://aistudio.google.com/) **OR** local Ollama / LM Studio.
 
-### 2. Setup & Execution
+### ⚙️ Setup & Execution
 
 ```powershell
 # Clone the repository
@@ -774,12 +740,13 @@ python setup.py
 python main.py
 ```
 
-*On the first launch, ALFRED automatically prompts you with the system initialisation overlay where you can set your Operator callsign, Assistant name, and choose between Gemini Live, Local Ollama, LM Studio, or OpenRouter API.*
+*On first launch, ALFRED prompts you with the System Initialisation overlay to set Operator callsign, Assistant name, and choose between Gemini Live, Local Ollama, LM Studio, or OpenRouter.*
 
 ---
 
-##  19. Configuration Reference (`config/api_keys.json`)
+## ⚙️ 20. Configuration Reference
 
+**`config/api_keys.json`:**
 ```json
 {
     "assistant_name": "ALFRED",
@@ -803,68 +770,53 @@ python main.py
 }
 ```
 
-### Hotkey Shortcuts
+### ⌨️ Hotkey Shortcuts
+
 | Shortcut | Action |
 |---|---|
-| `Ctrl+Space` (Hold) | Global Push-to-Talk (opens mic, releases on release) |
-| `F4` | Instant Microphone Mute / Unmute |
-| `F11` | Toggle Fullscreen / Windowed Tactical HUD |
-| `Escape` | Interrupt ALFRED mid-speech (drains queue, re-arms mic) |
+| `Ctrl+Space` (Hold) | Global Push-to-Talk |
+| `F4` | Instant Mic Mute / Unmute |
+| `F11` | Toggle Fullscreen HUD |
+| `Escape` | Interrupt speech mid-utterance, re-arm mic |
 
 ---
 
-##  20. Knowledge Graph (`graphify`)
+## 🕸️ 21. Knowledge Graph — Graphify
 
 <p align="center">
   <img src="Screenies/Graphify.png" alt="Graphify Visual Knowledge Graph" width="85%">
 </p>
 
-This codebase is indexed with a persistent **GraphRAG Knowledge Graph** located in `graphify-out/`:
-* **3,651 nodes** & **7,320 relationships** mapped across **208 semantic functional communities**.
-* Interactive navigable graph visualization: [`graphify-out/graph.html`](file:///d:/Projects/Alfred-Mark-V/graphify-out/graph.html).
-* Architectural breakdown: [`graphify-out/GRAPH_REPORT.md`](file:///d:/Projects/Alfred-Mark-V/graphify-out/GRAPH_REPORT.md).
-* **Dynamic Knowledge Graph Management**: Real-time graph mutation, entity/relationship addition, exponential decay, and 2-hop querying via `memory/graph_manager.py` for persistent knowledge evolution and context-aware reasoning.
+This codebase is indexed with a persistent **GraphRAG Knowledge Graph** in `graphify-out/`:
+* **📊 3,651 nodes** & **7,320 relationships** across **208 semantic communities**.
+* **🌐 Interactive Visualization**: [`graphify-out/graph.html`](file:///d:/Projects/Alfred-Mark-V/graphify-out/graph.html)
+* **📄 Architectural Report**: [`graphify-out/GRAPH_REPORT.md`](file:///d:/Projects/Alfred-Mark-V/graphify-out/GRAPH_REPORT.md)
+* **⚡ Dynamic Graph Management**: Real-time mutation, entity/relationship addition, exponential decay, 2-hop querying via `memory/graph_manager.py`.
 
----
+### 🎁 Mark VI New Actions (Auto-Discovered)
 
-##  21. Mark VI Enhancements
-
-* **Dual-Mode Sentry v2 (MONITOR + FOCUS)**: Autonomous background surveillance across builds, terminals, and downloads, coupled with proactive distraction defense locking onto applications or tabs, progressive excursion escalation, floating desktop countdown card, and privacy-preserving clean streak ledger.
-
-### Prompt Engine Overhaul (`core/prompt.txt`)
-- Stripped double-blank-line formatting bloat — **token cost reduced by ~50%** with zero content loss.
-- Eliminated triple-duplicate Heavenly Restriction — now stated once, authoritatively, in `[WHAT YOU CANNOT DO]`.
-- Extracted tool-routing rules from `[JUDGEMENT]` into a dedicated `[TOOL ROUTING]` section for model clarity.
-- Fixed run-on screen-verify instruction — now a clean standalone bullet in `[EXECUTION]`.
-- `[PROACTIVE_CHECK]` now permits `recall_memory` for context-aware proactive messages.
-- Added **error voice rule** — Alfred states failures in character with no stack traces or raw codes.
-- Removed self-contradicting speed directive.
-
-### New Actions (Auto-discovered — no registration required)
-
-| Action | What It Does |
+| Action | Purpose |
 |---|---|
-| `clipboard_history` | Session ring-buffer of last 20 copied items. "What did I copy earlier?" |
-| `window_manager` | Snap, tile, fullscreen, minimise windows by voice. Pure Win32, no extra deps. |
-| `quick_translate` | Translate any text to any language using Gemini (already authenticated). |
+| `clipboard_history` | Ring-buffer of last 20 copies. *"What did I copy earlier?"* |
+| `window_manager` | Snap, tile, fullscreen, minimize by voice. Pure Win32. |
+| `quick_translate` | Any language → any language via authenticated Gemini. |
 | `network_tools` | Speed test, public/local IP, ping, active connections. |
-| `process_manager` | Kill/find/list CPU hogs by name or PID. Uses `psutil` (already a dependency). |
-| `news_brief` | On-demand headlines with optional topic filter. 15-minute cache. |
+| `process_manager` | Kill / find / list CPU hogs by name or PID. |
+| `news_brief` | On-demand headlines with topic filter. 15-min cache. |
 
-### Network Resilience & UI Performance (`main.py`, `ui.py`, `actions/`)
-- Added Windows-specific socket error strings to the `is_net_err` reconnect classifier:
-  `wsarecv`, `wsasend`, `stream reading error`, `WinError`, `BrokenPipeError`, `ConnectionResetError`, `ConnectionAbortedError`.
-- Errors that previously fell through to the generic handler now correctly trigger exponential backoff and session resumption.
-- Replaced serial startup briefing and daily brief checks with concurrent worker execution (`ThreadPoolExecutor`).
-- Vector HUD rendering: cached static CRT grid layers and batched globe wireframe rendering (`drawLines`) for silky 60 FPS display without stalling audio output.
+### 🔧 Network Resilience & UI Performance
+* Windows-specific socket error strings added to reconnect classifier: `wsarecv`, `wsasend`, `stream reading error`, `WinError`, `BrokenPipeError`, `ConnectionResetError`, `ConnectionAbortedError`.
+* Serial startup replaced with concurrent execution (`ThreadPoolExecutor`).
+* Vector HUD: cached static CRT grid + batched globe wireframe (`drawLines`) for silky 60 FPS.
 
 ---
 
-##  22. Author & Licensing
+## 👤 22. Author & Licensing
 
-* **Lead Architect & Creator:** **ADITYA MANOJ**
-* **Project:** ALFRED-MK-VI (Wayne Protocol Edition)
-* **License:** [Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)](https://creativecommons.org/licenses/by-nc/4.0/)
+* **🎩 Lead Architect & Creator:** **ADITYA MANOJ**
+* **🦇 Project:** ALFRED-MK-VI (Wayne Protocol Edition)
+* **📜 License:** [Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)](https://creativecommons.org/licenses/by-nc/4.0/)
 
 ---
-*Built with precision for autonomy, performance, and complete digital sovereignty.*
+
+*⚡ Built with precision for autonomy, performance, and complete digital sovereignty — the most function-dense, optimisation-conscious open tactical assistant in the Wayne-protocol class.*

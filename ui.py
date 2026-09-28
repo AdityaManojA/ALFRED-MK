@@ -34,7 +34,7 @@ from PyQt6.QtWidgets import (
     QMenu,
     QApplication, QComboBox, QFileDialog, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit,
     QMainWindow, QPushButton, QScrollArea, QSizePolicy, QSlider, QSplitter,
-    QStackedWidget, QTextBrowser, QTextEdit, QVBoxLayout, QWidget, QProgressBar,
+    QStackedWidget, QTextBrowser, QTextEdit, QVBoxLayout, QWidget, QProgressBar, QToolTip,
 )
 
 # Qt6 enum compatibility alias: SemiBold -> DemiBold
@@ -793,6 +793,83 @@ def mono_font(size: int | float, weight: QFont.Weight = QFont.Weight.Normal, let
         spacing = letter_spacing / 50.0 if letter_spacing > 5.0 else letter_spacing
         f.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, spacing)
     return f
+
+
+HOVER_HELP_DELAY_MS: int = 600
+
+
+class TacticalHoverHelpManager(QObject):
+    """
+    Centralized, single-timer hover help manager for ALFRED settings and controls.
+    Avoids per-control timers, manages delayed tooltips on sustained hover and keyboard focus,
+    and cleanly dismisses help on leave, tab change, panel close, or rapid pointer sweeps.
+    """
+    _instance: TacticalHoverHelpManager | None = None
+
+    @classmethod
+    def instance(cls) -> TacticalHoverHelpManager:
+        if cls._instance is None:
+            cls._instance = TacticalHoverHelpManager()
+        return cls._instance
+
+    def __init__(self, parent: QObject | None = None):
+        super().__init__(parent)
+        self._timer = QTimer(self)
+        self._timer.setSingleShot(True)
+        self._timer.timeout.connect(self._on_timeout)
+        self._help_map: dict[QWidget, str] = {}
+        self._target_widget: QWidget | None = None
+
+    def register(self, widget: QWidget, text: str, label_widget: QWidget | None = None) -> None:
+        if not widget or not text:
+            return
+        clean_text = text.strip()
+        widget.setToolTip(clean_text)
+        widget.setAccessibleDescription(clean_text)
+        self._help_map[widget] = clean_text
+        widget.installEventFilter(self)
+
+        if label_widget is not None:
+            label_widget.setToolTip(clean_text)
+            self._help_map[label_widget] = clean_text
+            label_widget.installEventFilter(self)
+
+    def eventFilter(self, obj: QObject, event: QEvent) -> bool:
+        etype = event.type()
+        if etype in (QEvent.Type.Enter, QEvent.Type.FocusIn):
+            if isinstance(obj, QWidget) and obj in self._help_map:
+                if self._target_widget is not obj:
+                    self.dismiss()
+                self._target_widget = obj
+                self._timer.stop()
+                self._timer.start(HOVER_HELP_DELAY_MS)
+        elif etype in (QEvent.Type.Leave, QEvent.Type.FocusOut, QEvent.Type.Hide, QEvent.Type.MouseButtonPress):
+            if self._target_widget is obj or etype == QEvent.Type.MouseButtonPress:
+                self.dismiss()
+        return False
+
+    def _on_timeout(self) -> None:
+        if self._target_widget is None:
+            return
+        try:
+            if not self._target_widget.isVisible() or self._target_widget not in self._help_map:
+                self.dismiss()
+                return
+            text = self._help_map[self._target_widget]
+            pos = self._target_widget.mapToGlobal(QPoint(0, self._target_widget.height() + 4))
+            QToolTip.showText(pos, text, self._target_widget)
+        except Exception:
+            self.dismiss()
+
+    def dismiss(self) -> None:
+        self._timer.stop()
+        QToolTip.hideText()
+        self._target_widget = None
+
+
+def attach_hover_help(widget: QWidget, text: str, label_widget: QWidget | None = None) -> None:
+    """Convenience helper to attach descriptive long-hover help to a setting widget and optional label."""
+    TacticalHoverHelpManager.instance().register(widget, text, label_widget)
 
 
 _HUE_LINKED = (
@@ -5251,6 +5328,7 @@ class CustomizeOverlay(QWidget):
             }}
         """)
         close_btn.clicked.connect(self._cancel)
+        attach_hover_help(close_btn, "Discard changes and close the reconfiguration window.")
         hdr_row.addWidget(close_btn)
         outer_lay.addLayout(hdr_row)
 
@@ -5302,56 +5380,30 @@ class CustomizeOverlay(QWidget):
                f"border: 1px solid {C.BORDER_A}; border-radius: 2px; padding: 6px 12px; font-size: 13px; }}"
                f"QLineEdit:focus {{ border: 1px solid {C.PRI}; background: rgba(142, 155, 255, 0.08); }}")
 
-        # ── Persona Presets Row ──────────────────────────────────────────
-        lay.addWidget(_lbl("TACTICAL CRT THEME PRESETS", 8, bold=True, color=C.TEXT_DIM))
-        persona_row = QHBoxLayout(); persona_row.setSpacing(8)
-        presets = [
-            ("💜 DEFAULT BATCAVE", "Alfred", "Master Wayne", "#8e9bff", "Fenrir"),
-            ("💚 BANE MODE",       "Alfred", "Master Wayne", "#a8ff3e", "Puck"),
-            ("🔴 BATMAN BEYOND",   "Alfred", "Terry",        "#ff0037", "Fenrir"),
-        ]
-        for pill_label, p_name, p_user, p_color, p_voice in presets:
-            pb = QPushButton(pill_label)
-            pb.setFixedHeight(30)
-            pb.setFont(mono_font(8, QFont.Weight.Bold, letter_spacing=0.5))
-            pb.setCursor(Qt.CursorShape.PointingHandCursor)
-            pb.setStyleSheet(f"""
-                QPushButton {{
-                    background: {C.PANEL2};
-                    color: {C.TEXT_BRIGHT};
-                    border: 1px solid {C.BORDER_A};
-                    border-radius: 2px;
-                    padding: 0 10px;
-                }}
-                QPushButton:hover {{
-                    background: rgba(142, 155, 255, 0.22);
-                    color: #ffffff;
-                    border-color: {C.PRI};
-                }}
-            """)
-            pb.clicked.connect(lambda _, n=p_name, u=p_user, c=p_color, v=p_voice: self._apply_preset(n, u, c, v))
-            persona_row.addWidget(pb)
-        lay.addLayout(persona_row)
-
         # ── Codename & Designation ───────────────────────────────────────
-        lay.addWidget(_lbl("ASSISTANT CODENAME", 8, bold=True, color=C.TEXT_DIM))
+        lbl_codename = _lbl("ASSISTANT CODENAME", 8, bold=True, color=C.TEXT_DIM)
+        lay.addWidget(lbl_codename)
         self._name_input = QLineEdit(assistant_name)
         self._name_input.setFont(mono_font(10, QFont.Weight.DemiBold, letter_spacing=0.5))
         self._name_input.setFixedHeight(34)
         self._name_input.setStyleSheet(_fs)
+        attach_hover_help(self._name_input, "The codename ALFRED uses when speaking and displaying system status headers.", lbl_codename)
         lay.addWidget(self._name_input)
 
-        lay.addWidget(_lbl("COMMANDER DESIGNATION  (e.g. Master Wayne, Sir)", 8,
-                            bold=True, color=C.TEXT_DIM))
+        lbl_designation = _lbl("COMMANDER DESIGNATION  (e.g. Master Wayne, Sir)", 8,
+                               bold=True, color=C.TEXT_DIM)
+        lay.addWidget(lbl_designation)
         self._user_input = QLineEdit(user_name)
         self._user_input.setPlaceholderText("e.g.  Master Wayne   (leave blank for default)")
         self._user_input.setFont(mono_font(10, letter_spacing=0.3))
         self._user_input.setFixedHeight(34)
         self._user_input.setStyleSheet(_fs)
+        attach_hover_help(self._user_input, "How the assistant addresses you during conversations and briefings (e.g. Master Wayne, Sir).", lbl_designation)
         lay.addWidget(self._user_input)
 
         # ── Tactical Bat-Insignia & Application Icon ─────────────────────
-        lay.addWidget(_lbl("TACTICAL BAT-INSIGNIA & APPLICATION ICON", 8, bold=True, color=C.TEXT_DIM))
+        lbl_insignia = _lbl("TACTICAL BAT-INSIGNIA & APPLICATION ICON", 8, bold=True, color=C.TEXT_DIM)
+        lay.addWidget(lbl_insignia)
         icon_sub = QLabel("SELECT CHASSIS BADGE // SYSTEM TRAY & TASKBAR ICON // REALTIME UPLINK")
         icon_sub.setFont(tech_font(7, QFont.Weight.Medium, letter_spacing=0.8))
         icon_sub.setStyleSheet(f"color: {C.TEXT_MUTED}; background: transparent; margin-bottom: 2px;")
@@ -5406,16 +5458,17 @@ class CustomizeOverlay(QWidget):
             btn_lay.addStretch()
 
             btn.clicked.connect(lambda _=False, p=ic["path"]: self._on_icon_picked(p))
+            attach_hover_help(btn, f"Select '{ic['name']}' chassis insignia for HUD, taskbar, and tray badge.")
             self._icon_cards[ic["path"]] = btn
             icon_grid.addWidget(btn, row, col)
 
         lay.addLayout(icon_grid)
         self._refresh_icon_cards()
 
-
         # ── Assistant voice — Gemini prebuilt voices ─────────────────────
         from memory.config_manager import AVAILABLE_VOICES, DEFAULT_VOICE
-        lay.addWidget(_lbl("VOCAL SYNTHESIS PROFILE", 8, bold=True, color=C.TEXT_DIM))
+        lbl_voice = _lbl("VOCAL SYNTHESIS PROFILE", 8, bold=True, color=C.TEXT_DIM)
+        lay.addWidget(lbl_voice)
         self._sel_voice = (voice or DEFAULT_VOICE)
         if self._sel_voice not in AVAILABLE_VOICES:
             self._sel_voice = DEFAULT_VOICE
@@ -5428,21 +5481,24 @@ class CustomizeOverlay(QWidget):
             b.setFont(mono_font(8, QFont.Weight.Bold, letter_spacing=0.4))
             b.setCursor(Qt.CursorShape.PointingHandCursor)
             b.clicked.connect(lambda _=False, name=_v: self._on_voice_pick(name))
+            attach_hover_help(b, f"Use the neural vocal profile '{_v}' for spoken responses.", lbl_voice)
             self._voice_btns[_v] = b
             voice_row.addWidget(b)
         lay.addLayout(voice_row)
         self._refresh_voice_btns()
 
-        # ── Quick Chromatic Preset Chips ─────────────────────────────────
-        lay.addWidget(_lbl("AUTHENTIC CRT THEMES // CHROMATICS", 8, bold=True, color=C.TEXT_DIM))
+        # ── Single Authentic CRT Themes Selector // Chromatics ─────────────
+        lbl_theme = _lbl("AUTHENTIC CRT THEMES // CHROMATICS", 8, bold=True, color=C.TEXT_DIM)
+        lay.addWidget(lbl_theme)
         swatch_grid = QGridLayout()
         swatch_grid.setSpacing(8)
         swatch_grid.setContentsMargins(0, 0, 0, 0)
         swatches = [
-            ("💜 DEFAULT BATCAVE", "#8e9bff"),
-            ("💚 BANE MODE",       "#a8ff3e"),
-            ("🔴 BATMAN BEYOND",   "#ff0037"),
+            ("DEFAULT BATCAVE", "#8e9bff"),
+            ("BANE MODE",       "#a8ff3e"),
+            ("BATMAN BEYOND",   "#ff0037"),
         ]
+        self._theme_btns: dict[str, QPushButton] = {}
         for idx, (s_lbl, s_hex) in enumerate(swatches):
             sb = QPushButton(s_lbl)
             sb.setFixedHeight(32)
@@ -5461,7 +5517,9 @@ class CustomizeOverlay(QWidget):
                     border-color: {s_hex};
                 }}
             """)
-            sb.clicked.connect(lambda _, h=s_hex: self._set_color(h))
+            sb.clicked.connect(lambda _, h=s_hex: self._set_color(h, update_wheel=True, preview=True))
+            attach_hover_help(sb, f"Apply the {s_lbl} CRT theme ({s_hex}) and preview the chromatic palette.", lbl_theme)
+            self._theme_btns[s_lbl] = sb
             swatch_grid.addWidget(sb, 0, idx)
         lay.addLayout(swatch_grid)
 
@@ -5476,6 +5534,7 @@ class CustomizeOverlay(QWidget):
         lay.addLayout(wheel_row)
         self._wheel.hue_picked.connect(self._on_wheel_pick)
         self._wheel.hue_committed.connect(self._on_wheel_commit)
+        attach_hover_help(self._wheel, "Drag the color wheel to interactively tune custom HUD accent colors in real time.")
 
         self._hex_input = QLineEdit(self._sel_color)
         self._hex_input.setPlaceholderText("#ff0037   (custom hex colour)")
@@ -5483,10 +5542,12 @@ class CustomizeOverlay(QWidget):
         self._hex_input.setFixedHeight(30)
         self._hex_input.setStyleSheet(_fs)
         self._hex_input.textEdited.connect(self._on_hex_edited)
+        attach_hover_help(self._hex_input, "Enter a custom 6-digit hex color code (e.g. #8e9bff, #00f0ff) for HUD styling.")
         lay.addWidget(self._hex_input)
 
         lay.addSpacing(6)
-        lay.addWidget(_lbl("INTELLIGENCE BACKEND // API CREDENTIALS", 8, bold=True, color=C.TEXT_DIM))
+        lbl_api = _lbl("INTELLIGENCE BACKEND // API CREDENTIALS", 8, bold=True, color=C.TEXT_DIM)
+        lay.addWidget(lbl_api)
         api_btn = QPushButton("◈  SETUP API KEYS & NEURAL BACKEND")
         api_btn.setFixedHeight(32)
         api_btn.setFont(mono_font(8, QFont.Weight.Bold, letter_spacing=0.8))
@@ -5506,6 +5567,7 @@ class CustomizeOverlay(QWidget):
             }}
         """)
         api_btn.clicked.connect(lambda: self.setup_api_requested.emit())
+        attach_hover_help(api_btn, "Open the API key configuration window to set up Gemini and OpenRouter credentials.", lbl_api)
         lay.addWidget(api_btn)
 
         scroll.setWidget(body_widget)
@@ -5538,6 +5600,7 @@ class CustomizeOverlay(QWidget):
             }}
         """)
         save_btn.clicked.connect(self._save)
+        attach_hover_help(save_btn, "Save and apply all persona, voice, insignia, and theme changes to your configuration.")
         btn_row.addWidget(save_btn, stretch=2)
 
         cancel_btn = QPushButton("DISCARD")
@@ -5555,6 +5618,7 @@ class CustomizeOverlay(QWidget):
             QPushButton:pressed {{ background: rgba(142, 155, 255, 0.05); }}
         """)
         cancel_btn.clicked.connect(self._cancel)
+        attach_hover_help(cancel_btn, "Discard all unsaved changes and close the reconfiguration window.")
         btn_row.addWidget(cancel_btn, stretch=1)
         outer_lay.addLayout(btn_row)
 
@@ -5673,6 +5737,7 @@ class CustomizeOverlay(QWidget):
                 print(f"[Icon] Realtime change error: {e}")
 
     def _cancel(self):
+        TacticalHoverHelpManager.instance().dismiss()
         # If a preview was applied, revert to the colour from launch
         if self.on_preview and self._sel_color != self._initial_color:
             self.on_preview(self._initial_color)
@@ -5681,6 +5746,7 @@ class CustomizeOverlay(QWidget):
         self.hide()
 
     def _save(self):
+        TacticalHoverHelpManager.instance().dismiss()
         name = self._name_input.text().strip() or "Alfred"
         user = self._user_input.text().strip()
         self.saved.emit(name, user, self._sel_color or DEFAULT_UI_COLOR, self._sel_voice)
@@ -5688,11 +5754,15 @@ class CustomizeOverlay(QWidget):
             self.on_icon_change(self._current_icon)
         self.hide()
 
+    def hideEvent(self, event):
+        TacticalHoverHelpManager.instance().dismiss()
+        super().hideEvent(event)
+
 
 class CapabilitiesOverlay(QWidget):
     """
     Floating glassmorphic overlay displaying a categorized directory of everything
-    Alfred can do, complete with live search filtering.
+    Alfred can do, complete with live search filtering and Batcomputer theme styling.
     """
     _OW, _OH = 620, 680
 
@@ -5701,9 +5771,9 @@ class CapabilitiesOverlay(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.setStyleSheet(f"""
             CapabilitiesOverlay {{
-                background: rgba(4, 15, 26, 0.97);
-                border: 1px solid rgba(0, 240, 255, 0.30);
-                border-radius: 16px;
+                background: {C.PANEL_BG};
+                border: 1px solid {C.BORDER_B};
+                border-radius: 12px;
             }}
         """)
         lay = QVBoxLayout(self)
@@ -5714,13 +5784,13 @@ class CapabilitiesOverlay(QWidget):
         top_h = QHBoxLayout()
         title_box = QVBoxLayout()
         title_box.setSpacing(2)
-        
-        hdr = QLabel("📋  ALFRED TACTICAL DIRECTIVES")
+
+        hdr = QLabel("📋  DIRECTIVES & CAPABILITIES ARCHIVE")
         hdr.setFont(tech_font(12, QFont.Weight.Bold, letter_spacing=2.0))
         hdr.setStyleSheet(f"color: {C.PRI}; background: transparent;")
         title_box.addWidget(hdr)
 
-        sub = QLabel("OPERATIONAL CAPABILITIES & VOICE SKILLS DIRECTORY")
+        sub = QLabel("OPERATIONAL DIRECTIVES & VOICE CAPABILITIES DIRECTORY")
         sub.setFont(tech_font(8, letter_spacing=1.0))
         sub.setStyleSheet(f"color: {C.TEXT_DIM}; background: transparent;")
         title_box.addWidget(sub)
@@ -5733,23 +5803,24 @@ class CapabilitiesOverlay(QWidget):
         close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         close_btn.setStyleSheet(f"""
             QPushButton {{
-                background: rgba(255, 255, 255, 0.05);
+                background: {C.PANEL2};
                 color: {C.TEXT_MED};
-                border: 1px solid rgba(255, 255, 255, 0.12);
+                border: 1px solid {C.BORDER_A};
                 border-radius: 14px;
             }}
             QPushButton:hover {{
                 background: rgba(255, 42, 85, 0.25);
                 color: #ffffff;
-                border-color: #ff2a55;
+                border-color: {C.RED};
             }}
         """)
         close_btn.clicked.connect(self.hide)
+        attach_hover_help(close_btn, "Close the directives and capabilities archive overlay.")
         top_h.addWidget(close_btn)
         lay.addLayout(top_h)
 
         sep = QFrame(); sep.setFrameShape(QFrame.Shape.HLine)
-        sep.setStyleSheet("color: rgba(0, 240, 255, 0.15); margin: 2px 0;")
+        sep.setStyleSheet(f"color: {C.BORDER_A}; margin: 2px 0;")
         lay.addWidget(sep)
 
         # Search Bar
@@ -5761,23 +5832,24 @@ class CapabilitiesOverlay(QWidget):
         search_box.addWidget(search_icon)
 
         self._search = QLineEdit()
-        self._search.setPlaceholderText("Filter skills: e.g. open file, gmail, notes, weather, alarm...")
+        self._search.setPlaceholderText("Filter directives: e.g. open file, gmail, notes, weather, alarm, screen...")
         self._search.setFixedHeight(32)
         self._search.setFont(tech_font(9, letter_spacing=0.4))
         self._search.setStyleSheet(f"""
             QLineEdit {{
-                background: rgba(255, 255, 255, 0.05);
-                color: #ffffff;
-                border: 1px solid rgba(0, 240, 255, 0.20);
-                border-radius: 8px;
+                background: {C.PANEL2};
+                color: {C.WHITE};
+                border: 1px solid {C.BORDER_A};
+                border-radius: 6px;
                 padding: 4px 10px;
             }}
             QLineEdit:focus {{
                 border: 1px solid {C.PRI};
-                background: rgba(0, 240, 255, 0.08);
+                background: rgba(142, 155, 255, 0.08);
             }}
         """)
         self._search.textChanged.connect(self._filter_cards)
+        attach_hover_help(self._search, "Type keywords to live-filter directives across files, emails, intel, web, and system tools.")
         search_box.addWidget(self._search)
         lay.addLayout(search_box)
 
@@ -5794,12 +5866,12 @@ class CapabilitiesOverlay(QWidget):
                 margin: 4px 2px;
             }}
             QScrollBar::handle:vertical {{
-                background: rgba(0, 240, 255, 0.28);
+                background: {C.BORDER_A};
                 border-radius: 3px;
                 min-height: 24px;
             }}
             QScrollBar::handle:vertical:hover {{
-                background: rgba(0, 240, 255, 0.65);
+                background: {C.PRI};
             }}
         """)
 
@@ -5811,6 +5883,13 @@ class CapabilitiesOverlay(QWidget):
 
         self._cards: list[tuple[QWidget, str]] = []
         self._populate_capabilities()
+
+        self._empty_lbl = QLabel("◈  NO MATCHING DIRECTIVES FOUND  ◈")
+        self._empty_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._empty_lbl.setFont(mono_font(9, QFont.Weight.Bold, letter_spacing=1.0))
+        self._empty_lbl.setStyleSheet(f"color: {C.TEXT_DIM}; padding: 40px; background: transparent;")
+        self._empty_lbl.hide()
+        self._cards_lay.addWidget(self._empty_lbl)
 
         scroll.setWidget(cards_w)
         lay.addWidget(scroll, stretch=1)
@@ -5829,16 +5908,18 @@ class CapabilitiesOverlay(QWidget):
         dismiss.setCursor(Qt.CursorShape.PointingHandCursor)
         dismiss.setStyleSheet(f"""
             QPushButton {{
-                background: rgba(0, 240, 255, 0.15);
-                color: #ffffff;
+                background: {C.PANEL2};
+                color: {C.PRI};
                 border: 1px solid {C.PRI};
-                border-radius: 7px;
+                border-radius: 4px;
             }}
             QPushButton:hover {{
-                background: rgba(0, 240, 255, 0.35);
+                background: {C.PRI};
+                color: {C.DARK};
             }}
         """)
         dismiss.clicked.connect(self.hide)
+        attach_hover_help(dismiss, "Close the directives and capabilities archive overlay.")
         bot.addWidget(dismiss)
         lay.addLayout(bot)
 
@@ -5891,10 +5972,10 @@ class CapabilitiesOverlay(QWidget):
             card = QWidget()
             card.setStyleSheet(f"""
                 QWidget {{
-                    background: rgba(255, 255, 255, 0.03);
-                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    background: {C.PANEL2};
+                    border: 1px solid {C.BORDER};
                     border-left: 3px solid {color};
-                    border-radius: 10px;
+                    border-radius: 6px;
                 }}
             """)
             c_lay = QVBoxLayout(card)
@@ -5910,7 +5991,7 @@ class CapabilitiesOverlay(QWidget):
             for title, desc in items:
                 row = QHBoxLayout()
                 row.setSpacing(6)
-                b_lbl = QLabel(f"• <b>{title}</b>: <span style='color: rgba(255,255,255,0.75);'>{desc}</span>")
+                b_lbl = QLabel(f"• <b>{title}</b>: <span style='color: {C.TEXT_MED};'>{desc}</span>")
                 b_lbl.setTextFormat(Qt.TextFormat.RichText)
                 b_lbl.setFont(tech_font(8, letter_spacing=0.2))
                 b_lbl.setStyleSheet("background: transparent; border: none;")
@@ -5924,11 +6005,28 @@ class CapabilitiesOverlay(QWidget):
 
     def _filter_cards(self, text: str):
         q = text.strip().lower()
+        matched = 0
         for card, searchable in self._cards:
             if not q or q in searchable:
                 card.show()
+                matched += 1
             else:
                 card.hide()
+        if matched == 0:
+            self._empty_lbl.show()
+        else:
+            self._empty_lbl.hide()
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Escape:
+            self.hide()
+            event.accept()
+        else:
+            super().keyPressEvent(event)
+
+    def hideEvent(self, event):
+        TacticalHoverHelpManager.instance().dismiss()
+        super().hideEvent(event)
 
 
 class PluginManagerOverlay(QWidget):
@@ -7905,7 +8003,6 @@ class MainWindow(QMainWindow):
         self._drawer_btn.setFixedHeight(30)
         self._drawer_btn.setFont(mono_font(8, QFont.Weight.Bold, letter_spacing=0.6))
         self._drawer_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._drawer_btn.setToolTip("Batcave System Controls & Neural Parameters")
         self._drawer_btn.setStyleSheet(f"""
             QPushButton {{
                 background: {C.PANEL2};
@@ -7927,13 +8024,13 @@ class MainWindow(QMainWindow):
         """)
         self._drawer_btn.setCheckable(True)
         self._drawer_btn.clicked.connect(self._toggle_drawer)
+        attach_hover_help(self._drawer_btn, "Toggle the tactical controls panel for quick access to system settings and tools.")
         lay.addWidget(self._drawer_btn)
 
         self._directives_btn = QPushButton("[ ▤ ]  DIRECTIVES ARCHIVE")
         self._directives_btn.setFixedHeight(30)
         self._directives_btn.setFont(mono_font(8, QFont.Weight.Bold, letter_spacing=0.6))
         self._directives_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._directives_btn.setToolTip("View full catalog of skills & capabilities")
         self._directives_btn.setStyleSheet(f"""
             QPushButton {{
                 background: {C.PANEL2};
@@ -7952,6 +8049,7 @@ class MainWindow(QMainWindow):
             }}
         """)
         self._directives_btn.clicked.connect(self._open_directives)
+        attach_hover_help(self._directives_btn, "Open the full directory of operational skills, directives, and capabilities.")
         lay.addWidget(self._directives_btn)
 
         # Sentry Monitoring Toggle Button
@@ -7959,7 +8057,6 @@ class MainWindow(QMainWindow):
         self._sentry_btn.setFixedHeight(30)
         self._sentry_btn.setFont(mono_font(8, QFont.Weight.Bold, letter_spacing=0.6))
         self._sentry_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._sentry_btn.setToolTip("Continuous Visual Context Monitoring")
         self._sentry_btn.setStyleSheet(f"""
             QPushButton {{
                 background: {C.PANEL2};
@@ -7984,6 +8081,7 @@ class MainWindow(QMainWindow):
         """)
         self._sentry_btn.setCheckable(True)
         self._sentry_btn.clicked.connect(self._toggle_sentry_mode)
+        attach_hover_help(self._sentry_btn, "Toggle continuous visual monitoring and active task focus tracking.")
         lay.addWidget(self._sentry_btn)
 
         lay.addStretch()
@@ -8320,15 +8418,8 @@ class MainWindow(QMainWindow):
         remote_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         remote_btn.setStyleSheet(_BTN_STYLE_PRI)
         remote_btn.clicked.connect(self._open_remote)
+        attach_hover_help(remote_btn, "Pair with companion mobile device or browser to control ALFRED remotely over your local network.")
         lay.addWidget(remote_btn)
-
-        dir_btn = QPushButton("[ ▤ ]  TACTICAL DOSSIER // DIRECTIVES")
-        dir_btn.setFixedHeight(30)
-        dir_btn.setFont(mono_font(8, QFont.Weight.Bold, letter_spacing=0.5))
-        dir_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        dir_btn.setStyleSheet(_BTN_STYLE_PRI)
-        dir_btn.clicked.connect(self._open_directives)
-        lay.addWidget(dir_btn)
 
         fs_btn = QPushButton("[ ⛶ ]  TACTICAL HUD VIEW  [F11]")
         fs_btn.setFixedHeight(29)
@@ -8336,6 +8427,7 @@ class MainWindow(QMainWindow):
         fs_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         fs_btn.setStyleSheet(_BTN_STYLE_DIM)
         fs_btn.clicked.connect(self._toggle_fullscreen)
+        attach_hover_help(fs_btn, "Toggle full-screen tactical Batcomputer HUD view (or press F11).")
         lay.addWidget(fs_btn)
 
         sc_btn = QPushButton("[ ⊞ ]  DEPLOY BATCAVE CONSOLE")
@@ -8344,6 +8436,7 @@ class MainWindow(QMainWindow):
         sc_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         sc_btn.setStyleSheet(_BTN_STYLE_DIM)
         sc_btn.clicked.connect(self._create_desktop_shortcut)
+        attach_hover_help(sc_btn, "Create a quick-launch shortcut icon for ALFRED on your Windows desktop.")
         lay.addWidget(sc_btn)
 
         self._autostart_btn = QPushButton("[ ◈ ]  BATCOMPUTER AUTO-BOOT: OFF")
@@ -8351,6 +8444,7 @@ class MainWindow(QMainWindow):
         self._autostart_btn.setFont(mono_font(8, letter_spacing=0.5))
         self._autostart_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._autostart_btn.clicked.connect(self._toggle_autostart)
+        attach_hover_help(self._autostart_btn, "Automatically start ALFRED in the background whenever Windows boots up.")
         lay.addWidget(self._autostart_btn)
 
         cust_btn = QPushButton("[ ⚙ ]  RECONFIGURE BATCOMPUTER")
@@ -8359,6 +8453,7 @@ class MainWindow(QMainWindow):
         cust_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         cust_btn.setStyleSheet(_BTN_STYLE_DIM)
         cust_btn.clicked.connect(self._open_customize)
+        attach_hover_help(cust_btn, "Customize assistant name, commander designation, vocal synthesis, CRT theme, and app icon.")
         lay.addWidget(cust_btn)
 
         self._brief_btn = QPushButton()
@@ -8366,6 +8461,7 @@ class MainWindow(QMainWindow):
         self._brief_btn.setFont(mono_font(8, letter_spacing=0.5))
         self._brief_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._brief_btn.clicked.connect(self._toggle_brief)
+        attach_hover_help(self._brief_btn, "Deliver an automated morning briefing with weather, unread emails, and schedule on startup.")
         lay.addWidget(self._brief_btn)
 
         # ── Wake word ──────────────────────────────────────────────────────────
@@ -8374,6 +8470,7 @@ class MainWindow(QMainWindow):
         self._wake_btn.setFont(mono_font(8, letter_spacing=0.5))
         self._wake_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._wake_btn.clicked.connect(self._toggle_wake_word)
+        attach_hover_help(self._wake_btn, "Toggle continuous hands-free voice wake word detection for 'Alfred' and 'Jarvis'.")
         lay.addWidget(self._wake_btn)
 
         self._wake_sleep_btn = QPushButton()
@@ -8381,6 +8478,7 @@ class MainWindow(QMainWindow):
         self._wake_sleep_btn.setFont(mono_font(8, letter_spacing=0.5))
         self._wake_sleep_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._wake_sleep_btn.clicked.connect(self._tap_wake_manual)
+        attach_hover_help(self._wake_sleep_btn, "Manually trigger listening mode or put speech recognition to sleep.")
         lay.addWidget(self._wake_sleep_btn)
         self._wake_btn.setText("[ ◈ ]  COWL VOICE SENSORS")
         self._wake_btn.setStyleSheet(_BTN_STYLE_DIM)
@@ -8391,6 +8489,7 @@ class MainWindow(QMainWindow):
         self._ptt_btn.setFont(mono_font(8, letter_spacing=0.5))
         self._ptt_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._ptt_btn.clicked.connect(self._toggle_ptt)
+        attach_hover_help(self._ptt_btn, "Hold hotkey to speak so the microphone only listens while the key combination is held down.")
         lay.addWidget(self._ptt_btn)
 
         self._refresh_talk_btns()
@@ -8401,6 +8500,7 @@ class MainWindow(QMainWindow):
         audio_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         audio_btn.setStyleSheet(_BTN_STYLE_DIM)
         audio_btn.clicked.connect(self._open_audio_devices)
+        attach_hover_help(audio_btn, "Choose which microphone and speaker devices ALFRED uses for voice input and speech output.")
         lay.addWidget(audio_btn)
 
         mem_btn = QPushButton("[ ☵ ]  WAYNE SECURE ARCHIVES")
@@ -8409,23 +8509,8 @@ class MainWindow(QMainWindow):
         mem_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         mem_btn.setStyleSheet(_BTN_STYLE_DIM)
         mem_btn.clicked.connect(self._open_memory_panel)
+        attach_hover_help(mem_btn, "View and manage remembered facts, user habits, and long-term memory stored in the archives.")
         lay.addWidget(mem_btn)
-
-        plugin_btn = QPushButton("[ ⊞ ]  TACTICAL MODULES // PLUGINS")
-        plugin_btn.setFixedHeight(29)
-        plugin_btn.setFont(mono_font(8, letter_spacing=0.5))
-        plugin_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        plugin_btn.setStyleSheet(_BTN_STYLE_DIM)
-        plugin_btn.clicked.connect(self._open_plugin_manager)
-        lay.addWidget(plugin_btn)
-
-        settings_btn = QPushButton("[ ⚙ ]  MODULE PARAMETERS")
-        settings_btn.setFixedHeight(29)
-        settings_btn.setFont(mono_font(8, letter_spacing=0.5))
-        settings_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        settings_btn.setStyleSheet(_BTN_STYLE_DIM)
-        settings_btn.clicked.connect(self._open_plugin_settings)
-        lay.addWidget(settings_btn)
 
         setup_api_btn = QPushButton("[ ◈ ]  SETUP API & BACKEND")
         setup_api_btn.setFixedHeight(29)
@@ -8433,12 +8518,14 @@ class MainWindow(QMainWindow):
         setup_api_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         setup_api_btn.setStyleSheet(_BTN_STYLE_PRI)
         setup_api_btn.clicked.connect(self._open_api_setup)
+        attach_hover_help(setup_api_btn, "Configure Gemini and OpenRouter API keys and select neural intelligence backend model.")
         lay.addWidget(setup_api_btn)
 
         w.adjustSize()
         return w
 
     def _toggle_drawer(self, checked: bool):
+        TacticalHoverHelpManager.instance().dismiss()
         if checked:
             self._refresh_wake_btns()   # resolve wake state on open (lazy)
             self._position_quick_drawer()

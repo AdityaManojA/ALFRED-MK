@@ -23,6 +23,7 @@ from memory.config_manager import (
     get_plugin_config,
     get_plugin_enabled,
     get_plugin_settings_revision,
+    migrate_legacy_plugin_settings,
 )
 
 _NAME_RE = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]{0,63}$")
@@ -247,6 +248,7 @@ def discover_plugins(plugins_dir: Path, core_tool_names: set[str],
     of remaining files.
     """
     plugins_dir.mkdir(parents=True, exist_ok=True)
+    migrate_legacy_plugin_settings()
     valid: dict[str, PluginRecord] = {}
     all_records: list[PluginRecord] = []
 
