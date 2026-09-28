@@ -489,6 +489,33 @@ TOOL_DECLARATIONS = [
         },
     },
     {
+        "name": "sentry_monitor",
+        "description": (
+            "Controls Sentry MONITOR mode: watches terminal builds, window titles, files/logs, "
+            "processes, shell commands, or screen regions. "
+            "Use when user asks to: 'monitor this', 'keep an eye on ...', 'what are you monitoring', "
+            "'stop monitoring', 'stop monitoring <target>', 'monitor quieter', or 'monitor louder'."
+        ),
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {
+                "action": {
+                    "type": "STRING",
+                    "description": "start | stop | status | remove_target | quieter | louder",
+                },
+                "target": {
+                    "type": "STRING",
+                    "description": "Natural language monitoring target or specific target name/id to stop.",
+                },
+                "interval_seconds": {
+                    "type": "NUMBER",
+                    "description": "Polling interval in seconds (default 5).",
+                },
+            },
+            "required": ["action"],
+        },
+    },
+    {
         "name": "close_camera",
         "description": (
             "Closes the live camera view shown on screen. "
@@ -717,10 +744,18 @@ class JarvisLive:
         self._screen_monitor_analysis_pending = False
         self._screen_monitor_last_analysis = 0.0
         from core.sentry.mode_manager import get_sentry_mode_manager
+        from core.sentry.monitor.controller import get_monitor_controller
         self.sentry_mgr = get_sentry_mode_manager()
+        self.monitor_controller = get_monitor_controller()
+        self.monitor_controller.set_callbacks(
+            speak_fn=self.speak,
+            un_gate_fn=self._set_mic_ungated,
+            status_fn=lambda s: self.ui.write_log(f"SYS: {s}"),
+            loop_provider=lambda: self._loop,
+        )
         self.sentry_mgr.register_monitor_handlers(
-            on_start=self._start_screen_monitor,
-            on_stop=self._stop_screen_monitor,
+            on_start=self.monitor_controller.start,
+            on_stop=self.monitor_controller.stop,
         )
         self.sentry_mgr.state_changed.connect(self.ui.apply_sentry_snapshot)
 
@@ -1039,6 +1074,11 @@ class JarvisLive:
     def _on_text_command(self, text: str):
         if not self._loop:
             return
+        if getattr(self, "monitor_controller", None) and self.monitor_controller.is_waiting_for_answer:
+            if self.monitor_controller.submit_answer(text):
+                self.ui.write_log(f"You (Answer): {text}")
+                return
+
         # Respect wake-word sleep: a typed command must not be answered while
         # asleep either (the sleep gate is not just for the mic). Wake first with
         # "Hey Alfred" or the WAKE NOW button.
@@ -1060,13 +1100,20 @@ class JarvisLive:
                 self._loop
             )
 
+    def _set_mic_ungated(self, active: bool) -> None:
+        if active:
+            self._temp_awake_by_sentry = not self._awake
+            self._awake = True
+        else:
+            if getattr(self, "_temp_awake_by_sentry", False):
+                self._awake = not self._wake_enabled
+                self._temp_awake_by_sentry = False
+
     def _ui_screen_monitor_toggle(self, enabled: bool) -> dict:
         """Fast callback used by the Sentry button on the Qt thread."""
         if enabled:
-            return self._start_screen_monitor(
-                "Notify me when the current on-screen task has completed."
-            )
-        return self._stop_screen_monitor("Stopped from Sentry Mode.")
+            return self.monitor_controller.start()
+        return self.monitor_controller.stop("Stopped from Sentry Mode.")
 
     def _start_screen_monitor(self, goal: str, interval_seconds: float = 3.0) -> dict:
         goal = (goal or "Notify me when the current on-screen task has completed.").strip()
@@ -1738,6 +1785,13 @@ class JarvisLive:
                 else:
                     result = await loop.run_in_executor(None, undo_stack.undo_last)
 
+            elif name == "sentry_monitor":
+                from actions.sentry_monitor import sentry_monitor_action
+                _act = str(args.get("action", "status")).lower().strip()
+                _tgt = str(args.get("target", "")).strip()
+                _iv = float(args.get("interval_seconds", 5.0) or 5.0)
+                result = sentry_monitor_action(action=_act, target=_tgt, interval_seconds=_iv)
+
             elif name == "screen_monitor":
                 action = str(args.get("action", "status")).lower().strip()
                 if action == "start":
@@ -2205,6 +2259,8 @@ class JarvisLive:
 
                             full_in = " ".join(in_buf).strip()
                             if full_in:
+                                if getattr(self, "monitor_controller", None) and self.monitor_controller.is_waiting_for_answer:
+                                    self.monitor_controller.submit_answer(full_in)
                                 self._last_out_logged = ""   # new exchange
                                 self.ui.write_log(f"You: {full_in}")
                                 self._session_log.append(f"User: {full_in}")
@@ -3067,6 +3123,10 @@ class JarvisLive:
                     continue
 
                 user_text = user_text.strip()
+                if getattr(self, "monitor_controller", None) and self.monitor_controller.is_waiting_for_answer:
+                    if self.monitor_controller.submit_answer(user_text):
+                        self.ui.write_log(f"You (Answer): {user_text}")
+                        continue
                 self.ui.write_log(f"You: {user_text}")
                 self.ui.set_state("THINKING")
                 history.append({"role": "user", "content": user_text})
