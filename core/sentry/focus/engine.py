@@ -2,7 +2,8 @@
 
 Structural Privacy Law:
 - Distraction labels ride for one engine tick into the spoken string and are stored NOWHERE.
-- No app names, window titles, URLs, or spoken labels appear in FocusState, snapshot, or logs.
+- No app names, window titles, URLs, or spoken labels appear in FocusState,
+    Cadence, snapshot, or logs.
 - FocusState contains only booleans, counters, and progress integers.
 """
 from __future__ import annotations
@@ -13,6 +14,7 @@ import threading
 import time
 from typing import Any, Callable
 
+from core.sentry.focus.ledger import FocusLedger
 from core.sentry.answer_window import AnswerWindow, ANSWER_WINDOW_S
 from core.sentry.focus.labels import resolve_distraction_label
 from core.sentry.focus.lines import get_drift_line
@@ -27,6 +29,7 @@ from core.sentry.focus.state import (
     SNOOZE_DEFAULT_S,
     TICK_INTERVAL_S,
     FocusState,
+    Cadence,
 )
 from core.sentry.mode_manager import get_sentry_mode_manager
 
@@ -64,6 +67,7 @@ class FocusEngine:
         on_drift: Callable[[SurfaceIdentity, int], None] | None = None,
         auto_tick: bool = True,
         loop_provider: Callable[[], asyncio.AbstractEventLoop | None] | None = None,
+        ledger: FocusLedger | None = None,
     ) -> None:
         self._reader = reader or get_platform_reader()
         self._speak_fn = speak_fn
@@ -72,6 +76,7 @@ class FocusEngine:
         self._on_drift = on_drift
         self._auto_tick = auto_tick
         self._loop_provider = loop_provider
+        self._ledger = ledger or FocusLedger()
 
         self.answer_window = AnswerWindow(
             speak_fn=self._speak,
@@ -114,6 +119,7 @@ class FocusEngine:
         self._last_nag_time = 0.0
         self._first_callout_done = False
         self._drill_sergeant = False
+        self._cadence: Cadence = Cadence.NORMAL
 
         # Grace window tracking (DRIFT_GRACE_MS = 800)
         self._candidate_drift_start: float | None = None
@@ -166,9 +172,35 @@ class FocusEngine:
             un_gate_fn=self._un_gate,
         )
 
+    @property
+    def cadence(self) -> Cadence:
+        if self._drill_sergeant:
+            return Cadence.DRILL_SERGEANT
+        return self._cadence
+
+    def set_cadence(self, cadence: Cadence | str) -> None:
+        with self._lock:
+            if isinstance(cadence, Cadence):
+                self._cadence = cadence
+            else:
+                cad = str(cadence).lower().strip()
+                if cad == Cadence.DRILL_SERGEANT.value:
+                    self._cadence = Cadence.DRILL_SERGEANT
+                    self._drill_sergeant = True
+                elif cad == Cadence.GENTLE.value:
+                    self._cadence = Cadence.GENTLE
+                    self._drill_sergeant = False
+                else:
+                    self._cadence = Cadence.NORMAL
+                    self._drill_sergeant = False
+
     def set_drill_sergeant(self, enabled: bool) -> bool:
         with self._lock:
             self._drill_sergeant = bool(enabled)
+            if self._drill_sergeant:
+                self._cadence = Cadence.DRILL_SERGEANT
+            elif self._cadence == Cadence.DRILL_SERGEANT:
+                self._cadence = Cadence.NORMAL
             return self._drill_sergeant
 
     def _speak(self, text: str) -> None:
@@ -465,6 +497,7 @@ class FocusEngine:
         """Execute a single session tick with settle rule and grace window."""
         complete_cb = None
         drift_cb = None
+        surface = None
         spoken_line = ""
 
         with self._lock:
@@ -477,13 +510,26 @@ class FocusEngine:
             if self._remaining_s == 0:
                 self._active = False
                 complete_cb = self._on_complete
+                planned_s = self._planned_s
+                on_target_s = self._on_target_s
+                drift_count = self._drift_count
+                cadence = self.cadence
+
+                res = self._ledger.record_session(
+                    planned_seconds=planned_s,
+                    on_target_seconds=on_target_s,
+                    drift_count=drift_count,
+                )
+                spoken_line = self._ledger.generate_report_card(
+                    planned_seconds=planned_s,
+                    on_target_seconds=on_target_s,
+                    drift_count=drift_count,
+                    cadence=cadence,
+                    previous_streak=res["previous_streak"],
+                    clean_streak=res["clean_streak"],
+                    streak_broken=res["streak_broken"],
+                )
                 self._sync_mode_manager_locked()
-                if complete_cb:
-                    try:
-                        complete_cb()
-                    except Exception as exc:
-                        _LOGGER.debug("Complete callback error: %s", exc)
-                return
 
             # Query the frontmost surface afresh
             surface = self._reader.get_frontmost_surface()
@@ -582,11 +628,20 @@ class FocusEngine:
 
             self._sync_mode_manager_locked()
 
+        if complete_cb:
+            try:
+                complete_cb()
+            except Exception as exc:
+                _LOGGER.debug("Complete callback error: %s", exc)
+
         if spoken_line and self._speak_fn:
             try:
                 self._speak_fn(spoken_line)
             except Exception as exc:
                 _LOGGER.debug("Speak error: %s", exc)
+
+        if self._remaining_s == 0:
+            return
 
         if drift_cb and surface:
             try:

@@ -8,6 +8,14 @@ The verbal user intent string lives on the session engine, never in FocusState.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
+
+
+class Cadence(str, Enum):
+    NORMAL = "normal"
+    GENTLE = "gentle"
+    DRILL_SERGEANT = "drill_sergeant"
+
 
 # ── Named Constants ──────────────────────────────────────────────────────────
 DEFAULT_SESSION_MIN: int = 25
