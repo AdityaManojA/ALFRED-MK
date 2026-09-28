@@ -823,6 +823,12 @@ This codebase is indexed with a persistent **GraphRAG Knowledge Graph** in `grap
 * **🦇 Project:** ALFRED-MK-VI (Wayne Protocol Edition)
 * **📜 License:** [Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)](https://creativecommons.org/licenses/by-nc/4.0/)
 
+<p align="center">
+  <a href="https://buymeacoffee.com/adityamanoj" target="_blank">
+    <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="48" style="border-radius: 8px;">
+  </a>
+</p>
+
 ---
 
 *⚡ Built with precision for autonomy, performance, and complete digital sovereignty — the most function-dense, optimisation-conscious open tactical assistant in the Wayne-protocol class.*
