@@ -292,8 +292,8 @@ class FocusEngine:
             if active and not paused:
                 self.tick()
 
-    def tick(self) -> None:
-        """Execute a single 1-second session tick with grace window and escalation."""
+    def tick(self, now: float | None = None) -> None:
+        """Execute a single session tick with grace window and escalation."""
         complete_cb = None
         drift_cb = None
         spoken_line = ""
@@ -339,7 +339,7 @@ class FocusEngine:
                     tab_ok = (surface.tab_host_hash == self._target_tab_host_hash)
                 on_target = app_ok and tab_ok
 
-            now_mono = time.monotonic()
+            now_mono = now if now is not None else time.monotonic()
             now_epoch = time.time()
             is_snoozed = (now_epoch < self._snoozed_until_s)
 

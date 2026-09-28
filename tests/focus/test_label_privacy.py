@@ -10,6 +10,7 @@ is stored NOWHERE else:
 - Not in episode/notes log
 - Not in any file written during the test
 """
+import time
 import unittest
 import uuid
 from dataclasses import asdict
@@ -61,11 +62,11 @@ class TestLabelPrivacy(unittest.TestCase):
         # 2. Switch to drifting app with nonsense label
         reader.set_current(drift_surf)
 
-        # Drive ticks past the 800ms grace window
+        t0 = time.monotonic()
         # Tick 1: starts candidate timer
-        engine.tick()
-        # Tick 2 (1 second later): exceeds 800ms grace window -> triggers drift & spoken callout
-        engine.tick()
+        engine.tick(t0)
+        # Tick 2 (1.0s later, exceeding 800ms grace window): triggers drift & callout
+        engine.tick(t0 + 1.0)
 
         # 3. Assert the nonsense label was spoken!
         self.assertTrue(len(spoken_lines) >= 1, "Expected at least one spoken callout line")

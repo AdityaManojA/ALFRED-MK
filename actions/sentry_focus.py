@@ -4,6 +4,7 @@ Provides tool invocation for Sentry Mode v2 FOCUS capabilities:
 - Session start with duration in minutes and intent
 - Session controls: pause, resume, extend, abort/stop
 - Drift mitigations: snooze, excuse, and nag cadence adjustments
+- Tone tuning: drill sergeant mode ('be harsh today') / gentle mode
 - Surface locking
 """
 from __future__ import annotations
@@ -69,6 +70,14 @@ def sentry_focus_action(
         actual = engine.set_nag_interval(cadence_s)
         return f"Drift reminder cadence set to {actual} seconds, sir."
 
+    elif act in ("drill_sergeant", "harsh", "be_harsh", "tough"):
+        engine.set_drill_sergeant(True)
+        return "Drill sergeant mode engaged, sir. No mercy on distractions."
+
+    elif act in ("gentle", "standard", "normal", "polite"):
+        engine.set_drill_sergeant(False)
+        return "Standard courteous tone restored, sir."
+
     elif act in ("status", "check", "remaining"):
         st = engine.get_state()
         if not st.active:
@@ -79,7 +88,7 @@ def sentry_focus_action(
         return f"FOCUS session active: {m}m {s}s remaining ({status_desc}), sir."
 
     else:
-        return f"Unknown FOCUS action '{action}'. Valid actions: start, pause, resume, extend, stop, snooze, excuse, cadence, status."
+        return f"Unknown FOCUS action '{action}'. Valid actions: start, pause, resume, extend, stop, snooze, excuse, cadence, drill_sergeant, gentle, status."
 
 
 TOOL = {
@@ -88,14 +97,15 @@ TOOL = {
         "Controls Sentry FOCUS mode: manages distraction-free focus sessions, locks onto current window or tab, "
         "and handles drift controls. "
         "Actions: 'start' (with duration_minutes and optional intent), 'pause', 'resume', "
-        "'extend' (with minutes), 'stop' / 'abort', 'snooze' (with seconds), 'excuse', 'cadence' (nag interval), or 'status'."
+        "'extend' (with minutes), 'stop' / 'abort', 'snooze' (with seconds), 'excuse', 'cadence' (nag interval), "
+        "'drill_sergeant' (be harsh today), 'gentle' (normal tone), or 'status'."
     ),
     "parameters": {
         "type": "OBJECT",
         "properties": {
             "action": {
                 "type": "STRING",
-                "description": "start | pause | resume | extend | stop | snooze | excuse | cadence | status",
+                "description": "start | pause | resume | extend | stop | snooze | excuse | cadence | drill_sergeant | gentle | status",
             },
             "duration_minutes": {
                 "type": "INTEGER",

@@ -74,18 +74,21 @@ class TestFocusEngine(unittest.TestCase):
         app1 = SurfaceIdentity(app_id="code.exe", spoken_label="VS Code", capability="FULL")
         app2 = SurfaceIdentity(app_id="chrome.exe", tab_host_hash=hash_host("youtube.com"), is_browser=True, capability="FULL")
 
-        self.reader.set_sequence([app1, app2])
+        self.reader.set_sequence([app1, app2, app2])
         # Start session
         self.engine.start(duration_minutes=10)
 
+        t0 = time.monotonic()
         # Tick 1 -> reads app1, settles and locks on app1 (on target)
-        self.engine.tick()
+        self.engine.tick(t0)
         st1 = self.engine.get_state()
         self.assertFalse(st1.drifting)
         self.assertEqual(st1.on_target_s, 1)
 
-        # Tick 2 -> reads app2 (drifting!)
-        self.engine.tick()
+        # Tick 2 -> reads app2 (initiates candidate drift)
+        self.engine.tick(t0 + 0.5)
+        # Tick 3 -> 1.0s later, grace passed (drifting!)
+        self.engine.tick(t0 + 1.5)
         st2 = self.engine.get_state()
         self.assertTrue(st2.drifting)
         self.assertEqual(st2.current_drift_s, 1)
@@ -98,18 +101,22 @@ class TestFocusEngine(unittest.TestCase):
         self.engine.start(duration_minutes=10)
         self.engine.lock_surface("code.exe")
 
+        t0 = time.monotonic()
         # Snooze for 10 seconds
         until = self.engine.snooze(10)
         self.assertGreater(until, time.time())
 
         # Tick while snoozed: should not count as drift
-        self.engine.tick()
+        self.engine.tick(t0)
+        self.engine.tick(t0 + 1.0)
         st = self.engine.get_state()
         self.assertFalse(st.drifting)
 
         # Clear snooze
         self.engine.snooze(0)
-        self.engine.tick()
+        t1 = time.monotonic() + 15.0
+        self.engine.tick(t1)
+        self.engine.tick(t1 + 1.0)
         self.assertTrue(self.engine.get_state().drifting)
 
         # Excuse flow
@@ -120,7 +127,6 @@ class TestFocusEngine(unittest.TestCase):
 
     def test_session_survives_hud_lifecycle(self):
         """Verify countdown survives HUD minimize/close/recreation."""
-        # Start a real auto-ticking engine session
         live_engine = FocusEngine(reader=self.reader, auto_tick=True)
         live_engine.start(duration_minutes=1)
 
