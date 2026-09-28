@@ -3990,7 +3990,7 @@ class NotesTerminalWidget(QWidget):
         self._copy_btn.setFixedHeight(22)
         self._copy_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._copy_btn.setStyleSheet(_BTN_SM)
-        self._copy_btn.setToolTip("Copy all notes and links to clipboard")
+        attach_hover_help(self._copy_btn, "Copy all notes and links in the Intel vault to your clipboard.")
         self._copy_btn.clicked.connect(self.copy_all)
         top_bar.addWidget(self._copy_btn)
 
@@ -3999,7 +3999,7 @@ class NotesTerminalWidget(QWidget):
         self._clear_btn.setFixedHeight(22)
         self._clear_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._clear_btn.setStyleSheet(_BTN_SM)
-        self._clear_btn.setToolTip("Clear Intel terminal")
+        attach_hover_help(self._clear_btn, "Clear all saved notes and research links from the Intel vault.")
         self._clear_btn.clicked.connect(self.clear_notes)
         top_bar.addWidget(self._clear_btn)
 
@@ -7315,7 +7315,20 @@ class MainWindow(QMainWindow):
         self._capabilities_overlay: CapabilitiesOverlay | None = None
 
         central = QWidget()
-        central.setStyleSheet(f"background: {C.BG};")
+        central.setStyleSheet(f"""
+            QWidget {{
+                background: {C.BG};
+            }}
+            QToolTip {{
+                background-color: {C.PANEL_BG};
+                color: {C.PRI};
+                border: 1px solid {C.BORDER_A};
+                border-radius: 4px;
+                padding: 5px 9px;
+                font-family: 'JetBrains Mono', 'Cascadia Mono', 'Consolas', monospace;
+                font-size: 11px;
+            }}
+        """)
         self.setCentralWidget(central)
 
         root = QVBoxLayout(central)
@@ -7897,6 +7910,7 @@ class MainWindow(QMainWindow):
             self.showFullScreen()
 
     def resizeEvent(self, event):
+        TacticalHoverHelpManager.instance().dismiss()
         super().resizeEvent(event)
         cw = self.centralWidget()
         if self._overlay and self._overlay.isVisible():
@@ -8266,6 +8280,9 @@ class MainWindow(QMainWindow):
         tab_row.addWidget(self._tab_notes_btn)
         lay.addLayout(tab_row)
 
+        attach_hover_help(self._tab_activity_btn, "Display live system telemetry, activity logs, and assistant messages.")
+        attach_hover_help(self._tab_notes_btn, "View gathered intel entries, research notes, URLs, and code snippets.")
+
         self._tab_activity_btn.clicked.connect(lambda: self._switch_terminal_tab(0))
         self._tab_notes_btn.clicked.connect(lambda: self._switch_terminal_tab(1))
 
@@ -8286,8 +8303,9 @@ class MainWindow(QMainWindow):
         self._think_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._think_btn.setCheckable(True)
         self._think_btn.setChecked(False)
-        self._think_btn.setToolTip(
-            "Show / hide the agent's internal reasoning trace (THINK: prefixed lines)"
+        attach_hover_help(
+            self._think_btn,
+            "Show or hide the assistant's real-time internal reasoning trace and thoughts before answering."
         )
         self._style_think_btn(False)
         self._think_btn.toggled.connect(self._toggle_think)
@@ -8299,6 +8317,7 @@ class MainWindow(QMainWindow):
         # 3. Forensic Data Ingestion
         self._drop_zone = FileDropZone()
         self._drop_zone.file_selected.connect(self._on_file_selected)
+        attach_hover_help(self._drop_zone, "Drop files or click to upload documents, images, code, and logs for immediate analysis.")
         lay.addWidget(self._drop_zone)
 
         self._file_hint = QLabel("DROP EVIDENCE // SURVEILLANCE CAPTURES // TELEMETRY LOGS")
@@ -8315,6 +8334,7 @@ class MainWindow(QMainWindow):
         self._interrupt_btn.setFixedHeight(32)
         self._interrupt_btn.setFont(mono_font(7, QFont.Weight.Bold, letter_spacing=1.2))
         self._interrupt_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        attach_hover_help(self._interrupt_btn, "Immediately stop active speech synthesis, reasoning tasks, and ongoing directives.")
         self._interrupt_btn.setStyleSheet(f"""
             QPushButton {{
                 background: rgba(255, 42, 85, 0.08);
@@ -8345,6 +8365,7 @@ class MainWindow(QMainWindow):
         self._mute_btn.setAccessibleDescription(
             "Toggle microphone listening. The outline responds to input level while listening."
         )
+        attach_hover_help(self._mute_btn, "Toggle microphone input on or off. Responds dynamically to audio volume.")
         self._mute_btn.clicked.connect(self._toggle_mute)
         self._style_mute_btn()
         lay.addWidget(self._mute_btn)
@@ -8562,6 +8583,7 @@ class MainWindow(QMainWindow):
             }}
         """)
         self._input.returnPressed.connect(self._send)
+        attach_hover_help(self._input, "Type a text directive or question to submit to ALFRED directly.")
         row.addWidget(self._input)
 
         send = QPushButton("TRANSMIT ❯")
@@ -8587,13 +8609,14 @@ class MainWindow(QMainWindow):
             }}
         """)
         send.clicked.connect(self._send)
+        attach_hover_help(send, "Transmit typed directive or query to the AI reasoning engine.")
         row.addWidget(send)
 
         self._clear_btn = QPushButton("✕ CLEAR")
         self._clear_btn.setFixedHeight(34)
         self._clear_btn.setFont(mono_font(7, QFont.Weight.Bold, letter_spacing=1.0))
         self._clear_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._clear_btn.setToolTip("Wipe chat log and conversation history")
+        attach_hover_help(self._clear_btn, "Clear conversational chat history and reset terminal display.")
         self._clear_btn.setStyleSheet(f"""
             QPushButton {{
                 background: rgba(255, 42, 85, 0.08);

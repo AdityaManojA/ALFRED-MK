@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "core/plugin_loader.py": {
-    "mtime": 1790601113.4859748,
-    "seen": 1790601780.6861894,
-    "ast_hash": "9158a2f1c63532d0f2bad32956a73294",
+    "mtime": 1790630105.7600667,
+    "seen": 1790630747.880981,
+    "ast_hash": "03e03742e9ac9783cf5c4caf0b696f4d",
     "semantic_hash": ""
   },
   "core/stt.py": {
@@ -246,9 +246,9 @@
     "semantic_hash": "24935121ac923a382fcc4509d2b8053a"
   },
   "memory/config_manager.py": {
-    "mtime": 1790605155.402229,
-    "seen": 1790605304.6993763,
-    "ast_hash": "5f53000da369a446b7937a0ad88a6de7",
+    "mtime": 1790630083.828567,
+    "seen": 1790630747.881269,
+    "ast_hash": "ca022b0f12f80f050c169ab154ad8886",
     "semantic_hash": ""
   },
   "memory/memory_manager.py": {
@@ -276,9 +276,9 @@
     "semantic_hash": ""
   },
   "ui.py": {
-    "mtime": 1790627762.6056879,
-    "seen": 1790628576.7094564,
-    "ast_hash": "20da7fd627669e7fae665f3fb9e0f03a",
+    "mtime": 1790630503.4807203,
+    "seen": 1790630747.8818254,
+    "ast_hash": "5d8d0e27bda26358771095984e2388e9",
     "semantic_hash": ""
   },
   ".agents/rules/graphify.md": {
@@ -318,9 +318,9 @@
     "semantic_hash": ""
   },
   "readme.md": {
-    "mtime": 1790624365.089749,
-    "seen": 1790628576.709553,
-    "ast_hash": "c405af13886f605b4cf61a88a051bc0a",
+    "mtime": 1790630331.1370063,
+    "seen": 1790630747.8821495,
+    "ast_hash": "61e0696037c527425f0f001b22c40aca",
     "semantic_hash": ""
   },
   "requirements.txt": {
@@ -438,8 +438,8 @@
     "semantic_hash": "0c2178c383f8edcbe38ee55ce1b8bc8e"
   },
   "config/music_playlist.json": {
-    "mtime": 1790626806.506281,
-    "seen": 1790628576.7091866,
+    "mtime": 1790630715.3176913,
+    "seen": 1790630747.880864,
     "ast_hash": "1f9e15365dde86f74ae7aef8fd3a130b",
     "semantic_hash": ""
   },
@@ -654,9 +654,9 @@
     "semantic_hash": ""
   },
   "config/device_sessions.json": {
-    "mtime": 1790620755.7736156,
-    "seen": 1790620787.126534,
-    "ast_hash": "77288a1ab9e0de11a118756aeb987c29",
+    "mtime": 1790630538.5299666,
+    "seen": 1790630747.8808556,
+    "ast_hash": "3003ebc7a58fa8bba4de4ef8ea6393e4",
     "semantic_hash": ""
   },
   "core/local_pipeline.py": {
@@ -696,9 +696,9 @@
     "semantic_hash": ""
   },
   "tests/test_plugin_loader.py": {
-    "mtime": 1790587763.1307235,
-    "seen": 1790587943.045668,
-    "ast_hash": "3b847ea376f7f6ee2d8628824f46b43d",
+    "mtime": 1790630528.801296,
+    "seen": 1790630747.881549,
+    "ast_hash": "851ee0b94dc919047626f7fb62691d46",
     "semantic_hash": ""
   },
   "tests/test_screen_monitor.py": {
@@ -1122,8 +1122,8 @@
     "semantic_hash": ""
   },
   "config/users/Master_Wayne/protocols.yaml": {
-    "mtime": 1790628488.4204214,
-    "seen": 1790628576.709499,
+    "mtime": 1790630703.7465959,
+    "seen": 1790630747.8819747,
     "ast_hash": "9615a7dbeb0ff72ed036cca3442dfd42",
     "semantic_hash": ""
   },
@@ -1233,6 +1233,18 @@
     "mtime": 1790627181.6197903,
     "seen": 1790628576.7095802,
     "ast_hash": "ab992af4eba15d52522201a99296404e",
+    "semantic_hash": ""
+  },
+  "tests/test_ui_cleanup.py": {
+    "mtime": 1790630657.8904922,
+    "seen": 1790630747.8816257,
+    "ast_hash": "776632dae39059e0e459b80b2eb154bd",
+    "semantic_hash": ""
+  },
+  "docs/UI_CLEANUP_NOTES.md": {
+    "mtime": 1790630722.042219,
+    "seen": 1790630747.8820171,
+    "ast_hash": "0c2f490afa89890978fb00ea36c90e8c",
     "semantic_hash": ""
   }
 }

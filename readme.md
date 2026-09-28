@@ -131,6 +131,12 @@ Introduced dedicated `actions/audio_core.py` action tool and UI methods (`pause_
 * **Cognitive Trace (Chain-of-Thought Streamer)**: Introduced an interactive `THINKING TRACE: ON/OFF` toggle button above the HUD chat, paired with a dedicated streaming listener to display internal reasoning steps from thinking-enabled models.
 * **Protocol Confirmation Loop Prevention**: Fixed `actions/protocol_engine.py` to bypass confirmation gates on non-destructive workflow creation (`ask_confirmation=False`).
 
+### 🎛️ Tactical Controls & Main Screen UI Polish
+* **Directives Archives Direct Access**: Kept Directive Archives permanently accessible directly on ALFRED's main screen header row (`[ ☵ ] DIRECTIVES ARCHIVE`) while removing redundant navigation from the Tactical Controls quick drawer.
+* **Descriptive Long-Hover Tooltip Engine**: Introduced a centralized, single-timer hover help manager (`TacticalHoverHelpManager`) with `HOVER_HELP_DELAY_MS = 600`. Provides plain-language explanations for all interactive settings, labels, and buttons across Reconfigure Batcomputer, Tactical Controls, Directive Archives, and the main HUD, dismissing cleanly on pointer leave, modal close, and supporting keyboard focus.
+* **Deduplicated Authentic Theme Selector**: Streamlined theme selection in Reconfigure Batcomputer into a single chromatic picker under *AUTHENTIC CRT THEMES // CHROMATICS* with clean, emoji-free display names (`DEFAULT BATCAVE`, `BANE MODE`, `BATMAN BEYOND`), preserving full live previews and persistence.
+* **Zero-Friction Automatic Plugin Activation**: Retired manual plugin toggle clutter from the settings UI. All installed, valid, and approved plugins activate automatically at startup with safe legacy configuration migration and robust failure isolation.
+
 ---
 
 ## 🌐 3. 100% Local & Air-Gapped Operation
@@ -788,7 +794,7 @@ python main.py
 </p>
 
 This codebase is indexed with a persistent **GraphRAG Knowledge Graph** in `graphify-out/`:
-* **📊 3,651 nodes** & **7,320 relationships** across **208 semantic communities**.
+* **📊 3,411 nodes** & **7,027 relationships** across **188 semantic communities**.
 * **🌐 Interactive Visualization**: [`graphify-out/graph.html`](file:///d:/Projects/Alfred-Mark-V/graphify-out/graph.html)
 * **📄 Architectural Report**: [`graphify-out/GRAPH_REPORT.md`](file:///d:/Projects/Alfred-Mark-V/graphify-out/GRAPH_REPORT.md)
 * **⚡ Dynamic Graph Management**: Real-time mutation, entity/relationship addition, exponential decay, 2-hop querying via `memory/graph_manager.py`.

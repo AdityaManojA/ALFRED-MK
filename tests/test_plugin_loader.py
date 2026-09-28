@@ -71,11 +71,6 @@ class TestPluginSettingsSchemaCache(unittest.TestCase):
             self.assertEqual(enabled.call_count, 2)
             self.assertEqual(config.call_count, 2)
 
-            config_manager.save_plugin_enabled("demo", False)
-            self.assertEqual(self.registry.settings_schemas(), [])
-            self.assertEqual(enabled.call_count, 3)
-            self.assertEqual(config.call_count, 2)
-
     def test_external_plugin_config_write_refreshes_schema(self):
         config_manager.save_plugin_config("demo_config", {"token": "old"})
         self.assertEqual(self.registry.settings_schemas()[0]["values"], {"token": "old"})
