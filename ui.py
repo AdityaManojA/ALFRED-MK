@@ -28,7 +28,9 @@ from PyQt6.QtGui import (
     QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPainter, QPainterPath,
     QPen, QPixmap, QRadialGradient, QShortcut,
 )
+from core.sentry.mode_manager import get_sentry_mode_manager, SentrySnapshot
 from PyQt6.QtWidgets import (
+    QMenu,
     QApplication, QComboBox, QFileDialog, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit,
     QMainWindow, QPushButton, QScrollArea, QSizePolicy, QSlider, QSplitter,
     QStackedWidget, QTextBrowser, QTextEdit, QVBoxLayout, QWidget, QProgressBar,
@@ -3674,6 +3676,15 @@ class MinimizedHudOverlay(QWidget):
         header.addWidget(self._title)
         header.addStretch()
 
+        button_font = QFontDatabase.systemFont(QFontDatabase.SystemFont.GeneralFont)
+        button_font.setPointSize(10)
+        button_font.setWeight(QFont.Weight.Bold)
+
+        self._sentry_btn = QPushButton("S")
+        self._sentry_btn.setObjectName("sentryButton")
+        self._sentry_btn.setToolTip("Sentry Mode (Monitor & Focus)")
+        self._sentry_btn.clicked.connect(self._show_sentry_menu)
+
         minimize = QPushButton("−")
         minimize.setToolTip("Minimize overlay")
         minimize.clicked.connect(self.showMinimized)
@@ -3684,10 +3695,8 @@ class MinimizedHudOverlay(QWidget):
         close.setObjectName("closeButton")
         close.setToolTip("Hide overlay")
         close.clicked.connect(self.close)
-        button_font = QFontDatabase.systemFont(QFontDatabase.SystemFont.GeneralFont)
-        button_font.setPointSize(10)
-        button_font.setWeight(QFont.Weight.Bold)
-        for button in (minimize, restore, close):
+
+        for button in (self._sentry_btn, minimize, restore, close):
             button.setFont(button_font)
             button.setCursor(Qt.CursorShape.PointingHandCursor)
             header.addWidget(button)
@@ -3721,6 +3730,26 @@ class MinimizedHudOverlay(QWidget):
         font.setPointSize(point_size)
         font.setStyleHint(QFont.StyleHint.Monospace)
         return font
+
+    def _show_sentry_menu(self) -> None:
+        if self._main_window and hasattr(self._main_window, "_show_sentry_menu"):
+            self._main_window._show_sentry_menu(anchor=self._sentry_btn)
+
+    def update_sentry_indicator(self, mon_active: bool, foc_active: bool) -> None:
+        if not hasattr(self, "_sentry_btn"):
+            return
+        if mon_active and foc_active:
+            self._sentry_btn.setText("S●")
+            self._sentry_btn.setStyleSheet(f"QPushButton#sentryButton {{ color: {C.RED}; font-weight: bold; }}")
+        elif mon_active:
+            self._sentry_btn.setText("S●")
+            self._sentry_btn.setStyleSheet(f"QPushButton#sentryButton {{ color: {C.GREEN}; font-weight: bold; }}")
+        elif foc_active:
+            self._sentry_btn.setText("S●")
+            self._sentry_btn.setStyleSheet(f"QPushButton#sentryButton {{ color: {C.RED}; font-weight: bold; }}")
+        else:
+            self._sentry_btn.setText("S")
+            self._sentry_btn.setStyleSheet(f"QPushButton#sentryButton {{ color: {C.TEXT_MED}; font-weight: bold; }}")
 
     def set_assistant_name(self, name: str) -> None:
         self._assistant_name = (name or "Alfred").strip()
@@ -7094,6 +7123,7 @@ class ReactiveMicButton(QPushButton):
 class MainWindow(QMainWindow):
     _log_sig        = pyqtSignal(str)
     _state_sig      = pyqtSignal(str)
+    _sentry_snapshot_sig = pyqtSignal(object)
     _content_sig    = pyqtSignal(str, str)   # (title, text) — thread-safe content display
     _reconfig_sig   = pyqtSignal()           # trigger setup overlay from any thread
     _camera_sig     = pyqtSignal(bytes)      # show camera frame preview (small overlay)
@@ -7300,6 +7330,7 @@ class MainWindow(QMainWindow):
         self._intel_note_sig.connect(self._on_intel_note_received, Qt.ConnectionType.QueuedConnection)
         self._clear_log_sig.connect(self._on_clear_chat)
         self._screen_monitor_sig.connect(self._apply_screen_monitor_state)
+        self._sentry_snapshot_sig.connect(self._apply_sentry_snapshot)
         self._spotify_playback_sig.connect(self.set_spotify_playback)
         self._spotify_state_sig.connect(self.set_spotify_playback_state)
         self._cam_stop = threading.Event()
@@ -9944,30 +9975,116 @@ class MainWindow(QMainWindow):
                 "SYS: Cognitive trace concealed, sir. Only the conclusions remain."
             )
 
-    def _toggle_sentry_mode(self, checked: bool) -> None:
-        """Request screen-only monitoring from the application controller."""
-        if not self.on_screen_monitor_toggle:
-            self._apply_screen_monitor_state(False, "Screen monitor unavailable")
-            self._log.append_log("ERR: Screen monitoring is not connected.")
-            return
+    def _toggle_sentry_mode(self, checked: bool | None = None) -> None:
+        """Sentry Mode button handler: opens the dual MONITOR + FOCUS menu, or toggles if boolean passed."""
+        if isinstance(checked, bool) and getattr(self, "on_screen_monitor_toggle", None):
+            try:
+                result = self.on_screen_monitor_toggle(bool(checked))
+                active = bool(result.get("active", checked)) if isinstance(result, dict) else bool(checked)
+                label = result.get("label", "") if isinstance(result, dict) else ""
+                self._apply_screen_monitor_state(active, label)
+                return
+            except Exception as exc:
+                self._apply_screen_monitor_state(False, "Screen monitor error")
+                if hasattr(self, "_log"):
+                    self._log.append_log(f"ERR: Screen monitoring failed — {exc}")
+                return
 
-        try:
-            result = self.on_screen_monitor_toggle(bool(checked))
-            active = bool(result.get("active", checked)) if isinstance(result, dict) else bool(checked)
-            label = result.get("label", "") if isinstance(result, dict) else ""
-            self._apply_screen_monitor_state(active, label)
-        except Exception as exc:
-            self._apply_screen_monitor_state(False, "Screen monitor error")
-            self._log.append_log(f"ERR: Screen monitoring failed — {exc}")
+        self._show_sentry_menu(self._sentry_btn)
+
+    def _create_sentry_menu(self) -> QMenu:
+        parent_widget = self if isinstance(self, QWidget) else None
+        menu = QMenu(parent_widget)
+        menu.setStyleSheet(f"""
+            QMenu {{
+                background-color: {C.PANEL};
+                color: {C.TEXT};
+                border: 1px solid {C.BORDER_B};
+                border-radius: 4px;
+                padding: 4px;
+            }}
+            QMenu::item {{
+                padding: 6px 20px 6px 12px;
+                font-family: 'JetBrains Mono', 'Consolas', monospace;
+                font-size: 11px;
+            }}
+            QMenu::item:selected {{
+                background-color: rgba(142, 155, 255, 0.22);
+                color: #ffffff;
+            }}
+        """)
+        mgr = get_sentry_mode_manager()
+        snap = mgr.get_snapshot()
+
+        # MONITOR option
+        mon_label = f"[ ◈ ] MONITOR (ON) ▸ Stop" if snap.monitor.active else f"[ ▣ ] MONITOR (OFF) ▸ Start"
+        mon_act = menu.addAction(mon_label)
+        mon_act.triggered.connect(self._toggle_monitor_mode)
+
+        # FOCUS option
+        foc_label = f"[ ◉ ] FOCUS (ON) ▸ Stop" if snap.focus.active else f"[ ○ ] FOCUS (OFF) ▸ Start"
+        foc_act = menu.addAction(foc_label)
+        foc_act.triggered.connect(self._toggle_focus_mode)
+
+        return menu
+
+    def _show_sentry_menu(self, anchor: QWidget | None = None) -> None:
+        target = anchor if (isinstance(anchor, QWidget) and anchor.isVisible()) else self._sentry_btn
+        if not target or not isinstance(target, QWidget):
+            return
+        menu = self._create_sentry_menu()
+        menu.exec(target.mapToGlobal(QPoint(0, target.height())))
+
+    def _toggle_monitor_mode(self) -> None:
+        mgr = get_sentry_mode_manager()
+        mgr.toggle_monitor()
+        self._apply_sentry_snapshot(mgr.get_snapshot())
+
+    def _toggle_focus_mode(self) -> None:
+        mgr = get_sentry_mode_manager()
+        mgr.toggle_focus()
+        self._apply_sentry_snapshot(mgr.get_snapshot())
+
+    def _apply_sentry_snapshot(self, snapshot: SentrySnapshot) -> None:
+        mon = snapshot.monitor
+        foc = snapshot.focus
+
+        if mon.active and foc.active:
+            self._sentry_btn.setChecked(True)
+            self._sentry_btn.setText("[ ◈◉ ] SENTRY (2)")
+            self._sentry_btn.setToolTip("Both MONITOR and FOCUS active")
+        elif mon.active:
+            self._sentry_btn.setChecked(True)
+            self._sentry_btn.setText("[ ◈ ]  SCREEN MONITORING")
+            self._sentry_btn.setToolTip(f"MONITOR active: {mon.label or 'running'}")
+        elif foc.active:
+            self._sentry_btn.setChecked(True)
+            self._sentry_btn.setText("[ ◉ ]  FOCUS MODE")
+            self._sentry_btn.setToolTip("FOCUS active")
+        else:
+            self._sentry_btn.setChecked(False)
+            self._sentry_btn.setText("[ ▣ ]  SENTRY MODE")
+            self._sentry_btn.setToolTip("Sentry Mode: MONITOR + FOCUS")
+
+        if hasattr(self, "_hud_overlay") and hasattr(self._hud_overlay, "update_sentry_indicator"):
+            self._hud_overlay.update_sentry_indicator(mon.active, foc.active)
 
     def _apply_screen_monitor_state(self, active: bool, label: str = "") -> None:
         """Apply monitor state on the Qt thread for click and voice controls."""
+        mgr = get_sentry_mode_manager()
+        mgr.update_monitor_state(
+            active=bool(active),
+            label=label or ("Active" if active else ""),
+            target_count=1 if active else 0,
+        )
         self._sentry_btn.setChecked(bool(active))
         self._sentry_btn.setText("[ ◈ ]  SCREEN MONITORING" if active else "[ ▣ ]  SENTRY MODE")
         self._sentry_btn.setToolTip(label or (
             "Continuous screen monitoring active" if active
             else "Monitor the screen for task completion"
         ))
+        if hasattr(self, "_hud_overlay") and hasattr(self._hud_overlay, "update_sentry_indicator"):
+            self._hud_overlay.update_sentry_indicator(bool(active), mgr.focus_state.active)
 
     def _send(self):
         txt = self._input.text().strip()
@@ -10277,6 +10394,10 @@ class JarvisUI:
     @on_screen_monitor_toggle.setter
     def on_screen_monitor_toggle(self, cb):
         self._win.on_screen_monitor_toggle = cb
+
+    def apply_sentry_snapshot(self, snapshot: SentrySnapshot) -> None:
+        """Thread-safe Sentry Mode snapshot update."""
+        self._win._sentry_snapshot_sig.emit(snapshot)
 
     def set_screen_monitor_state(self, active: bool, label: str = "") -> None:
         """Thread-safe monitor state update used by click and voice controls."""

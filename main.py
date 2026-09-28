@@ -716,6 +716,14 @@ class JarvisLive:
         self._vision_busy          = False   # True while a vision capture/inject cycle is in flight
         self._screen_monitor_analysis_pending = False
         self._screen_monitor_last_analysis = 0.0
+        from core.sentry.mode_manager import get_sentry_mode_manager
+        self.sentry_mgr = get_sentry_mode_manager()
+        self.sentry_mgr.register_monitor_handlers(
+            on_start=self._start_screen_monitor,
+            on_stop=self._stop_screen_monitor,
+        )
+        self.sentry_mgr.state_changed.connect(self.ui.apply_sentry_snapshot)
+
         self._screen_monitor = ScreenMonitorController(
             on_meaningful_state=self._on_screen_monitor_event,
             on_completion=self._on_screen_monitor_completion,
