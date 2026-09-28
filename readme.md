@@ -11,6 +11,10 @@
 
 > **ALFRED MARK-VI** is an autonomous, real-time voice, vision, and system-control executive assistant built for complete digital sovereignty and tactical computing. Featuring native bidirectional audio streaming, real-time visual grounding, full desktop automation, high-performance long-term memory, and encrypted mobile remote telemetry.
 
+<p align="center">
+  <img src="Screenies/Default_theme.png" alt="ALFRED MARK-VI Tactical HUD Interface" width="92%">
+</p>
+
 ---
 
 ##  1. What's New: Recent Enhancements, Bug Fixes & Stability Updates
@@ -516,6 +520,10 @@ python actions/spotify_control.py
 
 ##  9. Quantum Mobile Remote & iPhone 16 Dashboard
 
+<p align="center">
+  <img src="Screenies/Remote_Uplink.png" alt="Quantum Mobile Remote Uplink & Pairing Modal" width="75%">
+</p>
+
 * **Encrypted Web Remote (AES-256-CBC)**: Scan the on-screen QR code from the desktop terminal or browse locally over WiFi. Session keys and traffic are encrypted locally with zero external server dependencies.
 * **iPhone 16 Viewport Architecture**: High-density responsive layout tailored for mobile displays with collapsible telemetry cards and zero button overflow.
 * **Dual-Destination Tactical Screenshots**: Asking ALFRED to capture the screen automatically dispatches high-resolution PNG captures to **both**:
@@ -537,6 +545,10 @@ python actions/spotify_control.py
 
 ##  11. High-Performance Memory & Conversational Briefing Customizer
 
+<p align="center">
+  <img src="Screenies/Daily_breifing.png" alt="ALFRED Morning Briefing Card" width="75%">
+</p>
+
 * **O(N log N) Pruning Engine**: Memory trimming optimized from $O(N^2)$ to $O(N \log N)$ using single-pass size accumulators and conservative lower-bound estimation. 50,000 records trimmed in **0.33 seconds** without CPU spikes.
 * **Tiered Memory Hierarchy (`memory/long_term.json`)**: Core identity facts stay in context; extended history is recalled on demand via sub-millisecond local keyword search (`recall_memory`).
 * **Conversational Briefing Directive Customizer (`update_daily_briefing.py`)**: Saying *"update my daily briefing"* opens an interactive alignment protocol where ALFRED captures specific additions, topics, news sources, or location shifts, permanently committing them to memory.
@@ -544,6 +556,15 @@ python actions/spotify_control.py
 ---
 
 ##  12. Real-Time Insignia & Chassis Hot-Swapper
+
+<p align="center">
+  <img src="Screenies/Reconfigure_settings.png" alt="Tactical Reconfigure Settings Panel" width="80%">
+</p>
+
+#### 🎨 Tactical Chassis Themes Showcase
+| Wayne Classic (Default) | Bane Protocol Chassis | Batman Beyond Chassis |
+|:---:|:---:|:---:|
+| <img src="Screenies/Default_theme.png" width="300" alt="Wayne Classic Theme"> | <img src="Screenies/Bane_theme.png" width="300" alt="Bane Theme"> | <img src="Screenies/Batman_beyond_Theme.png" width="300" alt="Batman Beyond Theme"> |
 
 * **Multi-Insignia Catalog**: Scans and registers brand assets from `Icons/` (Batman Beyond, Arkham Asylum, Classic Bat, White Bat, Tactical Stealth).
 * **Live Runtime Reconfiguration (`update_app_icon.py`)**: Hot-swaps the active application window icon, Windows taskbar insignia, and system tray in real time upon voice request (*"update the app icon to Batman Beyond"*) or via the Customise Assistant drawer.
@@ -794,8 +815,12 @@ python main.py
 
 ##  20. Knowledge Graph (`graphify`)
 
+<p align="center">
+  <img src="Screenies/Graphify.png" alt="Graphify Visual Knowledge Graph" width="85%">
+</p>
+
 This codebase is indexed with a persistent **GraphRAG Knowledge Graph** located in `graphify-out/`:
-* **2,640 nodes** & **5,146 relationships** mapped across **150 semantic functional communities**.
+* **3,651 nodes** & **7,320 relationships** mapped across **208 semantic functional communities**.
 * Interactive navigable graph visualization: [`graphify-out/graph.html`](file:///d:/Projects/Alfred-Mark-V/graphify-out/graph.html).
 * Architectural breakdown: [`graphify-out/GRAPH_REPORT.md`](file:///d:/Projects/Alfred-Mark-V/graphify-out/GRAPH_REPORT.md).
 * **Dynamic Knowledge Graph Management**: Real-time graph mutation, entity/relationship addition, exponential decay, and 2-hop querying via `memory/graph_manager.py` for persistent knowledge evolution and context-aware reasoning.
