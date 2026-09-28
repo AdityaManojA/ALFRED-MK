@@ -1,0 +1,70 @@
+{
+  "generated_at": "2026-09-28T13:42:14.397755+00:00",
+  "nodes": {
+    "actions_screen_monitor_screenmonitorcontroller": {
+      "code_fingerprint": "19f3e1cebe8ef4a8803e6a3a5d9131d469acd7d0c87b1f06647c3e4a0999eaf1",
+      "label": "ScreenMonitorController",
+      "last": "2026-09-28T13:11:06.078780+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-28T13:11:06.078780+00:00",
+          "outcome": "useful",
+          "q": "Read uiperformance.md and continousmonitoring.md and perform the tasks in the most efficient manner"
+        }
+      ],
+      "score": 0.999500503,
+      "source_file": "actions/screen_monitor.py",
+      "status": "tentative",
+      "uses": 1
+    },
+    "core_plugin_loader_pluginregistry_settings_schemas": {
+      "code_fingerprint": "dc3b344e91f3bbafc1a87aa0add8cde6d131835ebe5b75d9b87214eec8c68c41",
+      "label": ".settings_schemas()",
+      "last": "2026-09-28T13:11:06.078780+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-28T13:11:06.078780+00:00",
+          "outcome": "useful",
+          "q": "Read uiperformance.md and continousmonitoring.md and perform the tasks in the most efficient manner"
+        }
+      ],
+      "score": 0.999500503,
+      "source_file": "core/plugin_loader.py",
+      "status": "tentative",
+      "uses": 1
+    },
+    "memory_config_manager": {
+      "code_fingerprint": "92efdd34c260a04fdf8930554b698348e96ea60a456ff1aece934d2ec5df0d56",
+      "label": "config_manager.py",
+      "last": "2026-09-28T13:11:06.078780+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-28T13:11:06.078780+00:00",
+          "outcome": "useful",
+          "q": "Read uiperformance.md and continousmonitoring.md and perform the tasks in the most efficient manner"
+        }
+      ],
+      "score": 0.999500503,
+      "source_file": "memory/config_manager.py",
+      "status": "tentative",
+      "uses": 1
+    },
+    "ui_mainwindow_toggle_sentry_mode": {
+      "code_fingerprint": "ef5d7d42231fdec6d21c3b491e391a68267ca76bf95c6dcef71c27605e15650a",
+      "label": "._toggle_sentry_mode()",
+      "last": "2026-09-28T13:11:06.078780+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-28T13:11:06.078780+00:00",
+          "outcome": "useful",
+          "q": "Read uiperformance.md and continousmonitoring.md and perform the tasks in the most efficient manner"
+        }
+      ],
+      "score": 0.999500503,
+      "source_file": "ui.py",
+      "status": "tentative",
+      "uses": 1
+    }
+  },
+  "version": 1
+}

@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>ALFRED — Quantum Access Matrix</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:        #02060d;
+      --card-bg:   rgba(6, 16, 28, 0.72);
+      --border:    rgba(0, 240, 255, 0.20);
+      --border-hi: rgba(0, 240, 255, 0.48);
+      --accent:    #00f0ff;
+      --accent2:   #0088ff;
+      --amber:     #ffb700;
+      --adim:      rgba(0, 240, 255, 0.12);
+      --text:      #eaf6ff;
+      --muted:     #6b829c;
+      --err:       #ff3b5c;
+    }
+    html, body {
+      height: 100%;
+      background: radial-gradient(circle at 50% 30%, #061526 0%, #02070f 60%, #010307 100%);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Ambient cyber background grid */
+    body::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: 
+        radial-gradient(rgba(0, 240, 255, 0.08) 1px, transparent 1px),
+        radial-gradient(rgba(0, 136, 255, 0.04) 1px, transparent 1px);
+      background-size: 36px 36px, 12px 12px;
+      background-position: 0 0, 18px 18px;
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    /* Large ambient holographic glow behind the reactor */
+    .ambient-glow {
+      position: absolute;
+      width: 460px;
+      height: 460px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0, 240, 255, 0.14) 0%, rgba(0, 136, 255, 0.05) 45%, transparent 70%);
+      filter: blur(40px);
+      pointer-events: none;
+      z-index: 1;
+      animation: pulse-ambient 6s ease-in-out infinite alternate;
+    }
+    @keyframes pulse-ambient {
+      0%   { transform: scale(0.92); opacity: 0.6; }
+      100% { transform: scale(1.08); opacity: 0.95; }
+    }
+
+    /* Main Container & iOS Frosted Card */
+    .container {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Holographic Arc Reactor Canvas Container */
+    .reactor-wrap {
+      position: relative;
+      width: 220px;
+      height: 220px;
+      margin-bottom: -45px;
+      z-index: 3;
+      filter: drop-shadow(0 0 25px rgba(0, 240, 255, 0.45));
+      cursor: pointer;
+    }
+    #reactor-canvas {
+      width: 220px;
+      height: 220px;
+      display: block;
+    }
+
+    .card {
+      width: 360px;
+      max-width: 90vw;
+      padding: 55px 32px 34px;
+      background: var(--card-bg);
+      backdrop-filter: blur(36px) saturate(190%);
+      -webkit-backdrop-filter: blur(36px) saturate(190%);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      text-align: center;
+      box-shadow: 
+        0 30px 80px rgba(0, 0, 0, 0.75),
+        0 0 45px rgba(0, 240, 255, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12),
+        inset 0 0 20px rgba(0, 240, 255, 0.04);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Corner Stark Brackets */
+    .card::before, .card::after {
+      content: "";
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border: 1.5px solid var(--accent);
+      pointer-events: none;
+      opacity: 0.65;
+    }
+    .card::before { top: 12px; left: 12px; border-right: none; border-bottom: none; }
+    .card::after  { bottom: 12px; right: 12px; border-left: none; border-top: none; }
+
+    .badge-bar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .badge {
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 99px;
+      background: rgba(0, 240, 255, 0.08);
+      border: 1px solid rgba(0, 240, 255, 0.22);
+      color: var(--accent);
+    }
+
+    .logo {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 12px;
+      margin-bottom: 2px;
+      color: #ffffff;
+      text-shadow: 0 0 16px rgba(0, 240, 255, 0.6);
+      margin-right: -12px; /* balance letter-spacing */
+    }
+    .logo em {
+      color: var(--accent);
+      font-style: normal;
+      text-shadow: 0 0 20px var(--accent);
+    }
+    .sub {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .hint {
+      font-size: 12px;
+      color: #9cb1c9;
+      line-height: 1.55;
+      margin-bottom: 24px;
+    }
+
+    .key-wrap {
+      position: relative;
+      margin-bottom: 16px;
+    }
+    .key-input {
+      width: 100%;
+      padding: 16px 14px;
+      background: rgba(0, 16, 32, 0.65);
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      color: #ffffff;
+      font-size: 28px;
+      font-weight: 800;
+      font-family: 'SF Mono', 'Cascadia Code', 'Courier New', monospace;
+      text-align: center;
+      letter-spacing: 12px;
+      text-transform: uppercase;
+      outline: none;
+      transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+      caret-color: var(--accent);
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.6);
+    }
+    .key-input::placeholder {
+      color: rgba(107, 130, 156, 0.4);
+      letter-spacing: 8px;
+      font-size: 18px;
+    }
+    .key-input:focus {
+      border-color: var(--accent);
+      background: rgba(0, 240, 255, 0.07);
+      box-shadow: 
+        0 0 24px rgba(0, 240, 255, 0.28),
+        inset 0 0 14px rgba(0, 240, 255, 0.12);
+    }
+
+    .err {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--err);
+      min-height: 20px;
+      margin-bottom: 12px;
+      letter-spacing: 0.5px;
+      text-shadow: 0 0 10px rgba(255, 59, 92, 0.4);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #00f0ff 0%, #0088ff 100%);
+      color: #02070f;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 
+        0 8px 24px rgba(0, 240, 255, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.55);
+      transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .btn::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(255,255,255,0.4), transparent);
+      transform: rotate(45deg) translateY(-100%);
+      transition: transform 0.6s ease;
+    }
+    .btn:hover {
+      box-shadow: 0 12px 32px rgba(0, 240, 255, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+      transform: translateY(-1px);
+    }
+    .btn:hover::before {
+      transform: rotate(45deg) translateY(100%);
+    }
+    .btn:active {
+      transform: scale(0.98) translateY(1px);
+      box-shadow: 0 4px 14px rgba(0, 240, 255, 0.3);
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+    .shake { animation: shake 0.35s ease; }
+
+    .voice-note {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 22px;
+      line-height: 1.6;
+      text-align: left;
+      background: rgba(0, 240, 255, 0.03);
+      border: 1px solid rgba(0, 240, 255, 0.12);
+      border-radius: 12px;
+      padding: 10px 14px;
+    }
+    .voice-note code {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--accent);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-family: 'SF Mono', monospace;
+      font-size: 10px;
+    }
+
+    #reconnecting {
+      display: none;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+      animation: pulse-txt 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse-txt {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+    #bg-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <div class="ambient-glow"></div>
+  <div class="container">
+    <!-- Holographic Stark Arc Reactor Canvas -->
+    <div class="reactor-wrap" id="reactor-wrap" title="Stark Mark-LIV Quantum Reactor">
+      <canvas id="reactor-canvas" width="440" height="440"></canvas>
+    </div>
+
+    <div class="card" id="card">
+      <div class="badge-bar">
+        <span class="badge">STARK INDUSTRIES</span>
+        <span class="badge">MARK LIV</span>
+      </div>
+      <div class="logo"><em>A</em>LFRED</div>
+      <div class="sub">Quantum Access Protocol</div>
+      <p id="reconnecting">AUTHENTICATING DEVICE TOKEN…</p>
+      <p class="hint">Access requires session authorization. Press <strong style="color:var(--text)">Remote Control</strong> in the desktop HUD to obtain your PIN or QR code.</p>
+      <div class="key-wrap">
+        <input class="key-input" id="key" type="text" maxlength="6"
+               autocomplete="off" autocorrect="off" spellcheck="false"
+               placeholder="· · · · · ·">
+      </div>
+      <div class="err" id="err"></div>
+      <button class="btn" onclick="doLogin()">INITIALIZE LINK</button>
+      <p class="voice-note">
+        🎤 <strong style="color:var(--text)">Voice Audio Relay:</strong> Open
+        <code>chrome://flags</code> on mobile, search
+        <code>Insecure origins treated as secure</code>, add your ALFRED host IP, and tap Relaunch.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // ── BACKGROUND MOVING CYBER PIXELS & PARTICLES ENGINE ───────────────────
+    const bgCanvas = document.getElementById('bg-canvas');
+    const bgCtx = bgCanvas ? bgCanvas.getContext('2d') : null;
+    let bgParticles = [];
+    let mouseX = window.innerWidth / 2;
+    let mouseY = window.innerHeight / 2;
+    let targetTiltX = 0, targetTiltY = 0;
+    let currentTiltX = 0, currentTiltY = 0;
+
+    function initBgParticles() {
+      if (!bgCanvas) return;
+      const w = bgCanvas.width = window.innerWidth;
+      const h = bgCanvas.height = window.innerHeight;
+      bgParticles = [];
+      const count = Math.floor(Math.min(75, (w * h) / 18000));
+      for (let i = 0; i < count; i++) {
+        bgParticles.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          vx: (Math.random() - 0.5) * 0.45,
+          vy: (Math.random() - 0.5) * 0.45,
+          size: Math.random() * 2.2 + 0.8,
+          alpha: Math.random() * 0.5 + 0.2,
+          hue: Math.random() > 0.4 ? 'rgba(0, 240, 255,' : 'rgba(0, 136, 255,',
+        });
+      }
+    }
+    window.addEventListener('resize', initBgParticles);
+    window.addEventListener('mousemove', e => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      targetTiltX = (e.clientX - window.innerWidth / 2) / (window.innerWidth / 2);
+      targetTiltY = (e.clientY - window.innerHeight / 2) / (window.innerHeight / 2);
+    });
+
+    function drawBgParticles() {
+      if (!bgCtx) return;
+      const w = bgCanvas.width;
+      const h = bgCanvas.height;
+      bgCtx.clearRect(0, 0, w, h);
+
+      currentTiltX += (targetTiltX - currentTiltX) * 0.05;
+      currentTiltY += (targetTiltY - currentTiltY) * 0.05;
+
+      for (let i = 0; i < bgParticles.length; i++) {
+        const p = bgParticles[i];
+        p.x += p.vx + currentTiltX * 0.2;
+        p.y += p.vy + currentTiltY * 0.2;
+
+        if (p.x < 0) p.x = w;
+        else if (p.x > w) p.x = 0;
+        if (p.y < 0) p.y = h;
+        else if (p.y > h) p.y = 0;
+
+        bgCtx.fillStyle = p.hue + p.alpha + ')';
+        bgCtx.beginPath();
+        bgCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        bgCtx.fill();
+
+        for (let j = i + 1; j < bgParticles.length; j++) {
+          const p2 = bgParticles[j];
+          const dx = p.x - p2.x;
+          const dy = p.y - p2.y;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < 6400) { // ~80px
+            const dist = Math.sqrt(d2);
+            const a = (1 - dist / 80) * 0.16;
+            bgCtx.strokeStyle = `rgba(0, 240, 255, ${a})`;
+            bgCtx.lineWidth = 0.8;
+            bgCtx.beginPath();
+            bgCtx.moveTo(p.x, p.y);
+            bgCtx.lineTo(p2.x, p2.y);
+            bgCtx.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(drawBgParticles);
+    }
+    initBgParticles();
+    requestAnimationFrame(drawBgParticles);
+
+    // ── STARK / WAYNE QUANTUM GYRO-REACTOR ENGINE ───────────────────────────
+    const canvas = document.getElementById('reactor-canvas');
+    const ctx = canvas.getContext('2d');
+    let phase = 0;
+    let boost = 1.0;
+
+    const particles = [];
+    for (let i = 0; i < 48; i++) {
+      particles.push({
+        angle: Math.random() * Math.PI * 2,
+        dist: 0.18 + Math.random() * 0.78,
+        speed: (0.003 + Math.random() * 0.008) * (Math.random() > 0.5 ? 1 : -1),
+        size: 1.0 + Math.random() * 2.5,
+        alpha: 0.35 + Math.random() * 0.65,
+        hue: Math.random() > 0.35 ? '#00f0ff' : '#ffb800',
+      });
+    }
+
+    document.getElementById('reactor-wrap').addEventListener('mouseenter', () => { boost = 2.4; });
+    document.getElementById('reactor-wrap').addEventListener('mouseleave', () => { boost = 1.0; });
+    document.getElementById('reactor-wrap').addEventListener('click', () => {
+      boost = 3.8;
+      setTimeout(() => { boost = 1.0; }, 900);
+    });
+
+    function setupHiDPI(c, context, cssW, cssH) {
+      const dpr = window.devicePixelRatio || 1;
+      if (c.width !== cssW * dpr || c.height !== cssH * dpr) {
+        c.width = cssW * dpr;
+        c.height = cssH * dpr;
+      }
+      context.resetTransform ? context.resetTransform() : context.setTransform(1, 0, 0, 1, 0, 0);
+      context.scale(dpr, dpr);
+    }
+
+    function drawReactor() {
+      const cssW = 220;
+      const cssH = 220;
+      setupHiDPI(canvas, ctx, cssW, cssH);
+
+      const cx = cssW / 2;
+      const cy = cssH / 2;
+      const r = (cssW / 2) * 0.88;
+
+      ctx.clearRect(0, 0, cssW, cssH);
+
+      // 1. Core Atmospheric Radial Bloom
+      const breath = Math.sin(phase * 0.035) * 0.08;
+      const glowGrad = ctx.createRadialGradient(cx, cy, r * 0.05, cx, cy, r * (0.95 + breath));
+      glowGrad.addColorStop(0, 'rgba(0, 240, 255, 0.60)');
+      glowGrad.addColorStop(0.35, 'rgba(0, 136, 255, 0.22)');
+      glowGrad.addColorStop(0.75, 'rgba(0, 240, 255, 0.06)');
+      glowGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = glowGrad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r * 0.98, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 2. Cosmic Stardust Particles
+      particles.forEach(p => {
+        p.angle += p.speed * boost;
+        const pr = r * p.dist;
+        const px = cx + Math.cos(p.angle) * pr;
+        const py = cy + Math.sin(p.angle) * pr;
+        const pAlpha = p.alpha * (0.6 + 0.4 * Math.sin(phase * 0.05 + p.angle * 2));
+
+        ctx.fillStyle = p.hue;
+        ctx.globalAlpha = pAlpha;
+        ctx.beginPath();
+        ctx.arc(px, py, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.globalAlpha = 1.0;
+
+      // 3. Precision Laser Graduation Ticks (72 radial marks)
+      ctx.strokeStyle = 'rgba(0, 240, 255, 0.35)';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r * 0.95, 0, Math.PI * 2);
+      ctx.stroke();
+
+      for (let i = 0; i < 72; i++) {
+        const ang = (i * 5 * Math.PI) / 180;
+        const isMajor = (i % 6 === 0);
+        const len = isMajor ? r * 0.10 : r * 0.04;
+        const r0 = r * 0.95 - len;
+        ctx.strokeStyle = isMajor ? 'rgba(0, 240, 255, 0.85)' : 'rgba(0, 240, 255, 0.22)';
+        ctx.lineWidth = isMajor ? 1.8 : 0.9;
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(ang) * r0, cy + Math.sin(ang) * r0);
+        ctx.lineTo(cx + Math.cos(ang) * (r * 0.95), cy + Math.sin(ang) * (r * 0.95));
+        ctx.stroke();
+      }
+
+      // 4. Segmented Rotating Nano-Aperture Gear Ring (36 notches)
+      const nTeeth = 36;
+      const rAperture = r * 0.77;
+      const rotGear = (phase * 0.012) % (Math.PI * 2);
+      ctx.strokeStyle = 'rgba(0, 240, 255, 0.30)';
+      ctx.lineWidth = 1.2;
+      for (let i = 0; i < nTeeth; i++) {
+        const gAng = (i * (360 / nTeeth) * Math.PI) / 180 + rotGear;
+        const ca = Math.cos(gAng), sa = Math.sin(gAng);
+        ctx.beginPath();
+        ctx.moveTo(cx + ca * (rAperture - 2.5), cy + sa * (rAperture - 2.5));
+        ctx.lineTo(cx + ca * (rAperture + 2.5), cy + sa * (rAperture + 2.5));
+        ctx.stroke();
+      }
+
+      // 5. Multi-Layered Counter-Rotating Kinetic Energy Arcs
+      const arcLayers = [
+        { rr: 0.92, span: 80,  count: 3, dir: +1, spd: 0.042, col: '#00f0ff', wid: 2.8 },
+        { rr: 0.84, span: 120, count: 2, dir: -1, spd: 0.034, col: 'rgba(0, 136, 255, 0.85)', wid: 2.2 },
+        { rr: 0.68, span: 55,  count: 4, dir: +1, spd: 0.060, col: '#ffb700', wid: 2.4 },
+        { rr: 0.58, span: 100, count: 2, dir: -1, spd: 0.038, col: '#00f0ff', wid: 1.8 }
+      ];
+
+      arcLayers.forEach(l => {
+        const rad = r * l.rr;
+        const base = phase * l.spd * l.dir;
+        const step = (Math.PI * 2) / l.count;
+        const spanRad = (l.span * Math.PI) / 180;
+
+        ctx.strokeStyle = l.col;
+        ctx.lineWidth = l.wid;
+
+        for (let s = 0; s < l.count; s++) {
+          const start = base + s * step;
+          ctx.beginPath();
+          ctx.arc(cx, cy, rad, start, start + spanRad);
+          ctx.stroke();
+
+          // Glowing Orbital Nano-Pips on leading edge
+          if (l.rr > 0.65) {
+            const pipAng = start + (l.dir > 0 ? spanRad : 0);
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowColor = l.col;
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            ctx.arc(cx + Math.cos(pipAng) * rad, cy + Math.sin(pipAng) * rad, 3.2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+          }
+        }
+      });
+
+      // 6. Dual 3D Gyroscopic Gimbal Rings (Perspective Tilting)
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(phase * 0.016);
+      ctx.strokeStyle = 'rgba(0, 240, 255, 0.40)';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      const pitch1 = 0.45 + 0.10 * Math.sin(phase * 0.02);
+      ctx.ellipse(0, 0, r * 0.74, r * 0.74 * pitch1, 0.35, 0, Math.PI * 2);
+      ctx.stroke();
+
+      const satAng1 = -phase * 0.04;
+      const satX1 = Math.cos(satAng1) * (r * 0.74);
+      const satY1 = Math.sin(satAng1) * (r * 0.74 * pitch1);
+      ctx.fillStyle = '#00ff9d';
+      ctx.shadowColor = '#00ff9d';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.arc(satX1, satY1, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Counter gimbal ring
+      ctx.rotate(-phase * 0.028);
+      ctx.strokeStyle = 'rgba(255, 184, 0, 0.35)';
+      ctx.beginPath();
+      const pitch2 = 0.38 + 0.08 * Math.cos(phase * 0.025);
+      ctx.ellipse(0, 0, r * 0.62, r * 0.62 * pitch2, -0.45, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+
+      // 7. Magnetic Containment Triad Nodes (120° offsets)
+      const rTri = r * 0.44;
+      for (let t = 0; t < 3; t++) {
+        const tAng = (t * 120 * Math.PI) / 180 + phase * 0.008;
+        const tx = cx + Math.cos(tAng) * rTri;
+        const ty = cy + Math.sin(tAng) * rTri;
+        ctx.strokeStyle = '#00f0ff';
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(tAng) * (rTri - 6), cy + Math.sin(tAng) * (rTri - 6));
+        ctx.lineTo(cx + Math.cos(tAng) * (rTri + 7), cy + Math.sin(tAng) * (rTri + 7));
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = '#00f0ff';
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.arc(tx, ty, 3.0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+
+      // 8. Central Obsidian Glass Quantum Lens
+      const rInner = r * 0.34;
+      const lensGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, rInner);
+      lensGrad.addColorStop(0, 'rgba(0, 240, 255, 0.72)');
+      lensGrad.addColorStop(0.45, 'rgba(2, 24, 48, 0.95)');
+      lensGrad.addColorStop(1, 'rgba(0, 240, 255, 0.88)');
+
+      ctx.fillStyle = lensGrad;
+      ctx.strokeStyle = '#00f0ff';
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, rInner, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Specular Glare across lens
+      const glare = ctx.createLinearGradient(cx - rInner, cy - rInner, cx + rInner, cy + rInner);
+      glare.addColorStop(0, 'rgba(255, 255, 255, 0.40)');
+      glare.addColorStop(0.4, 'rgba(255, 255, 255, 0.06)');
+      glare.addColorStop(0.6, 'transparent');
+      ctx.fillStyle = glare;
+      ctx.beginPath();
+      ctx.arc(cx, cy, rInner - 1, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Hexagonal Quantum Lattice inside Lens
+      const rHex = rInner * 0.68;
+      const rotHex = -phase * 0.016;
+      ctx.strokeStyle = 'rgba(0, 240, 255, 0.45)';
+      ctx.lineWidth = 1.0;
+      ctx.beginPath();
+      for (let h = 0; h < 6; h++) {
+        const hAng = (h * 60 * Math.PI) / 180 + rotHex;
+        const hx = cx + Math.cos(hAng) * rHex;
+        const hy = cy + Math.sin(hAng) * rHex;
+        if (h === 0) ctx.moveTo(hx, hy);
+        else ctx.lineTo(hx, hy);
+      }
+      ctx.closePath();
+      ctx.stroke();
+
+      // Laser Typography inside Core
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(0, 240, 255, 0.95)';
+      ctx.shadowBlur = 10;
+      ctx.fillText('ALFRED', cx, cy);
+      ctx.shadowBlur = 0;
+
+      phase += 1.2 * boost;
+      requestAnimationFrame(drawReactor);
+    }
+    requestAnimationFrame(drawReactor);
+
+    // ── AUTHENTICATION & LOGIN LOGIC ──────────────────────────────────────────
+    (async function() {
+      const devTok = localStorage.getItem('jarvis_device_token');
+      if (!devTok) return;
+      document.getElementById('reconnecting').style.display = 'block';
+      try {
+        const r = await fetch('/api/device-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ device_token: devTok }),
+        });
+        const d = await r.json();
+        if (d.ok && d.token) {
+          sessionStorage.setItem('jarvis_key', d.key);
+          sessionStorage.setItem('jarvis_token', d.token);
+          localStorage.setItem('jarvis_key', d.key);
+          localStorage.setItem('jarvis_token', d.token);
+          if (d.device_token) {
+            localStorage.setItem('jarvis_device_token', d.device_token);
+          }
+          location.replace('/');
+          return;
+        } else if (r.status === 401) {
+          localStorage.removeItem('jarvis_device_token');
+        }
+      } catch (_) {
+        // Network glitch or server starting up — keep device token for next attempt
+      }
+      document.getElementById('reconnecting').style.display = 'none';
+    })();
+
+    const inp = document.getElementById('key');
+    inp.focus();
+
+    inp.addEventListener('input', () => {
+      inp.value = inp.value.toUpperCase().replace(/[^A-Z2-9]/g, '');
+      if (inp.value.length === 6) doLogin();
+    });
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+    async function doLogin() {
+      const key = inp.value.trim();
+      if (key.length < 6) { shake(); return; }
+      let data;
+      try {
+        const r = await fetch('/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin: key })
+        });
+        data = await r.json();
+      } catch (e) {
+        document.getElementById('err').textContent = 'Link Connection Error';
+        shake(); return;
+      }
+      if (data.ok && data.token) {
+        sessionStorage.setItem('jarvis_key', key);
+        sessionStorage.setItem('jarvis_token', data.token);
+        localStorage.setItem('jarvis_key', key);
+        localStorage.setItem('jarvis_token', data.token);
+        if (data.device_token) {
+          localStorage.setItem('jarvis_device_token', data.device_token);
+        }
+        location.href = '/';
+      } else {
+        inp.value = '';
+        inp.focus();
+        document.getElementById('err').textContent = 'Invalid or Expired Security PIN';
+        shake();
+      }
+    }
+
+    function shake() {
+      const c = document.getElementById('card');
+      c.classList.remove('shake');
+      void c.offsetWidth;
+      c.classList.add('shake');
+    }
+  </script>
+</body>
+</html>

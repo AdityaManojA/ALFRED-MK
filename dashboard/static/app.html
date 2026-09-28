@@ -1,0 +1,2801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ALFRED — Wayne Mark-IV Tactical Uplink</title>
+  <script src="/static/crypto.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    /* ── RETRO-FUTURISTIC CRT PALETTES (DESKTOP UI PARITY) ── */
+    :root, body[data-theme="dossier"], body[data-theme="batcave"] {
+      --bg:        #090a12;
+      --surface:   rgba(13, 15, 30, 0.92);
+      --border:    rgba(80, 91, 181, 0.32);
+      --border-hi: #505bb5;
+      --accent:    #8e9bff;
+      --accent2:   #ff7390;
+      --adim:      rgba(142, 155, 255, 0.16);
+      --text:      #e8ecff;
+      --muted:     #707ab0;
+      --green:     #4ef2bb;
+      --gdim:      rgba(78, 242, 187, 0.16);
+      --err:       #ff2a55;
+    }
+
+    /* ── BANE MODE / VECTOR THEME ── */
+    body[data-theme="vector"] {
+      --bg:        #060d07;
+      --surface:   rgba(9, 23, 11, 0.92);
+      --border:    rgba(72, 163, 85, 0.35);
+      --border-hi: #a8ff3e;
+      --accent:    #a8ff3e;
+      --accent2:   #ffaa33;
+      --adim:      rgba(168, 255, 62, 0.16);
+      --text:      #dcfc9f;
+      --muted:     #588554;
+      --green:     #a8ff3e;
+      --gdim:      rgba(168, 255, 62, 0.16);
+      --err:       #ff3838;
+      background: radial-gradient(circle at 50% 10%, #0d2613 0%, #060d07 65%, #030804 100%) !important;
+    }
+    body[data-theme="vector"] .pill.on {
+      background: rgba(168, 255, 62, 0.16);
+      border-color: rgba(168, 255, 62, 0.5);
+      color: #a8ff3e;
+      box-shadow: 0 0 14px rgba(168, 255, 62, 0.25);
+    }
+    body[data-theme="vector"] .pill.on .dot {
+      background: #a8ff3e;
+      box-shadow: 0 0 8px #a8ff3e;
+    }
+    body[data-theme="vector"] .msg-j {
+      border-left: 3.5px solid #a8ff3e !important;
+    }
+
+    /* ── BATMAN BEYOND NEO-GOTHAM THEME ── */
+    body[data-theme="beyond"] {
+      --bg:        #070103;
+      --surface:   rgba(18, 3, 7, 0.92);
+      --border:    rgba(255, 0, 55, 0.35);
+      --border-hi: #ff0037;
+      --accent:    #ff0037;
+      --accent2:   #00d4ff;
+      --adim:      rgba(255, 0, 55, 0.16);
+      --text:      #ffebef;
+      --muted:     #9e3348;
+      --green:     #00d4ff;
+      --gdim:      rgba(0, 212, 255, 0.15);
+      --err:       #ff0037;
+      background: radial-gradient(circle at 50% 10%, #220309 0%, #0d0104 65%, #050002 100%) !important;
+    }
+    body[data-theme="beyond"] .pill.on {
+      background: rgba(255, 0, 55, 0.16);
+      border-color: rgba(255, 0, 55, 0.5);
+      color: #ff0037;
+      box-shadow: 0 0 14px rgba(255, 0, 55, 0.25);
+    }
+    body[data-theme="beyond"] .pill.on .dot {
+      background: #ff0037;
+      box-shadow: 0 0 8px #ff0037;
+    }
+    body[data-theme="beyond"] .msg-j {
+      border-left: 3.5px solid #ff0037 !important;
+    }
+
+    /* ── WAYNE GOLD THEME ── */
+    body[data-theme="wayne"] {
+      --bg:        #0b0906;
+      --surface:   rgba(20, 16, 8, 0.92);
+      --border:    rgba(229, 169, 59, 0.35);
+      --border-hi: #e5a93b;
+      --accent:    #e5a93b;
+      --accent2:   #4ef2bb;
+      --adim:      rgba(229, 169, 59, 0.16);
+      --text:      #fff5df;
+      --muted:     #8c764a;
+      --green:     #4ef2bb;
+      --gdim:      rgba(78, 242, 187, 0.16);
+      --err:       #ff2a55;
+      background: radial-gradient(circle at 50% 10%, #291e0a 0%, #0b0906 65%, #050402 100%) !important;
+    }
+    body[data-theme="wayne"] .pill.on {
+      background: rgba(229, 169, 59, 0.16);
+      border-color: rgba(229, 169, 59, 0.5);
+      color: #e5a93b;
+      box-shadow: 0 0 14px rgba(229, 169, 59, 0.25);
+    }
+    body[data-theme="wayne"] .pill.on .dot {
+      background: #e5a93b;
+      box-shadow: 0 0 8px #e5a93b;
+    }
+    body[data-theme="wayne"] .msg-j {
+      border-left: 3.5px solid #e5a93b !important;
+    }
+
+    html {
+      height: 100%;
+      height: -webkit-fill-available;
+    }
+    body {
+      height: 100%;
+      height: 100dvh;
+      min-height: 100%;
+      min-height: -webkit-fill-available;
+      background: radial-gradient(circle at 50% 10%, #121528 0%, #090a12 65%, #05060a 100%);
+      color: var(--text);
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Courier New', 'Cascadia Code', 'SF Mono', monospace;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Ambient cyber background grid */
+    body::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: 
+        radial-gradient(rgba(0, 240, 255, 0.06) 1px, transparent 1px),
+        radial-gradient(rgba(0, 136, 255, 0.03) 1px, transparent 1px);
+      background-size: 32px 32px, 16px 16px;
+      pointer-events: none;
+      opacity: 0.6;
+    }
+
+    /* ── HEADER ── */
+    header {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(4, 12, 22, 0.88);
+      backdrop-filter: blur(28px) saturate(190%);
+      -webkit-backdrop-filter: blur(28px) saturate(190%);
+      z-index: 10;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Interactive Holographic Reactor Orb in Header */
+    .header-reactor {
+      width: 38px;
+      height: 38px;
+      flex-shrink: 0;
+      cursor: pointer;
+      position: relative;
+      filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.5));
+      transition: transform 0.2s ease;
+    }
+    .header-reactor:hover {
+      transform: scale(1.08);
+    }
+    #mini-reactor-canvas {
+      width: 38px;
+      height: 38px;
+      display: block;
+    }
+
+    .brand-wrap {
+      display: flex;
+      flex-direction: column;
+    }
+    .logo {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: 6px;
+      color: #ffffff;
+      text-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
+    }
+    .logo em {
+      color: var(--accent);
+      font-style: normal;
+      text-shadow: 0 0 16px var(--accent);
+    }
+    .sub-brand {
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-top: -2px;
+    }
+
+    .pill {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 12px;
+      border-radius: 99px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .pill.on {
+      background: var(--gdim);
+      border-color: rgba(0, 255, 157, 0.35);
+      color: var(--green);
+      box-shadow: 0 0 14px rgba(0, 255, 157, 0.2);
+    }
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--muted);
+      transition: background 0.3s;
+    }
+    .pill.on .dot {
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      animation: blink 2s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+    /* ── TTS UPLINK TOGGLE ── */
+    .tts-btn {
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 11px;
+      background: rgba(0, 240, 255, 0.08);
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      color: var(--accent);
+      border-radius: 99px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      transition: all 0.25s ease;
+    }
+    .tts-btn:hover {
+      background: rgba(0, 240, 255, 0.18);
+      border-color: var(--accent);
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
+    }
+    .tts-btn.on {
+      background: rgba(0, 255, 157, 0.12);
+      border-color: rgba(0, 255, 157, 0.4);
+      color: var(--green);
+      box-shadow: 0 0 12px rgba(0, 255, 157, 0.25);
+    }
+    .tts-btn.speaking {
+      animation: tts-pulse 0.9s infinite alternate cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    @keyframes tts-pulse {
+      0%   { box-shadow: 0 0 8px rgba(0, 255, 157, 0.4); transform: scale(1); }
+      100% { box-shadow: 0 0 18px rgba(0, 240, 255, 0.85); transform: scale(1.05); }
+    }
+    .tts-icon { font-size: 11px; }
+
+    /* ── THEME TOGGLE PILL ── */
+    .theme-btn {
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 11px;
+      border-radius: 99px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      transition: all 0.25s ease;
+      background: rgba(0, 240, 255, 0.08);
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      color: var(--accent);
+    }
+    .theme-btn:hover {
+      background: rgba(0, 240, 255, 0.18);
+      border-color: var(--accent);
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
+    }
+    .theme-icon { font-size: 11px; }
+
+    .spacer { flex: 1; }
+
+    .enc-badge {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      padding: 4px 9px;
+      border-radius: 6px;
+      display: none;
+    }
+    .enc-badge.on  {
+      display: block;
+      background: rgba(0, 255, 157, 0.08);
+      border: 1px solid rgba(0, 255, 157, 0.28);
+      color: var(--green);
+      box-shadow: 0 0 10px rgba(0, 255, 157, 0.15);
+    }
+    .enc-badge.off {
+      display: block;
+      background: rgba(255, 59, 92, 0.08);
+      border: 1px solid rgba(255, 59, 92, 0.25);
+      color: var(--err);
+    }
+    .url {
+      font-size: 10px;
+      font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+      color: var(--muted);
+      padding: 5px 10px;
+      background: rgba(0, 240, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    /* ── COLLAPSIBLE HOLOGRAPHIC REACTOR DOCK ── */
+    #reactor-panel {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 20px 8px;
+      background: linear-gradient(180deg, rgba(6, 16, 28, 0.75) 0%, rgba(2, 6, 13, 0) 100%);
+      border-bottom: 1px solid rgba(0, 240, 255, 0.12);
+      transition: max-height 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease;
+      overflow: hidden;
+      z-index: 5;
+    }
+    #reactor-panel.collapsed {
+      max-height: 0;
+      padding: 0;
+      opacity: 0;
+      border-bottom: none;
+      pointer-events: none;
+    }
+    #main-reactor-canvas {
+      width: 140px;
+      height: 140px;
+      filter: drop-shadow(0 0 18px rgba(0, 240, 255, 0.4));
+    }
+    .reactor-status-tag {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--accent);
+      margin-top: 4px;
+      text-transform: uppercase;
+      opacity: 0.85;
+    }
+
+    /* ── CHAT FEED ── */
+    main {
+      flex: 1 1 0;
+      min-height: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 16px 20px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 2;
+    }
+    main::-webkit-scrollbar { width: 4px; }
+    main::-webkit-scrollbar-thumb {
+      background: rgba(0, 240, 255, 0.2);
+      border-radius: 4px;
+    }
+
+    /* ── DUAL TAB VIEWER: FEED VS INTEL ── */
+    .view-tabs {
+      display: flex;
+      gap: 8px;
+      padding: 8px 20px;
+      background: rgba(4, 12, 22, 0.75);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      z-index: 6;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    .view-tab {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(0, 240, 255, 0.16);
+      border-radius: 9px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      padding: 6px 14px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .view-tab:hover {
+      color: #ffffff;
+      border-color: rgba(0, 240, 255, 0.4);
+      background: rgba(0, 240, 255, 0.08);
+    }
+    .view-tab.active {
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.25), rgba(0, 136, 255, 0.14));
+      border-color: var(--accent);
+      color: #ffffff;
+      box-shadow: 0 0 14px rgba(0, 240, 255, 0.25);
+    }
+    .tab-badge {
+      background: rgba(0, 240, 255, 0.25);
+      color: var(--accent);
+      font-size: 9px;
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+    }
+
+    #intel-vault {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 2;
+    }
+    #intel-vault::-webkit-scrollbar { width: 4px; }
+    #intel-vault::-webkit-scrollbar-thumb {
+      background: rgba(0, 240, 255, 0.2);
+      border-radius: 4px;
+    }
+    .intel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(0, 240, 255, 0.14);
+      margin-bottom: 6px;
+    }
+    .intel-title {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      color: var(--accent);
+    }
+    .intel-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .intel-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .intel-btn:hover {
+      background: rgba(0, 240, 255, 0.2);
+      border-color: var(--accent);
+      color: #ffffff;
+    }
+    .intel-card {
+      background: rgba(4, 18, 32, 0.85);
+      border-left: 3px solid var(--accent);
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      border-right: 1px solid rgba(255, 255, 255, 0.06);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      padding: 12px 14px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+      animation: pop 0.25s ease;
+    }
+    .intel-card.card-link { border-left-color: #00f0ff; }
+    .intel-card.card-data { border-left-color: #00ff9d; }
+    .intel-card.card-code { border-left-color: #c084fc; }
+    .intel-card.card-note { border-left-color: #ffb800; }
+    .intel-card-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .intel-badge {
+      font-size: 9px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+    }
+    .badge-link { background: rgba(0, 240, 255, 0.15); color: #00f0ff; }
+    .badge-data { background: rgba(0, 255, 157, 0.15); color: #00ff9d; }
+    .badge-code { background: rgba(192, 132, 252, 0.15); color: #c084fc; }
+    .badge-note { background: rgba(255, 184, 0, 0.15); color: #ffb800; }
+    .intel-time {
+      font-size: 9px;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+    }
+    .intel-card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 6px;
+    }
+    .intel-card-body {
+      font-size: 12px;
+      line-height: 1.5;
+      color: rgba(234, 246, 255, 0.9);
+      word-break: break-word;
+    }
+    .intel-card-body a {
+      color: #00f0ff;
+      text-decoration: underline;
+      font-weight: 600;
+    }
+    .intel-card-body a:hover {
+      color: #ffffff;
+    }
+    .intel-card-body pre {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(0, 240, 255, 0.15);
+      border-radius: 6px;
+      padding: 8px 10px;
+      color: #a5f3fc;
+      font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+      font-size: 11px;
+      overflow-x: auto;
+      margin-top: 6px;
+    }
+
+    /* ── MESSAGE BUBBLES & FEED TILES ── */
+    .msg {
+      max-width: 88%;
+      padding: 12px 16px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.55;
+      animation: pop 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+      position: relative;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+    @keyframes pop {
+      from { opacity: 0; transform: translateY(6px) scale(0.98); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .msg-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+    .msg-time {
+      font-size: 9px;
+      font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+      color: var(--muted);
+      opacity: 0.85;
+    }
+    .msg-text {
+      color: #eaf6ff;
+      font-size: 14px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* Assistant Cyber Glass Bubble */
+    .msg-j {
+      align-self: flex-start;
+      background: rgba(4, 20, 36, 0.88);
+      backdrop-filter: blur(28px) saturate(190%);
+      -webkit-backdrop-filter: blur(28px) saturate(190%);
+      border: 1px solid rgba(0, 240, 255, 0.35);
+      border-left: 3.5px solid var(--accent);
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(0, 240, 255, 0.2);
+    }
+
+    /* User Tactical Glass Bubble */
+    .msg-u {
+      align-self: flex-end;
+      background: rgba(10, 24, 44, 0.88);
+      backdrop-filter: blur(28px) saturate(190%);
+      -webkit-backdrop-filter: blur(28px) saturate(190%);
+      border: 1px solid rgba(0, 136, 255, 0.3);
+      border-right: 3.5px solid #0088ff;
+      border-bottom-right-radius: 4px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
+
+    /* System Telemetry Pill */
+    .msg-sys {
+      align-self: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--accent);
+      padding: 5px 14px;
+      background: rgba(0, 240, 255, 0.06);
+      border: 1px dashed rgba(0, 240, 255, 0.3);
+      border-radius: 99px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .lbl {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      opacity: 0.85;
+    }
+    .msg-j .lbl { color: var(--accent); text-shadow: 0 0 8px rgba(0, 240, 255, 0.6); }
+    .msg-u .lbl { color: #8fa5bd; text-align: right; }
+
+    /* Tactical Welcome Card in Feed */
+    .feed-welcome {
+      align-self: center;
+      margin: 8px 0 4px;
+      padding: 14px 20px;
+      background: rgba(4, 18, 32, 0.75);
+      border: 1px solid rgba(0, 240, 255, 0.22);
+      border-radius: 14px;
+      text-align: center;
+      max-width: 92%;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+    }
+    .welcome-badge {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: var(--green);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .welcome-title {
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: #ffffff;
+      text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+    }
+    .welcome-sub {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .welcome-hints {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-top: 8px;
+      opacity: 0.85;
+    }
+
+    /* ── FILE CARD ── */
+    .msg-file {
+      align-self: flex-end;
+      background: rgba(6, 16, 28, 0.75);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      border-bottom-right-radius: 4px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      max-width: 82%;
+      animation: pop 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+    .fc-icon { font-size: 28px; flex-shrink: 0; }
+    .fc-meta { flex: 1; min-width: 0; }
+    .fc-lbl  { font-size: 9px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+    .fc-name { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ffffff; }
+    .fc-size { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .fc-bar-wrap { height: 4px; background: rgba(255, 255, 255, 0.08); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+    .fc-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #0088ff, #00f0ff); border-radius: 2px; transition: width 0.12s linear; }
+    .fc-status { font-size: 10px; font-weight: 800; letter-spacing: 1px; flex-shrink: 0; color: var(--muted); }
+    .fc-status.done { color: var(--green); text-shadow: 0 0 8px var(--green); }
+    .fc-status.err  { color: var(--err); }
+    .fc-dl {
+      display: inline-block;
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 700;
+      padding: 3px 8px;
+      background: rgba(0, 240, 255, 0.08);
+      border: 1px solid rgba(0, 240, 255, 0.22);
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .fc-dl:hover { background: rgba(0, 240, 255, 0.18); color: #ffffff; }
+
+    /* ── TACTICAL OPERATOR DECK (DESKTOP UI PARITY) ── */
+    .action-deck-wrap {
+      flex-shrink: 0;
+      padding: 6px 14px 4px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      z-index: 9;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      box-shadow: 0 -2px 14px rgba(0, 0, 0, 0.4);
+    }
+    .deck-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 8.5px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      text-transform: uppercase;
+      padding: 0 2px;
+    }
+    .deck-title {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--accent);
+    }
+    .deck-pulse {
+      display: inline-block;
+      animation: deck-pulse-anim 1.5s ease-in-out infinite alternate;
+    }
+    @keyframes deck-pulse-anim {
+      0% { opacity: 0.35; transform: scale(0.9); }
+      100% { opacity: 1; transform: scale(1.1); text-shadow: 0 0 8px var(--accent); }
+    }
+    .deck-status {
+      font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'SF Mono', monospace;
+      color: var(--muted);
+      font-size: 8px;
+      letter-spacing: 0.5px;
+      max-width: 55%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .action-deck {
+      display: flex;
+      gap: 7px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .action-deck::-webkit-scrollbar { display: none; }
+    .deck-btn {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 11px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'SF Mono', Consolas, monospace;
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+    .deck-btn:hover {
+      border-color: var(--accent);
+      background: var(--adim);
+      color: #ffffff;
+      box-shadow: 0 0 12px var(--adim);
+    }
+    .deck-btn:active, .deck-btn.active {
+      transform: scale(0.94);
+      border-color: var(--accent);
+      background: var(--adim);
+      color: var(--accent);
+    }
+    .deck-btn-icon {
+      font-size: 13px;
+      line-height: 1;
+    }
+    .deck-btn-halt {
+      border-color: rgba(255, 42, 85, 0.35);
+      background: rgba(255, 42, 85, 0.08);
+      color: #ff5577;
+    }
+    .deck-btn-halt:hover, .deck-btn-halt.active {
+      border-color: #ff2a55;
+      background: rgba(255, 42, 85, 0.22);
+      color: #ffffff;
+      box-shadow: 0 0 14px rgba(255, 42, 85, 0.45);
+    }
+
+    /* ── FOOTER DOCK ── */
+    footer {
+      flex-shrink: 0;
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
+      background: rgba(4, 12, 22, 0.88);
+      backdrop-filter: blur(28px) saturate(190%);
+      -webkit-backdrop-filter: blur(28px) saturate(190%);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      z-index: 10;
+      box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.5);
+    }
+    #inp {
+      flex: 1;
+      padding: 12px 18px;
+      background: rgba(0, 16, 32, 0.65);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 500;
+      outline: none;
+      transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    #inp:focus {
+      border-color: var(--accent);
+      background: rgba(0, 240, 255, 0.06);
+      box-shadow: 0 0 18px rgba(0, 240, 255, 0.25), inset 0 0 10px rgba(0, 240, 255, 0.08);
+    }
+    #inp::placeholder { color: var(--muted); }
+
+    .btn {
+      padding: 12px 18px;
+      border: none;
+      border-radius: 14px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .btn:active { transform: scale(0.96); }
+
+    .btn-send {
+      background: linear-gradient(135deg, #00f0ff 0%, #0088ff 100%);
+      color: #02070f;
+      box-shadow: 0 4px 16px rgba(0, 240, 255, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    }
+    .btn-send:hover {
+      box-shadow: 0 6px 22px rgba(0, 240, 255, 0.5);
+      transform: translateY(-1px);
+    }
+
+    .btn-wake {
+      background: rgba(0, 255, 157, 0.08);
+      border: 1px solid rgba(0, 255, 157, 0.35);
+      color: var(--green);
+      display: none;
+    }
+    .btn-wake.show { display: block; }
+    .btn-wake:hover { background: rgba(0, 255, 157, 0.18); box-shadow: 0 0 14px rgba(0, 255, 157, 0.3); }
+
+    .btn-attach {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 12px 14px;
+      font-size: 16px;
+      line-height: 1;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .btn-attach:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(0, 240, 255, 0.08);
+      box-shadow: 0 0 14px rgba(0, 240, 255, 0.2);
+    }
+
+    .btn-clear-chat {
+      background: rgba(255, 42, 85, 0.08);
+      border: 1px solid rgba(255, 42, 85, 0.35);
+      color: #ff5577;
+      padding: 12px 14px;
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .btn-clear-chat:hover {
+      border-color: #ff2a55;
+      color: #ffffff;
+      background: rgba(255, 42, 85, 0.22);
+      box-shadow: 0 0 14px rgba(255, 42, 85, 0.4);
+      transform: translateY(-1px);
+    }
+    .btn-clear-chat:active { transform: scale(0.96); }
+
+    /* ── MIC BUTTON ── */
+    #mic-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 12px 14px;
+      font-size: 16px;
+      line-height: 1;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    #mic-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(0, 240, 255, 0.08);
+      box-shadow: 0 0 14px rgba(0, 240, 255, 0.2);
+    }
+    #mic-btn.recording {
+      background: rgba(255, 59, 92, 0.18);
+      border-color: rgba(255, 59, 92, 0.55);
+      color: #ff3b5c;
+      animation: mic-pulse 1s ease-in-out infinite;
+      box-shadow: 0 0 20px rgba(255, 59, 92, 0.4);
+    }
+    #mic-btn.unsupported { opacity: 0.3; cursor: not-allowed; }
+    @keyframes mic-pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50%      { transform: scale(0.96); opacity: 0.7; }
+    }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed;
+      top: 76px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-10px);
+      background: rgba(4, 16, 28, 0.90);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--green);
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 8px 22px;
+      border-radius: 99px;
+      opacity: 0;
+      transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+      pointer-events: none;
+      white-space: nowrap;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 255, 157, 0.3);
+      z-index: 99;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #bg-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Telemetry Transcript Card */
+    .msg-telemetry {
+      align-self: flex-start;
+      font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+      font-size: 11px;
+      line-height: 1.4;
+      color: #94a3b8;
+      background: rgba(4, 16, 28, 0.75);
+      border: 1px solid rgba(0, 240, 255, 0.18);
+      border-radius: 8px;
+      padding: 6px 10px;
+      max-width: 92%;
+      word-break: break-word;
+      animation: pop 0.18s ease;
+    }
+    .tag-red {
+      color: #ff3b5c;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      margin-right: 4px;
+    }
+
+    /* ── MOBILE / IPHONE 16 RESPONSIVE STYLES ── */
+    @media (max-width: 600px) {
+      header {
+        padding: 8px 12px;
+        gap: 8px;
+      }
+      .logo {
+        font-size: 13px;
+        letter-spacing: 2px;
+      }
+      .sub-brand {
+        font-size: 7px;
+        letter-spacing: 1px;
+      }
+      .pill {
+        padding: 4px 8px;
+        font-size: 9px;
+        letter-spacing: 1px;
+      }
+      .enc-badge {
+        padding: 3px 6px;
+        font-size: 8px;
+      }
+      .url {
+        display: none !important; /* Hide IP URL on mobile to avoid horizontal header overflow */
+      }
+      .view-tabs {
+        padding: 6px 12px;
+        gap: 6px;
+      }
+      .view-tab {
+        padding: 6px 10px;
+        font-size: 10px;
+        letter-spacing: 0.5px;
+      }
+      main {
+        padding: 10px 12px 14px;
+        gap: 10px;
+        flex: 1 1 0;
+        min-height: 0;
+      }
+      .msg {
+        max-width: 92%;
+        padding: 10px 14px;
+      }
+      .msg-text {
+        font-size: 13.5px;
+        line-height: 1.5;
+      }
+      .tts-btn, .theme-btn {
+        padding: 4px 8px;
+        font-size: 8.5px;
+        letter-spacing: 0.5px;
+      }
+      .feed-welcome {
+        padding: 10px 14px;
+        margin: 4px 0 2px;
+      }
+      .welcome-title {
+        font-size: 12.5px;
+      }
+      .welcome-sub {
+        font-size: 8px;
+      }
+      .msg-sys, .msg-telemetry {
+        font-size: 9px;
+        padding: 4px 8px;
+        max-width: 96%;
+      }
+      footer {
+        padding: 8px 10px;
+        gap: 6px;
+      }
+      #inp {
+        padding: 9px 12px;
+        font-size: 13px;
+        min-width: 0 !important; /* Essential: prevents input from forcing buttons off screen */
+      }
+      .btn-attach, #mic-btn, .btn-clear-chat {
+        padding: 9px 10px;
+        font-size: 14px;
+        border-radius: 10px;
+      }
+      .btn {
+        padding: 9px 12px;
+        font-size: 10px;
+        letter-spacing: 1px;
+        border-radius: 10px;
+      }
+      #reactor-panel {
+        padding: 8px 12px 4px;
+      }
+      #main-reactor-canvas {
+        width: 100px;
+        height: 100px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <div id="toast"></div>
+
+  <header>
+    <!-- Interactive Mini Arc Reactor in Header -->
+    <div class="header-reactor" id="header-reactor" title="Toggle Arc Reactor Telemetry Display">
+      <canvas id="mini-reactor-canvas" width="76" height="76"></canvas>
+    </div>
+    <div class="brand-wrap">
+      <div class="logo"><em>A</em>LFRED</div>
+      <div class="sub-brand">WAYNE MARK-IV</div>
+    </div>
+    <div class="pill" id="pill"><span class="dot"></span><span id="st">CONNECTING</span></div>
+    <div class="pill on tts-btn" id="tts-btn" onclick="toggleTTS()" title="Toggle Voice Readout on Uplink">
+      <span class="tts-icon">🔊</span><span id="tts-st">TTS ON</span>
+    </div>
+    <div class="pill theme-btn" id="theme-btn" onclick="cycleTheme()" title="Switch CRT Theme (Dossier / Bane / Beyond / Wayne Gold)">
+      <span class="theme-icon" id="theme-icon">🦇</span><span id="theme-lbl">DOSSIER</span>
+    </div>
+    <div class="enc-badge" id="enc">AES-256</div>
+    <div class="spacer"></div>
+    <div class="url">__IP__:__PORT__</div>
+  </header>
+
+  <!-- Collapsible Holographic Reactor Visualizer Panel (Collapsed by default on mobile so feed is unobstructed) -->
+  <div id="reactor-panel" class="collapsed">
+    <canvas id="main-reactor-canvas" width="280" height="280"></canvas>
+    <div class="reactor-status-tag" id="reactor-status">QUANTUM CORE ACTIVE</div>
+  </div>
+
+  <div class="view-tabs">
+    <button class="view-tab active" id="tab-feed-btn" onclick="switchView('feed')">◈ ACTIVITY FEED</button>
+    <button class="view-tab" id="tab-intel-btn" onclick="switchView('intel')">📝 INTEL &amp; NOTES <span class="tab-badge" id="intel-badge">0</span></button>
+  </div>
+
+  <main id="feed">
+    <div class="feed-welcome" id="feed-welcome">
+      <div class="welcome-badge">◈ UPLINK SYNCHRONIZED</div>
+      <div class="welcome-title">ALFRED QUANTUM TERMINAL</div>
+      <div class="welcome-sub">WAYNE ENTERPRISES // MOBILE UPLINK ACTIVE [MK-IV]</div>
+      <div class="welcome-hints">
+        <span>🔊 TTS Vocalizer Active</span>
+        <span>•</span>
+        <span>⚡ Realtime Neural Link</span>
+        <span>•</span>
+        <span>🛡️ AES-256</span>
+      </div>
+    </div>
+  </main>
+
+  <div id="intel-vault" style="display:none;">
+    <div class="intel-header">
+      <span class="intel-title">◈ INTEL &amp; NOTES VAULT</span>
+      <div class="intel-actions">
+        <button class="intel-btn" onclick="copyIntelNotes()">📋 COPY ALL</button>
+        <button class="intel-btn" onclick="clearIntelNotes()">🗑 CLEAR</button>
+      </div>
+    </div>
+    <div id="intel-list">
+      <div style="font-family: -apple-system, sans-serif; color: rgba(0, 240, 255, 0.45); text-align: center; margin-top: 40px;">
+        <div style="font-size: 24px; margin-bottom: 8px;">📝</div>
+        <div style="font-size: 12px; font-weight: 700; letter-spacing: 1px;">INTEL VAULT READY</div>
+        <div style="font-size: 11px; color: var(--muted); margin-top: 6px;">Special notes, links, and code snippets from Alfred will appear here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tactical Operator Action Deck (Desktop UI Parity) -->
+  <div class="action-deck-wrap" id="action-deck-wrap">
+    <div class="deck-header">
+      <div class="deck-title"><span class="deck-pulse">◈</span> TACTICAL OPERATOR DECK</div>
+      <div class="deck-status" id="deck-status-txt">AUDIO CORE: STANDBY</div>
+    </div>
+    <div class="action-deck" id="action-deck">
+      <button class="deck-btn" id="btn-act-screenshot" onclick="executeTacticalAction('screenshot')" title="Trigger PC Desktop Screenshot">
+        <span class="deck-btn-icon">📸</span>
+        <span class="deck-btn-label">SCREENSHOT</span>
+      </button>
+      <button class="deck-btn" id="btn-act-audio-core" onclick="executeTacticalAction('audio_core')" title="Toggle TRON Audio Core Track">
+        <span class="deck-btn-icon">🎵</span>
+        <span class="deck-btn-label">AUDIO CORE</span>
+      </button>
+      <button class="deck-btn" id="btn-act-spotify" onclick="executeTacticalAction('spotify')" title="Toggle Spotify Playback">
+        <span class="deck-btn-icon">🎧</span>
+        <span class="deck-btn-label">SPOTIFY</span>
+      </button>
+      <button class="deck-btn" id="btn-act-system-status" onclick="executeTacticalAction('system_status')" title="Query PC Telemetry & Vitals">
+        <span class="deck-btn-icon">📊</span>
+        <span class="deck-btn-label">SYS STATUS</span>
+      </button>
+      <button class="deck-btn" id="btn-act-briefing" onclick="executeTacticalAction('briefing')" title="Deliver Daily Briefing">
+        <span class="deck-btn-icon">📋</span>
+        <span class="deck-btn-label">BRIEFING</span>
+      </button>
+      <button class="deck-btn deck-btn-halt" id="btn-act-interrupt" onclick="executeTacticalAction('interrupt')" title="Emergency Interrupt / Halt">
+        <span class="deck-btn-icon">🛑</span>
+        <span class="deck-btn-label">HALT</span>
+      </button>
+      <button class="deck-btn" id="btn-act-toggle-mute" onclick="executeTacticalAction('toggle_mute')" title="Toggle Speaker Mute">
+        <span class="deck-btn-icon" id="deck-mute-icon">🔇</span>
+        <span class="deck-btn-label" id="deck-mute-label">MUTE</span>
+      </button>
+    </div>
+  </div>
+
+  <footer>
+    <input id="inp" placeholder="Transmit directive to ALFRED…" autocomplete="off">
+    <button class="btn-clear-chat" id="clear-chat-btn" onclick="doClearChat()" title="Wipe conversation">✕</button>
+    <label class="btn-attach" for="file-inp" title="Send file">📎</label>
+    <input type="file" id="file-inp" multiple accept="*/*" style="display:none">
+    <button id="mic-btn" onclick="doMic()" title="Voice command">🎤</button>
+    <button class="btn btn-wake" id="wake" onclick="doWake()">WAKE</button>
+    <button class="btn btn-send" onclick="doSend()">SEND</button>
+  </footer>
+
+  <script>
+    // ── THEME MANAGEMENT ENGINE ──────────────────────────────────────────────
+    const SERVER_THEME_COLOR = "__THEME_COLOR__";
+    const THEMES = ['dossier', 'vector', 'beyond', 'wayne'];
+    const THEME_INFO = {
+      'dossier': { icon: '🦇', label: 'DOSSIER', name: 'DEFAULT BATCAVE', sub: 'WAYNE ENTERPRISES // MOBILE UPLINK ACTIVE [MK-IV]' },
+      'vector':  { icon: '☣️', label: 'BANE',    name: 'BANE VECTOR MODE', sub: 'SANTA PRISCA PROTOCOL // BANE VECTOR [MK-IV]' },
+      'beyond':  { icon: '⚡', label: 'BEYOND',  name: 'BATMAN BEYOND',    sub: 'WAYNE-POWERS // BATMAN BEYOND UPLINK [NEO-GOTHAM]' },
+      'wayne':   { icon: '⚜️', label: 'WAYNE',   name: 'WAYNE GOLD',       sub: 'WAYNE TOWER OVERRIDE // OBSIDIAN GOLD [MK-IV]' },
+    };
+    let activeTheme = 'dossier';
+
+    function initTheme() {
+      try {
+        const saved = localStorage.getItem('alfred_mobile_theme');
+        if (saved && THEMES.includes(saved)) {
+          activeTheme = saved;
+        } else if (SERVER_THEME_COLOR === '#a8ff3e') {
+          activeTheme = 'vector';
+        } else if (SERVER_THEME_COLOR === '#ff0037') {
+          activeTheme = 'beyond';
+        } else if (SERVER_THEME_COLOR === '#e5a93b') {
+          activeTheme = 'wayne';
+        } else {
+          activeTheme = 'dossier';
+        }
+      } catch (_) {}
+      applyTheme(activeTheme, false);
+    }
+
+    function applyTheme(name, notify = true) {
+      if (!THEMES.includes(name)) name = 'dossier';
+      activeTheme = name;
+      const themeIcon = document.getElementById('theme-icon');
+      const themeLbl = document.getElementById('theme-lbl');
+      const welcomeSub = document.querySelector('.welcome-sub');
+      const info = THEME_INFO[name] || THEME_INFO['dossier'];
+
+      if (name === 'dossier') {
+        document.body.removeAttribute('data-theme');
+      } else {
+        document.body.setAttribute('data-theme', name);
+      }
+
+      if (themeIcon) themeIcon.textContent = info.icon;
+      if (themeLbl) themeLbl.textContent = info.label;
+      if (welcomeSub) welcomeSub.textContent = info.sub;
+      if (notify) toast(`${info.name} ENGAGED`);
+
+      try { localStorage.setItem('alfred_mobile_theme', activeTheme); } catch (_) {}
+      initBgParticles();
+      initReactorParticles();
+    }
+
+    function cycleTheme() {
+      const idx = THEMES.indexOf(activeTheme);
+      const nextTheme = THEMES[(idx + 1) % THEMES.length];
+      applyTheme(nextTheme, true);
+    }
+
+    function toggleTheme() {
+      cycleTheme();
+    }
+
+    // ── BACKGROUND CYBER-PARTICLE ENGINE & AMBIENT FIELD ────────────────────
+    const bgCanvas = document.getElementById('bg-canvas');
+    const bgCtx = bgCanvas ? bgCanvas.getContext('2d') : null;
+    let bgParticles = [];
+    let mouseX = window.innerWidth / 2;
+    let mouseY = window.innerHeight / 2;
+    let targetTiltX = 0, targetTiltY = 0;
+    let currentTiltX = 0, currentTiltY = 0;
+
+    function initBgParticles() {
+      if (!bgCanvas) return;
+      const w = bgCanvas.width = window.innerWidth;
+      const h = bgCanvas.height = window.innerHeight;
+      bgParticles = [];
+      const count = Math.floor(Math.min(70, (w * h) / 20000));
+      for (let i = 0; i < count; i++) {
+        let hColor = 'rgba(142, 155, 255,';
+        if (activeTheme === 'vector') hColor = 'rgba(168, 255, 62,';
+        else if (activeTheme === 'beyond') hColor = 'rgba(255, 0, 55,';
+        else if (activeTheme === 'wayne') hColor = 'rgba(229, 169, 59,';
+
+        bgParticles.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          vx: (Math.random() - 0.5) * 0.40,
+          vy: (Math.random() - 0.5) * 0.40,
+          size: Math.random() * 2.0 + 0.8,
+          alpha: Math.random() * 0.5 + 0.2,
+          hue: hColor,
+        });
+      }
+    }
+    let _resizeTimer = null;
+    function debouncedResize() {
+      clearTimeout(_resizeTimer);
+      _resizeTimer = setTimeout(() => {
+        initBgParticles();
+        initReactorParticles();
+      }, 250);
+    }
+    window.addEventListener('resize', debouncedResize, { passive: true });
+
+    let _tickingMove = false;
+    window.addEventListener('mousemove', e => {
+      if (!_tickingMove) {
+        _tickingMove = true;
+        requestAnimationFrame(() => {
+          mouseX = e.clientX;
+          mouseY = e.clientY;
+          targetTiltX = (e.clientX - window.innerWidth / 2) / (window.innerWidth / 2);
+          targetTiltY = (e.clientY - window.innerHeight / 2) / (window.innerHeight / 2);
+          _tickingMove = false;
+        });
+      }
+    }, { passive: true });
+
+    function drawBgParticles() {
+      if (!bgCtx || document.hidden) {
+        requestAnimationFrame(drawBgParticles);
+        return;
+      }
+      const w = bgCanvas.width;
+      const h = bgCanvas.height;
+      bgCtx.clearRect(0, 0, w, h);
+
+      currentTiltX += (targetTiltX - currentTiltX) * 0.05;
+      currentTiltY += (targetTiltY - currentTiltY) * 0.05;
+
+      for (let i = 0; i < bgParticles.length; i++) {
+        const p = bgParticles[i];
+        p.x += p.vx + currentTiltX * 0.2;
+        p.y += p.vy + currentTiltY * 0.2;
+
+        if (p.x < 0) p.x = w;
+        else if (p.x > w) p.x = 0;
+        if (p.y < 0) p.y = h;
+        else if (p.y > h) p.y = 0;
+
+        bgCtx.fillStyle = p.hue + p.alpha + ')';
+        bgCtx.beginPath();
+        bgCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        bgCtx.fill();
+
+        for (let j = i + 1; j < bgParticles.length; j++) {
+          const p2 = bgParticles[j];
+          const dx = p.x - p2.x;
+          const dy = p.y - p2.y;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < 6400) { // ~80px
+            const dist = Math.sqrt(d2);
+            const a = (1 - dist / 80) * 0.15;
+            let strokeColor = 'rgba(142, 155, 255,';
+            if (activeTheme === 'vector') strokeColor = 'rgba(168, 255, 62,';
+            else if (activeTheme === 'beyond') strokeColor = 'rgba(255, 0, 55,';
+            else if (activeTheme === 'wayne') strokeColor = 'rgba(229, 169, 59,';
+            bgCtx.strokeStyle = strokeColor + a + ')';
+            bgCtx.lineWidth = 0.8;
+            bgCtx.beginPath();
+            bgCtx.moveTo(p.x, p.y);
+            bgCtx.lineTo(p2.x, p2.y);
+            bgCtx.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(drawBgParticles);
+    }
+
+    // ── STARK / WAYNE QUANTUM GYRO-REACTOR ENGINE ───────────────────────────
+    const miniCanvas = document.getElementById('mini-reactor-canvas');
+    const miniCtx = miniCanvas ? miniCanvas.getContext('2d') : null;
+    const mainCanvas = document.getElementById('main-reactor-canvas');
+    const mainCtx = mainCanvas ? mainCanvas.getContext('2d') : null;
+    const reactorPanel = document.getElementById('reactor-panel');
+
+    let phase = 0;
+    let reactorAmp = 0.0;
+    let isSpeaking = false;
+    let assistantName = 'ALFRED';
+let _ttsActive = true;
+let _initialHistoryLoaded = true;
+
+function toggleTTS() {
+  _ttsActive = !_ttsActive;
+  const btn = document.getElementById('tts-btn');
+  const label = document.getElementById('tts-st');
+  if (_ttsActive) {
+    btn.classList.add('on');
+    label.textContent = 'TTS ON';
+  } else {
+    btn.classList.remove('on');
+    label.textContent = 'TTS OFF';
+  }
+}
+
+function speakOnMobile(text) {
+  if ('speechSynthesis' in window) {
+    speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+    utterance.volume = 1.0;
+    speechSynthesis.speak(utterance);
+  }
+}
+
+// Particle Stardust Field
+    let particles = [];
+    function initReactorParticles() {
+      particles = [];
+      const isBeyond = (activeTheme === 'beyond');
+      for (let i = 0; i < 40; i++) {
+        particles.push({
+          angle: Math.random() * Math.PI * 2,
+          dist: 0.18 + Math.random() * 0.78,
+          speed: (0.003 + Math.random() * 0.008) * (Math.random() > 0.5 ? 1 : -1),
+          size: 1.0 + Math.random() * 2.2,
+          alpha: 0.3 + Math.random() * 0.7,
+          hue: isBeyond
+            ? (Math.random() > 0.35 ? '#ff0037' : '#00d4ff')
+            : (Math.random() > 0.30 ? '#00f0ff' : '#ffb800'),
+        });
+      }
+    }
+
+    // Toggle reactor panel on clicking mini reactor
+    const headerReactor = document.getElementById('header-reactor');
+    if (headerReactor && reactorPanel) {
+      headerReactor.addEventListener('click', () => {
+        reactorPanel.classList.toggle('collapsed');
+      });
+    }
+
+    function setupHiDPI(c, ctx, cssW, cssH) {
+      const dpr = window.devicePixelRatio || 1;
+      const targetW = Math.round(cssW * dpr);
+      const targetH = Math.round(cssH * dpr);
+      if (c.width !== targetW || c.height !== targetH) {
+        c.width = targetW;
+        c.height = targetH;
+        ctx.resetTransform ? ctx.resetTransform() : ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.scale(dpr, dpr);
+      }
+    }
+
+    function renderArcReactor(ctx, cssW, cssH, isMini = false) {
+      if (!ctx || !ctx.canvas) return;
+      setupHiDPI(ctx.canvas, ctx, cssW, cssH);
+      const cx = cssW / 2;
+      const cy = cssH / 2;
+      const r = (cssW / 2) * 0.90;
+      const isBeyond = (activeTheme === 'beyond');
+
+      ctx.clearRect(0, 0, cssW, cssH);
+
+      // 1. Core Atmospheric Radial Bloom
+      const breath = Math.sin(phase * 0.035) * 0.08;
+      const glowGrad = ctx.createRadialGradient(cx, cy, r * 0.05, cx, cy, r * (0.95 + breath));
+      if (isBeyond) {
+        glowGrad.addColorStop(0, 'rgba(255, 0, 55, 0.65)');
+        glowGrad.addColorStop(0.35, 'rgba(184, 0, 40, 0.28)');
+        glowGrad.addColorStop(0.75, 'rgba(255, 0, 55, 0.08)');
+      } else {
+        glowGrad.addColorStop(0, 'rgba(0, 240, 255, 0.58)');
+        glowGrad.addColorStop(0.35, 'rgba(0, 136, 255, 0.22)');
+        glowGrad.addColorStop(0.75, 'rgba(0, 240, 255, 0.06)');
+      }
+      glowGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = glowGrad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r * 0.98, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 2. Cosmic Stardust Particles (Full scale only)
+      if (!isMini) {
+        particles.forEach(p => {
+          p.angle += p.speed * (1 + reactorAmp * 1.8);
+          const pr = r * p.dist;
+          const px = cx + Math.cos(p.angle) * pr;
+          const py = cy + Math.sin(p.angle) * pr;
+          const pAlpha = p.alpha * (0.6 + 0.4 * Math.sin(phase * 0.05 + p.angle * 2));
+
+          ctx.fillStyle = p.hue;
+          ctx.globalAlpha = pAlpha;
+          ctx.beginPath();
+          ctx.arc(px, py, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.globalAlpha = 1.0;
+      }
+
+      // 3. Outer Static Calibration Ring & Laser Ticks
+      ctx.strokeStyle = isBeyond ? 'rgba(255, 0, 55, 0.36)' : 'rgba(0, 240, 255, 0.32)';
+      ctx.lineWidth = isMini ? 1.0 : 1.4;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r * 0.95, 0, Math.PI * 2);
+      ctx.stroke();
+
+      if (!isMini) {
+        // High-precision laser ticks (60 marks)
+        for (let i = 0; i < 60; i++) {
+          const ang = (i * 6 * Math.PI) / 180;
+          const isMajor = (i % 5 === 0);
+          const len = isMajor ? r * 0.09 : r * 0.04;
+          const rBase = r * 0.95;
+          ctx.strokeStyle = isBeyond
+            ? (isMajor ? 'rgba(255, 0, 55, 0.90)' : 'rgba(255, 0, 55, 0.25)')
+            : (isMajor ? 'rgba(0, 240, 255, 0.85)' : 'rgba(0, 240, 255, 0.22)');
+          ctx.lineWidth = isMajor ? 1.8 : 0.9;
+          ctx.beginPath();
+          ctx.moveTo(cx + Math.cos(ang) * (rBase - len), cy + Math.sin(ang) * (rBase - len));
+          ctx.lineTo(cx + Math.cos(ang) * rBase, cy + Math.sin(ang) * rBase);
+          ctx.stroke();
+        }
+
+        // 4. Segmented Rotating Nano-Aperture Gear Ring (36 notches)
+        const nTeeth = 36;
+        const rAperture = r * 0.77;
+        const rotGear = (phase * 0.012) % (Math.PI * 2);
+        ctx.strokeStyle = isBeyond ? 'rgba(255, 0, 55, 0.32)' : 'rgba(0, 240, 255, 0.28)';
+        ctx.lineWidth = 1.2;
+        for (let i = 0; i < nTeeth; i++) {
+          const gAng = (i * (360 / nTeeth) * Math.PI) / 180 + rotGear;
+          const ca = Math.cos(gAng), sa = Math.sin(gAng);
+          ctx.beginPath();
+          ctx.moveTo(cx + ca * (rAperture - 2.5), cy + sa * (rAperture - 2.5));
+          ctx.lineTo(cx + ca * (rAperture + 2.5), cy + sa * (rAperture + 2.5));
+          ctx.stroke();
+        }
+      }
+
+      // 5. Multi-Layered Counter-Rotating Kinetic Energy Arcs
+      const arcLayers = isBeyond ? (
+        isMini ? [
+          { rr: 0.88, span: 90, count: 2, dir: +1, spd: 0.045, col: '#ff0037', wid: 2.2 },
+          { rr: 0.68, span: 75, count: 3, dir: -1, spd: 0.065, col: '#00d4ff', wid: 1.8 }
+        ] : [
+          { rr: 0.92, span: 80,  count: 3, dir: +1, spd: 0.040, col: '#ff0037', wid: 2.8 },
+          { rr: 0.84, span: 120, count: 2, dir: -1, spd: 0.032, col: 'rgba(255, 23, 68, 0.85)', wid: 2.2 },
+          { rr: 0.68, span: 55,  count: 4, dir: +1, spd: 0.060, col: '#00d4ff', wid: 2.4 },
+          { rr: 0.58, span: 100, count: 2, dir: -1, spd: 0.038, col: '#ff0037', wid: 1.8 }
+        ]
+      ) : (
+        isMini ? [
+          { rr: 0.88, span: 90, count: 2, dir: +1, spd: 0.045, col: '#00f0ff', wid: 2.2 },
+          { rr: 0.68, span: 75, count: 3, dir: -1, spd: 0.065, col: '#ffb800', wid: 1.8 }
+        ] : [
+          { rr: 0.92, span: 80,  count: 3, dir: +1, spd: 0.040, col: '#00f0ff', wid: 2.8 },
+          { rr: 0.84, span: 120, count: 2, dir: -1, spd: 0.032, col: 'rgba(0, 136, 255, 0.85)', wid: 2.2 },
+          { rr: 0.68, span: 55,  count: 4, dir: +1, spd: 0.060, col: '#ffb800', wid: 2.4 },
+          { rr: 0.58, span: 100, count: 2, dir: -1, spd: 0.038, col: '#00f0ff', wid: 1.8 }
+        ]
+      );
+
+      arcLayers.forEach(l => {
+        const rad = r * l.rr;
+        const base = phase * l.spd * l.dir;
+        const step = (Math.PI * 2) / l.count;
+        const spanRad = (l.span * Math.PI) / 180;
+
+        ctx.strokeStyle = l.col;
+        ctx.lineWidth = l.wid;
+
+        for (let s = 0; s < l.count; s++) {
+          const start = base + s * step;
+          ctx.beginPath();
+          ctx.arc(cx, cy, rad, start, start + spanRad);
+          ctx.stroke();
+
+          // Glowing Orbital Nano-Pips on leading edge
+          if (!isMini && l.rr > 0.65) {
+            const pipAng = start + (l.dir > 0 ? spanRad : 0);
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowColor = l.col;
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            ctx.arc(cx + Math.cos(pipAng) * rad, cy + Math.sin(pipAng) * rad, 3.0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+          }
+        }
+      });
+
+      // 6. Dual 3D Gyroscopic Gimbal Rings (Perspective Tilting)
+      if (!isMini) {
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(phase * 0.016);
+        ctx.strokeStyle = isBeyond ? 'rgba(255, 0, 55, 0.42)' : 'rgba(0, 240, 255, 0.40)';
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        const pitch1 = 0.45 + 0.08 * Math.sin(phase * 0.02);
+        ctx.ellipse(0, 0, r * 0.74, r * 0.74 * pitch1, 0.32, 0, Math.PI * 2);
+        ctx.stroke();
+
+        const satAng1 = -phase * 0.04;
+        const satX1 = Math.cos(satAng1) * (r * 0.74);
+        const satY1 = Math.sin(satAng1) * (r * 0.74 * pitch1);
+        ctx.fillStyle = isBeyond ? '#00d4ff' : '#00ff9d';
+        ctx.shadowColor = isBeyond ? '#00d4ff' : '#00ff9d';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(satX1, satY1, 3.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Counter gimbal ring
+        ctx.rotate(-phase * 0.026);
+        ctx.strokeStyle = isBeyond ? 'rgba(0, 212, 255, 0.35)' : 'rgba(255, 184, 0, 0.32)';
+        ctx.beginPath();
+        const pitch2 = 0.38 + 0.07 * Math.cos(phase * 0.024);
+        ctx.ellipse(0, 0, r * 0.62, r * 0.62 * pitch2, -0.42, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+
+        // 7. Magnetic Containment Triad Nodes (120° offsets)
+        const rTri = r * 0.44;
+        for (let t = 0; t < 3; t++) {
+          const tAng = (t * 120 * Math.PI) / 180 + phase * 0.008;
+          const tx = cx + Math.cos(tAng) * rTri;
+          const ty = cy + Math.sin(tAng) * rTri;
+          ctx.strokeStyle = isBeyond ? '#ff0037' : '#00f0ff';
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.moveTo(cx + Math.cos(tAng) * (rTri - 5), cy + Math.sin(tAng) * (rTri - 5));
+          ctx.lineTo(cx + Math.cos(tAng) * (rTri + 6), cy + Math.sin(tAng) * (rTri + 6));
+          ctx.stroke();
+
+          ctx.fillStyle = '#ffffff';
+          ctx.shadowColor = isBeyond ? '#ff0037' : '#00f0ff';
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.arc(tx, ty, 2.8, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+
+        // 8. Audio-Reactive Frequency Pulse Bars
+        const nSpikes = 40;
+        const rSpike = r * 0.39;
+        ctx.strokeStyle = isBeyond ? 'rgba(255, 0, 55, 0.70)' : 'rgba(0, 240, 255, 0.65)';
+        ctx.lineWidth = 1.4;
+        for (let i = 0; i < nSpikes; i++) {
+          const ang = (i * (360 / nSpikes) * Math.PI) / 180 + phase * 0.012;
+          const h = r * (0.02 + (0.02 + 0.12 * reactorAmp) * Math.sin(phase * 0.08 + i * 0.75));
+          ctx.beginPath();
+          ctx.moveTo(cx + Math.cos(ang) * rSpike, cy + Math.sin(ang) * rSpike);
+          ctx.lineTo(cx + Math.cos(ang) * (rSpike + h), cy + Math.sin(ang) * (rSpike + h));
+          ctx.stroke();
+        }
+      }
+
+      // 9. Central Obsidian Glass Quantum Lens
+      const rInner = r * 0.33;
+      const lensGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, rInner);
+      if (isBeyond) {
+        lensGrad.addColorStop(0, 'rgba(255, 0, 55, 0.80)');
+        lensGrad.addColorStop(0.45, 'rgba(28, 2, 6, 0.98)');
+        lensGrad.addColorStop(1, 'rgba(255, 0, 55, 0.90)');
+      } else {
+        lensGrad.addColorStop(0, 'rgba(0, 240, 255, 0.72)');
+        lensGrad.addColorStop(0.45, 'rgba(2, 24, 48, 0.95)');
+        lensGrad.addColorStop(1, 'rgba(0, 240, 255, 0.88)');
+      }
+
+      ctx.fillStyle = lensGrad;
+      ctx.strokeStyle = isBeyond ? '#ff0037' : '#00f0ff';
+      ctx.lineWidth = isMini ? 1.5 : 2.2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, rInner, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      if (!isMini) {
+        // Specular Glare across lens
+        const glare = ctx.createLinearGradient(cx - rInner, cy - rInner, cx + rInner, cy + rInner);
+        glare.addColorStop(0, 'rgba(255, 255, 255, 0.38)');
+        glare.addColorStop(0.4, 'rgba(255, 255, 255, 0.05)');
+        glare.addColorStop(0.6, 'transparent');
+        ctx.fillStyle = glare;
+        ctx.beginPath();
+        ctx.arc(cx, cy, rInner - 1, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Hexagonal Quantum Lattice inside Lens
+        const rHex = rInner * 0.68;
+        const rotHex = -phase * 0.016;
+        ctx.strokeStyle = isBeyond ? 'rgba(255, 0, 55, 0.50)' : 'rgba(0, 240, 255, 0.45)';
+        ctx.lineWidth = 1.0;
+        ctx.beginPath();
+        for (let h = 0; h < 6; h++) {
+          const hAng = (h * 60 * Math.PI) / 180 + rotHex;
+          const hx = cx + Math.cos(hAng) * rHex;
+          const hy = cy + Math.sin(hAng) * rHex;
+          if (h === 0) ctx.moveTo(hx, hy);
+          else ctx.lineTo(hx, hy);
+        }
+        ctx.closePath();
+        ctx.stroke();
+
+        // Laser Typography inside Core
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.shadowColor = isBeyond ? 'rgba(255, 0, 55, 0.95)' : 'rgba(0, 240, 255, 0.95)';
+        ctx.shadowBlur = 10;
+        ctx.fillText(assistantName, cx, cy);
+        ctx.shadowBlur = 0;
+      }
+    }
+
+    function animateReactors() {
+      if (document.hidden) {
+        requestAnimationFrame(animateReactors);
+        return;
+      }
+      const speed = 1.0 + (isSpeaking ? 1.6 : 0.0) + reactorAmp * 2.2;
+      phase += 1.2 * speed;
+
+      if (miniCtx) renderArcReactor(miniCtx, 38, 38, true);
+      if (mainCtx && reactorPanel && !reactorPanel.classList.contains('collapsed')) {
+        renderArcReactor(mainCtx, 140, 140, false);
+      }
+      requestAnimationFrame(animateReactors);
+    }
+    initTheme();
+    requestAnimationFrame(drawBgParticles);
+    requestAnimationFrame(animateReactors);
+
+    // ── DUAL TAB SWITCHER LOGIC ──────────────────────────────────────────────
+    let activeTab = 'feed';
+    const intelNotesList = [];
+
+    function switchView(view) {
+      activeTab = view;
+      const feedEl = document.getElementById('feed');
+      const intelEl = document.getElementById('intel-vault');
+      const feedBtn = document.getElementById('tab-feed-btn');
+      const intelBtn = document.getElementById('tab-intel-btn');
+
+      if (view === 'feed') {
+        feedEl.style.setProperty('display', 'flex', 'important');
+        intelEl.style.setProperty('display', 'none', 'important');
+        feedBtn.classList.add('active');
+        intelBtn.classList.remove('active');
+        requestAnimationFrame(() => { feedEl.scrollTop = feedEl.scrollHeight; });
+      } else {
+        feedEl.style.setProperty('display', 'none', 'important');
+        intelEl.style.setProperty('display', 'flex', 'important');
+        feedBtn.classList.remove('active');
+        intelBtn.classList.add('active');
+        updateIntelBadge(intelNotesList.length);
+      }
+    }
+
+    function updateIntelBadge(count) {
+      const b = document.getElementById('intel-badge');
+      if (b) b.textContent = count;
+    }
+
+    function addIntelNoteToVault(item) {
+      intelNotesList.push(item);
+      updateIntelBadge(intelNotesList.length);
+      appendIntelCard(item);
+
+      if (activeTab !== 'intel') {
+        const intelBtn = document.getElementById('tab-intel-btn');
+        if (intelBtn) {
+          intelBtn.style.borderColor = '#ffb800';
+          setTimeout(() => { intelBtn.style.borderColor = ''; }, 2000);
+        }
+      }
+    }
+
+    function createIntelCardElement(n) {
+      const ntype = (n.type || 'note').toLowerCase();
+      let contentHtml = escapeHtml(n.content || '');
+      contentHtml = contentHtml.replace(/(https?:\/\/[^\s<>"]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+      if (ntype === 'code') contentHtml = `<pre>${contentHtml}</pre>`;
+
+      const card = document.createElement('div');
+      card.className = `intel-card card-${ntype}`;
+      card.innerHTML = `
+        <div class="intel-card-top">
+          <span class="intel-badge badge-${ntype}">[${ntype.toUpperCase()}]</span>
+          <span class="intel-time">${escapeHtml(n.time || '')}</span>
+        </div>
+        <div class="intel-card-title">${escapeHtml(n.title || 'Untitled')}</div>
+        <div class="intel-card-body">${contentHtml.replace(/\\n/g, '<br>')}</div>
+      `;
+      return card;
+    }
+
+    function appendIntelCard(item) {
+      const container = document.getElementById('intel-list');
+      if (!container) return;
+      const placeholder = container.querySelector('.intel-empty');
+      if (placeholder) container.innerHTML = '';
+      container.appendChild(createIntelCardElement(item));
+      requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
+    }
+
+    function renderIntelList() {
+      const container = document.getElementById('intel-list');
+      if (!container) return;
+      if (intelNotesList.length === 0) {
+        container.innerHTML = `
+          <div class="intel-empty" style="font-family: -apple-system, sans-serif; color: rgba(0, 240, 255, 0.45); text-align: center; margin-top: 40px;">
+            <div style="font-size: 24px; margin-bottom: 8px;">📝</div>
+            <div style="font-size: 12px; font-weight: 700; letter-spacing: 1px;">INTEL VAULT READY</div>
+            <div style="font-size: 11px; color: var(--muted); margin-top: 6px;">Special notes, links, and code snippets from Alfred will appear here.</div>
+          </div>
+        `;
+        return;
+      }
+
+      const frag = document.createDocumentFragment();
+      intelNotesList.forEach(n => frag.appendChild(createIntelCardElement(n)));
+      container.innerHTML = '';
+      container.appendChild(frag);
+      requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
+    }
+
+    function copyIntelNotes() {
+      if (intelNotesList.length === 0) return;
+      const text = intelNotesList.map(n => `[${(n.type||'note').toUpperCase()}] ${n.title || ''}\\n${n.content || ''}\\n---`).join('\\n');
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('✓ Intel notes copied to clipboard');
+      }).catch(() => {});
+    }
+
+    function clearIntelNotes() {
+      intelNotesList.length = 0;
+      updateIntelBadge(0);
+      renderIntelList();
+      showToast('Intel vault cleared');
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // ── Auth & Persistent Pairing Engine ──────────────────────────────────────
+    let _authToken  = sessionStorage.getItem('jarvis_token') || localStorage.getItem('jarvis_token');
+    let _sessionKey = sessionStorage.getItem('jarvis_key') || localStorage.getItem('jarvis_key');
+    let _deviceToken = localStorage.getItem('jarvis_device_token');
+
+    // If both token and device_token are missing, redirect to login
+    if (!_authToken && !_deviceToken) {
+      location.replace('/login');
+    }
+
+    function _authHeader() {
+      const devTok = localStorage.getItem('jarvis_device_token') || '';
+      const curTok = _authToken || localStorage.getItem('jarvis_token') || '';
+      return {
+        'Authorization': `Bearer ${curTok}`,
+        'X-Device-Token': devTok
+      };
+    }
+
+    async function _authFetch(url, opts = {}) {
+      opts.headers = Object.assign({}, opts.headers, _authHeader());
+      let res;
+      try {
+        res = await fetch(url, opts);
+      } catch (e) {
+        throw e;
+      }
+
+      if (res.status === 401) {
+        const devTok = localStorage.getItem('jarvis_device_token');
+        if (devTok) {
+          try {
+            const rec = await fetch('/api/device-login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ device_token: devTok })
+            });
+            const d = await rec.json();
+            if (d.ok && d.token) {
+              _authToken = d.token;
+              _sessionKey = d.key;
+              sessionStorage.setItem('jarvis_token', d.token);
+              sessionStorage.setItem('jarvis_key', d.key);
+              localStorage.setItem('jarvis_token', d.token);
+              localStorage.setItem('jarvis_key', d.key);
+              _initCrypto(d.key);
+              opts.headers['Authorization'] = `Bearer ${d.token}`;
+              res = await fetch(url, opts);
+            }
+          } catch (_) {}
+        }
+      }
+      return res;
+    }
+
+    // ── AES-256-CBC encryption (CryptoJS) ────────────────────────────────────
+    const _AES_SALT = 'JARVIS-DASHBOARD-v1';
+    let _aesKey = null;
+
+    function _initCrypto(key) {
+      if (typeof CryptoJS === 'undefined' || !key) return false;
+      try {
+        _aesKey = CryptoJS.SHA256(key + _AES_SALT);
+        return true;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function _encrypt(plaintext) {
+      if (!_aesKey || typeof CryptoJS === 'undefined') return null;
+      try {
+        const iv  = CryptoJS.lib.WordArray.random(16);
+        const enc = CryptoJS.AES.encrypt(
+          CryptoJS.enc.Utf8.parse(plaintext), _aesKey,
+          { iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 }
+        );
+        const ivHex = iv.toString(CryptoJS.enc.Hex);
+        const ctHex = enc.ciphertext.toString(CryptoJS.enc.Hex);
+        const hex   = ivHex + ctHex;
+        const bytes = new Uint8Array(hex.length / 2);
+        for (let i = 0; i < bytes.length; i++)
+          bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+        return btoa(String.fromCharCode(...bytes));
+      } catch { return null; }
+    }
+
+    let _encReady = _sessionKey ? _initCrypto(_sessionKey) : false;
+    const encBadge = document.getElementById('enc');
+    if (_encReady && encBadge) { encBadge.className = 'enc-badge on'; }
+    else if (encBadge) { encBadge.className = 'enc-badge off'; encBadge.textContent = 'NO ENC'; }
+
+    // ── TACTICAL ACTION DECK CONTROLS ────────────────────────────────────────
+    async function executeTacticalAction(action, params = {}) {
+      const btn = document.getElementById(`btn-act-${action.replace(/_/g, '-')}`);
+      if (btn) btn.classList.add('active');
+      try {
+        const res = await _authFetch('/api/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action, params })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          toast(`${action.toUpperCase().replace(/_/g, ' ')} OK`);
+          if (action === 'audio_core' || action === 'toggle_mute') {
+            setTimeout(updateDeckStatus, 300);
+          }
+        } else {
+          toast(`FAIL: ${data.error || 'ERROR'}`);
+        }
+      } catch (err) {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'action', action, params }));
+          toast(`TRANSMITTING ${action.toUpperCase()}`);
+        } else {
+          toast('LINK UNREACHABLE');
+        }
+      } finally {
+        setTimeout(() => { if (btn) btn.classList.remove('active'); }, 300);
+      }
+    }
+
+    async function updateDeckStatus() {
+      try {
+        const res = await _authFetch('/api/status');
+        const data = await res.json();
+        if (data.ok) {
+          const core = data.audio_core || {};
+          const statusTxt = document.getElementById('deck-status-txt');
+          if (statusTxt) {
+            if (core.is_playing) {
+              const stem = core.track_stem || 'TRON LEGACY';
+              statusTxt.textContent = `CORE: PLAYING [${stem.substring(0, 18)}]`;
+              statusTxt.style.color = 'var(--green)';
+            } else {
+              statusTxt.textContent = 'CORE: STANDBY / PAUSED';
+              statusTxt.style.color = 'var(--muted)';
+            }
+          }
+          const muteIcon = document.getElementById('deck-mute-icon');
+          const muteLbl = document.getElementById('deck-mute-label');
+          if (data.muted) {
+            if (muteIcon) muteIcon.textContent = '🔊';
+            if (muteLbl) muteLbl.textContent = 'UNMUTE';
+          } else {
+            if (muteIcon) muteIcon.textContent = '🔇';
+            if (muteLbl) muteLbl.textContent = 'MUTE';
+          }
+        }
+      } catch (_) {}
+    }
+
+    // ── AUTO-RECONNECTING WEBSOCKET ENGINE ────────────────────────────────────
+    const feed  = document.getElementById('feed');
+    const pill  = document.getElementById('pill');
+    const stTxt = document.getElementById('st');
+    const wake  = document.getElementById('wake');
+    const rStatus = document.getElementById('reactor-status');
+
+    let ws = null;
+    let _wsReconnectTimer = null;
+    let _wsReconnectDelay = 1000;
+    let _pingInterval = null;
+
+    function initWebSocket() {
+      if (ws) {
+        try { ws.close(); } catch (_) {}
+        ws = null;
+      }
+      clearTimeout(_wsReconnectTimer);
+      clearInterval(_pingInterval);
+
+      const curTok = _authToken || localStorage.getItem('jarvis_token') || '';
+      const devTok = localStorage.getItem('jarvis_device_token') || '';
+      const _wsProto = location.protocol === 'https:' ? 'wss' : 'ws';
+      const _wsUrl = `${_wsProto}://${location.host}/ws?token=${encodeURIComponent(curTok)}&device_token=${encodeURIComponent(devTok)}`;
+
+      try {
+        ws = new WebSocket(_wsUrl);
+      } catch (e) {
+        scheduleWsReconnect();
+        return;
+      }
+
+      ws.onopen = () => {
+        _wsReconnectDelay = 1000;
+        setStatus('active');
+        sys('Quantum uplink operational.');
+        toast('Link Established');
+        _setupAudioWebSocket();
+        updateDeckStatus();
+        _pingInterval = setInterval(() => {
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'ping' }));
+          }
+        }, 20000);
+      };
+
+      ws.onclose = () => {
+        clearInterval(_pingInterval);
+        setStatus('standby');
+        _cleanupAudio();
+        scheduleWsReconnect();
+      };
+
+      ws.onerror = () => {
+        try { ws.close(); } catch (_) {}
+      };
+
+      ws.onmessage = (e) => {
+        try {
+          const m = JSON.parse(e.data);
+          const mType = (m.type || '').toLowerCase();
+          if (mType === 'pong') return;
+          if (mType === 'clear_chat') {
+            clearChatFeed();
+          } else if (mType === 'log' || mType === 'chat' || mType === 'message') {
+            append(m.speaker || m.role || 'alfred', m.text || m.content || '');
+          } else if (mType === 'telemetry') {
+            appendTelemetry(m.tag, m.icon, m.text);
+          } else if (mType === 'status') {
+            setStatus(m.state);
+          } else if (mType === 'wake') {
+            sys('Wake signal acknowledged.');
+          } else if (mType === 'sys' || mType === 'system') {
+            sys(m.text || m.message || '');
+          } else if (mType === 'file_received') {
+            _onFileReceived(m);
+          } else if (mType === 'action_result') {
+            toast(`ACTION ${m.action ? m.action.toUpperCase() : ''} COMPLETE`);
+            updateDeckStatus();
+          } else if (m.text) {
+            append(m.speaker || 'sys', m.text);
+          }
+        } catch (err) {
+          console.error('[Uplink WS] parse error:', err);
+        }
+      };
+    }
+
+    function scheduleWsReconnect() {
+      clearTimeout(_wsReconnectTimer);
+      _wsReconnectTimer = setTimeout(() => {
+        _wsReconnectDelay = Math.min(_wsReconnectDelay * 1.5, 8000);
+        initWebSocket();
+      }, _wsReconnectDelay);
+    }
+
+    // Resume connection on phone wake / screen unlock / tab switch
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        if (!ws || ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING) {
+          initWebSocket();
+        } else {
+          updateDeckStatus();
+        }
+      }
+    });
+    window.addEventListener('online', () => {
+      initWebSocket();
+    });
+    // ── Bidirectional Audio WebSocket ─────────────────────────────────────
+    let _audioWs = null;
+    let _audioCtx = null;
+    let _audioProcessor = null;
+    let _audioOutputBuffer = [];
+
+    function _setupAudioWebSocket() {
+      // Close any existing audio WebSocket
+      if (_audioWs) {
+        _audioWs.close();
+      }
+
+      const curTok = _authToken || localStorage.getItem('jarvis_token') || '';
+      const devTok = localStorage.getItem('jarvis_device_token') || '';
+      const wsProto = location.protocol === 'https:' ? 'wss' : 'ws';
+      _audioWs = new WebSocket(`${wsProto}://${location.host}/ws/audio?token=${encodeURIComponent(curTok)}&device_token=${encodeURIComponent(devTok)}`);
+      _audioWs.binaryType = 'arraybuffer';
+
+      _audioWs.onopen = () => {
+        sys('Audio channel established.');
+        toast('Audio Relay Live');
+
+        // Initialize AudioContext for playback
+        try {
+          _audioCtx = new AudioContext({ sampleRate: 16000 });
+        } catch (e) {
+          _audioCtx = new AudioContext();
+        }
+
+        // Start processing incoming audio data
+        _processAudioIncoming();
+      };
+
+      _audioWs.onclose = () => {
+        sys('Audio channel disconnected.');
+        _cleanupAudio();
+      };
+
+      _audioWs.onerror = () => {
+        sys('Audio connection error.');
+        _cleanupAudio();
+      };
+    }
+
+    function _cleanupAudio() {
+      if (_audioWs) {
+        _audioWs.close();
+        _audioWs = null;
+      }
+      if (_audioCtx) {
+        _audioCtx.close();
+        _audioCtx = null;
+      }
+      _audioProcessor = null;
+      _audioOutputBuffer = [];
+    }
+
+    function _processAudioIncoming() {
+      if (!_audioWs || _audioWs.readyState !== WebSocket.OPEN) {
+        setTimeout(_processAudioIncoming, 100);
+        return;
+      }
+
+      // Check if we have audio data to play
+      if (_audioOutputBuffer.length > 0 && _audioCtx && _audioCtx.state === 'running') {
+        try {
+          // Concatenate all audio chunks in the buffer
+          const totalLength = _audioOutputBuffer.reduce((sum, chunk) => sum + chunk.length, 0);
+          const combined = new Int16Array(totalLength);
+          let offset = 0;
+          for (const chunk of _audioOutputBuffer) {
+            combined.set(chunk, offset);
+            offset += chunk.length;
+          }
+
+          // Convert to AudioBuffer and play
+          const audioBuffer = _audioCtx.createBuffer(
+            1,
+            combined.length,
+            _audioCtx.sampleRate
+          );
+          audioBuffer.copyToChannel(combined, 0);
+
+          const source = _audioCtx.createBufferSource();
+          source.buffer = audioBuffer;
+          source.connect(_audioCtx.destination);
+          source.start();
+
+          // Clear the buffer
+          _audioOutputBuffer = [];
+        } catch (e) {
+          console.error('Error playing audio:', e);
+          _audioOutputBuffer = [];
+        }
+      }
+
+      // Continue processing
+      setTimeout(_processAudioIncoming, 50);
+    }
+
+    // Function to send audio data from microphone to ALFRED
+    function _sendAudioData(audioData) {
+      if (_audioWs && _audioWs.readyState === WebSocket.OPEN) {
+        try {
+          _audioWs.send(audioData);
+        } catch (e) {
+          console.error('Error sending audio data:', e);
+        }
+      }
+    }
+
+    // Mic button handler for push-to-talk audio transmission
+    async function doMic() {
+      if (_voiceWs) { _stopVoice(); return; }
+
+      if (!navigator.mediaDevices?.getUserMedia) {
+        _showVoiceSetup();
+        return;
+      }
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
+        });
+      } catch (e) {
+        sys(e.name === 'NotAllowedError'
+          ? 'Microphone permission denied.'
+          : 'Mic error: ' + e.message);
+        return;
+      }
+
+      let ctx;
+      try { ctx = new AudioContext({ sampleRate: 16000 }); }
+      catch (_) { ctx = new AudioContext(); }
+      if (ctx.state === 'suspended') await ctx.resume();
+
+      // Phone audio WebSocket (existing)
+      const curTok = _authToken || localStorage.getItem('jarvis_token') || '';
+      const devTok = localStorage.getItem('jarvis_device_token') || '';
+      const wsProto = location.protocol === 'https:' ? 'wss' : 'ws';
+      const phoneWs = new WebSocket(
+        `${wsProto}://${location.host}/ws/phone-audio?token=${encodeURIComponent(curTok)}&device_token=${encodeURIComponent(devTok)}`
+      );
+      phoneWs.binaryType = 'arraybuffer';
+
+      phoneWs.onopen = async () => {
+        const rate = ctx.sampleRate;
+        const src  = ctx.createMediaStreamSource(stream);
+
+        const wCode = `class J extends AudioWorkletProcessor{process(i){const c=i[0]?.[0];if(c)this.port.postMessage(c.slice());return true;}}registerProcessor('j',J);`;
+        try {
+          const burl = URL.createObjectURL(new Blob([wCode], { type: 'application/javascript' }));
+          await ctx.audioWorklet.addModule(burl);
+          URL.revokeObjectURL(burl);
+          const nd = new AudioWorkletNode(ctx, 'j');
+          let _pbuf = [], _plen = 0;
+          nd.port.onmessage = e => {
+            const chunk = new Int16Array(_f32toPcm16(e.data, rate));
+            _pbuf.push(chunk); _plen += chunk.length;
+            reactorAmp = 0.5 + Math.random() * 0.4;
+            if (_plen >= 1024) {
+              const out = new Int16Array(_plen); let off = 0;
+              for (const c of _pbuf) { out.set(c, off); off += c.length; }
+              if (phoneWs.readyState === 1) phoneWs.send(out.buffer);
+              _pbuf = []; _plen = 0;
+            }
+          };
+          src.connect(nd);
+          _audioNd = nd;
+        } catch (_) {
+          const sp = ctx.createScriptProcessor(4096, 1, 1);
+          sp.onaudioprocess = e => {
+            reactorAmp = 0.5 + Math.random() * 0.4;
+            if (phoneWs.readyState === 1) phoneWs.send(_f32toPcm16(e.inputBuffer.getChannelData(0), rate));
+          };
+          src.connect(sp); sp.connect(ctx.destination);
+          _audioNd = sp;
+        }
+
+        micBtn.innerHTML = '⏹';
+        micBtn.title     = 'Tap to terminate voice channel';
+        micBtn.classList.add('recording');
+        sys('Voice channel live.');
+        toast('🎤 Voice Relay Live');
+      };
+
+      phoneWs.onclose = () => { _stopVoice(); };
+      phoneWs.onerror = () => { sys('Voice connection disrupted.'); _stopVoice(); };
+
+      _voiceWs  = phoneWs;
+      _audioCtx = ctx;
+      _micStm   = stream;
+    }
+
+    function _stopVoice() {
+      if (_audioNd)  { try { _audioNd.disconnect(); }  catch (_) {}; _audioNd  = null; }
+      if (_audioCtx) { try { _audioCtx.close(); }      catch (_) {}; _audioCtx = null; }
+      if (_micStm)   { _micStm.getTracks().forEach(t => t.stop()); _micStm = null; }
+      if (_voiceWs)  {
+        const w = _voiceWs; _voiceWs = null;
+        if (w.readyState < 2) w.close();
+      }
+      _micIdle();
+    }
+
+    function setStatus(s) {
+      if (s === 'active') {
+        pill.className = 'pill on'; stTxt.textContent = 'ONLINE'; wake.classList.remove('show');
+        if (rStatus) rStatus.textContent = 'QUANTUM CORE ONLINE';
+      } else {
+        pill.className = 'pill'; stTxt.textContent = 'STANDBY'; wake.classList.add('show');
+        if (rStatus) rStatus.textContent = 'STANDBY MATRIX';
+      }
+    }
+
+    let _scrollPending = false;
+    function scrollToBottom() {
+      if (_scrollPending) return;
+      _scrollPending = true;
+      requestAnimationFrame(() => {
+        feed.scrollTop = feed.scrollHeight;
+        _scrollPending = false;
+      });
+    }
+
+    function trimFeedIfNeeded() {
+      const maxNodes = 120;
+      const welcome = document.getElementById('feed-welcome');
+      while (feed.children.length > maxNodes) {
+        const first = feed.firstElementChild;
+        if (first === welcome) {
+          if (feed.children.length > 1) {
+            feed.removeChild(feed.children[1]);
+          } else {
+            break;
+          }
+        } else {
+          feed.removeChild(first);
+        }
+      }
+    }
+
+    function append(speaker, text) {
+      if (text === undefined || text === null || text === '') return;
+      const sp = (speaker || '').toLowerCase();
+      const isAlfred = (sp === 'jarvis' || sp === 'alfred' || sp === 'assistant' || sp === 'ai' || sp === 'bot');
+      
+      const d = document.createElement('div');
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      if (isAlfred) {
+        d.className = 'msg msg-j';
+        d.innerHTML = `
+          <div class="msg-header">
+            <span class="lbl">ALFRED // WAYNE MK-IV</span>
+            <span class="msg-time">${timeStr}</span>
+          </div>
+          <div class="msg-text">${esc(text)}</div>
+        `;
+        isSpeaking = true;
+        reactorAmp = 0.85;
+        setTimeout(() => { isSpeaking = false; reactorAmp = 0.0; }, 3500);
+
+        if (_ttsActive && _initialHistoryLoaded) {
+          speakOnMobile(text);
+        }
+      } else {
+        d.className = 'msg msg-u';
+        d.innerHTML = `
+          <div class="msg-header">
+            <span class="lbl">COMMANDER</span>
+            <span class="msg-time">${timeStr}</span>
+          </div>
+          <div class="msg-text">${esc(text)}</div>
+        `;
+      }
+      feed.appendChild(d);
+      trimFeedIfNeeded();
+      scrollToBottom();
+    }
+
+    function appendTelemetry(tag, icon, text) {
+      const d = document.createElement('div');
+      d.className = 'msg-telemetry';
+      const iconHtml = icon ? `<span class="tag-red">[${esc(icon)}]</span>` : '';
+      d.innerHTML = `<span class="tag-red">[${esc(tag || 'ALFRED')}]</span> ${iconHtml}<span>${esc(text || '')}</span>`;
+      feed.appendChild(d);
+      trimFeedIfNeeded();
+      scrollToBottom();
+    }
+
+    function sys(text) {
+      const d = document.createElement('div');
+      d.className = 'msg msg-sys'; d.textContent = `[SYS] ${text}`;
+      feed.appendChild(d);
+      trimFeedIfNeeded();
+      scrollToBottom();
+    }
+
+    function esc(s) {
+      if (s === null || s === undefined) return '';
+      if (typeof s !== 'string') s = String(s);
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── File helpers ──────────────────────────────────────────────────────────
+    function _fileIcon(name) {
+      const ext = (name.split('.').pop() || '').toLowerCase();
+      if (['jpg','jpeg','png','gif','webp','heic','heif','avif','bmp','svg'].includes(ext)) return '🖼️';
+      if (['mp4','mov','avi','mkv','webm','m4v','3gp'].includes(ext))                       return '🎬';
+      if (['mp3','m4a','wav','flac','aac','ogg','opus'].includes(ext))                      return '🎵';
+      if (['pdf'].includes(ext))                                                             return '📋';
+      if (['doc','docx','txt','md','rtf','odt'].includes(ext))                              return '📝';
+      if (['xls','xlsx','csv','ods'].includes(ext))                                         return '📊';
+      if (['ppt','pptx','odp'].includes(ext))                                               return '📑';
+      if (['zip','rar','7z','tar','gz','bz2','xz'].includes(ext))                          return '📦';
+      if (['apk','exe','dmg','deb','rpm','msi'].includes(ext))                              return '⚙️';
+      return '📎';
+    }
+
+    function _fmtSize(bytes) {
+      if (bytes < 1024)             return bytes + ' B';
+      if (bytes < 1024 * 1024)     return (bytes / 1024).toFixed(1) + ' KB';
+      if (bytes < 1024 ** 3)       return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+      return (bytes / 1024 ** 3).toFixed(2) + ' GB';
+    }
+
+    // ── File upload (phone → computer) ────────────────────────────────────────
+    function _uploadFile(file) {
+      const id = 'fc_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+
+      const card = document.createElement('div');
+      card.className = 'msg-file';
+      card.id = id;
+      card.innerHTML = `
+        <div class="fc-icon">${_fileIcon(file.name)}</div>
+        <div class="fc-meta">
+          <div class="fc-lbl">TRANSMITTING PACKET</div>
+          <div class="fc-name">${esc(file.name)}</div>
+          <div class="fc-size">${_fmtSize(file.size)}</div>
+          <div class="fc-bar-wrap"><div class="fc-bar" id="${id}_bar"></div></div>
+        </div>
+        <div class="fc-status" id="${id}_st">0%</div>
+      `;
+      feed.appendChild(card);
+      feed.scrollTop = feed.scrollHeight;
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/api/upload');
+      xhr.setRequestHeader('Authorization', `Bearer ${_authToken}`);
+
+      xhr.upload.onprogress = (e) => {
+        if (!e.lengthComputable) return;
+        const pct = Math.round(e.loaded / e.total * 100);
+        const bar = document.getElementById(`${id}_bar`);
+        const st  = document.getElementById(`${id}_st`);
+        if (bar) bar.style.width = pct + '%';
+        if (st)  st.textContent  = pct + '%';
+      };
+
+      xhr.onload = () => {
+        const bar  = document.getElementById(`${id}_bar`);
+        const st   = document.getElementById(`${id}_st`);
+        const meta = card.querySelector('.fc-meta');
+        const lbl  = card.querySelector('.fc-lbl');
+        if (xhr.status === 200) {
+          let savedName = file.name;
+          try { savedName = JSON.parse(xhr.responseText).name || file.name; } catch {}
+          const curTok = _authToken || localStorage.getItem('jarvis_token') || '';
+          const devTok = localStorage.getItem('jarvis_device_token') || '';
+          const dlUrl = `/uploads/${encodeURIComponent(savedName)}?token=${encodeURIComponent(curTok)}&device_token=${encodeURIComponent(devTok)}`;
+          if (bar)  { bar.style.width = '100%'; bar.style.background = 'var(--green)'; }
+          if (st)   { st.textContent = '✓'; st.className = 'fc-status done'; }
+          if (lbl)  lbl.textContent = 'TRANSMISSION COMPLETE';
+          if (meta) meta.insertAdjacentHTML('beforeend',
+            `<a class="fc-dl" href="${dlUrl}" download="${esc(savedName)}">⬇ Download File</a>`);
+          toast('File Transferred');
+        } else {
+          let errMsg = 'Upload failed';
+          try { errMsg = JSON.parse(xhr.responseText).error || errMsg; } catch {}
+          if (bar) bar.style.background = 'var(--err)';
+          if (st)  { st.textContent = 'ERR'; st.className = 'fc-status err'; }
+          if (lbl) lbl.textContent = errMsg;
+        }
+      };
+
+      xhr.onerror = () => {
+        const st  = document.getElementById(`${id}_st`);
+        const lbl = card.querySelector('.fc-lbl');
+        if (st)  { st.textContent = 'ERR'; st.className = 'fc-status err'; }
+        if (lbl) lbl.textContent = 'Connection error';
+      };
+
+      const fd = new FormData();
+      fd.append('file', file);
+      xhr.send(fd);
+    }
+
+    function _onFileReceived(m) {
+      const curTok = _authToken || localStorage.getItem('jarvis_token') || '';
+      const devTok = localStorage.getItem('jarvis_device_token') || '';
+      const dlUrl = `/uploads/${encodeURIComponent(m.name)}?token=${encodeURIComponent(curTok)}&device_token=${encodeURIComponent(devTok)}`;
+      const card  = document.createElement('div');
+      card.className = 'msg-file';
+      const isImg = (m.name.match(/\.(png|jpe?g|webp|gif)$/i));
+      const previewHtml = isImg ? `<div style="margin-top:6px;border-radius:6px;overflow:hidden;border:1px solid rgba(0,240,255,0.25);"><img src="${dlUrl}" style="max-width:100%;max-height:160px;display:block;border-radius:4px;" alt="Screenshot"></div>` : '';
+      card.innerHTML = `
+        <div class="fc-icon">${_fileIcon(m.name)}</div>
+        <div class="fc-meta">
+          <div class="fc-lbl">${m.is_screenshot ? 'TACTICAL SCREENSHOT CAPTURED' : 'PACKET RECEIVED'}</div>
+          <div class="fc-name">${esc(m.name)}</div>
+          ${m.size ? `<div class="fc-size">${_fmtSize(m.size)}</div>` : ''}
+          ${previewHtml}
+          <a class="fc-dl" href="${dlUrl}" download="${esc(m.name)}">⬇ View / Save Image</a>
+        </div>
+        <div class="fc-status done">✓</div>
+      `;
+      feed.appendChild(card);
+      feed.scrollTop = feed.scrollHeight;
+      toast(m.is_screenshot ? 'Screenshot Delivered' : 'File Received');
+    }
+
+    document.getElementById('file-inp').addEventListener('change', function () {
+      Array.from(this.files).forEach(_uploadFile);
+      this.value = '';
+    });
+
+    // ── Commands ──────────────────────────────────────────────────────────────
+    function doSend() {
+      const inp = document.getElementById('inp');
+      const txt = inp.value.trim();
+      if (!txt) return;
+      inp.value = '';
+      append('user', txt);
+      const enc  = _encrypt(txt);
+      const body = enc ? { enc } : { text: txt };
+      _authFetch('/api/command', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+    }
+
+    function doWake() {
+      sys('Sending wake command…');
+      _authFetch('/api/wake', { method: 'POST' });
+    }
+
+    function clearChatFeed() {
+      const feed = document.getElementById('feed');
+      if (feed) {
+        feed.innerHTML = `
+          <div class="feed-welcome" id="feed-welcome">
+            <div class="welcome-badge">◈ UPLINK SYNCHRONIZED</div>
+            <div class="welcome-title">ALFRED QUANTUM TERMINAL</div>
+            <div class="welcome-sub">CONVERSATION WIPED // SYSTEM READY</div>
+            <div class="welcome-hints">
+              <span>🔊 TTS Vocalizer Active</span>
+              <span>•</span>
+              <span>⚡ Realtime Neural Link</span>
+              <span>•</span>
+              <span>🛡️ AES-256</span>
+            </div>
+          </div>
+        `;
+      }
+      sys('Conversation wiped clean.');
+    }
+
+    function doClearChat() {
+      clearChatFeed();
+      _authFetch('/api/clear-chat', { method: 'POST' }).catch(err => {
+        console.error('Clear chat error:', err);
+      });
+      toast('Conversation Cleared');
+    }
+
+    document.getElementById('inp').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doSend(); }
+    });
+
+    // ── Toast ─────────────────────────────────────────────────────────────────
+    let _toastTimer;
+    function toast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      clearTimeout(_toastTimer);
+      _toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+    }
+
+    // ── Real-time Voice — PCM16 WebSocket → Gemini Live ──────────────────────
+    const micBtn  = document.getElementById('mic-btn');
+    let _voiceWs  = null;
+    let _audioCtx = null;
+    let _micStm   = null;
+    let _audioNd  = null;
+
+    function _micIdle() {
+      micBtn.innerHTML = '🎤';
+      micBtn.title     = 'Voice — tap to speak';
+      micBtn.classList.remove('recording');
+      reactorAmp = 0.0;
+    }
+
+    function _f32toPcm16(f32, srcRate) {
+      let s = f32;
+      if (srcRate !== 16000) {
+        const ratio = srcRate / 16000;
+        const len   = Math.round(f32.length / ratio);
+        s = new Float32Array(len);
+        for (let i = 0; i < len; i++)
+          s[i] = f32[Math.min(Math.round(i * ratio), f32.length - 1)];
+      }
+      const out = new Int16Array(s.length);
+      for (let i = 0; i < s.length; i++)
+        out[i] = Math.max(-32768, Math.min(32767, Math.round(s[i] * 32768)));
+      return out.buffer;
+    }
+
+    function _showVoiceSetup() {
+      if (document.getElementById('voice-setup')) return;
+      const origin = location.origin;
+      const card = document.createElement('div');
+      card.id = 'voice-setup';
+      card.style.cssText = [
+        'align-self:stretch', 'background:rgba(0,240,255,0.06)',
+        'border:1px solid rgba(0,240,255,0.22)', 'border-radius:16px',
+        'padding:16px 20px', 'font-size:13px', 'line-height:1.8',
+        'animation:pop 0.22s ease'
+      ].join(';');
+      card.innerHTML =
+        '<div style="font-weight:800;color:#00f0ff;letter-spacing:1px;margin-bottom:10px">🎤 Mobile Voice Setup</div>' +
+        '<ol style="padding-left:18px;color:#8fa5bd;margin:0;display:flex;flex-direction:column;gap:5px">' +
+        '<li>Open a new tab → navigate to <span style="background:rgba(255,255,255,0.08);padding:1px 6px;border-radius:4px;font-family:monospace;font-size:12px">chrome://flags</span></li>' +
+        '<li>Search: <strong style="color:#ffffff">Insecure origins treated as secure</strong></li>' +
+        '<li>Paste this origin URL:<br><span id="flags-url" style="background:rgba(0,240,255,0.1);color:#00f0ff;padding:3px 8px;border-radius:6px;font-family:monospace;font-size:11px;user-select:all;cursor:pointer">' + esc(origin) + '</span></li>' +
+        '<li>Set to <strong style="color:#00ff9d">Enabled</strong> → tap <strong style="color:#ffffff">Relaunch</strong></li>' +
+        '<li>Return here and tap 🎤 to transmit voice.</li>' +
+        '</ol>';
+      feed.appendChild(card);
+      feed.scrollTop = feed.scrollHeight;
+      card.querySelector('#flags-url').addEventListener('click', () => {
+        navigator.clipboard?.writeText(origin).then(() => toast('Origin URL Copied')).catch(() => {});
+      });
+    }
+
+    async function doMic() {
+      if (_voiceWs) { _stopVoice(); return; }
+
+      if (!navigator.mediaDevices?.getUserMedia) {
+        _showVoiceSetup();
+        return;
+      }
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
+        });
+      } catch (e) {
+        sys(e.name === 'NotAllowedError'
+          ? 'Microphone permission denied.'
+          : 'Mic error: ' + e.message);
+        return;
+      }
+
+      let ctx;
+      try { ctx = new AudioContext({ sampleRate: 16000 }); }
+      catch (_) { ctx = new AudioContext(); }
+      if (ctx.state === 'suspended') await ctx.resume();
+
+      const wsProto = location.protocol === 'https:' ? 'wss' : 'ws';
+      const ws = new WebSocket(
+        `${wsProto}://${location.host}/ws/phone-audio?token=${encodeURIComponent(_authToken)}`
+      );
+      ws.binaryType = 'arraybuffer';
+
+      ws.onopen = async () => {
+        const rate = ctx.sampleRate;
+        const src  = ctx.createMediaStreamSource(stream);
+
+        const wCode = `class J extends AudioWorkletProcessor{process(i){const c=i[0]?.[0];if(c)this.port.postMessage(c.slice());return true;}}registerProcessor('j',J);`;
+        try {
+          const burl = URL.createObjectURL(new Blob([wCode], { type: 'application/javascript' }));
+          await ctx.audioWorklet.addModule(burl);
+          URL.revokeObjectURL(burl);
+          const nd = new AudioWorkletNode(ctx, 'j');
+          let _pbuf = [], _plen = 0;
+          nd.port.onmessage = e => {
+            const chunk = new Int16Array(_f32toPcm16(e.data, rate));
+            _pbuf.push(chunk); _plen += chunk.length;
+            reactorAmp = 0.5 + Math.random() * 0.4;
+            if (_plen >= 1024) {
+              const out = new Int16Array(_plen); let off = 0;
+              for (const c of _pbuf) { out.set(c, off); off += c.length; }
+              if (ws.readyState === 1) ws.send(out.buffer);
+              _pbuf = []; _plen = 0;
+            }
+          };
+          src.connect(nd);
+          _audioNd = nd;
+        } catch (_) {
+          const sp = ctx.createScriptProcessor(4096, 1, 1);
+          sp.onaudioprocess = e => {
+            reactorAmp = 0.5 + Math.random() * 0.4;
+            if (ws.readyState === 1) ws.send(_f32toPcm16(e.inputBuffer.getChannelData(0), rate));
+          };
+          src.connect(sp); sp.connect(ctx.destination);
+          _audioNd = sp;
+        }
+
+        micBtn.innerHTML = '⏹';
+        micBtn.title     = 'Tap to terminate voice channel';
+        micBtn.classList.add('recording');
+        sys('Voice channel live.');
+        toast('🎤 Voice Relay Live');
+      };
+
+      ws.onclose = () => { _stopVoice(); };
+      ws.onerror = () => { sys('Voice connection disrupted.'); _stopVoice(); };
+
+      _voiceWs  = ws;
+      _audioCtx = ctx;
+      _micStm   = stream;
+    }
+
+    function _stopVoice() {
+      if (_audioNd)  { try { _audioNd.disconnect(); }  catch (_) {}; _audioNd  = null; }
+      if (_audioCtx) { try { _audioCtx.close(); }      catch (_) {}; _audioCtx = null; }
+      if (_micStm)   { _micStm.getTracks().forEach(t => t.stop()); _micStm = null; }
+      if (_voiceWs)  {
+        const w = _voiceWs; _voiceWs = null;
+        if (w.readyState < 2) w.close();
+      }
+      _micIdle();
+    }
+  </script>
+</body>
+</html>
