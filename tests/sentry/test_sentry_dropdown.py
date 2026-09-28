@@ -113,10 +113,10 @@ class TestSentryDropdownIntegration(unittest.TestCase):
             self.assertEqual(overlay._sentry_btn.text(), "S")
 
             overlay.update_sentry_indicator(mon_active=True, foc_active=False)
-            self.assertEqual(overlay._sentry_btn.text(), "S●")
+            self.assertIn("MON", overlay._sentry_btn.text())
 
             overlay.update_sentry_indicator(mon_active=False, foc_active=True)
-            self.assertEqual(overlay._sentry_btn.text(), "S●")
+            self.assertIn("FOC", overlay._sentry_btn.text())
 
             overlay.update_sentry_indicator(mon_active=False, foc_active=False)
             self.assertEqual(overlay._sentry_btn.text(), "S")

@@ -29,6 +29,7 @@ from PyQt6.QtGui import (
     QPen, QPixmap, QRadialGradient, QShortcut,
 )
 from core.sentry.mode_manager import get_sentry_mode_manager, SentrySnapshot
+from core.sentry.focus.card import FloatingFocusCard
 from PyQt6.QtWidgets import (
     QMenu,
     QApplication, QComboBox, QFileDialog, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit,
@@ -740,6 +741,7 @@ class C:
     GREEN       = "#4ef2bb"       # Phosphor matrix emerald
     GREEN_D     = "#228562"       # Muted green bio-metric
     RED         = "#ff2a55"       # Threat assessment crimson
+    CYAN        = "#00f0ff"       # High-tech focus cyan
     MUTED       = "#707ab0"       # Muted terminal readout
     MUTED_C     = "#ff3366"       # Silence protocol neon
     TEXT        = "#e8ecff"       # Crisp luminescent CRT white-blue
@@ -3735,21 +3737,31 @@ class MinimizedHudOverlay(QWidget):
         if self._main_window and hasattr(self._main_window, "_show_sentry_menu"):
             self._main_window._show_sentry_menu(anchor=self._sentry_btn)
 
-    def update_sentry_indicator(self, mon_active: bool, foc_active: bool) -> None:
+    def update_sentry_indicator(
+        self,
+        mon_active: bool,
+        foc_active: bool,
+        waiting_for_answer: bool = False,
+        foc_remaining_s: int = 0,
+        drifting: bool = False,
+    ) -> None:
         if not hasattr(self, "_sentry_btn"):
             return
-        if mon_active and foc_active:
-            self._sentry_btn.setText("S●")
-            self._sentry_btn.setStyleSheet(f"QPushButton#sentryButton {{ color: {C.RED}; font-weight: bold; }}")
+        if foc_active:
+            mins = max(0, foc_remaining_s) // 60
+            secs = max(0, foc_remaining_s) % 60
+            self._sentry_btn.setText(f"FOC {mins:02d}:{secs:02d}")
+            if drifting:
+                self._sentry_btn.setStyleSheet(f"QPushButton#sentryButton {{ color: {C.RED}; font-weight: bold; min-width: 80px; max-width: 90px; border: 1px solid {C.RED}; }}")
+            else:
+                self._sentry_btn.setStyleSheet(f"QPushButton#sentryButton {{ color: {C.CYAN}; font-weight: bold; min-width: 80px; max-width: 90px; border: 1px solid rgba(0, 240, 255, 80); }}")
         elif mon_active:
-            self._sentry_btn.setText("S●")
-            self._sentry_btn.setStyleSheet(f"QPushButton#sentryButton {{ color: {C.GREEN}; font-weight: bold; }}")
-        elif foc_active:
-            self._sentry_btn.setText("S●")
-            self._sentry_btn.setStyleSheet(f"QPushButton#sentryButton {{ color: {C.RED}; font-weight: bold; }}")
+            dot_color = "#ffcc00" if waiting_for_answer else "#00ff88"
+            self._sentry_btn.setText("MON ●")
+            self._sentry_btn.setStyleSheet(f"QPushButton#sentryButton {{ color: {dot_color}; font-weight: bold; min-width: 60px; max-width: 70px; }}")
         else:
             self._sentry_btn.setText("S")
-            self._sentry_btn.setStyleSheet(f"QPushButton#sentryButton {{ color: {C.TEXT_MED}; font-weight: bold; }}")
+            self._sentry_btn.setStyleSheet(f"QPushButton#sentryButton {{ color: {C.TEXT_MED}; font-weight: bold; min-width: 26px; max-width: 26px; border: none; }}")
 
     def set_assistant_name(self, name: str) -> None:
         self._assistant_name = (name or "Alfred").strip()
@@ -7314,6 +7326,7 @@ class MainWindow(QMainWindow):
         self._hud_overlay = MinimizedHudOverlay(
             self, self._log_sig, self._assistant_name
         )
+        self._focus_card = FloatingFocusCard()
         self._state_sig.connect(self._apply_state)
         self._content_sig.connect(self._show_content)
         self._reconfig_sig.connect(self._show_setup)
@@ -10066,8 +10079,17 @@ class MainWindow(QMainWindow):
             self._sentry_btn.setText("[ ▣ ]  SENTRY MODE")
             self._sentry_btn.setToolTip("Sentry Mode: MONITOR + FOCUS")
 
+        if hasattr(self, "_focus_card"):
+            self._focus_card.update_state(foc)
         if hasattr(self, "_hud_overlay") and hasattr(self._hud_overlay, "update_sentry_indicator"):
-            self._hud_overlay.update_sentry_indicator(mon.active, foc.active)
+            mgr = get_sentry_mode_manager()
+            self._hud_overlay.update_sentry_indicator(
+                mon.active,
+                foc.active,
+                waiting_for_answer=mgr.is_waiting_for_answer(),
+                foc_remaining_s=foc.remaining_s,
+                drifting=foc.drifting,
+            )
 
     def _apply_screen_monitor_state(self, active: bool, label: str = "") -> None:
         """Apply monitor state on the Qt thread for click and voice controls."""

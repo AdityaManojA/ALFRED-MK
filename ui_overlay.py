@@ -29,6 +29,11 @@ except Exception as e:
     print(f"[UI Overlay] Qt6 not available: {e}")
     QT_AVAILABLE = False
 
+try:
+    from core.sentry.focus.card import FloatingFocusCard
+except Exception:
+    FloatingFocusCard = None
+
 
 class TelemetryHUD(QWidget):
     """A minimalist floating HUD widget for displaying telemetry data."""
@@ -43,6 +48,9 @@ class TelemetryHUD(QWidget):
         # Track last network I/O for calculating speeds
         self._last_net_io = psutil.net_io_counters()
         self._last_net_time = time.time()
+
+        # Floating focus card integration
+        self._focus_card = FloatingFocusCard() if FloatingFocusCard else None
 
     def _setup_ui(self):
         """Set up the HUD user interface."""
