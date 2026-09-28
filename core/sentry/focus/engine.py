@@ -1,10 +1,9 @@
-"""Focus Engine Core: Independent 1-second tick session thread.
+"""Focus Engine Core: Independent 1-second tick session thread with drift escalation.
 
 Structural Privacy Law:
-- All identifying tokens (app IDs, window titles, tab URLs, spoken labels, verbal intent)
-  are strictly private to the engine instance and NEVER exported to FocusState.
+- Distraction labels ride for one engine tick into the spoken string and are stored NOWHERE.
+- No app names, window titles, URLs, or spoken labels appear in FocusState, snapshot, or logs.
 - FocusState contains only booleans, counters, and progress integers.
-- Session runs independently of the HUD lifecycle on a dedicated daemon thread.
 """
 from __future__ import annotations
 
@@ -13,9 +12,12 @@ import threading
 import time
 from typing import Any, Callable
 
+from core.sentry.focus.labels import resolve_distraction_label
+from core.sentry.focus.lines import get_drift_line
 from core.sentry.focus.reader import BasePlatformReader, SurfaceIdentity, get_platform_reader
 from core.sentry.focus.state import (
     DEFAULT_SESSION_MIN,
+    DRIFT_GRACE_MS,
     MAX_SESSION_MIN,
     NAG_DEFAULT_S,
     NAG_MAX_S,
@@ -45,11 +47,13 @@ class FocusEngine:
     def __init__(
         self,
         reader: BasePlatformReader | None = None,
+        speak_fn: Callable[[str], None] | None = None,
         on_complete: Callable[[], None] | None = None,
         on_drift: Callable[[SurfaceIdentity, int], None] | None = None,
         auto_tick: bool = True,
     ) -> None:
         self._reader = reader or get_platform_reader()
+        self._speak_fn = speak_fn
         self._on_complete = on_complete
         self._on_drift = on_drift
         self._auto_tick = auto_tick
@@ -74,7 +78,7 @@ class FocusEngine:
         self._locked_app = False
         self._locked_tab = False
 
-        # Drift tracking
+        # Drift tracking & escalation
         self._drifting = False
         self._drift_count = 0
         self._current_drift_s = 0
@@ -82,6 +86,12 @@ class FocusEngine:
         self._snoozed_until_s = 0.0
         self._excused = False
         self._nag_interval_s = NAG_DEFAULT_S
+        self._last_nag_time = 0.0
+        self._first_callout_done = False
+        self._drill_sergeant = False
+
+        # Grace window tracking (DRIFT_GRACE_MS = 800)
+        self._candidate_drift_start: float | None = None
 
     @property
     def is_active(self) -> bool:
@@ -93,21 +103,33 @@ class FocusEngine:
         with self._lock:
             return self._paused
 
+    @property
+    def is_drill_sergeant(self) -> bool:
+        with self._lock:
+            return self._drill_sergeant
+
     def set_reader(self, reader: BasePlatformReader) -> None:
-        """Inject custom platform reader (used in unit tests)."""
         with self._lock:
             self._reader = reader
 
     def set_callbacks(
         self,
+        speak_fn: Callable[[str], None] | None = None,
         on_complete: Callable[[], None] | None = None,
         on_drift: Callable[[SurfaceIdentity, int], None] | None = None,
     ) -> None:
         with self._lock:
+            if speak_fn is not None:
+                self._speak_fn = speak_fn
             if on_complete is not None:
                 self._on_complete = on_complete
             if on_drift is not None:
                 self._on_drift = on_drift
+
+    def set_drill_sergeant(self, enabled: bool) -> bool:
+        with self._lock:
+            self._drill_sergeant = bool(enabled)
+            return self._drill_sergeant
 
     # ── Session Lifecycle ─────────────────────────────────────────────────────
 
@@ -118,7 +140,6 @@ class FocusEngine:
         lock_app: bool = False,
         lock_tab: bool = False,
     ) -> dict[str, Any]:
-        """Start a new FOCUS session."""
         mins = max(1, min(duration_minutes, MAX_SESSION_MIN))
         planned_s = mins * 60
 
@@ -138,8 +159,11 @@ class FocusEngine:
             self._snoozed_until_s = 0.0
             self._excused = False
             self._nag_interval_s = NAG_DEFAULT_S
+            self._last_nag_time = 0.0
+            self._first_callout_done = False
+            self._candidate_drift_start = None
 
-            # Settle rule / deferred lock by default
+            # Settle rule / deferred lock
             self._deferred_lock = True
             self._locked_app = bool(lock_app)
             self._locked_tab = bool(lock_tab)
@@ -175,7 +199,6 @@ class FocusEngine:
         self._sync_mode_manager()
 
     def extend(self, minutes: int = 10) -> int:
-        """Extend the current session by N minutes."""
         add_s = max(1, minutes) * 60
         with self._lock:
             if not self._active:
@@ -187,7 +210,6 @@ class FocusEngine:
         return remaining
 
     def abort(self, reason: str = "Aborted by user.") -> dict[str, Any]:
-        """Abort or stop the session cleanly."""
         with self._lock:
             if not self._active:
                 return {"active": False, "reason": reason}
@@ -196,12 +218,12 @@ class FocusEngine:
             self._remaining_s = 0
             self._drifting = False
             self._current_drift_s = 0
+            self._candidate_drift_start = None
 
         self._sync_mode_manager()
         return {"active": False, "reason": reason}
 
     def snooze(self, seconds: int = SNOOZE_DEFAULT_S) -> float:
-        """Temporarily silence drift alerts for N seconds."""
         until = (time.time() + seconds) if seconds > 0 else 0.0
         with self._lock:
             self._snoozed_until_s = until
@@ -209,14 +231,13 @@ class FocusEngine:
         return until
 
     def excuse(self, reason: str = "Research") -> None:
-        """Excuse current excursion, refunding drift time until back on target."""
         with self._lock:
             self._excused = True
             self._current_drift_s = 0
+            self._candidate_drift_start = None
         self._sync_mode_manager()
 
     def set_nag_interval(self, seconds: int) -> int:
-        """Tune nag cadence within [NAG_MIN_S, NAG_MAX_S]."""
         cadence = max(NAG_MIN_S, min(seconds, NAG_MAX_S))
         with self._lock:
             self._nag_interval_s = cadence
@@ -224,19 +245,18 @@ class FocusEngine:
         return cadence
 
     def lock_surface(self, app_id: str, tab_host_hash: str = "") -> None:
-        """Explicitly lock the session onto a specific app / tab hash."""
         with self._lock:
             self._target_app_id = (app_id or "").strip().lower()
             self._target_tab_host_hash = (tab_host_hash or "").strip()
             self._locked_app = bool(self._target_app_id)
             self._locked_tab = bool(self._target_tab_host_hash)
             self._deferred_lock = False
+            self._candidate_drift_start = None
         self._sync_mode_manager()
 
     # ── State Whitelist Query ─────────────────────────────────────────────────
 
     def get_state(self) -> FocusState:
-        """Return the immutable FocusState whitelist. Zero private strings."""
         with self._lock:
             return FocusState(
                 active=self._active,
@@ -273,9 +293,10 @@ class FocusEngine:
                 self.tick()
 
     def tick(self) -> None:
-        """Execute a single 1-second session tick."""
+        """Execute a single 1-second session tick with grace window and escalation."""
         complete_cb = None
         drift_cb = None
+        spoken_line = ""
 
         with self._lock:
             if not self._active or self._paused:
@@ -298,7 +319,7 @@ class FocusEngine:
             # Query the frontmost surface afresh
             surface = self._reader.get_frontmost_surface()
 
-            # Handle deferred lock on first non-home-base interaction
+            # Settle rule: Deferred lock onto first non-home-base interaction
             if self._deferred_lock and not surface.is_home_base and surface.capability in ("FULL", "APP_ONLY"):
                 self._target_app_id = surface.app_id
                 self._target_tab_host_hash = surface.tab_host_hash
@@ -308,10 +329,8 @@ class FocusEngine:
 
             # Comparison
             if surface.is_home_base or surface.capability == "UNKNOWN":
-                # ALFRED HUD is home base: never a drift
                 on_target = True
             elif not self._locked_app:
-                # Still awaiting lock
                 on_target = True
             else:
                 app_ok = (surface.app_id.lower() == self._target_app_id.lower())
@@ -320,24 +339,60 @@ class FocusEngine:
                     tab_ok = (surface.tab_host_hash == self._target_tab_host_hash)
                 on_target = app_ok and tab_ok
 
-            now = time.time()
-            is_snoozed = (now < self._snoozed_until_s)
+            now_mono = time.monotonic()
+            now_epoch = time.time()
+            is_snoozed = (now_epoch < self._snoozed_until_s)
 
             if on_target:
                 self._on_target_s += 1
                 self._drifting = False
                 self._current_drift_s = 0
-                self._excused = False  # returning on-target clears excuse
+                self._candidate_drift_start = None
+                self._excused = False  # returning on target clears excuse
             else:
-                if not self._excused and not is_snoozed:
-                    was_drifting = self._drifting
-                    self._drifting = True
-                    self._current_drift_s += 1
-                    if not was_drifting:
-                        self._drift_count += 1
-                    drift_cb = self._on_drift
+                # Potential drift: Apply grace window (DRIFT_GRACE_MS = 800)
+                if self._candidate_drift_start is None:
+                    self._candidate_drift_start = now_mono
+
+                grace_elapsed_ms = (now_mono - self._candidate_drift_start) * 1000.0
+                if grace_elapsed_ms >= DRIFT_GRACE_MS:
+                    # Grace window passed: official drift confirmed
+                    if not self._excused and not is_snoozed:
+                        was_drifting = self._drifting
+                        self._drifting = True
+                        self._current_drift_s += 1
+
+                        if not was_drifting:
+                            self._drift_count += 1
+                            # Tier escalation: 1 -> 2 -> 3
+                            self._tier = min(3, self._drift_count)
+                            should_callout = True
+                        else:
+                            # Repeating nag cadence
+                            should_callout = (now_mono - self._last_nag_time) >= self._nag_interval_s
+
+                        if should_callout:
+                            self._last_nag_time = now_mono
+                            label = resolve_distraction_label(surface)
+                            is_first = not self._first_callout_done
+                            spoken_line = get_drift_line(
+                                tier=self._tier,
+                                label=label,
+                                intent=self._intent,
+                                is_first=is_first,
+                                drill_sergeant=self._drill_sergeant,
+                            )
+                            self._first_callout_done = True
+                            drift_cb = self._on_drift
 
             self._sync_mode_manager_locked()
+
+        # Speak callout (Privacy: label lives only in this ephemeral spoken string)
+        if spoken_line and self._speak_fn:
+            try:
+                self._speak_fn(spoken_line)
+            except Exception as exc:
+                _LOGGER.debug("Speak error: %s", exc)
 
         if drift_cb and surface:
             try:
@@ -373,5 +428,4 @@ class FocusEngine:
 
 
 def get_focus_engine() -> FocusEngine:
-    """Convenience accessor for singleton FocusEngine."""
     return FocusEngine.instance()

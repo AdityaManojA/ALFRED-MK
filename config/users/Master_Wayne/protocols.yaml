@@ -1,0 +1,121 @@
+test_protocol:
+  description: Test protocol that opens Documents and sets volume to 20
+  triggers:
+  - run test protocol
+  - test workflow
+  - verify protocol engine
+  steps:
+  - tool: file_controller
+    parameters:
+      action: open
+      path: documents
+  - tool: computer_settings
+    parameters:
+      action: volume_set
+      value: 20
+fcc_claude:
+  description: Launch FCC server in admin PowerShell and FCC Claude in separate terminal
+  triggers:
+  - FCC CLAUDE
+  - fcc claude
+  - start fcc claude
+  - launch fcc claude
+  steps:
+  - tool: terminal_admin
+    parameters:
+      command: fcc-server
+    sleep_ms: 1000
+  - tool: open_terminal
+    parameters:
+      command: fcc-claude
+morning_routine:
+  description: Set volume to 50, open daily brief and fetch weather
+  triggers:
+  - morning routine
+  - start my morning
+  - good morning alfred
+  steps:
+  - tool: computer_settings
+    parameters:
+      action: volume_set
+      value: 50
+  - tool: weather_report
+    parameters:
+      action: get_weather
+  - tool: daily_brief
+    parameters:
+      action: read_briefing
+dev_mode:
+  description: Open code editor and project workspace
+  triggers:
+  - dev mode
+  - start coding
+  - development workflow
+  steps:
+  - tool: open_app
+    parameters:
+      app_name: code
+    sleep_ms: 500
+  - tool: file_controller
+    parameters:
+      action: open
+      path: documents
+locked_in:
+  description: Open AntiGravity IDE, Spotify, and play Back in Black by AC/DC.
+  triggers:
+  - let's lock in
+  - lock in
+  - activate lock in
+  steps:
+  - tool: focus_protocol
+    parameters:
+      action: stop
+  - parameters:
+      app_name: AntiGravity IDE
+    tool: open_app
+    sleep_ms: 1000
+  - parameters:
+      app_name: Spotify
+    tool: open_app
+    sleep_ms: 2000
+  - parameters:
+      image_path: D:/Projects/Alfred-Mark-IV/LockIN.jpg
+    tool: show_image_popup
+    sleep_ms: 1000
+  - tool: spotify_control
+    parameters:
+      action: play
+      query: Back In Black by AC/DC
+    sleep_ms: 1000
+wake_up_daddys_home:
+  description: Max brightness, start music, wait 2s, open wallpaper URL in Brave.
+  triggers:
+  - wake up daddy's home
+  steps:
+  - tool: computer_settings
+    parameters:
+      action: brightness_set
+      value: '100'
+  - parameters:
+      action: play
+      query: Back in Black by AC/DC
+    tool: spotify_control
+  - tool: computer_control
+    parameters:
+      seconds: 2
+      action: wait
+  - tool: browser_control
+    parameters:
+      action: go_to
+      browser: brave
+      url: https://wallpapercat.com/w/full/c/f/f/320224-1920x1080-desktop-full-hd-iron-man-wallpaper.jpg
+focus_mode:
+  description: Begin a deep work session.
+  triggers:
+  - focus mode
+  - study mode
+  steps:
+  - tool: focus_protocol
+    parameters:
+      action: start
+      duration_minutes: 25
