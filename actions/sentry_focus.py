@@ -1,11 +1,11 @@
-"""Action: Sentry FOCUS Mode Controller.
+"""Action: Sentry FOCUS Mode Controller with Voice Routing for Tab Locking.
 
 Provides tool invocation for Sentry Mode v2 FOCUS capabilities:
 - Session start with duration in minutes and intent
 - Session controls: pause, resume, extend, abort/stop
 - Drift mitigations: snooze, excuse, and nag cadence adjustments
 - Tone tuning: drill sergeant mode ('be harsh today') / gentle mode
-- Surface locking
+- Voice route & card trap: 'lock on this tab', 'keep me in this tab', 'this is the tab', 'stay on this tab'
 """
 from __future__ import annotations
 
@@ -27,6 +27,7 @@ def sentry_focus_action(
     reason: str = "Research",
     lock_app: bool = False,
     lock_tab: bool = False,
+    from_card: bool = False,
     **kwargs: Any,
 ) -> str:
     """Execute a Sentry FOCUS mode action."""
@@ -35,9 +36,28 @@ def sentry_focus_action(
 
     if act in ("start", "begin", "focus"):
         mins = int(duration_minutes or DEFAULT_SESSION_MIN)
-        res = engine.start(duration_minutes=mins, intent=intent, lock_app=lock_app, lock_tab=lock_tab)
-        target_info = " Locked to current surface." if (lock_app or lock_tab) else " Will lock once you switch to your target window, sir."
-        return f"FOCUS session initiated for {mins} minutes.{target_info}"
+        res = engine.start(
+            duration_minutes=mins,
+            intent=intent,
+            lock_app=lock_app,
+            lock_tab=lock_tab,
+            from_card=from_card,
+        )
+        if res.get("deferred_lock"):
+            return "FOCUS session initiated. Go to what you're working on and I'll lock on there, sir."
+        return f"FOCUS session initiated for {mins} minutes. Locked on target, sir."
+
+    elif act in (
+        "lock_tab",
+        "lock_on_this_tab",
+        "lock_this_tab",
+        "this_is_the_tab",
+        "stay_on_this_tab",
+        "keep_me_in_this_tab",
+        "lock_current",
+        "lock_surface",
+    ):
+        return engine.lock_current_surface(from_card=from_card)
 
     elif act in ("pause", "freeze"):
         engine.pause()
@@ -85,10 +105,11 @@ def sentry_focus_action(
         m = st.remaining_s // 60
         s = st.remaining_s % 60
         status_desc = "paused" if st.paused else ("drifting" if st.drifting else "on target")
-        return f"FOCUS session active: {m}m {s}s remaining ({status_desc}), sir."
+        lock_desc = " (deferred lock)" if st.deferred_lock else ""
+        return f"FOCUS session active: {m}m {s}s remaining ({status_desc}){lock_desc}, sir."
 
     else:
-        return f"Unknown FOCUS action '{action}'. Valid actions: start, pause, resume, extend, stop, snooze, excuse, cadence, drill_sergeant, gentle, status."
+        return f"Unknown FOCUS action '{action}'. Valid actions: start, lock_tab, pause, resume, extend, stop, snooze, excuse, cadence, drill_sergeant, gentle, status."
 
 
 TOOL = {
@@ -96,16 +117,16 @@ TOOL = {
     "description": (
         "Controls Sentry FOCUS mode: manages distraction-free focus sessions, locks onto current window or tab, "
         "and handles drift controls. "
-        "Actions: 'start' (with duration_minutes and optional intent), 'pause', 'resume', "
-        "'extend' (with minutes), 'stop' / 'abort', 'snooze' (with seconds), 'excuse', 'cadence' (nag interval), "
-        "'drill_sergeant' (be harsh today), 'gentle' (normal tone), or 'status'."
+        "Use when user asks to: 'focus for 25', 'thirty minutes on this', 'lock on this tab', 'keep me in this tab', "
+        "'this is the tab', 'stay on this tab', 'pause focus', 'resume focus', 'give me ten more', 'snooze', 'excuse', "
+        "'be harsh today', or 'stop focus'."
     ),
     "parameters": {
         "type": "OBJECT",
         "properties": {
             "action": {
                 "type": "STRING",
-                "description": "start | pause | resume | extend | stop | snooze | excuse | cadence | drill_sergeant | gentle | status",
+                "description": "start | lock_tab | pause | resume | extend | stop | snooze | excuse | cadence | drill_sergeant | gentle | status",
             },
             "duration_minutes": {
                 "type": "INTEGER",
@@ -134,6 +155,10 @@ TOOL = {
             "lock_tab": {
                 "type": "BOOLEAN",
                 "description": "True to lock specifically to current browser tab/domain.",
+            },
+            "from_card": {
+                "type": "BOOLEAN",
+                "description": "True if invoked from HUD or card button to engage card trap.",
             },
         },
         "required": ["action"],

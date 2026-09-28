@@ -751,6 +751,13 @@ def _detect_action(description: str) -> dict:
     if num and any(w in low for w in ("volume", "ses", "sound", "lautstark", "громкость")):
         return {"action": "volume_set", "value": max(0, min(100, int(num.group(1))))}
 
+    # Guard: Sentry Mode v2 Focus tab/app locking collision prevention.
+    # Phrases like "lock on this tab", "lock this tab", "stay on this tab", "lock this app"
+    # must NEVER lock the OS screen (win + l).
+    if any(k in low for k in ("tab", "this tab", "on this", "stay on", "keep me in", "this app", "on app")):
+        if "lock" in low or "stay" in low or "keep" in low:
+            return {"action": "", "value": None}
+
     # 3. Alias phrases.
     for action, phrases in _ALIASES.items():
         if any(_normalise(p) == norm or p in low for p in phrases):

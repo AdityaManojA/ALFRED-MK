@@ -39,7 +39,7 @@ class TestFocusEngine(unittest.TestCase):
         self.engine.abort("Teardown")
 
     def test_start_pause_resume_extend(self):
-        self.engine.start(duration_minutes=20, intent="Write tests")
+        self.engine.start(duration_minutes=20, intent="Write tests", prompt_intent=False)
         st = self.engine.get_state()
         self.assertTrue(st.active)
         self.assertFalse(st.paused)
@@ -74,21 +74,23 @@ class TestFocusEngine(unittest.TestCase):
         app1 = SurfaceIdentity(app_id="code.exe", spoken_label="VS Code", capability="FULL")
         app2 = SurfaceIdentity(app_id="chrome.exe", tab_host_hash=hash_host("youtube.com"), is_browser=True, capability="FULL")
 
-        self.reader.set_sequence([app1, app2, app2])
-        # Start session
-        self.engine.start(duration_minutes=10)
+        # Sequence: start() reads app1, tick 1 reads app1 (count 1), tick 2 reads app1 (count 2 -> settles!),
+        # tick 3 reads app2 (candidate drift), tick 4 reads app2 (drift confirmed)
+        self.reader.set_sequence([app1, app1, app1, app2, app2])
+        self.engine.start(duration_minutes=10, prompt_intent=False)
 
         t0 = time.monotonic()
-        # Tick 1 -> reads app1, settles and locks on app1 (on target)
+        # Tick 1 & 2 -> settles on app1
         self.engine.tick(t0)
+        self.engine.tick(t0 + 1.0)
         st1 = self.engine.get_state()
+        self.assertFalse(st1.deferred_lock)
         self.assertFalse(st1.drifting)
-        self.assertEqual(st1.on_target_s, 1)
+        self.assertEqual(st1.on_target_s, 2)
 
-        # Tick 2 -> reads app2 (initiates candidate drift)
-        self.engine.tick(t0 + 0.5)
-        # Tick 3 -> 1.0s later, grace passed (drifting!)
-        self.engine.tick(t0 + 1.5)
+        # Tick 3 & 4 -> reads app2 (drifting past grace window)
+        self.engine.tick(t0 + 2.0)
+        self.engine.tick(t0 + 3.0)
         st2 = self.engine.get_state()
         self.assertTrue(st2.drifting)
         self.assertEqual(st2.current_drift_s, 1)
@@ -98,7 +100,7 @@ class TestFocusEngine(unittest.TestCase):
         app_drift = SurfaceIdentity(app_id="discord.exe", capability="FULL")
 
         self.reader.set_sequence([app_drift])
-        self.engine.start(duration_minutes=10)
+        self.engine.start(duration_minutes=10, prompt_intent=False)
         self.engine.lock_surface("code.exe")
 
         t0 = time.monotonic()
@@ -128,7 +130,7 @@ class TestFocusEngine(unittest.TestCase):
     def test_session_survives_hud_lifecycle(self):
         """Verify countdown survives HUD minimize/close/recreation."""
         live_engine = FocusEngine(reader=self.reader, auto_tick=True)
-        live_engine.start(duration_minutes=1)
+        live_engine.start(duration_minutes=1, prompt_intent=False)
 
         st0 = live_engine.get_state()
         self.assertTrue(st0.active)

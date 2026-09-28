@@ -520,15 +520,16 @@ TOOL_DECLARATIONS = [
         "description": (
             "Controls Sentry FOCUS mode: manages distraction-free focus sessions, locks onto current window or tab, "
             "and handles drift controls. "
-            "Actions: 'start' (with duration_minutes and optional intent), 'pause', 'resume', "
-            "'extend' (with minutes), 'stop' / 'abort', 'snooze' (with seconds), 'excuse', 'cadence' (nag interval), or 'status'."
+            "Use when user asks to: 'focus for 25', 'thirty minutes on this', 'lock on this tab', 'keep me in this tab', "
+            "'this is the tab', 'stay on this tab', 'pause focus', 'resume focus', 'give me ten more', 'snooze', 'excuse', "
+            "'be harsh today', or 'stop focus'."
         ),
         "parameters": {
             "type": "OBJECT",
             "properties": {
                 "action": {
                     "type": "STRING",
-                    "description": "start | pause | resume | extend | stop | snooze | excuse | cadence | status",
+                    "description": "start | lock_tab | pause | resume | extend | stop | snooze | excuse | cadence | drill_sergeant | gentle | status",
                 },
                 "duration_minutes": {
                     "type": "INTEGER",
