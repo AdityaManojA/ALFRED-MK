@@ -6,15 +6,16 @@ import sys
 import time
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from PyQt6.QtGui import QImage, QPainter, QPixmap
 from PyQt6.QtWidgets import QApplication
 
-from ui import HudCanvas, ReactiveMicButton
+from ui import CustomizeOverlay, HudCanvas, ReactiveMicButton
 from memory import config_manager
 
 
@@ -97,6 +98,46 @@ class TestHudReactivity(unittest.TestCase):
         with patch.object(config_manager, "_save_flag") as save:
             config_manager.save_hud_style("classic")
         save.assert_called_once_with("hud_style", "reactive")
+
+    def test_static_hud_layers_and_emblem_are_reused_between_frames(self):
+        self.hud.resize(900, 600)
+        image = QImage(900, 600, QImage.Format.Format_ARGB32)
+
+        painter = QPainter(image)
+        self.hud.render(painter)
+        painter.end()
+        first_layers = dict(self.hud._static_layers)
+        first_emblem = self.hud._emblem_cache
+
+        painter = QPainter(image)
+        self.hud.render(painter)
+        painter.end()
+
+        self.assertEqual(set(self.hud._static_layers), set(first_layers))
+        for key, layer in first_layers.items():
+            self.assertIs(self.hud._static_layers[key], layer)
+        self.assertIs(self.hud._emblem_cache, first_emblem)
+
+    def test_unchanged_configure_icon_does_not_restyle_cards(self):
+        overlay = CustomizeOverlay(current_icon="")
+        try:
+            for button in overlay._icon_cards.values():
+                button.setStyleSheet = MagicMock()
+
+            overlay._refresh_icon_cards()
+
+            for button in overlay._icon_cards.values():
+                button.setStyleSheet.assert_not_called()
+        finally:
+            overlay.close()
+
+    def test_static_layer_cache_is_bounded_during_theme_preview(self):
+        for index in range(12):
+            self.hud._remember_static_layer(("preview", index), QPixmap(2, 2))
+
+        self.assertEqual(len(self.hud._static_layers), 8)
+        self.assertNotIn(("preview", 0), self.hud._static_layers)
+        self.assertIn(("preview", 11), self.hud._static_layers)
 
 
 if __name__ == "__main__":

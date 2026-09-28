@@ -1334,8 +1334,8 @@ class JarvisLive:
         while time.monotonic() < deadline:
             with self._speaking_lock:
                 speaking = self._is_speaking
-            recently_spoke = (time.monotonic() - self._last_user_speech) < 1.0
-            if not speaking and not recently_spoke and self._tool_calls_active == 0:
+            recently_spoke = (time.monotonic() - self._last_user_speech) < 0.25
+            if not speaking and not recently_spoke and getattr(self, "_tool_calls_active", 0) == 0:
                 return True
             await asyncio.sleep(0.1)
         return False

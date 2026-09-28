@@ -2266,36 +2266,50 @@ class HudCanvas(QWidget):
     def _paint_crt_scanlines_and_reticles(self, p: QPainter, W: float, H: float):
         """Authentic CRT Scanlines, Corner Brackets, and Viewport Telemetry."""
         main, _ = self._core_colours()
+        width, height = max(1, int(W)), max(1, int(H))
+        key = ("crt-overlay", width, height, int(main.rgba()))
+        cached = self._static_layers.get(key)
+        if cached is not None:
+            p.drawPixmap(0, 0, cached)
+            return
+
+        layer = QPixmap(width, height)
+        layer.fill(Qt.GlobalColor.transparent)
+        lp = QPainter(layer)
+        lp.setRenderHint(QPainter.RenderHint.Antialiasing, False)
         arm = 14.0
         m = 10.0
-        p.setPen(QPen(main, 1.6))
+        lp.setPen(QPen(main, 1.6))
         # Top-Left
-        p.drawLine(QLineF(m, m, m + arm, m))
-        p.drawLine(QLineF(m, m, m, m + arm))
+        lp.drawLine(QLineF(m, m, m + arm, m))
+        lp.drawLine(QLineF(m, m, m, m + arm))
         # Top-Right
-        p.drawLine(QLineF(W - m, m, W - m - arm, m))
-        p.drawLine(QLineF(W - m, m, W - m, m + arm))
+        lp.drawLine(QLineF(W - m, m, W - m - arm, m))
+        lp.drawLine(QLineF(W - m, m, W - m, m + arm))
         # Bottom-Left
-        p.drawLine(QLineF(m, H - m, m + arm, H - m))
-        p.drawLine(QLineF(m, H - m, m, H - m - arm))
+        lp.drawLine(QLineF(m, H - m, m + arm, H - m))
+        lp.drawLine(QLineF(m, H - m, m, H - m - arm))
         # Bottom-Right
-        p.drawLine(QLineF(W - m, H - m, W - m - arm, H - m))
-        p.drawLine(QLineF(W - m, H - m, W - m, H - m - arm))
+        lp.drawLine(QLineF(W - m, H - m, W - m - arm, H - m))
+        lp.drawLine(QLineF(W - m, H - m, W - m, H - m - arm))
 
         # Viewport micro telemetry
         f_badge = mono_font(6, QFont.Weight.Bold)
-        p.setFont(f_badge)
-        p.setPen(QPen(QColor(main.red(), main.green(), main.blue(), 160), 1))
-        p.drawText(QRectF(m + 4, m + 2, 180, 12), Qt.AlignmentFlag.AlignLeft, "SUBJECT ALFRED.MK-IV // VECTOR HUD")
-        p.drawText(QRectF(W - m - 184, m + 2, 180, 12), Qt.AlignmentFlag.AlignRight, "ORBITAL MATRIX: 4 ACTIVE")
-        p.drawText(QRectF(m + 4, H - m - 14, 180, 12), Qt.AlignmentFlag.AlignLeft, "COORDS: 42°19'N 71°05'W")
-        p.drawText(QRectF(W - m - 184, H - m - 14, 180, 12), Qt.AlignmentFlag.AlignRight, "WAYNE TECH PROTOCOL MK-IV")
+        lp.setFont(f_badge)
+        lp.setPen(QPen(QColor(main.red(), main.green(), main.blue(), 160), 1))
+        lp.drawText(QRectF(m + 4, m + 2, 180, 12), Qt.AlignmentFlag.AlignLeft, "SUBJECT ALFRED.MK-IV // VECTOR HUD")
+        lp.drawText(QRectF(W - m - 184, m + 2, 180, 12), Qt.AlignmentFlag.AlignRight, "ORBITAL MATRIX: 4 ACTIVE")
+        lp.drawText(QRectF(m + 4, H - m - 14, 180, 12), Qt.AlignmentFlag.AlignLeft, "COORDS: 42°19'N 71°05'W")
+        lp.drawText(QRectF(W - m - 184, H - m - 14, 180, 12), Qt.AlignmentFlag.AlignRight, "WAYNE TECH PROTOCOL MK-IV")
 
         # Subtle CRT scanlines every 3px
         scan_col = QColor(main.red(), main.green(), main.blue(), 12)
-        p.setPen(QPen(scan_col, 1))
+        lp.setPen(QPen(scan_col, 1))
         scan_lines = [QLineF(0, y, W, y) for y in range(0, int(H), 3)]
-        p.drawLines(scan_lines)
+        lp.drawLines(scan_lines)
+        lp.end()
+        self._remember_static_layer(key, layer)
+        p.drawPixmap(0, 0, layer)
 
     def _paint_holographic_audio_display(self, p: QPainter, cx: float, cy: float, W: float, H: float):
         """Secondary audio display fallback if needed."""
@@ -2310,16 +2324,23 @@ class HudCanvas(QWidget):
         for fp in candidates:
             if fp.exists():
                 try:
-                    pm = QPixmap(str(fp))
+                    key = (str(fp), max(1, int(max_w)), max(1, int(max_h)))
+                    if self._emblem_cache_key != key or self._emblem_cache is None:
+                        source = QPixmap(str(fp))
+                        self._emblem_cache = source.scaled(
+                            key[1], key[2],
+                            Qt.AspectRatioMode.KeepAspectRatio,
+                            Qt.TransformationMode.SmoothTransformation,
+                        )
+                        self._emblem_cache_key = key
+                    pm = self._emblem_cache
                     if not pm.isNull():
-                        sc = min(max_w / max(1, pm.width()), max_h / max(1, pm.height()))
-                        nw = int(pm.width() * sc)
-                        nh = int(pm.height() * sc)
+                        nw = pm.width()
+                        nh = pm.height()
                         if nw > 0 and nh > 0:
-                            scaled = pm.scaled(nw, nh, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
                             p.save()
                             p.setOpacity(0.35 + 0.10 * math.sin(self._tick * 0.05))
-                            p.drawPixmap(int(cx - nw / 2), int(cy - nh / 2), scaled)
+                            p.drawPixmap(int(cx - nw / 2), int(cy - nh / 2), pm)
                             p.restore()
                             return True
                 except Exception:
@@ -5572,6 +5593,9 @@ class CustomizeOverlay(QWidget):
 
     def _refresh_icon_cards(self):
         norm_cur = Path(self._current_icon).name.lower() if self._current_icon else ""
+        style_key = (norm_cur, C.PRI, C.PANEL2, C.BORDER_A)
+        if getattr(self, "_icon_style_key", None) == style_key:
+            return
         for path_key, btn in self._icon_cards.items():
             is_active = (path_key == self._current_icon) or (norm_cur and Path(path_key).name.lower() == norm_cur)
             if is_active:
@@ -5596,6 +5620,7 @@ class CustomizeOverlay(QWidget):
                         border-color: {C.PRI};
                     }}
                 """)
+        self._icon_style_key = style_key
 
     def _on_icon_picked(self, path: str):
         self._current_icon = path
