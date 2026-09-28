@@ -516,6 +516,53 @@ TOOL_DECLARATIONS = [
         },
     },
     {
+        "name": "sentry_focus",
+        "description": (
+            "Controls Sentry FOCUS mode: manages distraction-free focus sessions, locks onto current window or tab, "
+            "and handles drift controls. "
+            "Actions: 'start' (with duration_minutes and optional intent), 'pause', 'resume', "
+            "'extend' (with minutes), 'stop' / 'abort', 'snooze' (with seconds), 'excuse', 'cadence' (nag interval), or 'status'."
+        ),
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {
+                "action": {
+                    "type": "STRING",
+                    "description": "start | pause | resume | extend | stop | snooze | excuse | cadence | status",
+                },
+                "duration_minutes": {
+                    "type": "INTEGER",
+                    "description": "Session duration in minutes (e.g. 25, 30, 45). Default 25.",
+                },
+                "intent": {
+                    "type": "STRING",
+                    "description": "Optional stated intent or task description for this session.",
+                },
+                "minutes": {
+                    "type": "INTEGER",
+                    "description": "Minutes to add when action is 'extend'. Default 10.",
+                },
+                "seconds": {
+                    "type": "INTEGER",
+                    "description": "Seconds for snooze duration or nag cadence.",
+                },
+                "reason": {
+                    "type": "STRING",
+                    "description": "Reason for excusing the current excursion (e.g. 'research', 'documentation').",
+                },
+                "lock_app": {
+                    "type": "BOOLEAN",
+                    "description": "True to lock immediately to frontmost application.",
+                },
+                "lock_tab": {
+                    "type": "BOOLEAN",
+                    "description": "True to lock specifically to current browser tab/domain.",
+                },
+            },
+            "required": ["action"],
+        },
+    },
+    {
         "name": "close_camera",
         "description": (
             "Closes the live camera view shown on screen. "
@@ -756,6 +803,12 @@ class JarvisLive:
         self.sentry_mgr.register_monitor_handlers(
             on_start=self.monitor_controller.start,
             on_stop=self.monitor_controller.stop,
+        )
+        from core.sentry.focus.engine import get_focus_engine
+        self.focus_engine = get_focus_engine()
+        self.sentry_mgr.register_focus_handlers(
+            on_start=self.focus_engine.start,
+            on_stop=self.focus_engine.abort,
         )
         self.sentry_mgr.state_changed.connect(self.ui.apply_sentry_snapshot)
 
@@ -1784,6 +1837,10 @@ class JarvisLive:
                               ) if items else "I have not changed anything I can undo yet."
                 else:
                     result = await loop.run_in_executor(None, undo_stack.undo_last)
+
+            elif name == "sentry_focus":
+                from actions.sentry_focus import sentry_focus_action
+                result = sentry_focus_action(**args)
 
             elif name == "sentry_monitor":
                 from actions.sentry_monitor import sentry_monitor_action
