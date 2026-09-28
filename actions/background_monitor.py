@@ -6,6 +6,7 @@ No crypto, no finance, no uninvited tracking.
 import hashlib
 import json
 import re
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
 
@@ -114,13 +115,29 @@ def check_all() -> list[str]:
     alerts  = []
     changed = False
 
-    for slug, data in monitors.items():
-        if data.get("last_check") == today:
-            continue                     # already checked today
+    pending = [
+        (slug, data.get("topic", slug))
+        for slug, data in monitors.items()
+        if data.get("last_check") != today
+    ]
 
-        topic = data.get("topic", slug)
+    def _fetch(item: tuple[str, str]) -> tuple[str, str, list[dict], Exception | None]:
+        slug, topic = item
         try:
-            results = _ddg_news(topic, max_results=5)
+            return slug, topic, _ddg_news(topic, max_results=5), None
+        except Exception as exc:
+            return slug, topic, [], exc
+
+    fetched = []
+    if pending:
+        workers = min(4, len(pending))
+        with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="topic-monitor") as pool:
+            fetched = list(pool.map(_fetch, pending))
+
+    for slug, topic, results, error in fetched:
+        try:
+            if error is not None:
+                raise error
             if not results:
                 monitors[slug]["last_check"] = today
                 changed = True
@@ -135,7 +152,7 @@ def check_all() -> list[str]:
             monitors[slug]["last_check"] = today
             changed = True
 
-            if h == data.get("last_hash"):
+            if h == monitors[slug].get("last_hash"):
                 continue                 # same headline as last check — no alert
 
             monitors[slug]["last_hash"] = h

@@ -14,6 +14,7 @@ import json
 import os
 import platform
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -167,29 +168,6 @@ def daily_brief(
     inc_system = parameters.get("include_system", True)
     city = parameters.get("city")
 
-    greeting = _get_greeting()
-    components = [greeting]
-
-    if inc_weather:
-        weather_text = _get_live_weather(city)
-        if weather_text:
-            components.append(weather_text)
-
-    if inc_email:
-        email_text = _get_gmail_brief()
-        if email_text:
-            components.append(email_text)
-
-    if inc_reminders:
-        rem_text = _get_reminders_brief()
-        if rem_text:
-            components.append(rem_text)
-
-    if inc_system:
-        sys_text = _get_system_vitals()
-        if sys_text:
-            components.append(sys_text)
-
     # Incorporate user's remembered briefing preferences from long-term memory
     brief_pref = ""
     try:
@@ -209,15 +187,57 @@ def daily_brief(
     except Exception:
         pass
 
-    if brief_pref:
-        try:
-            from actions.web_search import _news
-            pref_news = _news(f"{brief_pref} today")
-            if pref_news and not pref_news.startswith(("No news", "Search failed", "Please provide")):
-                first_item = pref_news.strip().split("\n")[0]
-                components.append(f"Regarding your briefing focus on {brief_pref}: {first_item}")
-        except Exception:
-            pass
+    greeting = _get_greeting()
+    weather_text = ""
+    email_text = ""
+    rem_text = ""
+    sys_text = ""
+    pref_news = ""
+
+    def _get_preferred_news() -> str:
+        if not brief_pref:
+            return ""
+        from actions.web_search import _news
+        return _news(f"{brief_pref} today")
+
+    # These sections are independent. Serial execution made the user wait for
+    # the sum of every network timeout before the model could speak.
+    jobs = {}
+    with ThreadPoolExecutor(max_workers=5, thread_name_prefix="daily-brief") as pool:
+        if inc_weather:
+            jobs["weather"] = pool.submit(_get_live_weather, city)
+        if inc_email:
+            jobs["email"] = pool.submit(_get_gmail_brief)
+        if inc_reminders:
+            jobs["reminders"] = pool.submit(_get_reminders_brief)
+        if inc_system:
+            jobs["system"] = pool.submit(_get_system_vitals)
+        if brief_pref:
+            jobs["news"] = pool.submit(_get_preferred_news)
+
+        results = {}
+        for key, future in jobs.items():
+            try:
+                results[key] = future.result()
+            except Exception:
+                results[key] = ""
+
+    weather_text = results.get("weather", "")
+    email_text = results.get("email", "")
+    rem_text = results.get("reminders", "")
+    sys_text = results.get("system", "")
+    pref_news = results.get("news", "")
+
+    components = [greeting]
+    components.extend(text for text in (weather_text, email_text, rem_text, sys_text) if text)
+    if pref_news and not pref_news.startswith(("No news", "Search failed", "Please provide")):
+        news_lines = [line.strip() for line in pref_news.splitlines() if line.strip()]
+        headline = next(
+            (line for line in news_lines if not line.lower().startswith("latest news:")),
+            "",
+        )
+        if headline:
+            components.append(f"Regarding your briefing focus on {brief_pref}: {headline}")
 
     components.append("All directives stand ready at your command.")
     full_brief = " ".join(components)
@@ -251,6 +271,9 @@ TOOL = {
         "scheduled reminders, and system vitals into a concise spoken report. "
         "Trigger when user says 'good morning', 'morning brief', 'daily brief', "
         "'what does my day look like', 'give me an update', or 'status report'. "
+        "Call this tool alone for that request; it already reads memory, weather, "
+        "mail, reminders, system status, and preferred news. Do not call those "
+        "tools separately before or after it. "
         "DO NOT call this tool when the user asks to update, change, configure, or customize their daily briefing."
     ),
     "parameters": {

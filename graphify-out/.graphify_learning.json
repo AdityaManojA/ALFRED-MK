@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-28T13:42:14.397755+00:00",
+  "generated_at": "2026-09-28T15:03:34.830421+00:00",
   "nodes": {
     "actions_screen_monitor_screenmonitorcontroller": {
       "code_fingerprint": "19f3e1cebe8ef4a8803e6a3a5d9131d469acd7d0c87b1f06647c3e4a0999eaf1",
@@ -12,7 +12,7 @@
           "q": "Read uiperformance.md and continousmonitoring.md and perform the tasks in the most efficient manner"
         }
       ],
-      "score": 0.999500503,
+      "score": 0.998196891,
       "source_file": "actions/screen_monitor.py",
       "status": "tentative",
       "uses": 1
@@ -28,13 +28,45 @@
           "q": "Read uiperformance.md and continousmonitoring.md and perform the tasks in the most efficient manner"
         }
       ],
-      "score": 0.999500503,
+      "score": 0.998196891,
       "source_file": "core/plugin_loader.py",
       "status": "tentative",
       "uses": 1
     },
+    "core_wake_word_wakeworddetector": {
+      "code_fingerprint": "5de192da645abef78fe7ba538ed06c1d732b0d416121dca4e7a688729af73c5e",
+      "label": "WakeWordDetector",
+      "last": "2026-09-28T14:21:56.590178+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-28T14:21:56.590178+00:00",
+          "outcome": "useful",
+          "q": "change wake key to hey Alfred no t jarvis"
+        }
+      ],
+      "score": 0.999332149,
+      "source_file": "core/wake_word.py",
+      "status": "tentative",
+      "uses": 1
+    },
+    "main_jarvislive": {
+      "code_fingerprint": "b792d967d79e50b7802044ec8ce1c6e0377ebe62f2986c256bd2f5c0f8a81bf8",
+      "label": "JarvisLive",
+      "last": "2026-09-28T14:21:56.590178+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-28T14:21:56.590178+00:00",
+          "outcome": "useful",
+          "q": "change wake key to hey Alfred no t jarvis"
+        }
+      ],
+      "score": 0.999332149,
+      "source_file": "main.py",
+      "status": "tentative",
+      "uses": 1
+    },
     "memory_config_manager": {
-      "code_fingerprint": "92efdd34c260a04fdf8930554b698348e96ea60a456ff1aece934d2ec5df0d56",
+      "code_fingerprint": "39d54353fc5c3abf32916f89d4d4de74ffc55a04cb209cd91fd85c1cf7ae8851",
       "label": "config_manager.py",
       "last": "2026-09-28T13:11:06.078780+00:00",
       "provenance": [
@@ -44,13 +76,77 @@
           "q": "Read uiperformance.md and continousmonitoring.md and perform the tasks in the most efficient manner"
         }
       ],
-      "score": 0.999500503,
+      "score": 0.998196891,
       "source_file": "memory/config_manager.py",
       "status": "tentative",
       "uses": 1
     },
+    "tests_test_minimized_hud_overlay_testminimizedhudoverlay": {
+      "code_fingerprint": "70a3cc5cfc376ae662fca311d6713f9825328ae9fe6bb2f057c25c1838cc9e54",
+      "label": "TestMinimizedHudOverlay",
+      "last": "2026-09-28T14:53:12.057130+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-28T14:53:12.057130+00:00",
+          "outcome": "useful",
+          "q": "the hud text is quite hard to see"
+        }
+      ],
+      "score": 0.999833473,
+      "source_file": "tests/test_minimized_hud_overlay.py",
+      "status": "tentative",
+      "uses": 1
+    },
+    "ui_jarvisui": {
+      "code_fingerprint": "593c0c2f8f870e0fe0b96c3ffedb4de23126e88bbce54f0459a33e7346c2e9c1",
+      "label": "JarvisUI",
+      "last": "2026-09-28T14:46:00.008956+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-28T14:46:00.008956+00:00",
+          "outcome": "useful",
+          "q": "Implement the ALFRED MK-IV translucent minimised HUD overlay plan from the pasted text."
+        }
+      ],
+      "score": 0.999717962,
+      "source_file": "ui.py",
+      "status": "tentative",
+      "uses": 1
+    },
+    "ui_logwidget": {
+      "code_fingerprint": "593c0c2f8f870e0fe0b96c3ffedb4de23126e88bbce54f0459a33e7346c2e9c1",
+      "label": "LogWidget",
+      "last": "2026-09-28T14:46:00.008956+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-28T14:46:00.008956+00:00",
+          "outcome": "useful",
+          "q": "Implement the ALFRED MK-IV translucent minimised HUD overlay plan from the pasted text."
+        }
+      ],
+      "score": 0.999717962,
+      "source_file": "ui.py",
+      "status": "tentative",
+      "uses": 1
+    },
+    "ui_mainwindow": {
+      "code_fingerprint": "593c0c2f8f870e0fe0b96c3ffedb4de23126e88bbce54f0459a33e7346c2e9c1",
+      "label": "MainWindow",
+      "last": "2026-09-28T14:46:00.008956+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-28T14:46:00.008956+00:00",
+          "outcome": "useful",
+          "q": "Implement the ALFRED MK-IV translucent minimised HUD overlay plan from the pasted text."
+        }
+      ],
+      "score": 0.999717962,
+      "source_file": "ui.py",
+      "status": "tentative",
+      "uses": 1
+    },
     "ui_mainwindow_toggle_sentry_mode": {
-      "code_fingerprint": "ef5d7d42231fdec6d21c3b491e391a68267ca76bf95c6dcef71c27605e15650a",
+      "code_fingerprint": "593c0c2f8f870e0fe0b96c3ffedb4de23126e88bbce54f0459a33e7346c2e9c1",
       "label": "._toggle_sentry_mode()",
       "last": "2026-09-28T13:11:06.078780+00:00",
       "provenance": [
@@ -60,10 +156,31 @@
           "q": "Read uiperformance.md and continousmonitoring.md and perform the tasks in the most efficient manner"
         }
       ],
-      "score": 0.999500503,
+      "score": 0.998196891,
       "source_file": "ui.py",
       "status": "tentative",
       "uses": 1
+    },
+    "ui_minimizedhudoverlay": {
+      "code_fingerprint": "593c0c2f8f870e0fe0b96c3ffedb4de23126e88bbce54f0459a33e7346c2e9c1",
+      "label": "MinimizedHudOverlay",
+      "last": "2026-09-28T14:53:12.057130+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-28T14:53:12.057130+00:00",
+          "outcome": "useful",
+          "q": "the hud text is quite hard to see"
+        },
+        {
+          "date": "2026-09-28T14:46:00.008956+00:00",
+          "outcome": "useful",
+          "q": "Implement the ALFRED MK-IV translucent minimised HUD overlay plan from the pasted text."
+        }
+      ],
+      "score": 1.999551435,
+      "source_file": "ui.py",
+      "status": "preferred",
+      "uses": 2
     }
   },
   "version": 1

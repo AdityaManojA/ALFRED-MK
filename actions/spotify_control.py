@@ -2,11 +2,11 @@
 """
 Spotify AI Agent & Playback Control for ALFRED.
 
-Provides seamless Spotify integration:
+Provides Spotify Web API integration:
 - Lazy initialization of Spotify client
 - Connection pooling with requests.Session
 - Smart caching of auth tokens, devices, and profile data
-- Multi-tier playback execution: Web API with local desktop URI & media key fallbacks
+- Verified Web API playback without launching local applications implicitly
 - Synchronizes with ALFRED's bottom-left Tactical Audio Player & background music engine
 """
 
@@ -129,6 +129,7 @@ class SpotifyClient:
 
         self._active_device_id: Optional[str] = None
         self._current_track_info: Dict[str, Any] = {}
+        self._last_playback_error: str = ""
 
         self._load_credentials()
         self._init_session()
@@ -257,6 +258,10 @@ class SpotifyClient:
             return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
         return {"Content-Type": "application/json"}
 
+    def has_user_authorization(self) -> bool:
+        """Playback endpoints require a user OAuth token, not client credentials."""
+        return bool(self._refresh_token)
+
     # ── Search ───────────────────────────────────────────────────────────────
 
     def search(self, query: str, search_type: str = "track", limit: int = 5) -> List[Dict[str, Any]]:
@@ -316,8 +321,7 @@ class SpotifyClient:
         search_type: str = "track"
     ) -> Dict[str, Any]:
         """
-        Starts playback of a query, URI, or resumes current playback.
-        Attempts Web API first, falls back gracefully to Spotify desktop URI launch.
+        Start playback through Spotify Connect without opening a local app.
         """
         track_info = {}
         target_uri = uri or context_uri
@@ -333,82 +337,95 @@ class SpotifyClient:
                 target_uri = top["uri"]
                 track_info = top
             else:
-                # If search via API returned nothing (or no API key), format search URI
-                clean_q = quote_plus(query)
-                target_uri = f"spotify:search:{clean_q}"
-                track_info = {"name": query, "artist": "Spotify", "uri": target_uri}
+                return {
+                    "status": "error",
+                    "error": f"No Spotify result found for '{query}'.",
+                    "method": "api",
+                }
 
         if not track_info and target_uri:
             track_info = {"name": target_uri, "artist": "", "uri": target_uri}
 
-        self._current_track_info = track_info
-
-        # 1. Try Web API Playback
-        token = self.get_token()
-        web_api_success = False
-        if token and self._session:
-            url = "https://api.spotify.com/v1/me/player/play"
-            if device_id or self._active_device_id:
-                url += f"?device_id={device_id or self._active_device_id}"
-
-            payload: Dict[str, Any] = {}
-            if target_uri:
-                if ":track:" in target_uri:
-                    payload["uris"] = [target_uri]
-                else:
-                    payload["context_uri"] = target_uri
-
-            try:
-                resp = self._session.put(
-                    url,
-                    headers=self._auth_headers(),
-                    data=json.dumps(payload) if payload else None,
-                    timeout=5
-                )
-                if resp.status_code in (200, 204):
-                    web_api_success = True
-                else:
-                    logger.debug(f"Spotify Web API play returned status {resp.status_code}: {resp.text}")
-            except Exception as e:
-                logger.debug(f"Spotify Web API play request error: {e}")
-
-        # 2. Local Fallback: Open URI in Spotify desktop client or browser
-        if not web_api_success:
-            if target_uri:
-                self._launch_uri(target_uri)
-            else:
-                # Resume via media key
-                _send_media_key(VK_MEDIA_PLAY_PAUSE)
-
-        return {
-            "status": "playing",
+        result = {
+            "status": "error",
             "track": track_info.get("name", query or "Track"),
             "artist": track_info.get("artist", ""),
             "uri": target_uri,
-            "method": "api" if web_api_success else "local"
+            "method": "api",
         }
 
-    def _launch_uri(self, uri: str):
-        """Launches Spotify URI using the operating system handler."""
-        try:
-            if sys.platform == "win32":
-                subprocess.Popen(["cmd", "/c", "start", "", uri], shell=False)
-            elif sys.platform == "darwin":
-                subprocess.Popen(["open", uri])
+        if not self.has_user_authorization():
+            result["error"] = "Connect Spotify in settings to authorize playback control."
+            return result
+
+        token = self.get_token()
+        if not token or not self._session:
+            result["error"] = "Spotify authorization expired. Reconnect Spotify in settings."
+            return result
+
+        selected_device = device_id
+        if not selected_device:
+            devices = self.get_devices(force_refresh=True)
+            active = next((d for d in devices if d.get("is_active") and not d.get("is_restricted")), None)
+            available = active or next(
+                (d for d in devices if d.get("id") and not d.get("is_restricted")), None
+            )
+            selected_device = available.get("id") if available else None
+        if not selected_device:
+            result["error"] = (
+                "No controllable Spotify Connect device is available. Start Spotify on a phone, "
+                "browser, speaker, or computer, then try again."
+            )
+            return result
+
+        self._active_device_id = selected_device
+        url = f"https://api.spotify.com/v1/me/player/play?device_id={quote_plus(selected_device)}"
+        payload: Dict[str, Any] = {}
+        if target_uri:
+            if ":track:" in target_uri:
+                payload["uris"] = [target_uri]
             else:
-                subprocess.Popen(["xdg-open", uri])
+                payload["context_uri"] = target_uri
+
+        try:
+            resp = self._session.put(
+                url,
+                headers=self._auth_headers(),
+                data=json.dumps(payload) if payload else None,
+                timeout=5,
+            )
+            if resp.status_code in (200, 204):
+                result["status"] = "playing"
+                track_info["is_playing"] = True
+                self._current_track_info = track_info
+                self._last_playback_error = ""
+                return result
+            if resp.status_code == 401:
+                message = "Spotify authorization expired. Reconnect Spotify in settings."
+            elif resp.status_code == 403:
+                message = "Spotify rejected playback. Premium is required and the device must allow remote control."
+            elif resp.status_code == 404:
+                message = "Spotify could not activate the selected Connect device. Start playback on it once, then retry."
+            elif resp.status_code == 429:
+                message = "Spotify is rate limiting playback requests. Wait briefly and retry."
+            else:
+                message = f"Spotify playback failed with HTTP {resp.status_code}."
+            self._last_playback_error = message
+            result.update(error=message, http_status=resp.status_code)
         except Exception as e:
-            logger.warning(f"Failed to launch Spotify URI '{uri}': {e}")
-            if "spotify:search:" in uri:
-                q = uri.replace("spotify:search:", "")
-                webbrowser.open(f"https://open.spotify.com/search/{q}")
+            message = f"Spotify playback request failed: {e}"
+            self._last_playback_error = message
+            result["error"] = message
+        return result
 
     def control_playback(self, action: str, device_id: Optional[str] = None) -> bool:
         """
         Controls playback: pause, resume, skip_next, skip_previous.
-        Combines Spotify Web API with native media key fail-safes.
+        Uses Spotify's Web API only, so failures cannot affect another media app.
         """
         act = action.lower().strip()
+        if not self.has_user_authorization():
+            return False
         token = self.get_token()
         success = False
 
@@ -434,31 +451,6 @@ class SpotifyClient:
                         success = True
                 except Exception as e:
                     logger.debug(f"Web API control '{act}' error: {e}")
-
-        # Native Windows Media Command (explicit Pause vs Play without toggling)
-        if not success and sys.platform == "win32":
-            cmd_map = {
-                "pause": APPCOMMAND_MEDIA_PAUSE,
-                "stop": APPCOMMAND_MEDIA_STOP,
-                "play": APPCOMMAND_MEDIA_PLAY,
-                "resume": APPCOMMAND_MEDIA_PLAY,
-                "skip_next": APPCOMMAND_MEDIA_NEXTTRACK,
-                "next": APPCOMMAND_MEDIA_NEXTTRACK,
-                "skip_previous": APPCOMMAND_MEDIA_PREVIOUSTRACK,
-                "prev": APPCOMMAND_MEDIA_PREVIOUSTRACK,
-                "previous": APPCOMMAND_MEDIA_PREVIOUSTRACK,
-            }
-            if act in cmd_map:
-                success = _send_app_command(cmd_map[act])
-
-        # Hardware media key fallback if API & APPCOMMAND were not handled
-        if not success:
-            if act in ("pause", "resume", "play"):
-                success = _send_media_key(VK_MEDIA_PLAY_PAUSE)
-            elif act in ("skip_next", "next"):
-                success = _send_media_key(VK_MEDIA_NEXT_TRACK)
-            elif act in ("skip_previous", "prev", "previous"):
-                success = _send_media_key(VK_MEDIA_PREV_TRACK)
 
         return success
 
@@ -495,12 +487,15 @@ class SpotifyClient:
                 logger.debug(f"Web API set_volume error: {e}")
         return False
 
-    def get_devices(self) -> List[Dict[str, Any]]:
+    def get_devices(self, force_refresh: bool = False) -> List[Dict[str, Any]]:
         """Returns available Spotify devices with 5-minute TTL caching."""
         now = time.time()
-        if self._devices_cache and (now - self._devices_cache_time) < self._devices_ttl:
+        if (not force_refresh and self._devices_cache is not None
+                and (now - self._devices_cache_time) < self._devices_ttl):
             return self._devices_cache
 
+        if not self.has_user_authorization():
+            return []
         token = self.get_token()
         if not token or not self._session:
             return []
@@ -552,6 +547,8 @@ class SpotifyClient:
 
     def get_current_playback(self) -> Dict[str, Any]:
         """Returns currently playing track information."""
+        if not self.has_user_authorization():
+            return {}
         token = self.get_token()
         if token and self._session:
             try:
@@ -561,7 +558,7 @@ class SpotifyClient:
                     item = data.get("item", {})
                     if item:
                         artists = ", ".join(a["name"] for a in item.get("artists", []))
-                        return {
+                        current = {
                             "is_playing": data.get("is_playing", False),
                             "name": item.get("name", ""),
                             "artist": artists,
@@ -570,9 +567,14 @@ class SpotifyClient:
                             "progress_ms": data.get("progress_ms", 0),
                             "duration_ms": item.get("duration_ms", 0),
                         }
+                        device = data.get("device") or {}
+                        if device.get("id"):
+                            self._active_device_id = device["id"]
+                        self._current_track_info = current
+                        return current
             except Exception:
                 pass
-        return self._current_track_info
+        return {}
 
 
 # ── Module-level convenience functions ────────────────────────────────────────
@@ -593,14 +595,14 @@ def start_playback(
     client = get_spotify_client()
     res = client.play(query=query, uri=uri, context_uri=context_uri, device_id=device_id)
     # Sync with ALFRED UI's Tactical Audio Player if available
-    if player and hasattr(player, "set_spotify_playback"):
+    if res.get("status") == "playing" and player and hasattr(player, "set_spotify_playback"):
         track_name = res.get("track", query or "Track")
         artist = res.get("artist", "")
         track_uri = res.get("uri", "")
         player.set_spotify_playback(track_name, artist, track_uri)
     return res
 
-def control_playback(action: str, device_id: Optional[str] = None) -> bool:
+def control_playback(action: str, device_id: Optional[str] = None, player=None) -> bool:
     return get_spotify_client().control_playback(action, device_id=device_id)
 
 def manage_queue(uri: str, action: str = "add", device_id: Optional[str] = None) -> bool:
@@ -674,6 +676,9 @@ def spotify_control(
             artist = res.get("artist", "")
             track_uri = res.get("uri", uri)
 
+            if res.get("status") != "playing":
+                return res.get("error", "Spotify could not start playback.")
+
             # Update Tactical Audio Player deck on MainWindow
             if player:
                 if hasattr(player, "set_spotify_playback"):
@@ -692,9 +697,10 @@ def spotify_control(
                         player._bg_music.pause()
                 return "Audio Core paused, sir."
 
-            client.control_playback("pause", device_id=device_id)
-            if player and hasattr(player, "_bg_music") and player._bg_music:
-                player._bg_music.pause()
+            if not client.control_playback("pause", device_id=device_id):
+                return "Spotify could not pause playback. Check the active Connect device."
+            if player and hasattr(player, "set_spotify_playback_state"):
+                player.set_spotify_playback_state(False)
             return "Spotify playback paused, sir."
 
         elif action in ("resume", "unpause"):
@@ -706,18 +712,19 @@ def spotify_control(
                         player._bg_music.play()
                 return "Audio Core resumed, sir."
 
-            client.control_playback("resume", device_id=device_id)
-            if player and hasattr(player, "_bg_music") and player._bg_music:
-                player._bg_music.play()
+            if not client.control_playback("resume", device_id=device_id):
+                return "Spotify could not resume playback. Check the active Connect device."
+            if player and hasattr(player, "set_spotify_playback_state"):
+                player.set_spotify_playback_state(True)
             return "Resuming Spotify playback, sir."
 
         elif action in ("skip_next", "next"):
-            client.control_playback("skip_next", device_id=device_id)
-            return "Skipped to next track, sir."
+            ok = client.control_playback("skip_next", device_id=device_id)
+            return "Skipped to next track, sir." if ok else "Spotify could not skip tracks."
 
         elif action in ("skip_previous", "prev", "previous"):
-            client.control_playback("skip_previous", device_id=device_id)
-            return "Returning to previous track, sir."
+            ok = client.control_playback("skip_previous", device_id=device_id)
+            return "Returning to previous track, sir." if ok else "Spotify could not change tracks."
 
         elif action in ("close", "exit", "quit", "kill"):
             # Terminate Spotify desktop processes safely
@@ -793,6 +800,11 @@ def spotify_control(
         elif action in ("current_track", "what_is_playing", "now_playing"):
             cur = client.get_current_playback()
             if cur and cur.get("name"):
+                if player and hasattr(player, "set_spotify_playback"):
+                    player.set_spotify_playback(
+                        cur["name"], cur.get("artist", ""), cur.get("uri", ""),
+                        cur.get("is_playing", False),
+                    )
                 return f"Currently playing: {cur['name']} by {cur.get('artist', 'Unknown')}."
             else:
                 return "No Spotify track currently reported as playing, sir."
@@ -817,7 +829,9 @@ def spotify_control(
 TOOL = {
     "name": "spotify_control",
     "description": (
-        "Controls Spotify playback, search, and queue. By default, requests to play songs or music target Spotify. "
+        "Controls Spotify Connect playback, search, and queue through the authenticated Web API. "
+        "It never opens the Spotify desktop app automatically; playback requires an available Connect device. "
+        "By default, requests to play songs or music target Spotify. "
         "Use for: playing songs/tracks/albums/playlists, pause, resume, skip next, skip previous, volume, queue management, "
         "closing Spotify, and restoring the default TRON Legacy background score."
     ),
