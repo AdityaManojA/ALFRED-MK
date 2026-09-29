@@ -57,19 +57,44 @@
 
 ### ⚙️ Setup & Execution
 
+#### Windows
 ```powershell
-# 1. Clone the repository
+# 1. Clone repository & install dependencies
 git clone https://github.com/AdityaManojA/ALFRED-MK-V.git
 cd ALFRED-MK-V
-
-# 2. Run the OS-tailored dependency setup
 python setup.py
 
-# 3. Launch ALFRED
+# 2. Launch ALFRED
 python main.py
 ```
 
-*On first launch, ALFRED prompts you with the interactive **System Initialisation overlay** to set Operator callsign, Assistant name, and choose between Gemini Live, Local Ollama, LM Studio, or OpenRouter.*
+#### macOS (Apple Silicon / Intel)
+```bash
+# 1. Install prerequisites via Homebrew
+brew install yt-dlp ffmpeg portaudio python-tk@3.12
+
+# 2. Clone repository & install dependencies
+git clone https://github.com/AdityaManojA/ALFRED-MK-V.git
+cd ALFRED-MK-V
+pip install -r requirements.txt
+
+# 3. Launch ALFRED (zero Ollama required - defaults to Gemini Live)
+python main.py
+```
+
+#### Linux (Ubuntu / Debian / Fedora / Arch)
+```bash
+# 1. Install prerequisites
+sudo apt install -y python3-pyqt6 python3-tk yt-dlp ffmpeg gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-libav xdotool wmctrl playerctl libportaudio2 maim
+
+# 2. Clone & launch
+git clone https://github.com/AdityaManojA/ALFRED-MK-V.git
+cd ALFRED-MK-V
+pip install -r requirements.txt
+python main.py
+```
+
+*On first launch, ALFRED prompts you with the interactive **System Initialisation overlay** to set Operator callsign, Assistant name, and choose between Gemini Live, Local Ollama, LM Studio, or OpenRouter.* For full platform-specific notes, see [`docs/crossplatform/SETUP.md`](docs/crossplatform/SETUP.md).
 
 ---
 
@@ -260,6 +285,12 @@ Many maximise model hype and under-ship the glue. MARK-VII invests in the glue t
 
 <a id="whats-new"></a>
 ## 🆕 5. What's New in Mark VII
+
+### 🌐 Cross-Platform Parity (macOS + Linux Architecture)
+* **Unified Platform Dispatch (`core/platform/`)**: Centralized OS backend interface providing clean runtime abstraction for windowing flags, master volume (`osascript`, `pactl`, `pycaw`), native TTS fallbacks (`say`, `espeak-ng`), media pause/resume (`playerctl`, AppleScript, `WM_APPCOMMAND`), and screen capture.
+* **Mac App Initialisation & Zero-Ollama Default**: Optimized startup overlay for macOS and Linux users to default directly to Google Gemini Live with zero required local compute, avoiding macOS 14+ GUI compatibility blocks on older systems (macOS 11–13).
+* **Multimedia Engine Independence**: Validated playback pipelines for AVFoundation (macOS) and GStreamer (Linux) ensuring VP9 video and Opus audio render with zero airspace clipping above Qt widgets.
+* **Full Documentation & Verification Suite**: Added dedicated guides in `docs/crossplatform/SETUP.md`, `docs/crossplatform/VERIFY.md`, and phased technical notes (`docs/crossplatform/PHASE_0_NOTES.md` through `PHASE_5_NOTES.md`).
 
 ### 🎬 Visual HUD v2: Embedded Multimedia & Tactical Layering
 * **Synchronized Dual-Player Pipeline**: Dual `QMediaPlayer` audio/video synchronization for web streams, preserving native audio tracks unmuted with persistent user volume retention.
