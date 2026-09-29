@@ -52,10 +52,8 @@ def check_cuda_and_vram() -> tuple[bool, bool, float]:
     Returns (has_cuda, has_min_vram, vram_gb).
     """
     if "torch" not in sys.modules:
-        # Don't import torch synchronously during UI boot if not already loaded
-        import importlib.util
-        if importlib.util.find_spec("torch") is None:
-            return False, False, 0.0
+        # Avoid importing torch synchronously on the UI thread as it causes a 10+ second freeze
+        return False, False, 0.0
     try:
         import torch
         if not torch.cuda.is_available():
@@ -67,36 +65,58 @@ def check_cuda_and_vram() -> tuple[bool, bool, float]:
         return False, False, 0.0
 
 
-def check_jarvis_capability(allow_cpu: bool = False) -> Capability:
+# Capability cache to prevent UI thread stutter/freezes
+_CAPABILITY_CACHE: tuple[bool, Capability] | None = None
+_CACHE_TIMESTAMP: float = 0.0
+_CACHE_TTL: float = 60.0  # cache for 60 seconds
+
+
+def check_jarvis_capability(allow_cpu: bool = False, use_cache: bool = True) -> Capability:
     """
     Determine the current capability status for the Jarvis voice option.
     Evaluates sequentially without raising unhandled exceptions.
+    Uses cached result when available to prevent UI blocking.
     """
+    global _CAPABILITY_CACHE, _CACHE_TIMESTAMP
+    import time
+    now = time.time()
+    if use_cache and _CAPABILITY_CACHE is not None:
+        cached_allow_cpu, cached_cap = _CAPABILITY_CACHE
+        if cached_allow_cpu == allow_cpu and (now - _CACHE_TIMESTAMP) < _CACHE_TTL:
+            return cached_cap
+
     if not check_python_version():
-        return Capability.PYTHON_VERSION
+        res = Capability.PYTHON_VERSION
+    elif not check_dependencies():
+        res = Capability.MISSING_DEPS
+    else:
+        has_cuda, has_vram, _ = check_cuda_and_vram()
+        if not has_cuda:
+            if allow_cpu:
+                pass
+            else:
+                res = Capability.NO_CUDA
+                _CAPABILITY_CACHE = (allow_cpu, res)
+                _CACHE_TIMESTAMP = now
+                return res
+        elif not has_vram:
+            res = Capability.LOW_VRAM
+            _CAPABILITY_CACHE = (allow_cpu, res)
+            _CACHE_TIMESTAMP = now
+            return res
 
-    if not check_dependencies():
-        return Capability.MISSING_DEPS
+        # Check whether assets are downloaded
+        try:
+            from core.tts.jarvis_assets import are_assets_downloaded
+            if not are_assets_downloaded():
+                res = Capability.NOT_DOWNLOADED
+            elif not has_cuda and allow_cpu:
+                res = Capability.CPU_ONLY
+            else:
+                res = Capability.OK
+        except Exception:
+            res = Capability.NOT_DOWNLOADED
 
-    has_cuda, has_vram, _ = check_cuda_and_vram()
-    if not has_cuda:
-        if allow_cpu:
-            # CPU allowed explicitly
-            pass
-        else:
-            return Capability.NO_CUDA
-    elif not has_vram:
-        return Capability.LOW_VRAM
-
-    # Check whether assets are downloaded
-    try:
-        from core.tts.jarvis_assets import are_assets_downloaded
-        if not are_assets_downloaded():
-            return Capability.NOT_DOWNLOADED
-    except Exception:
-        return Capability.NOT_DOWNLOADED
-
-    if not has_cuda and allow_cpu:
-        return Capability.CPU_ONLY
-
-    return Capability.OK
+    _CAPABILITY_CACHE = (allow_cpu, res)
+    _CACHE_TIMESTAMP = now
+    return res

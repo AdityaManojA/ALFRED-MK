@@ -157,20 +157,34 @@ class SpotifyClient:
         self._session.mount("http://", adapter)
 
     def _load_credentials(self):
-        """Loads Spotify credentials from config/api_keys.json or environment variables."""
-        if API_CONFIG_PATH.exists():
-            try:
-                with open(API_CONFIG_PATH, "r", encoding="utf-8") as f:
-                    cfg = json.load(f)
-                    self._client_id = cfg.get("spotify_client_id", "").strip()
-                    self._client_secret = cfg.get("spotify_client_secret", "").strip()
-                    self._refresh_token = cfg.get("spotify_refresh_token", "").strip()
-                    if cfg.get("spotify_access_token"):
-                        self._access_token = cfg.get("spotify_access_token").strip()
-            except Exception as e:
-                logger.warning(f"Error reading Spotify credentials from {API_CONFIG_PATH}: {e}")
+        """Loads Spotify credentials from SecretStore, config/api_keys.json, or environment."""
+        # Priority 1: Encrypted SecretStore
+        try:
+            from core.secrets.store import get_secret_store
+            store = get_secret_store()
+            self._client_id = (store.get("spotify.client_id") or "").strip()
+            self._client_secret = (store.get("spotify.client_secret") or "").strip()
+            self._refresh_token = (store.get("spotify.refresh_token") or "").strip()
+            if store.get("spotify.access_token"):
+                self._access_token = (store.get("spotify.access_token") or "").strip()
+        except Exception:
+            pass
 
-        # Environment variable overrides
+        # Priority 2: config/api_keys.json
+        if not self._client_id or not self._client_secret:
+            if API_CONFIG_PATH.exists():
+                try:
+                    with open(API_CONFIG_PATH, "r", encoding="utf-8") as f:
+                        cfg = json.load(f)
+                        self._client_id = self._client_id or cfg.get("spotify_client_id", "").strip()
+                        self._client_secret = self._client_secret or cfg.get("spotify_client_secret", "").strip()
+                        self._refresh_token = self._refresh_token or cfg.get("spotify_refresh_token", "").strip()
+                        if not self._access_token and cfg.get("spotify_access_token"):
+                            self._access_token = cfg.get("spotify_access_token").strip()
+                except Exception as e:
+                    logger.warning(f"Error reading Spotify credentials from {API_CONFIG_PATH}: {e}")
+
+        # Priority 3: Environment variable overrides
         self._client_id = os.environ.get("SPOTIFY_CLIENT_ID", self._client_id)
         self._client_secret = os.environ.get("SPOTIFY_CLIENT_SECRET", self._client_secret)
         self._refresh_token = os.environ.get("SPOTIFY_REFRESH_TOKEN", self._refresh_token)

@@ -47,8 +47,8 @@ class JokerCardScatterVisual(SlotVisual):
         painter.setPen(self.pen_card)
         painter.drawText(QRectF(rect.x() + 8, rect.y() + 4, rect.width() - 16, 14),
                          Qt.AlignmentFlag.AlignLeft, "● ● ●  ENTROPY CARD // SCATTER")
+        painter.setBrush(self.brush_card)
         for card in self.cards:
-            painter.fillRect(card, self.brush_card)
             painter.drawRect(card)
 
 

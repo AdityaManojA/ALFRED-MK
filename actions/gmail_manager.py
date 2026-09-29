@@ -25,10 +25,28 @@ _CONFIG_PATH = Path(__file__).resolve().parent.parent / "config" / "api_keys.jso
 
 
 def _load_gmail_creds() -> tuple[str, str]:
-    """Retrieve user email and app password from config or environment."""
-    email_addr = os.environ.get("GMAIL_USER", "").strip()
-    app_pw = os.environ.get("GMAIL_APP_PASSWORD", "").strip()
+    """Retrieve user email and app password from SecretStore, config, or environment."""
+    email_addr = ""
+    app_pw = ""
 
+    # Priority 1: Encrypted SecretStore
+    try:
+        from core.secrets.store import get_secret_store
+        store = get_secret_store()
+        email_addr = (store.get("gmail.user") or "").strip()
+        app_pw = (store.get("gmail.app_password") or "").strip()
+        if not app_pw:
+            app_pw = (store.get("gmail.api_key") or "").strip()
+    except Exception:
+        pass
+
+    # Priority 2: Environment variables
+    if not email_addr:
+        email_addr = os.environ.get("GMAIL_USER", "").strip()
+    if not app_pw:
+        app_pw = os.environ.get("GMAIL_APP_PASSWORD", "").strip()
+
+    # Priority 3: Legacy config/api_keys.json
     if not email_addr or not app_pw:
         if _CONFIG_PATH.exists():
             try:

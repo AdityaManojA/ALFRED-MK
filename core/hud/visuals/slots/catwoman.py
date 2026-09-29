@@ -65,9 +65,9 @@ class CatwomanSonarVisual(SlotVisual):
                          Qt.AlignmentFlag.AlignLeft, "● ● ●  ROOFTOP SONAR // EAST END")
 
         # Laser scan bar
-        painter.setPen(self.pen_laser)
+        painter.setBrush(self.brush_laser)
+        painter.drawRect(self.scan_rect)
         painter.drawLine(self.scan_line)
-        painter.fillRect(self.scan_rect, self.brush_laser)
 
 
 class CatwomanLockpickVisual(SlotVisual):

@@ -30,6 +30,8 @@ class TwoFaceSplitMirrorVisual(SlotVisual):
         self.pen_dirty = QPen(c_acc, 1.2, Qt.PenStyle.DashDotLine)
         bx, by, bw, bh = rect.x() + 8.0, rect.y() + 22.0, rect.width() - 16.0, rect.height() - 30.0
         self.rect_inner = QRectF(bx, by, bw, bh)
+        mid_x = bx + bw / 2.0
+        self.mid_line = QLineF(mid_x, by, mid_x, by + bh)
 
     def tick(self, dt: float, signals: HudSignals) -> None:
         pass
@@ -39,8 +41,7 @@ class TwoFaceSplitMirrorVisual(SlotVisual):
         painter.setPen(self.pen_clean)
         painter.drawText(QRectF(rect.x() + 8, rect.y() + 4, rect.width() - 16, 14),
                          Qt.AlignmentFlag.AlignLeft, "● ● ●  SPLIT-MIRROR SCAN // DUALITY")
-        mid_x = self.rect_inner.x() + self.rect_inner.width() / 2.0
-        painter.drawLine(QLineF(mid_x, self.rect_inner.y(), mid_x, self.rect_inner.bottom()))
+        painter.drawLine(self.mid_line)
 
 
 class TwoFaceSilverDollarVisual(SlotVisual):

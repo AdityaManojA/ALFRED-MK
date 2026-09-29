@@ -736,9 +736,9 @@ def _read_full_config() -> dict:
 APP_VERSION  = "MK-IV"
 APP_PROTOCOL = "MK-IV"
 
-_DEFAULT_W, _DEFAULT_H = 1060, 720
-_MIN_W,     _MIN_H     = 880, 600
-_LEFT_W  = 185
+_DEFAULT_W, _DEFAULT_H = 1120, 720
+_MIN_W,     _MIN_H     = 920, 600
+_LEFT_W  = 220
 _RIGHT_W = 345
 
 _OS = platform.system()  # "Windows" | "Darwin" | "Linux"
@@ -1381,11 +1381,11 @@ class HudCanvas(QWidget):
                 'vy': random.uniform(-0.0008, 0.0008),
                 'vx0': 0.0,  # base velocity stored for wake-burst recovery
                 'vy0': 0.0,
-                'size': random.uniform(1.2, 2.8),
-                'alpha': random.uniform(0.25, 0.80),
+                'size': random.uniform(1.2, 2.5),
+                'alpha': random.uniform(0.20, 0.65),
                 'phase': random.uniform(0, math.pi * 2),
             }
-            for _ in range(54)
+            for _ in range(24)
         ]
         # Store base velocities for wake-burst recovery
         for _pt in self._particles:
@@ -1414,7 +1414,7 @@ class HudCanvas(QWidget):
         self._paint_error_logged = False
         self._tmr = QTimer(self)
         self._tmr.timeout.connect(self._step)
-        self._tmr.start(16)
+        self._tmr.start(33)
 
     def _start_animations(self) -> None:
         """Guarantee the HUD animation step timer is started unconditionally."""
@@ -2733,10 +2733,10 @@ class SlotHostWidget(QWidget):
         # Register for theme updates
         ThemeChrome.add_listener(self._on_theme_changed)
 
-        # Step timer for continuous animation (~30 Hz)
+        # Step timer for continuous animation (~20 Hz)
         self._tmr = QTimer(self)
         self._tmr.timeout.connect(self._step)
-        self._tmr.start(33)
+        self._tmr.start(50)
 
     def _on_theme_changed(self, theme) -> None:
         from core.hud.visuals import instantiate_visual
@@ -9196,11 +9196,12 @@ class MainWindow(QMainWindow):
         w.setObjectName("QuickDrawer")
         from core.hud_video.layering import make_frameless_overlay
         make_frameless_overlay(w, self)
+        w.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         w.setStyleSheet(f"""
             QWidget#QuickDrawer {{
-                background: rgba(5, 7, 13, 0.98);
+                background-color: #040810;
                 border: 1px solid {C.BORDER_B};
-                border-radius: 2px;
+                border-radius: 4px;
             }}
         """)
         w.hide()
@@ -9315,14 +9316,15 @@ class MainWindow(QMainWindow):
         attach_hover_help(mem_btn, "View and manage remembered facts, user habits, and long-term memory stored in the archives.")
         lay.addWidget(mem_btn)
 
-        setup_api_btn = QPushButton("[ ◈ ]  SETUP API & BACKEND")
-        setup_api_btn.setFixedHeight(29)
-        setup_api_btn.setFont(mono_font(8, letter_spacing=0.5))
-        setup_api_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        setup_api_btn.setStyleSheet(_BTN_STYLE_PRI)
-        setup_api_btn.clicked.connect(self._open_api_setup)
-        attach_hover_help(setup_api_btn, "Configure Gemini and OpenRouter API keys and select neural intelligence backend model.")
-        lay.addWidget(setup_api_btn)
+        self._setup_api_btn = QPushButton("[ ◈ ]  SETUP API BACKENDS")
+        self._setup_api_btn.setFixedHeight(29)
+        self._setup_api_btn.setFont(mono_font(8, letter_spacing=0.5))
+        self._setup_api_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._setup_api_btn.setStyleSheet(_BTN_STYLE_PRI)
+        self._setup_api_btn.clicked.connect(self._open_api_setup)
+        attach_hover_help(self._setup_api_btn, "Manage encrypted credentials and OAuth tokens for Google Workspace, Spotify, and Gmail.")
+        lay.addWidget(self._setup_api_btn)
+        self._refresh_setup_api_btn()
 
         w.adjustSize()
         return w
@@ -10797,6 +10799,46 @@ class MainWindow(QMainWindow):
                     self._log.append_log(f"ERR: Failed to open module parameters — {e}")
                 except Exception:
                     pass
+
+    def _refresh_setup_api_btn(self):
+        """Update the Tactical Controls button text with configured count."""
+        if not hasattr(self, "_setup_api_btn") or self._setup_api_btn is None:
+            return
+        try:
+            from core.apis.registry import get_configured_backends_count
+            configured, total = get_configured_backends_count()
+            self._setup_api_btn.setText(f"[ ◈ ]  SETUP API BACKENDS ({configured}/{total})")
+        except Exception:
+            self._setup_api_btn.setText("[ ◈ ]  SETUP API BACKENDS")
+
+    def _open_api_setup(self):
+        """Lazy-instantiate and display the SetupApiModal dialog."""
+        started = time.perf_counter()
+        try:
+            if not hasattr(self, "_api_setup_modal") or self._api_setup_modal is None:
+                from ui.setup_api_modal import SetupApiModal
+                self._api_setup_modal = SetupApiModal(parent=self)
+                self._api_setup_modal.config_saved.connect(self._on_api_setup_saved)
+            from core.hud_video.layering import centre_overlay_globally, raise_overlay
+            centre_overlay_globally(self._api_setup_modal, self)
+            raise_overlay(self._api_setup_modal, self)
+            print(f"[UI Perf] api setup modal open: {(time.perf_counter() - started) * 1000:.1f} ms")
+        except Exception as e:
+            print(f"[UI] ⚠️ Failed to open api setup modal: {e}")
+            if hasattr(self, "_log") and self._log:
+                try:
+                    self._log.append_log(f"ERR: Failed to open API setup — {e}")
+                except Exception:
+                    pass
+
+    def _on_api_setup_saved(self, backend_name: str):
+        """Handle backend credentials saved event."""
+        self._refresh_setup_api_btn()
+        if hasattr(self, "_log") and self._log:
+            try:
+                self._log.append_log(f"SYS: Backend '{backend_name}' authenticated and configured, sir.")
+            except Exception:
+                pass
 
     # ── Clipboard intelligence ───────────────────────────────────────────────────
 

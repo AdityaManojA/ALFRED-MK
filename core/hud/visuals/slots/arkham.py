@@ -33,6 +33,7 @@ class ArkhamFloorplanVisual(SlotVisual):
 
         bx, by, bw, bh = rect.x() + 8.0, rect.y() + 22.0, rect.width() - 16.0, rect.height() - 30.0
         self.rect_inner = QRectF(bx, by, bw, bh)
+        self.sweep_line = QLineF()
         cw, ch = bw / 3.0 - 4.0, bh / 2.0 - 4.0
         for row in range(2):
             for col in range(3):
@@ -40,6 +41,8 @@ class ArkhamFloorplanVisual(SlotVisual):
 
     def tick(self, dt: float, signals: HudSignals) -> None:
         self.sweep_x = (self.sweep_x + dt * 0.4) % 1.0
+        lx = self.rect_inner.x() + self.sweep_x * self.rect_inner.width()
+        self.sweep_line.setLine(lx, self.rect_inner.y(), lx, self.rect_inner.bottom())
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
         painter.setFont(self.font_hdr)
@@ -48,9 +51,8 @@ class ArkhamFloorplanVisual(SlotVisual):
                          Qt.AlignmentFlag.AlignLeft, "● ● ●  CELL-BLOCK FLOORPLAN // BLOCK B")
         for cell in self.cells:
             painter.drawRect(cell)
-        lx = self.rect_inner.x() + self.sweep_x * self.rect_inner.width()
         painter.setPen(self.pen_light)
-        painter.drawLine(QLineF(lx, self.rect_inner.y(), lx, self.rect_inner.bottom()))
+        painter.drawLine(self.sweep_line)
 
 
 class ArkhamEEGVisual(SlotVisual):
