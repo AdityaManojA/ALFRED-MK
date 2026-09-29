@@ -21,27 +21,28 @@
 
 1. [🏆 Why ALFRED Outclasses Every Other "Jarvis"](#-1-why-alfred-outclasses-every-other-jarvis)
 2. [🆕 What's New in Mark VII](#-2-whats-new-in-mark-vii)
-3. [🌐 100% Local & Air-Gapped Operation](#-3-100-local--air-gapped-operation)
-4. [🎭 Example Tactical Commands](#-4-example-tactical-commands--wayne-protocol-in-action)
-5. [🛡️ Security, Privacy & Defensive Architecture](#-5-security-privacy--defensive-architecture)
-6. [🎙️ Master Voice Command Codex](#-6-master-voice-command-codex)
-7. [🎧 Real-Time Multimodal Intelligence](#-7-real-time-multimodal-intelligence--dual-audio-engine)
-8. [🎵 Tactical Audio Matrix & Background Score](#-8-tactical-audio-matrix--background-score)
-9. [🎶 Spotify AI Agent](#-9-spotify-ai-agent--dual-tier-architecture)
-10. [🎬 Visual HUD v2: Embedded Multimedia & Tactical Layering](#-10-visual-hud-v2-embedded-multimedia--tactical-layering)
-11. [📱 Quantum Mobile Remote & Dashboard](#-11-quantum-mobile-remote--iphone-16-dashboard)
-12. [🖥️ Full Desktop Control & OS Automation](#-12-full-desktop-control--os-automation)
-13. [🧠 Memory & Briefing Customizer](#-13-memory--briefing-customizer)
-14. [🎨 Insignia & Chassis Hot-Swapper](#-14-insignia--chassis-hot-swapper)
-15. [⚡ Protocol Engine & Macro Playbooks](#-15-protocol-engine--macro-playbooks)
-16. [👁️ Local Hybrid Visual Grounding](#-16-local-hybrid-visual-grounding)
-17. [🔊 Audio Ducking & Background Concurrency](#-17-audio-ducking--background-concurrency)
-18. [🚨 Process Watchdog & Anomaly Detection](#-18-process-watchdog--anomaly-detection)
-19. [🏗️ System Architecture](#-19-system-architecture--file-structure)
-20. [🚀 Quick Start & Installation](#-20-quick-start--installation)
-21. [⚙️ Configuration Reference](#-21-configuration-reference)
-22. [🕸️ Knowledge Graph](#-22-knowledge-graph--graphify)
-23. [👤 Author & Licensing](#-23-author--licensing)
+3. [🚀 Quick Start & Installation](#-3-quick-start--installation)
+4. [🔑 Gemini API Key Setup & Configuration](#-4-gemini-api-key-setup--configuration)
+5. [🌐 100% Local & Air-Gapped Operation](#-5-100-local--air-gapped-operation)
+6. [🎭 Example Tactical Commands](#-6-example-tactical-commands--wayne-protocol-in-action)
+7. [🛡️ Security, Privacy & Defensive Architecture](#-7-security-privacy--defensive-architecture)
+8. [🎙️ Master Voice Command Codex](#-8-master-voice-command-codex)
+9. [🎧 Real-Time Multimodal Intelligence](#-9-real-time-multimodal-intelligence--dual-audio-engine)
+10. [🎵 Tactical Audio Matrix & Background Score](#-10-tactical-audio-matrix--background-score)
+11. [🎶 Spotify AI Agent](#-11-spotify-ai-agent--dual-tier-architecture)
+12. [🎬 Visual HUD v2: Embedded Multimedia & Tactical Layering](#-12-visual-hud-v2-embedded-multimedia--tactical-layering)
+13. [📱 Quantum Mobile Remote & Dashboard](#-13-quantum-mobile-remote--iphone-16-dashboard)
+14. [🖥️ Full Desktop Control & OS Automation](#-14-full-desktop-control--os-automation)
+15. [🧠 Memory & Briefing Customizer](#-15-memory--briefing-customizer)
+16. [🎨 Insignia & Chassis Hot-Swapper](#-16-insignia--chassis-hot-swapper)
+17. [⚡ Protocol Engine & Macro Playbooks](#-17-protocol-engine--macro-playbooks)
+18. [👁️ Local Hybrid Visual Grounding](#-18-local-hybrid-visual-grounding)
+19. [🔊 Audio Ducking & Background Concurrency](#-19-audio-ducking--background-concurrency)
+20. [🚨 Process Watchdog & Anomaly Detection](#-20-process-watchdog--anomaly-detection)
+21. [🏗️ System Architecture](#-21-system-architecture--file-structure)
+22. [⚙️ Configuration Reference & Hotkeys](#-22-configuration-reference--hotkeys)
+23. [🕸️ Knowledge Graph](#-23-knowledge-graph--graphify)
+24. [👤 Author & Licensing](#-24-author--licensing)
 
 ---
 
@@ -158,9 +159,75 @@ Introduced dedicated `actions/audio_core.py` action tool and UI methods (`pause_
 
 ---
 
-## 🌐 3. 100% Local & Air-Gapped Operation
+## 🚀 3. Quick Start & Installation
 
-**ALFRED is architected for dual-backend operation.** Seamlessly toggle between Google's **Gemini 3.1 Flash Live API** (cloud multimodal WebSocket) and **100% local, air-gapped open-weight models** (Ollama, LM Studio, vLLM, Jan, LocalAI, or llama.cpp) without changing a single line of code.
+### 📋 Prerequisites
+* **Operating System**: Windows 10/11, macOS, or Linux.
+* **Python**: `3.11`, `3.12`, or `3.13`.
+* **Hardware**: Standard microphone and speakers. *No dedicated GPU required — runs on lightweight software rendering.*
+* **Intelligence Backend**: Free Gemini API key from [Google AI Studio](https://aistudio.google.com/) **OR** local Ollama / LM Studio.
+
+### ⚙️ Setup & Execution
+
+```powershell
+# 1. Clone the repository
+git clone https://github.com/AdityaManojA/ALFRED-MK-V.git
+cd ALFRED-MK-V
+
+# 2. Run the OS-tailored dependency setup
+python setup.py
+
+# 3. Launch ALFRED
+python main.py
+```
+
+*On first launch, ALFRED prompts you with the interactive **System Initialisation overlay** to set Operator callsign, Assistant name, and choose between Gemini Live, Local Ollama, LM Studio, or OpenRouter.*
+
+---
+
+## 🔑 4. Gemini API Key Setup & Configuration
+
+ALFRED utilizes **Google Gemini 3.1 Flash Live** for real-time sub-second bidirectional voice and vision streaming. You can obtain a free API key in seconds:
+
+### 🌐 Step-by-Step: Obtaining Your Free Google AI Studio API Key
+
+1. **Visit Google AI Studio**: Go to [https://aistudio.google.com/](https://aistudio.google.com/) in your browser.
+2. **Sign In**: Sign in with your standard Google account.
+3. **Open API Keys**: Click the blue **"Get API key"** button on the left sidebar (or navigate directly to [https://aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)).
+4. **Generate Key**: Click **"Create API key"** → select **"Create API key in new project"** (or attach to an existing Google Cloud project).
+5. **Copy Your Key**: Copy your generated API key string (starts with `AIzaSy...`).
+
+### ⚙️ Configuring the Key in ALFRED
+
+You can provide your Gemini API key through any of three convenient methods:
+
+#### 1️⃣ Method A: Interactive Graphical Wizard (Recommended)
+On first launch (`python main.py`), ALFRED automatically displays the System Initialisation dialog. Simply paste your `AIzaSy...` key into the input field and click **Save & Initialise**.
+
+#### 2️⃣ Method B: Configuration File (`config/api_keys.json`)
+Open or edit `config/api_keys.json` and paste your key into the `gemini_api_key` field:
+```json
+{
+    "gemini_api_key": "AIzaSyYOUR_ACTUAL_GEMINI_API_KEY_HERE"
+}
+```
+
+#### 3️⃣ Method C: System Environment Variable
+Set the environment variable in your terminal before starting ALFRED:
+```powershell
+# Windows PowerShell
+$env:GEMINI_API_KEY="AIzaSyYOUR_ACTUAL_GEMINI_API_KEY_HERE"
+
+# Linux / macOS Bash or Zsh
+export GEMINI_API_KEY="AIzaSyYOUR_ACTUAL_GEMINI_API_KEY_HERE"
+```
+*ALFRED automatically detects and prioritizes the `GEMINI_API_KEY` environment variable if present.*
+
+---
+
+## 🌐 5. 100% Local & Air-Gapped Operation
+
+**ALFRED is architected for dual-backend sovereignty.** Seamlessly toggle between Google's **Gemini 3.1 Flash Live API** (cloud multimodal WebSocket) and **100% local, air-gapped open-weight models** (Ollama, LM Studio, vLLM, Jan, LocalAI, or llama.cpp) without changing a single line of application code.
 
 ### 📊 Gemini Live vs. Local Comparison
 
@@ -265,7 +332,7 @@ ALFRED automatically prioritizes Gemini Live when a valid key is detected.
 
 ---
 
-## 🎭 4. Example Tactical Commands — "Wayne Protocol" in Action
+## 🎭 6. Example Tactical Commands — "Wayne Protocol" in Action
 
 ALFRED is infused with the personality, dry British wit, and unwavering dignity of **Alfred Pennyworth**. Beyond standard tools, ALFRED features immersive Easter eggs and rapid-fire tactical shortcuts:
 
@@ -299,7 +366,7 @@ ALFRED is infused with the personality, dry British wit, and unwavering dignity 
 
 ---
 
-## 🛡️ 5. Security, Privacy & Defensive Architecture
+## 🛡️ 7. Security, Privacy & Defensive Architecture
 
 ### 🔒 Structural Privacy Law (Sentry Mode)
 ALFRED treats human privacy as an **absolute structural invariant** rather than a policy toggle:
@@ -328,9 +395,9 @@ ALFRED treats human privacy as an **absolute structural invariant** rather than 
 
 ---
 
-## 🎙️ 6. Master Voice Command Codex
+## 🎙️ 8. Master Voice Command Codex
 
-### 🛡️ 6.0 Sentry Mode v2 — Surveillance & Focus Enforcement
+### 🛡️ 8.0 Sentry Mode v2 — Surveillance & Focus Enforcement
 
 | Voice Command | Behavior | Context |
 |---|---|---|
@@ -347,7 +414,7 @@ ALFRED treats human privacy as an **absolute structural invariant** rather than 
 | *"Pause / Resume / Stop focus"* | Session lifecycle | Report card on stop |
 | *"Focus status"* | Spoken telemetry | Live metrics |
 
-### 👁️ 6.1 Desktop Automation & Vision
+### 👁️ 8.1 Desktop Automation & Vision
 
 | Voice Command | Behavior | Context |
 |---|---|---|
@@ -358,7 +425,7 @@ ALFRED treats human privacy as an **absolute structural invariant** rather than 
 | *"Scroll up/down"* | Smooth wheel on focused window | Native emulation |
 | *"Copy to clipboard"* / *"What's in my clipboard?"* | Full clipboard bridge | Read/write |
 
-### ⚙️ 6.2 OS, Hardware & Applications
+### ⚙️ 8.2 OS, Hardware & Applications
 
 | Voice Command | Behavior | Context |
 |---|---|---|
@@ -369,14 +436,14 @@ ALFRED treats human privacy as an **absolute structural invariant** rather than 
 | *"Watch process [name]"* | Watchdog daemon | Security monitor |
 | *"Lock workstation"* / *"Sleep PC"* | OS power state | Cross-platform |
 
-### ⚡ 6.3 Compound Protocols
+### ⚡ 8.3 Compound Protocols
 
 | Voice Command | Behavior | Context |
 |---|---|---|
 | *"[Custom Trigger]"* | Executes multi-step YAML playbook (e.g., *"FCC CLAUDE"* opens admin terminals + servers) | `protocols.yaml` |
 | *"Let's create a workflow"* | Interactive builder with confirmation gate | Cryptographic gate |
 
-### 🧠 6.4 Memory & Reversibility
+### 🧠 8.4 Memory & Reversibility
 
 | Voice Command | Behavior | Context |
 |---|---|---|
@@ -385,7 +452,7 @@ ALFRED treats human privacy as an **absolute structural invariant** rather than 
 | *"Undo"* / *"Revert that"* | Rolls back last reversible action | Universal journal |
 | *"Wipe conversation"* | Clean context reset | Zero residuals |
 
-### 📰 6.5 Intelligence & Briefings
+### 📰 8.5 Intelligence & Briefings
 
 | Voice Command | Behavior | Context |
 |---|---|---|
@@ -395,7 +462,7 @@ ALFRED treats human privacy as an **absolute structural invariant** rather than 
 | *"Latest news on [topic]"* | Breaking news summary | Live scraper |
 | *"What is the weather in [city]?"* | Meteorological report | Live conditions |
 
-### 📱 6.6 Mobile Remote
+### 📱 8.6 Mobile Remote
 
 | Voice Command | Behavior | Context |
 |---|---|---|
@@ -403,7 +470,7 @@ ALFRED treats human privacy as an **absolute structural invariant** rather than 
 | *"Send screenshot to phone"* | Mobile push preview | Full-res + link |
 | Remote WebAudio Streaming | Low-latency bidirectional voice | `/ws/audio` gateway |
 
-### 🎧 6.7 Spotify AI Agent
+### 🎧 8.7 Spotify AI Agent
 
 | Voice Command | Action | Parameters |
 |---|---|---|
@@ -418,7 +485,7 @@ ALFRED treats human privacy as an **absolute structural invariant** rather than 
 | *"What song is playing?"* | Track query | `action="status"` |
 | *"Close Spotify"* | Graceful shutdown + TRON restore | `action="close"` |
 
-### 🎵 6.8 Tactical Audio Core
+### 🎵 8.8 Tactical Audio Core
 
 | Voice Command | Action | Parameters |
 |---|---|---|
@@ -429,13 +496,13 @@ ALFRED treats human privacy as an **absolute structural invariant** rather than 
 | *"Audio core next / previous"* | Playlist navigation | `action="next"` / `"prev"` |
 | *"Restore TRON music"* | Restore default score | `action="restore_tron"` |
 
-### 🎨 6.9 Chassis Customization
+### 🎨 8.9 Chassis Customization
 
 | Voice Command | Behavior | Context |
 |---|---|---|
 | *"Update app icon to [insignia]"* | Hot-swaps window icon, taskbar, tray, shortcuts | Real-time |
 
-### 🎬 6.10 Visual HUD v2 Multimedia Commands
+### 🎬 8.10 Visual HUD v2 Multimedia Commands
 
 | Voice Command | Action | Parameters / Context |
 |---|---|---|
@@ -453,7 +520,7 @@ ALFRED treats human privacy as an **absolute structural invariant** rather than 
 
 ---
 
-## 🎧 7. Real-Time Multimodal Intelligence & Dual Audio Engine
+## 🎧 9. Real-Time Multimodal Intelligence & Dual Audio Engine
 
 | Subsystem | Implementation |
 |---|---|
@@ -466,7 +533,7 @@ ALFRED treats human privacy as an **absolute structural invariant** rather than 
 
 ---
 
-## 🎵 8. Tactical Audio Matrix & Background Score
+## 🎵 10. Tactical Audio Matrix & Background Score
 
 ALFRED features an integrated cybernetic background audio engine coordinated between ambient tactical soundtracks and live external streaming:
 
@@ -488,7 +555,7 @@ When Spotify is paused, stopped, or closed, the tactical engine automatically re
 
 ---
 
-## 🎶 9. Spotify AI Agent — Dual-Tier Architecture
+## 🎶 11. Spotify AI Agent — Dual-Tier Architecture
 
 ALFRED includes an autonomous full-featured **Spotify AI Agent** (`actions/spotify_control.py`) engineered for zero-latency playback control, catalog discovery, and HUD synchronization:
 
@@ -542,7 +609,7 @@ ALFRED launches a local callback server, opens Spotify authorization, captures t
 
 ---
 
-## 🎬 10. Visual HUD v2: Embedded Multimedia & Tactical Layering
+## 🎬 12. Visual HUD v2: Embedded Multimedia & Tactical Layering
 
 ALFRED's central HUD canvas seamlessly transforms into a hardware-accelerated multimedia surface on demand, enabling native in-app video streaming without opening third-party browser tabs or floating window clutter:
 
@@ -558,7 +625,7 @@ ALFRED's central HUD canvas seamlessly transforms into a hardware-accelerated mu
 
 ---
 
-## 📱 11. Quantum Mobile Remote & iPhone 16 Dashboard
+## 📱 13. Quantum Mobile Remote & iPhone 16 Dashboard
 
 <p align="center">
   <img src="Screenies/Remote_Uplink.png" alt="Quantum Mobile Remote Uplink & Pairing Modal" width="75%">
@@ -573,7 +640,7 @@ ALFRED's central HUD canvas seamlessly transforms into a hardware-accelerated mu
 
 ---
 
-## 🖥️ 11. Full Desktop Control & OS Automation
+## 🖥️ 14. Full Desktop Control & OS Automation
 
 * **⌨️ Deep OS Automation**: Keystrokes, mouse positioning, clicks, drags, window focus, clipboard R/W, AI-driven element location (`screen_find`).
 * **⏰ OS-Native Scheduling**: Reminders via Windows Task Scheduler (`schtasks`), macOS `launchd`, or Linux `systemd`/`at`.
@@ -582,7 +649,7 @@ ALFRED's central HUD canvas seamlessly transforms into a hardware-accelerated mu
 
 ---
 
-## 🧠 12. Memory & Briefing Customizer
+## 🧠 15. Memory & Briefing Customizer
 
 <p align="center">
   <img src="Screenies/Daily_breifing.png" alt="ALFRED Morning Briefing Card" width="75%">
@@ -594,7 +661,7 @@ ALFRED's central HUD canvas seamlessly transforms into a hardware-accelerated mu
 
 ---
 
-## 🎨 13. Insignia & Chassis Hot-Swapper
+## 🎨 16. Insignia & Chassis Hot-Swapper
 
 <p align="center">
   <img src="Screenies/Reconfigure_settings.png" alt="Tactical Reconfigure Settings Panel" width="80%">
@@ -602,9 +669,21 @@ ALFRED's central HUD canvas seamlessly transforms into a hardware-accelerated mu
 
 ### 🖼️ Tactical Chassis Themes Showcase
 
-| Wayne Classic (Default) | Bane Protocol Chassis | Batman Beyond Chassis |
+| **Wayne Classic (Default)** | **Batman Beyond** | **Arkham Asylum** |
 |:---:|:---:|:---:|
-| <img src="Screenies/Default_theme.png" width="300" alt="Wayne Classic"> | <img src="Screenies/Bane_theme.png" width="300" alt="Bane"> | <img src="Screenies/Batman_beyond_Theme.png" width="300" alt="Batman Beyond"> |
+| <img src="Screenies/Default_theme.png" width="320" alt="Wayne Classic Theme"> | <img src="Screenies/Batman_beyond_Theme.png" width="320" alt="Batman Beyond Theme"> | <img src="Screenies/ArkymAsylum_theme.png" width="320" alt="Arkham Asylum Theme"> |
+
+| **Bane Protocol** | **The Joker (Anarchy)** | **The Riddler (Enigma)** |
+|:---:|:---:|:---:|
+| <img src="Screenies/Bane_theme.png" width="320" alt="Bane Protocol Theme"> | <img src="Screenies/joker%20_ui.png" width="320" alt="The Joker Theme"> | <img src="Screenies/Riddler_ui.png" width="320" alt="The Riddler Theme"> |
+
+| **Two-Face (Dual Chromatic)** | **Catwoman (Tactical)** | **Mr. Freeze (Cryogenic)** |
+|:---:|:---:|:---:|
+| <img src="Screenies/2_face_theme.png" width="320" alt="Two-Face Theme"> | <img src="Screenies/Catwoman_theme.png" width="320" alt="Catwoman Theme"> | <img src="Screenies/Mr.Freeze.png" width="320" alt="Mr. Freeze Theme"> |
+
+| **Justice League Watchtower (Orbital)** |
+|:---:|
+| <img src="Screenies/Watchtower_theme.png" width="480" alt="Justice League Watchtower Theme"> |
 
 * **🎭 Multi-Insignia Catalog**: Scans and registers assets from `Icons/` (Batman Beyond, Arkham Asylum, Classic Bat, White Bat, Tactical Stealth).
 * **⚡ Live Runtime Reconfiguration** (`update_app_icon.py`): Hot-swaps window icon, Windows taskbar, and system tray via voice (*"update the app icon to Batman Beyond"*).
@@ -612,7 +691,7 @@ ALFRED's central HUD canvas seamlessly transforms into a hardware-accelerated mu
 
 ---
 
-## ⚡ 14. Protocol Engine & Macro Playbooks
+## ⚡ 17. Protocol Engine & Macro Playbooks
 
 ALFRED features an autonomous **Protocol Engine** (`actions/protocol_engine.py`) for executing complex sequential compound workflows via custom voice triggers:
 
@@ -629,7 +708,7 @@ ALFRED features an autonomous **Protocol Engine** (`actions/protocol_engine.py`)
 
 ---
 
-## 👁️ 15. Local Hybrid Visual Grounding
+## 👁️ 18. Local Hybrid Visual Grounding
 
 Streaming full screenshots to cloud APIs for coordinate lookup wastes tokens and latency. ALFRED resolves this via multi-tiered local grounding (`actions/screen_find.py`):
 
@@ -644,7 +723,7 @@ Streaming full screenshots to cloud APIs for coordinate lookup wastes tokens and
 
 ---
 
-## 🔊 16. Audio Ducking & Background Concurrency
+## 🔊 19. Audio Ducking & Background Concurrency
 
 * **🎚️ Process-Level Ducking** (`core/audio_ducker.py`): Directly interfaces with OS audio session managers (`pycaw` on Windows, `pulsectl` on Linux). Automatically reduces Spotify, Chrome, YouTube, VLC, Edge by **70%** (factor `0.3`) when ALFRED speaks, restoring exact pre-duck volumes when speech ends or is interrupted.
 * **⚙️ Non-Blocking Worker Pool** (`main.py`): Asynchronous `background_task_queue` executing long tasks (web scraping, video processing) concurrently without blocking voice turns. Live `[control] [background XX%]` telemetry.
@@ -653,7 +732,7 @@ Streaming full screenshots to cloud APIs for coordinate lookup wastes tokens and
 
 ---
 
-## 🚨 17. Process Watchdog & Anomaly Detection
+## 🚨 20. Process Watchdog & Anomaly Detection
 
 ALFRED incorporates an OS security & performance watchdog daemon actively monitoring processes, flagging anomalies, inspecting sockets, and auto-throttling (`actions/system_monitor.py`):
 
@@ -677,7 +756,7 @@ ALFRED incorporates an OS security & performance watchdog daemon actively monito
 
 ---
 
-## 🏗️ 18. System Architecture & File Structure
+## 🏗️ 21. System Architecture & File Structure
 
 ```
 ALFRED-MK-VII/
@@ -787,33 +866,7 @@ ALFRED-MK-VII/
 
 ---
 
-## 🚀 19. Quick Start & Installation
-
-### 📋 Prerequisites
-* **Operating System**: Windows 10/11, macOS, or Linux.
-* **Python**: `3.11`, `3.12`, or `3.13`.
-* **Hardware**: Standard microphone and speakers. *No dedicated GPU required — runs on lightweight software rendering.*
-* **Intelligence Backend**: Free Gemini API key from [Google AI Studio](https://aistudio.google.com/) **OR** local Ollama / LM Studio.
-
-### ⚙️ Setup & Execution
-
-```powershell
-# Clone the repository
-git clone https://github.com/AdityaManojA/ALFRED-MK-V.git
-cd ALFRED-MK-IV
-
-# Run the OS-tailored dependency setup
-python setup.py
-
-# Launch ALFRED
-python main.py
-```
-
-*On first launch, ALFRED prompts you with the System Initialisation overlay to set Operator callsign, Assistant name, and choose between Gemini Live, Local Ollama, LM Studio, or OpenRouter.*
-
----
-
-## ⚙️ 20. Configuration Reference
+## ⚙️ 22. Configuration Reference & Hotkeys
 
 **`config/api_keys.json`:**
 ```json
@@ -850,7 +903,7 @@ python main.py
 
 ---
 
-## 🕸️ 21. Knowledge Graph — Graphify
+## 🕸️ 23. Knowledge Graph — Graphify
 
 <p align="center">
   <img src="Screenies/Graphify.png" alt="Graphify Visual Knowledge Graph" width="85%">
@@ -928,7 +981,7 @@ yt-dlp format selector explicitly excludes AV1 (`av01`) and prefers VP9+Opus, fa
 
 ---
 
-## 👤 22. Author & Licensing
+## 👤 24. Author & Licensing
 
 * **🎩 Lead Architect & Creator:** **ADITYA MANOJ**
 * **🦇 Project:** ALFRED-MK-VII (Wayne Protocol Edition)
