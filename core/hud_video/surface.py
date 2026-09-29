@@ -133,12 +133,35 @@ class HudVideoSurface(QWidget):
         self._mute_hide_timer.setSingleShot(True)
         self._mute_hide_timer.timeout.connect(self._hide_mute_badge)
 
+        self._toast_timer = QTimer(self)
+        self._toast_timer.setSingleShot(True)
+        self._toast_timer.timeout.connect(self._hide_toast)
+
         self._build_ui()
         self._connect_controller()
 
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
+
+    def show_toast(self, text: str) -> None:
+        """Display a tactical toast overlay over the video."""
+        if not text:
+            return
+        self._toast_lbl.setText(f"◈  {text.upper()}  ◈")
+        self._toast_lbl.adjustSize()
+        w = max(140, self._toast_lbl.width() + 32)
+        h = max(34, self._toast_lbl.height() + 14)
+        self._toast_lbl.resize(w, h)
+        cx = max(0, (self.width() - w) // 2)
+        cy = max(0, (self.height() - h) // 2)
+        self._toast_lbl.move(cx, cy)
+        self._toast_lbl.show()
+        self._toast_lbl.raise_()
+        self._toast_timer.start(1800)
+
+    def _hide_toast(self) -> None:
+        self._toast_lbl.hide()
 
     def video_widget(self) -> QVideoWidget:
         """Return the QVideoWidget for the backend to attach to."""
@@ -152,6 +175,8 @@ class HudVideoSurface(QWidget):
         self._text_dim = text_dim
         self._spinner.set_color(QColor(pri))
         self._apply_stylesheet()
+        if hasattr(self, "_controls_strip") and self._controls_strip is not None:
+            self._controls_strip.apply_theme(pri, pri_dim, bg, text_dim)
 
     # ------------------------------------------------------------------
     # Controller signal handlers
@@ -163,28 +188,45 @@ class HudVideoSurface(QWidget):
             self._content_stack.setCurrentIndex(0)  # loading panel
             self._status_lbl.setText("RESOLVING…")
             self._close_btn.show()
+            if hasattr(self, "_controls_strip"):
+                self._controls_strip.hide()
         elif state == VideoState.LOADING:
             self._spinner.start()
             self._content_stack.setCurrentIndex(0)
             self._close_btn.show()
+            if hasattr(self, "_controls_strip"):
+                self._controls_strip.hide()
         elif state == VideoState.PLAYING:
             self._spinner.stop()
             self._content_stack.setCurrentIndex(1)  # video widget
             self._close_btn.show()
             self._pause_overlay.hide()
+            if hasattr(self, "_controls_strip"):
+                self._controls_strip.show()
             log.info("[hud_video] embed loaded, player visible")
-
         elif state == VideoState.PAUSED:
             self._content_stack.setCurrentIndex(1)
             self._pause_overlay.show()
             self._close_btn.show()
+            if hasattr(self, "_controls_strip"):
+                self._controls_strip.show()
+        elif state == VideoState.ENDED:
+            self._content_stack.setCurrentIndex(1)
+            self._pause_overlay.hide()
+            self._close_btn.show()
+            if hasattr(self, "_controls_strip"):
+                self._controls_strip.show()
         elif state == VideoState.ERROR:
             self._spinner.stop()
             self._content_stack.setCurrentIndex(2)  # error panel
             self._close_btn.show()
+            if hasattr(self, "_controls_strip"):
+                self._controls_strip.hide()
         elif state == VideoState.IDLE:
             self._spinner.stop()
             self._pause_overlay.hide()
+            if hasattr(self, "_controls_strip"):
+                self._controls_strip.hide()
 
     def _on_status_text(self, text: str) -> None:
         self._status_lbl.setText(text.upper())
@@ -217,6 +259,12 @@ class HudVideoSurface(QWidget):
         self._content_stack.setCurrentIndex(0)
         root.addWidget(self._content_stack, stretch=1)
 
+        # Bottom controls strip (placed strictly below video, avoiding airspace z-order conflicts)
+        from core.hud_video.controls import HudVideoControlsStrip
+        self._controls_strip = HudVideoControlsStrip(self._controller, self)
+        self._controls_strip.hide()
+        root.addWidget(self._controls_strip, stretch=0)
+
         # Mute indicator badge (absolute position over content_stack)
         self._mute_badge = QLabel("MUTED", self)
         self._mute_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -227,6 +275,11 @@ class HudVideoSurface(QWidget):
         self._pause_overlay.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._pause_overlay.hide()
 
+        # In-HUD Toast acknowledgement label (absolute position)
+        self._toast_lbl = QLabel(self)
+        self._toast_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._toast_lbl.hide()
+
         self._apply_stylesheet()
 
     def _build_header(self) -> QHBoxLayout:
@@ -234,7 +287,7 @@ class HudVideoSurface(QWidget):
         row.setContentsMargins(10, 5, 10, 5)
         row.setSpacing(6)
 
-        self._title_lbl = QLabel("◈  HUD PLAYER")
+        self._title_lbl = QLabel("◈  VISUAL HUD")
         self._title_lbl.setFont(self._tech_font(8, bold=True))
 
         self._close_btn = QPushButton("✕  CLOSE")
@@ -287,6 +340,7 @@ class HudVideoSurface(QWidget):
     def _connect_controller(self) -> None:
         self._controller.state_changed.connect(self._on_state_changed)
         self._controller.status_text_changed.connect(self._on_status_text)
+        self._controller.toast_requested.connect(self.show_toast)
 
     def _apply_stylesheet(self) -> None:
         pri = self._pri
@@ -332,6 +386,14 @@ class HudVideoSurface(QWidget):
                 font-size: 11pt; letter-spacing: 3px;
             }}
         """)
+        self._toast_lbl.setStyleSheet(f"""
+            QLabel {{
+                color: {pri}; background: rgba(0, 0, 0, 0.78);
+                border: 1px solid {pri_dim};
+                border-radius: 4px; padding: 5px 14px;
+                font-size: 9pt; font-weight: bold; letter-spacing: 2px;
+            }}
+        """)
 
     @staticmethod
     def _tech_font(size: int, bold: bool = False) -> QFont:
@@ -361,4 +423,10 @@ class HudVideoSurface(QWidget):
                 (self.width() - pw) // 2,
                 (self.height() - ph) // 2,
                 pw, ph,
+            )
+        if hasattr(self, "_toast_lbl") and self._toast_lbl.isVisible():
+            tw, th = self._toast_lbl.width(), self._toast_lbl.height()
+            self._toast_lbl.move(
+                max(0, (self.width() - tw) // 2),
+                max(0, (self.height() - th) // 2),
             )

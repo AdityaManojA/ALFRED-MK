@@ -40,6 +40,9 @@ BASE_DIR    = Path(__file__).resolve().parent.parent
 STATIC_DIR  = Path(__file__).parent / "static"
 PORT        = 8000
 MAX_UPLOAD_MB = 500
+RECONNECT_BASE_S: float = 2.0
+RECONNECT_MAX_S: float = 30.0
+UPLINK_HISTORY_N: int = 100
 
 
 def _make_uploads_dir() -> Path:
@@ -977,15 +980,24 @@ class DashboardServer:
         async def ws_ep(websocket: WebSocket, token: str = "", device_token: str = ""):
             tok = _resolve_ws_auth(token, device_token)
             if not tok:
-                await websocket.close(code=4001)
+                try:
+                    await websocket.close(code=4001)
+                except Exception:
+                    pass
                 return
             await websocket.accept()
             self._clients.add(websocket)
-            for entry in self._history[-50:]:
-                try:
-                    await websocket.send_json(entry)
-                except Exception:
-                    break
+
+            # Send historical buffer immediately in batch
+            history_slice = list(self._history[-UPLINK_HISTORY_N:])
+            try:
+                await websocket.send_json({"type": "history", "items": history_slice})
+            except (WebSocketDisconnect, ConnectionResetError, ConnectionAbortedError, BrokenPipeError, OSError, asyncio.CancelledError):
+                self._clients.discard(websocket)
+                return
+            except Exception:
+                pass
+
             try:
                 while True:
                     data = await websocket.receive_json()
@@ -1008,7 +1020,9 @@ class DashboardServer:
                                 await websocket.send_json({"type": "action_result", "action": act, "data": a_res})
                             except Exception as ex:
                                 await websocket.send_json({"type": "action_result", "action": act, "error": str(ex)})
-            except WebSocketDisconnect:
+            except (WebSocketDisconnect, ConnectionResetError, ConnectionAbortedError, BrokenPipeError, OSError, asyncio.CancelledError):
+                pass
+            except Exception as e:
                 pass
             finally:
                 self._clients.discard(websocket)
@@ -1023,7 +1037,10 @@ class DashboardServer:
             """
             tok = _resolve_ws_auth(token, device_token)
             if not tok:
-                await websocket.close(code=4001)
+                try:
+                    await websocket.close(code=4001)
+                except Exception:
+                    pass
                 return
             await websocket.accept()
 
@@ -1032,17 +1049,15 @@ class DashboardServer:
                 try:
                     while True:
                         data = await websocket.receive_bytes()
-                        # Route incoming client PCM chunks to main.py voice input buffer ([mic])
-                        # This mimics what the phone mic does
                         try:
                             self._phone_audio_queue.put_nowait(
                                 {"data": data, "mime_type": "audio/pcm"}
                             )
                         except asyncio.QueueFull:
-                            pass  # drop frame rather than block
+                            pass
                         except Exception:
                             pass
-                except WebSocketDisconnect:
+                except (WebSocketDisconnect, ConnectionResetError, ConnectionAbortedError, BrokenPipeError, OSError, asyncio.CancelledError):
                     pass
                 except Exception:
                     pass
@@ -1051,26 +1066,23 @@ class DashboardServer:
             async def handle_outgoing_audio():
                 try:
                     while True:
-                        # Get audio data from the audio queue (ALFRED's synthesized audio for WebSocket)
                         try:
-                            # Wait for audio data with timeout to allow checking for disconnect
                             audio_data = await asyncio.wait_for(
                                 self._audio_queue.get(),
                                 timeout=0.1
                             )
-                            # Send the audio data back to the browser
                             await websocket.send_bytes(audio_data["data"])
                         except asyncio.TimeoutError:
-                            # Continue looping to check for disconnect
                             continue
+                        except (WebSocketDisconnect, ConnectionResetError, ConnectionAbortedError, BrokenPipeError, OSError, asyncio.CancelledError):
+                            break
                         except Exception:
                             pass
-                except WebSocketDisconnect:
+                except (WebSocketDisconnect, ConnectionResetError, ConnectionAbortedError, BrokenPipeError, OSError, asyncio.CancelledError):
                     pass
                 except Exception:
                     pass
 
-            # Run both tasks concurrently
             try:
                 await asyncio.gather(
                     handle_incoming_audio(),

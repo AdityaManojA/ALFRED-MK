@@ -39,6 +39,9 @@ _BASE         = _base_dir()
 _CONFIG_PATH  = _BASE / "config" / "api_keys.json"
 _MEMORY_PATH  = _BASE / "memory" / "long_term.json"
 
+SCREENSHOT_FORMAT: str = "png"
+SCREENSHOT_MAX_MB: float = 10.0
+
 def _load_config() -> dict:
     try:
         return json.loads(_CONFIG_PATH.read_text(encoding="utf-8"))
@@ -58,7 +61,7 @@ def _get_api_key() -> str:
     return _load_config().get("gemini_api_key", "")
 
 def _safe_screenshot_path(requested: str | None) -> Path:
-    fallback = Path.home() / "Desktop" / "alfred_screenshot.png"
+    fallback = Path.home() / "Desktop" / f"alfred_screenshot.{SCREENSHOT_FORMAT}"
     if not requested:
         return fallback
     try:
@@ -237,28 +240,33 @@ def _clipboard_paste(text: str) -> str:
 
 
 def _screenshot(save_path: str | None = None) -> str:
-    _require_pyautogui()
     ts = int(time.time())
     desktop_dir = Path.home() / "Desktop"
-    desktop_path = desktop_dir / f"alfred_screenshot_{ts}.png"
-    if save_path:
-        path = _safe_screenshot_path(save_path)
-    else:
-        path = desktop_path
+    desktop_path = desktop_dir / f"alfred_screenshot_{ts}.{SCREENSHOT_FORMAT}"
+    path = _safe_screenshot_path(save_path) if save_path else desktop_path
 
-    img = pyautogui.screenshot()
-    img.save(str(path))
+    try:
+        from actions.screen_processor import capture_screen
+        shot = capture_screen(monitor=1)
+        img_bytes = shot.img_bytes
+        if len(img_bytes) > (SCREENSHOT_MAX_MB * 1024 * 1024):
+            return f"Screenshot failed: image size exceeds {SCREENSHOT_MAX_MB} MB limit"
+        path.write_bytes(img_bytes)
+    except Exception:
+        _require_pyautogui()
+        img = pyautogui.screenshot()
+        img.save(str(path))
 
-    # Also save a copy to the dashboard uploads directory so it's instantly sent to the phone
+    # Also save a copy to the dashboard uploads directory so it's instantly sent to the uplink
     dash_dir = Path(__file__).resolve().parent.parent / "dashboard" / "uploads"
     dash_dir.mkdir(parents=True, exist_ok=True)
-    dash_path = dash_dir / f"alfred_screenshot_{ts}.png"
+    dash_path = dash_dir / f"alfred_screenshot_{ts}.{SCREENSHOT_FORMAT}"
     try:
-        img.save(str(dash_path))
+        dash_path.write_bytes(path.read_bytes())
     except Exception:
         pass
 
-    return f"Screenshot captured and saved to Desktop ({path}) and phone (/uploads/{dash_path.name})"
+    return f"Screenshot captured and saved to Desktop ({path}) and uplink (/uploads/{dash_path.name})"
 
 
 def _clear_field() -> str:

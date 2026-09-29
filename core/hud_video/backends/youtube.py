@@ -28,16 +28,17 @@ log = logging.getLogger(__name__)
 # Named constants
 # ---------------------------------------------------------------------------
 
-# Format priority (AV1 excluded — no reliable software decoder in FFmpeg/Qt on Windows):
-#   1. VP9 video (webm) + opus audio — best quality, full FFmpeg software support
-#   2. H.264 video (mp4) + AAC audio — widest hw-decode compat fallback
-#   3. Any non-AV1 bestvideo+bestaudio merge
-#   4. Single-file best (last resort)
+# Format priority:
+#   1. Best progressive single-file stream with combined audio & video (itag 18, 22, etc.)
+#   2. Best video + best audio adaptive streams (dual streams returned as video_url, audio_url)
+#   3. Fallback best available stream
 YTDLP_FORMAT: str = (
+    "best[vcodec!=none][acodec!=none]/"
+    "18/22/"
     "bestvideo[vcodec^=vp9][height<=1080]+bestaudio[acodec=opus]/"
     "bestvideo[vcodec^=avc][height<=1080][ext=mp4]+bestaudio[ext=m4a]/"
-    "bestvideo[vcodec!=av01][height<=1080]+bestaudio[acodec!=av01]/"
-    "best[vcodec!=av01]"
+    "bestvideo[height<=1080]+bestaudio/"
+    "best"
 )
 YTDLP_TIMEOUT_S: int = 30    # yt-dlp subprocess hard timeout
 
@@ -63,15 +64,16 @@ def _ytdlp_available() -> bool:
         return False
 
 
-def extract_stream_url(watch_url: str) -> str:
-    """Extract a direct CDN stream URL from a YouTube watch URL.
+def extract_stream_url(watch_url: str) -> tuple[str, str | None]:
+    """Extract direct CDN stream URL(s) from a YouTube watch URL.
 
     Uses yt-dlp subprocess. Run in a thread pool — this is blocking.
 
-    Raises YouTubeResolveError if yt-dlp is unavailable or extraction fails.
+    Returns:
+        tuple[str, str | None]: (video_url, audio_url). audio_url is None for
+        progressive streams where audio is multiplexed into the video stream.
 
-    Phase 3 activation: install yt-dlp and this function becomes live.
-    Until then, raises YouTubeResolveError("yt-dlp not installed").
+    Raises YouTubeResolveError if yt-dlp is unavailable or extraction fails.
     """
     if not _ytdlp_available():
         raise YouTubeResolveError(
@@ -89,10 +91,10 @@ def extract_stream_url(watch_url: str) -> str:
         result = subprocess.run(
             [
                 sys.executable, "-m", "yt_dlp",
+                "--extractor-args", "youtube:player_client=android,ios,web",
                 "--get-url",
                 "--format", YTDLP_FORMAT,
                 "--no-playlist",
-                "--merge-output-format", "mp4",
                 watch_url,
             ],
             capture_output=True,
@@ -108,14 +110,13 @@ def extract_stream_url(watch_url: str) -> str:
         if not urls:
             raise YouTubeResolveError("yt-dlp returned no stream URL.")
 
-        # For merged VP9+opus webm/mkv, yt-dlp --get-url returns two lines
-        # (video URL, audio URL). QMediaPlayer can't multiplex two streams;
-        # return just the video URL — audio is baked in for most formats.
-        # If only one URL is returned it already contains both tracks.
-        stream_url = urls[0]
-        log.info("[hud_video] yt-dlp resolved %d URL(s); using stream: %s…",
-                 len(urls), stream_url[:60])
-        return stream_url
+        video_url = urls[0]
+        audio_url = urls[1] if len(urls) > 1 else None
+
+        from urllib.parse import urlparse
+        host = urlparse(video_url).netloc
+        log.info("[hud_video] yt-dlp resolved %d URL(s); stream host: %s", len(urls), host)
+        return video_url, audio_url
 
     except subprocess.TimeoutExpired:
         raise YouTubeResolveError("yt-dlp timed out resolving the stream URL.")

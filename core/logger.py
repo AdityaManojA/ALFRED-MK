@@ -68,15 +68,20 @@ def ts_print(*args, **kwargs):
     flush = kwargs.get("flush", False)
 
     content = sep.join(str(a) for a in args)
+    if not content.strip():
+        with _print_lock:
+            _orig_print(content, end=end, file=target_file, flush=flush)
+        return
+
     lines = content.splitlines()
 
     with _print_lock:
-        if not lines:
-            _orig_print(prefix, end=end, file=target_file, flush=flush)
-        else:
-            for i, line in enumerate(lines):
-                line_end = end if i == len(lines) - 1 else "\n"
+        for i, line in enumerate(lines):
+            line_end = end if i == len(lines) - 1 else "\n"
+            if line.strip():
                 _orig_print(f"{prefix} {line}", end=line_end, file=target_file, flush=flush)
+            else:
+                _orig_print(line, end=line_end, file=target_file, flush=flush)
 
 
 def install_timestamped_logging() -> None:

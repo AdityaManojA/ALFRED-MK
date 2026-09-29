@@ -59,6 +59,7 @@ win10toast; sys_platform == "win32"
 pywinauto;  sys_platform == "win32"
 pywin32;    sys_platform == "win32"
 wmi;        sys_platform == "win32"
+winsdk;     sys_platform == "win32"  # SMTC session pause for exclusive playback
 
 # ── Documents, media & hardware readouts ──────────────────────────────────────
 # Every one of these is imported inside a try/except at the point of use, so a

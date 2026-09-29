@@ -35,3 +35,6 @@ class BackendBase:
 
     def set_volume(self, volume: float) -> None:
         raise NotImplementedError
+
+    def seek(self, position_s: float) -> None:
+        raise NotImplementedError

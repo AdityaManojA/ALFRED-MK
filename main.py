@@ -49,7 +49,10 @@ install_timestamped_logging()
 # Qt reads QT_LOGGING_RULES at init time; setting it here ensures it's in
 # place even if the user hasn't set it in their environment.
 import os as _os
-_os.environ.setdefault("QT_LOGGING_RULES", "qt.multimedia.ffmpeg=false")
+_os.environ.setdefault(
+    "QT_LOGGING_RULES",
+    "qt.multimedia.ffmpeg=false;qt.multimedia.ffmpeg.*=false;qt.tls.*=false",
+)
 
 # Crash reporting
 import traceback
@@ -620,14 +623,20 @@ TOOL_DECLARATIONS = [
     {
         "name": "shutdown_jarvis",
         "description": (
-            "Shuts down the assistant completely. "
-            "Call this when the user expresses intent to end the conversation, "
-            "close the assistant, say goodbye, or stop Alfred. "
-            "The user can say this in ANY language."
+            "Shuts down the ALFRED assistant application completely. "
+            "Call this ONLY when the user explicitly gives a direct, unambiguous verbal command to exit, quit, shut down, or close ALFRED (e.g. 'shut down Alfred', 'quit Alfred', 'exit the assistant'). "
+            "NEVER call this on casual farewells, ambient background speech, song lyrics, music playback, or noise. "
+            "Requires confirmation=True."
         ),
         "parameters": {
             "type": "OBJECT",
-            "properties": {},
+            "properties": {
+                "confirmation": {
+                    "type": "BOOLEAN",
+                    "description": "Must be True. Indicates explicit user command to terminate the entire ALFRED desktop application.",
+                }
+            },
+            "required": ["confirmation"],
         }
     },
     {
@@ -785,7 +794,13 @@ class JarvisLive:
         self.ui             = ui
         from core.media import get_media_arbiter
         self.media_arbiter = get_media_arbiter()
+        self.media_arbiter.set_notice_callback(self.speak)
         self.ui.set_media_arbiter(self.media_arbiter)
+        from core.registry import register
+        from core.scheduler import SchedulerEngine
+        self.scheduler = SchedulerEngine(speak=self.speak, notify=self.ui.scheduler_event)
+        register("scheduler_engine", self.scheduler)
+        self.ui.set_scheduler(self.scheduler)
         self._asst_name     = "ALFRED"   # updated each session from config
         self.session              = None
         self._is_local_mode       = False
@@ -955,6 +970,7 @@ class JarvisLive:
         self.ui.on_wake_toggle   = self._ui_wake_toggle   # (enable: bool) -> str
         self.ui.on_wake_manual   = self._ui_wake_manual   # () -> toggle awake/asleep
         self.ui.on_wake_install  = self._ui_wake_install  # () -> (ok, msg)
+        self._tts_self_check()
 
     # â”€â”€ Wake word: state machine â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -1616,20 +1632,60 @@ class JarvisLive:
                 _tlog("ALFRED", "warn", f"Background worker exception: {e}", getattr(self, "_dashboard", None))
                 await asyncio.sleep(0.5)
 
+    def _tts_self_check(self) -> bool:
+        """Startup self-check verifying TTS engine and audio output device availability."""
+        try:
+            import sounddevice as sd
+            from core.tts import get_engine
+            dev = sd.query_devices(kind="output")
+            if not dev:
+                _tlog("TTS", "error", "TTS Self-Check: No default audio output device found.", getattr(self, "_dashboard", None))
+                print("[TTS] [ERROR] No default audio output device detected.")
+                return False
+            engine = get_engine()
+            if not engine:
+                _tlog("TTS", "error", "TTS Self-Check: Failed to initialize TTS engine.", getattr(self, "_dashboard", None))
+                print("[TTS] [ERROR] Failed to initialize default TTS engine.")
+                return False
+            return True
+        except Exception as exc:
+            _tlog("TTS", "error", f"TTS Self-Check Error: {exc}", getattr(self, "_dashboard", None))
+            print(f"[TTS] [ERROR] TTS self-check failed: {exc}")
+            return False
+
     def speak(self, text: str):
-        if not self._loop or not self.session:
+        if self._loop and self.session:
+            asyncio.run_coroutine_threadsafe(
+                self.session.send_client_content(
+                    turns={"role": "user", "parts": [{"text": text}]},
+                    turn_complete=True
+                ),
+                self._loop
+            )
             return
-        asyncio.run_coroutine_threadsafe(
-            self.session.send_client_content(
-                turns={"role": "user", "parts": [{"text": text}]},
-                turn_complete=True
-            ),
-            self._loop
-        )
+        # Local TTS fallback when cloud session is inactive or local
+        self._speak_local(text)
+
+    def _speak_local(self, text: str) -> None:
+        """Play speech through local core.tts engine without silent drop."""
+        def _synth_worker():
+            try:
+                from core.tts import get_engine
+                engine = get_engine()
+                engine.speak(text)
+            except Exception as e:
+                _tlog("TTS", "error", f"Local TTS synthesis error: {e}", getattr(self, "_dashboard", None))
+                print(f"[TTS] Local synthesis failure: {e}")
+
+        threading.Thread(target=_synth_worker, daemon=True, name="LocalTTSSynth").start()
+
+    async def _safe_background_announce(self, text: str) -> None:
+        """Announce background events via active session or local TTS."""
+        self.speak(text)
 
     def speak_error(self, tool_name: str, error: str):
         short = str(error)[:120]
-        self.ui.write_log(f"ERR: {tool_name} â€” {short}")
+        self.ui.write_log(f"ERR: {tool_name} — {short}")
         self.speak(f"Sir, {tool_name} encountered an error. {short}")
 
     def _build_system_instruction(self) -> tuple[str, list]:
@@ -1958,22 +2014,27 @@ class JarvisLive:
                 result = "Conversation history and on-screen chat feed have been wiped clean, sir."
 
             elif name == "shutdown_jarvis":
-                self.ui.write_log("SYS: Shutdown requested.")
-                async def _do_shutdown():
-                    self._screen_monitor.stop(wait=False)
-                    await self._save_session_summary()
-                    if self.session:
-                        try:
-                            await self.session.send_client_content(
-                                turns={"role": "user", "parts": [{"text": "Say a brief natural goodbye to the user."}]},
-                                turn_complete=True,
-                            )
-                        except Exception:
-                            pass
-                    await asyncio.sleep(1.5)
-                    import os as _os
-                    _os._exit(0)
-                asyncio.create_task(_do_shutdown())
+                if not args.get("confirmation"):
+                    self.ui.write_log("SYS: Shutdown ignored (missing explicit confirmation).")
+                    result = "Shutdown command ignored: explicit confirmation=True required."
+                else:
+                    self.ui.write_log("SYS: Shutdown requested.")
+                    async def _do_shutdown():
+                        self._screen_monitor.stop(wait=False)
+                        await self._save_session_summary()
+                        if self.session:
+                            try:
+                                await self.session.send_client_content(
+                                    turns={"role": "user", "parts": [{"text": "Say a brief natural goodbye to the user."}]},
+                                    turn_complete=True,
+                                )
+                            except Exception:
+                                pass
+                        await asyncio.sleep(1.5)
+                        import os as _os
+                        _os._exit(0)
+                    asyncio.create_task(_do_shutdown())
+                    result = "Shutting down ALFRED, sir."
 
             elif self._action_registry.has(name):
                 # file_processor: fall back to the currently-uploaded file when none is given
@@ -2976,6 +3037,16 @@ class JarvisLive:
             if action == "screenshot":
                 from actions.computer_control import computer_control
                 res = await asyncio.to_thread(computer_control, {"action": "screenshot", "screenshot_mode": "both"}, player=self.ui)
+                if self._dashboard:
+                    uploads = sorted(self._dashboard._uploads_dir.glob("*.png"), key=lambda p: p.stat().st_mtime, reverse=True)
+                    if uploads:
+                        latest = uploads[0]
+                        asyncio.create_task(self._dashboard.broadcast({
+                            "type": "file_received",
+                            "name": latest.name,
+                            "size": latest.stat().st_size,
+                            "is_screenshot": True,
+                        }))
                 return {"ok": True, "result": res}
 
             elif action in ("audio_core", "audio_core_toggle", "audio_core_pause", "audio_core_play", "audio_core_volume", "audio_core_next", "audio_core_prev"):
@@ -3013,8 +3084,16 @@ class JarvisLive:
                         sub = "skip_previous"
                     else:
                         sub = "toggle"
-                from actions.spotify_control import control_playback
-                res = await asyncio.to_thread(control_playback, sub, player=self.ui)
+                from actions.spotify_control import get_spotify_client, control_playback
+                client = get_spotify_client()
+                if not client.has_user_authorization():
+                    if hasattr(self, "ui") and self.ui:
+                        self.ui.write_log("SYS: Spotify not connected, sir. Please configure authorization.")
+                    return {"ok": False, "error": "Spotify not connected, sir"}
+                res = await asyncio.to_thread(control_playback, sub)
+                if not res:
+                    err_msg = client._last_playback_error or "Spotify command failed — no active Connect device"
+                    return {"ok": False, "error": err_msg}
                 return {"ok": True, "result": res}
 
             elif action == "briefing":
@@ -3048,15 +3127,26 @@ class JarvisLive:
                 return {"ok": True, "result": "Interrupted"}
 
             elif action == "toggle_mute":
-                self.ui.toggle_mute()
-                return {"ok": True, "muted": self.ui.muted}
+                if hasattr(self.ui, "toggle_mute"):
+                    self.ui.toggle_mute()
+                elif hasattr(self.ui, "muted"):
+                    self.ui.muted = not self.ui.muted
+                return {"ok": True, "muted": getattr(self.ui, "muted", False)}
 
             elif action == "get_deck_state":
-                core_st = self.ui.get_audio_core_status() if hasattr(self.ui, "get_audio_core_status") else {}
+                bg = getattr(self.ui, "_bg_music", None)
+                is_playing = bg.is_playing() if bg else False
+                stem = bg.current_track_stem() if bg else "TRON LEGACY"
+                vol = int(bg.base_volume() * 100) if bg else 10
+                muted = getattr(self.ui, "muted", False)
                 return {
                     "ok": True,
-                    "audio_core": core_st,
-                    "muted": getattr(self.ui, "muted", False)
+                    "audio_core": {
+                        "is_playing": is_playing,
+                        "track_stem": stem,
+                        "volume": vol,
+                    },
+                    "muted": muted,
                 }
 
             else:
@@ -3326,6 +3416,19 @@ class JarvisLive:
 
     async def run(self):
         self._loop = asyncio.get_event_loop()
+        self.scheduler.start()
+        def _proactor_exc_handler(loop, context):
+            exc = context.get("exception")
+            msg = str(context.get("message", ""))
+            if (
+                isinstance(exc, (ConnectionResetError, ConnectionAbortedError, BrokenPipeError, OSError))
+                or "connection_lost" in msg
+                or "10054" in msg
+                or "_call_connection_lost" in msg
+            ):
+                return
+            loop.default_exception_handler(context)
+        self._loop.set_exception_handler(_proactor_exc_handler)
         self._local_msg_queue = asyncio.Queue()
         self._reconnect_event = asyncio.Event()
 
@@ -3598,6 +3701,7 @@ def main():
             _tlog("ALFRED", "halt", "Shutting down...")
         finally:
             alfred._screen_monitor.stop(wait=False)
+            alfred.scheduler.stop()
 
     threading.Thread(target=runner, daemon=True).start()
     ui.root.mainloop()

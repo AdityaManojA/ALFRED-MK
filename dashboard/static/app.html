@@ -2053,6 +2053,9 @@ function speakOnMobile(text) {
     }
 
     // ── AUTO-RECONNECTING WEBSOCKET ENGINE ────────────────────────────────────
+    const RECONNECT_BASE_S = 2.0;
+    const RECONNECT_MAX_S  = 30.0;
+
     const feed  = document.getElementById('feed');
     const pill  = document.getElementById('pill');
     const stTxt = document.getElementById('st');
@@ -2061,8 +2064,9 @@ function speakOnMobile(text) {
 
     let ws = null;
     let _wsReconnectTimer = null;
-    let _wsReconnectDelay = 1000;
+    let _wsReconnectDelay = RECONNECT_BASE_S * 1000;
     let _pingInterval = null;
+    let _initialHistoryLoaded = false;
 
     function initWebSocket() {
       if (ws) {
@@ -2085,7 +2089,7 @@ function speakOnMobile(text) {
       }
 
       ws.onopen = () => {
-        _wsReconnectDelay = 1000;
+        _wsReconnectDelay = RECONNECT_BASE_S * 1000;
         setStatus('active');
         sys('Quantum uplink operational.');
         toast('Link Established');
@@ -2114,7 +2118,14 @@ function speakOnMobile(text) {
           const m = JSON.parse(e.data);
           const mType = (m.type || '').toLowerCase();
           if (mType === 'pong') return;
-          if (mType === 'clear_chat') {
+          if (mType === 'history') {
+            if (Array.isArray(m.items)) {
+              m.items.forEach(item => {
+                append(item.speaker || item.role || 'alfred', item.text || item.content || '');
+              });
+            }
+            _initialHistoryLoaded = true;
+          } else if (mType === 'clear_chat') {
             clearChatFeed();
           } else if (mType === 'log' || mType === 'chat' || mType === 'message') {
             append(m.speaker || m.role || 'alfred', m.text || m.content || '');
@@ -2143,7 +2154,7 @@ function speakOnMobile(text) {
     function scheduleWsReconnect() {
       clearTimeout(_wsReconnectTimer);
       _wsReconnectTimer = setTimeout(() => {
-        _wsReconnectDelay = Math.min(_wsReconnectDelay * 1.5, 8000);
+        _wsReconnectDelay = Math.min(_wsReconnectDelay * 1.5, RECONNECT_MAX_S * 1000);
         initWebSocket();
       }, _wsReconnectDelay);
     }

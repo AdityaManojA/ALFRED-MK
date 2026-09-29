@@ -53,6 +53,8 @@ class PlayableRef:
     title: str                        # display + TTS (never a raw URL)
     thumb_url: str | None = None
     source_query: str | None = None   # original user text, locus stripped
+    audio_uri: str | None = None      # separate audio stream URI if multi-stream
+
 
 
 # ---------------------------------------------------------------------------

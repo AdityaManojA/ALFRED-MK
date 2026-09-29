@@ -29,6 +29,8 @@ class AnswerWindow:
         self._active = False
         self._pending_future: asyncio.Future[str] | None = None
         self._loop: asyncio.AbstractEventLoop | None = None
+        self._sync_event: threading.Event | None = None
+        self._sync_result: list[str] | None = None
 
     @property
     def is_active(self) -> bool:
@@ -62,6 +64,9 @@ class AnswerWindow:
             un_gate = self._un_gate_fn
             speak = self._speak_fn
 
+        from core.registry import register
+        register("active_answer_window", self)
+
         # 1. Open gate in audio stream
         if un_gate is not None:
             try:
@@ -91,6 +96,47 @@ class AnswerWindow:
 
         return (answer or "").strip()
 
+    def request_answer_sync(
+        self,
+        prompt_speech: str = DEFAULT_PROMPT,
+        timeout_s: float = ANSWER_WINDOW_S,
+    ) -> str:
+        """Synchronously speak prompt and wait for answer via threading.Event."""
+        event = threading.Event()
+        result_box: list[str] = [""]
+
+        with self._lock:
+            self._active = True
+            self._sync_event = event
+            self._sync_result = result_box
+            un_gate = self._un_gate_fn
+            speak = self._speak_fn
+
+        from core.registry import register
+        register("active_answer_window", self)
+
+        # 1. Open gate in audio stream
+        if un_gate is not None:
+            try:
+                un_gate(True)
+            except Exception as exc:
+                _LOGGER.warning("Could not un-gate mic for answer window: %s", exc)
+
+        # 2. Speak the prompt
+        if speak is not None and prompt_speech:
+            try:
+                speak(prompt_speech)
+            except Exception as exc:
+                _LOGGER.warning("Could not speak answer window prompt: %s", exc)
+
+        # 3. Wait on event
+        answered = event.wait(timeout=max(1.0, timeout_s))
+        if not answered:
+            _LOGGER.debug("Answer window sync timed out after %.1fs", timeout_s)
+
+        self._close_window()
+        return result_box[0].strip()
+
     def submit_answer(self, text: str) -> bool:
         """Submit captured speech/text into the waiting window.
 
@@ -101,8 +147,14 @@ class AnswerWindow:
             return False
 
         with self._lock:
-            if not self._active or self._pending_future is None:
+            if not self._active:
                 return False
+
+            if self._sync_event is not None and self._sync_result is not None:
+                self._sync_result[0] = cleaned
+                self._sync_event.set()
+                return True
+
             fut = self._pending_future
             loop = self._loop
 
@@ -123,6 +175,12 @@ class AnswerWindow:
             un_gate = self._un_gate_fn
             fut = self._pending_future
             self._pending_future = None
+            sync_evt = self._sync_event
+            self._sync_event = None
+            self._sync_result = None
+
+        from core.registry import unregister
+        unregister("active_answer_window")
 
         if un_gate is not None:
             try:
@@ -132,3 +190,5 @@ class AnswerWindow:
 
         if fut is not None and not fut.done():
             fut.cancel()
+        if sync_evt is not None and not sync_evt.is_set():
+            sync_evt.set()

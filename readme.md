@@ -1,4 +1,4 @@
-# 🦇 ALFRED — MARK-VI (Wayne Protocol Edition)
+# 🦇 ALFRED — MARK-VII (Wayne Protocol Edition)
 ### 🎩 Autonomous Multimodal AI Desktop Assistant & Tactical Terminal
 **Architect & Lead Creator:** **ADITYA MANOJ**
 
@@ -9,10 +9,10 @@
 [![AES-256 Remote](https://img.shields.io/badge/Mobile-Quantum%20Dashboard%20(iOS%2FAndroid)-00f0ff.svg)](https://github.com/AdityaManojA/ALFRED-MK-V)
 [![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
 
-> **ALFRED MARK-VI** is an autonomous, real-time voice, vision, and system-control executive assistant built for complete digital sovereignty and tactical computing. Native bidirectional audio streaming, real-time visual grounding, full desktop automation, high-performance long-term memory, and encrypted mobile remote telemetry — engineered as one of the **most function-dense, production-hardened tactical AI assistants** in the open ecosystem.
+> **ALFRED MARK-VII** is an autonomous, real-time voice, vision, and system-control executive assistant built for complete digital sovereignty and tactical computing. Native bidirectional audio streaming, real-time visual grounding, full desktop automation, high-performance long-term memory, and encrypted mobile remote telemetry — engineered as one of the **most function-dense, production-hardened tactical AI assistants** in the open ecosystem.
 
 <p align="center">
-  <img src="Screenies/Default_theme.png" alt="ALFRED MARK-VI Tactical HUD Interface" width="92%">
+  <img src="Screenies/Default_theme.png" alt="ALFRED MARK-VII Tactical HUD Interface" width="92%">
 </p>
 
 ---
@@ -20,7 +20,7 @@
 ## 📑 Table of Contents
 
 1. [🏆 Why ALFRED Outclasses Every Other "Jarvis"](#-1-why-alfred-outclasses-every-other-jarvis)
-2. [🆕 What's New in Mark VI](#-2-whats-new-in-mark-vi)
+2. [🆕 What's New in Mark VII](#-2-whats-new-in-mark-vii)
 3. [🌐 100% Local & Air-Gapped Operation](#-3-100-local--air-gapped-operation)
 4. [🎭 Example Tactical Commands](#-4-example-tactical-commands--wayne-protocol-in-action)
 5. [🛡️ Security, Privacy & Defensive Architecture](#-5-security-privacy--defensive-architecture)
@@ -28,29 +28,30 @@
 7. [🎧 Real-Time Multimodal Intelligence](#-7-real-time-multimodal-intelligence--dual-audio-engine)
 8. [🎵 Tactical Audio Matrix & Background Score](#-8-tactical-audio-matrix--background-score)
 9. [🎶 Spotify AI Agent](#-9-spotify-ai-agent--dual-tier-architecture)
-10. [📱 Quantum Mobile Remote & Dashboard](#-10-quantum-mobile-remote--iphone-16-dashboard)
-11. [🖥️ Full Desktop Control & OS Automation](#-11-full-desktop-control--os-automation)
-12. [🧠 Memory & Briefing Customizer](#-12-memory--briefing-customizer)
-13. [🎨 Insignia & Chassis Hot-Swapper](#-13-insignia--chassis-hot-swapper)
-14. [⚡ Protocol Engine & Macro Playbooks](#-14-protocol-engine--macro-playbooks)
-15. [👁️ Local Hybrid Visual Grounding](#-15-local-hybrid-visual-grounding)
-16. [🔊 Audio Ducking & Background Concurrency](#-16-audio-ducking--background-concurrency)
-17. [🚨 Process Watchdog & Anomaly Detection](#-17-process-watchdog--anomaly-detection)
-18. [🏗️ System Architecture](#-18-system-architecture--file-structure)
-19. [🚀 Quick Start & Installation](#-19-quick-start--installation)
-20. [⚙️ Configuration Reference](#-20-configuration-reference)
-21. [🕸️ Knowledge Graph](#-21-knowledge-graph--graphify)
-22. [👤 Author & Licensing](#-22-author--licensing)
+10. [🎬 Visual HUD v2: Embedded Multimedia & Tactical Layering](#-10-visual-hud-v2-embedded-multimedia--tactical-layering)
+11. [📱 Quantum Mobile Remote & Dashboard](#-11-quantum-mobile-remote--iphone-16-dashboard)
+12. [🖥️ Full Desktop Control & OS Automation](#-12-full-desktop-control--os-automation)
+13. [🧠 Memory & Briefing Customizer](#-13-memory--briefing-customizer)
+14. [🎨 Insignia & Chassis Hot-Swapper](#-14-insignia--chassis-hot-swapper)
+15. [⚡ Protocol Engine & Macro Playbooks](#-15-protocol-engine--macro-playbooks)
+16. [👁️ Local Hybrid Visual Grounding](#-16-local-hybrid-visual-grounding)
+17. [🔊 Audio Ducking & Background Concurrency](#-17-audio-ducking--background-concurrency)
+18. [🚨 Process Watchdog & Anomaly Detection](#-18-process-watchdog--anomaly-detection)
+19. [🏗️ System Architecture](#-19-system-architecture--file-structure)
+20. [🚀 Quick Start & Installation](#-20-quick-start--installation)
+21. [⚙️ Configuration Reference](#-21-configuration-reference)
+22. [🕸️ Knowledge Graph](#-22-knowledge-graph--graphify)
+23. [👤 Author & Licensing](#-23-author--licensing)
 
 ---
 
 ## 🏆 1. Why ALFRED Outclasses Every Other "Jarvis"
 
-Most projects branded as "Jarvis clones" ship with a wake word, a chat window, and a handful of shell scripts. **ALFRED MARK-VI is fundamentally different** — it is a full executive control plane for the operating system, engineered around latency, reliability, structural privacy, and the **sheer density of real, production-hardened functions** it dispatches to your machine.
+Most projects branded as "Jarvis clones" ship with a wake word, a chat window, and a handful of shell scripts. **ALFRED MARK-VII is fundamentally different** — it is a full executive control plane for the operating system, engineered around latency, reliability, structural privacy, and the **sheer density of real, production-hardened functions** it dispatches to your machine.
 
 ### 🎯 What "Best-in-Class Optimisation" Actually Means Here
 
-| Pillar | ALFRED MARK-VI | Typical "Jarvis Clone" |
+| Pillar | ALFRED MARK-VII | Typical "Jarvis Clone" |
 |---|---|---|
 | **Action Surface** | 30+ self-describing, auto-discovered tools (OS, files, vision, music, protocols, sentry, network, windows, clipboard, news, translate, process control, and beyond) | 5–15 brittle, hardcoded scripts |
 | **Dual Cognitive Backend** | Gemini Live **or** fully local Ollama / LM Studio / vLLM / OpenRouter — same codebase, single config flip | Cloud-only or local-only |
@@ -58,7 +59,7 @@ Most projects branded as "Jarvis clones" ship with a wake word, a chat window, a
 | **Visual Grounding** | Local RapidOCR + ONNX first (~75–150 ms), Gemini fallback **only** when confidence is low | Every click = full cloud screenshot |
 | **Focus & Sentry** | Dual-mode MONITOR + FOCUS engine, settle rule, deferred lock, floating countdown card, mini-HUD pills, **numeric-only** privacy ledger | Toast notifications, if any |
 | **HUD Performance** | Cached CRT layers, batched globe rendering, throttled GC, cached WMI/NVML handles, UI work off Qt timer thread | Frame drops under load |
-| **Security Model** | Path guard, Heavenly Restriction, C: drive quarantine, cryptographic confirm gates, universal undo stack, process shields | Hope + system prompt |
+| **Security Model** | Path guard, Heavenly Restriction, C: drive quarantine, cryptographic confirm gates, universal undo stack, process shields, confirmed shutdown | Hope + system prompt |
 | **Mobile Remote** | AES-encrypted local dashboard, QR auto-login, dual-destination screenshots, WebAudio streaming | ngrok demo page |
 | **Persona** | Alfred Pennyworth — dignified, dry British wit, in-character error voice, no stack traces | Generic chatbot voice |
 | **Music Control** | Dual-tier: Spotify Web API + native OS fallback, debounced anti-loop guards, acoustic feedback elimination | Basic media key spam |
@@ -72,16 +73,26 @@ Film Jarvis is narrative UI — a beautiful HUD without an OS underneath. **ALFR
 These optimise for safe, shallow, cloud-mediated skills. **ALFRED optimises for power-user sovereignty**: local models, filesystem law, YAML compound protocols, watchdog throttling, and a tactical PyQt6 chassis you can theme and hot-swap insignia on at runtime.
 
 ### 🧪 Compared to Other Open "Agent" Repos
-Many maximise model hype and under-ship the glue. MARK-VI invests in the glue that **fails in production for everyone else**: debounce, explicit OS media commands, encoding resilience, reconnect classifiers, background workers, cache TTLs, hybrid grounding, and structural privacy for focus telemetry.
+Many maximise model hype and under-ship the glue. MARK-VII invests in the glue that **fails in production for everyone else**: debounce, explicit OS media commands, encoding resilience, reconnect classifiers, background workers, cache TTLs, hybrid grounding, and structural privacy for focus telemetry.
 
-> **The Verdict:** ALFRED MARK-VI is not "another Jarvis skin." It is one of the most **function-dense, optimisation-conscious, safety-instrumented** open tactical assistants ever released in the Wayne-protocol class — built to *run the desk*, not merely answer questions.
+> **The Verdict:** ALFRED MARK-VII is not "another Jarvis skin." It is one of the most **function-dense, optimisation-conscious, safety-instrumented** open tactical assistants ever released in the Wayne-protocol class — built to *run the desk*, not merely answer questions.
 
 ---
 
-## 🆕 2. What's New in Mark VI
+## 🆕 2. What's New in Mark VII
+
+### 🎬 Visual HUD v2: Embedded Multimedia & Tactical Layering
+* **Synchronized Dual-Player Pipeline**: Dual `QMediaPlayer` audio/video synchronization for web streams, preserving native audio tracks unmuted with persistent user volume retention.
+* **Win32 HWND Airspace Immunity**: Frameless tool overlays (`make_frameless_overlay`, `Qt.WindowType.Tool`) positioned in global screen space to eliminate Win32 native video viewport occlusion.
+* **Zero-Allocation Scrubber & Controls**: Custom-painted timeline (`VideoTimeline`) with click-to-seek, drag-to-scrub with live floating timestamp, and commit-on-release to prevent FFmpeg seek thrashing.
+* **Natural Language Voice Time Parser**: Full conversational time parsing (`core/hud_video/mediatime.py`) supporting colons (`"1:10"`), spoken words (`"one minute twenty seconds"`), symbolic landmarks (`"the beginning"`, `"halfway"`), and relative skips (`"forward 30 seconds"`, `"back 10s"`).
+* **Hardware AV1 Suppression**: Avoids Windows D3D11 hardware acceleration failures by enforcing VP9 video (`bestvideo[vcodec^=vp9]`) and Opus audio (`bestaudio[acodec^=opus]`), completely eliminating Direct3D11 crash cascades.
+
+### 🛡️ Hardened Safety Interlocks & Anti-Hallucination Guard
+* **Confirmed Application Shutdown**: Hardened `shutdown_jarvis` schema with required `confirmation=True` property and anti-hallucination descriptions, permanently preventing accidental exits triggered by speaker music playback, song lyrics, or ambient voice spikes.
+* **Acoustic Feedback Elimination**: Strict acoustic isolation and debounced state checks preventing live Spotify or media output from self-triggering duplicate tool calls.
 
 ### 🛡️ Sentry Mode v2: Dual-Mode Surveillance & Distraction Defense
-
 * **Dual-Mode Architecture**: Replaced single-terminal screen checks with an extensible vigilance architecture coordinated by `core/sentry/mode_manager.py`.
 * **MONITOR Mode (Passive Surveillance)**: Generalized across 5 targets (`terminal`, `build`, `download`, `test`, `screen`) to observe long-running external work without polling loops. Features an 8-second conversational `AnswerWindow` for seamless STT un-gating upon task completion or anomaly alerts.
 * **FOCUS Mode (Proactive Distraction Defense)**: Independent 1 Hz session loop (`core/sentry/focus/engine.py`) locking onto specific applications or browser tabs. Features an 800 ms grace window, 3 progressive escalation tiers, and customizable cadences (`normal`, `gentle`, `drill_sergeant`).
@@ -136,6 +147,14 @@ Introduced dedicated `actions/audio_core.py` action tool and UI methods (`pause_
 * **Descriptive Long-Hover Tooltip Engine**: Introduced a centralized, single-timer hover help manager (`TacticalHoverHelpManager`) with `HOVER_HELP_DELAY_MS = 600`. Provides plain-language explanations for all interactive settings, labels, and buttons across Reconfigure Batcomputer, Tactical Controls, Directive Archives, and the main HUD, dismissing cleanly on pointer leave, modal close, and supporting keyboard focus.
 * **Deduplicated Authentic Theme Selector**: Streamlined theme selection in Reconfigure Batcomputer into a single chromatic picker under *AUTHENTIC CRT THEMES // CHROMATICS* with clean, emoji-free display names (`DEFAULT BATCAVE`, `BANE MODE`, `BATMAN BEYOND`), preserving full live previews and persistence.
 * **Zero-Friction Automatic Plugin Activation**: Retired manual plugin toggle clutter from the settings UI. All installed, valid, and approved plugins activate automatically at startup with safe legacy configuration migration and robust failure isolation.
+
+### 🎬 Visual HUD v2: Embedded Multimedia & Tactical Layering
+* **Globe-to-Video Transformation**: Seamlessly swaps the central avatar canvas for an embedded hardware-accelerated video surface without window tearing or modal popups. Uses Qt Multimedia/FFmpeg with VP9+Opus streams (explicitly suppressing AV1 to eliminate hardware decoder crashes on Windows).
+* **Win32 Airspace Confinement**: Controls strip placed strictly below the video viewport in a layout container, completely avoiding native HWND occlusion conflicts where video draws over lightweight Qt children.
+* **Zero-Allocation Scrubber & Controls**: Custom-painted timeline (`VideoTimeline`) with click-to-seek, drag-to-scrub with live floating timestamp, and commit-on-release to prevent FFmpeg seek thrashing. Prebuilt pens/brushes/fonts ensure 0 heap allocations per paint event.
+* **Natural Language Voice Time Parser**: Full conversational time parsing (`core/hud_video/mediatime.py`) supporting colons (`"1:10"`), spoken words (`"one minute twenty seconds"`), symbolic landmarks (`"the beginning"`, `"halfway"`), and relative skips (`"forward 30 seconds"`, `"back 10s"`).
+* **Deterministic Precedence Routing**: Explicit "pause focus" always bypasses HUD; bare transport commands ("pause", "resume", "replay") intercept only while Visual HUD is visible; time queries ("how much is left", "where are we") return terse responses ("1:58 left, sir."); initial start times supported on new videos ("play Dune trailer at 1:10 on the hud").
+* **Structural Privacy & Audio Ducking**: Signed stream URLs are never logged or saved to state (only whitelisted enums, bools, and timestamps). Automatic 30% volume ducking while ALFRED speaks.
 
 ---
 
@@ -416,6 +435,22 @@ ALFRED treats human privacy as an **absolute structural invariant** rather than 
 |---|---|---|
 | *"Update app icon to [insignia]"* | Hot-swaps window icon, taskbar, tray, shortcuts | Real-time |
 
+### 🎬 6.10 Visual HUD v2 Multimedia Commands
+
+| Voice Command | Action | Parameters / Context |
+|---|---|---|
+| *"Play [query] in the app / on the hud"* | Resolves and streams video inside HUD | `action="play"`, `target="..."`, `locus_confirmed=True` |
+| *"Play [query] at [time] on the hud"* | Starts video directly at timestamp | `target="..."`, `start_s=70` |
+| *"Pause" / "Freeze"* | Pauses playback (HUD visible) | `action="pause"` |
+| *"Resume" / "Unpause"* | Resumes playback | `action="resume"` |
+| *"Replay" / "Play again"* | Restarts from beginning | `action="replay"` |
+| *"Play the current video at 2:35"* | Seeks current video to absolute position | `action="seek"`, `seek_s=155.0` |
+| *"Forward 30 seconds" / "Skip 30s"* | Relative jump forward | `action="seek"`, `seek_s=30.0`, `is_relative=True` |
+| *"Back 10 seconds" / "Rewind 10s"* | Relative jump backward | `action="seek"`, `seek_s=-10.0`, `is_relative=True` |
+| *"How much is left?" / "Where are we?"* | Speaks remaining time | `action="query_time"` → "1:58 left, sir." |
+| *"Pause focus"* | Bypasses HUD to pause Sentry Focus | `action="pause_focus"` (HUD continues) |
+| *"Close the Visual HUD" / "Back to the globe"* | Restores HUD avatar globe | `action="stop"` |
+
 ---
 
 ## 🎧 7. Real-Time Multimodal Intelligence & Dual Audio Engine
@@ -507,7 +542,23 @@ ALFRED launches a local callback server, opens Spotify authorization, captures t
 
 ---
 
-## 📱 10. Quantum Mobile Remote & iPhone 16 Dashboard
+## 🎬 10. Visual HUD v2: Embedded Multimedia & Tactical Layering
+
+ALFRED's central HUD canvas seamlessly transforms into a hardware-accelerated multimedia surface on demand, enabling native in-app video streaming without opening third-party browser tabs or floating window clutter:
+
+### 🧩 Core Architecture
+* **Stack Integration**: Embedded inside `_hud_cam_stack` (Slot 2) within `ui.py`. Swapping between the interactive vector globe and active video streams happens instantly with zero frame tearing.
+* **Win32 Native Airspace Immunity**: On Windows, native `QVideoWidget` HWND viewports clip and paint over standard child overlays. Visual HUD v2 solves this by placing the tactical control strip (`HudVideoControlsStrip`) strictly below the video viewport in layout hierarchy, while modal dialogs and toasts are elevated as frameless tool-windows (`core/hud_video/layering.py`) with strict Z-order invariants:
+  `Z_VISUAL_HUD < Z_HUD_BUTTONS < Z_DROPDOWN_CARD_TOAST < Z_SETTINGS_MODAL`.
+* **Hardware AV1 Suppression**: Avoids Windows D3D11 hardware acceleration failures by enforcing VP9 video (`bestvideo[vcodec^=vp9]`) and Opus audio (`bestaudio[acodec^=opus]`), completely eliminating Direct3D11 crash cascades.
+* **Zero-Allocation Scrubber**: Custom-painted `VideoTimeline` scrubber prebuilds all `QPen`, `QBrush`, and `QFont` objects in `__init__`, completely eliminating memory allocations in `paintEvent` loops. Throttled state emissions (`STATE_EMIT_HZ = 4`) keep idle CPU at ~0%.
+* **Conversational Natural Language Time Parser**: `core/hud_video/mediatime.py` parses spoken units (*"two minutes thirty"*), symbolic landmarks (*"the beginning"*, *"the end"*), and relative skips (*"forward 30 seconds"*, *"back ten seconds"*).
+* **Structural Privacy Protection**: Signed CDN stream tokens and raw media URLs are strictly ephemeral — never written to disk, logged to terminal, or exposed to the model state ledger.
+* **Intelligent Audio Ducking**: Video audio automatically ducks to `30%` whenever ALFRED speaks or the user activates push-to-talk, smoothly restoring upon speech completion.
+
+---
+
+## 📱 11. Quantum Mobile Remote & iPhone 16 Dashboard
 
 <p align="center">
   <img src="Screenies/Remote_Uplink.png" alt="Quantum Mobile Remote Uplink & Pairing Modal" width="75%">
@@ -629,7 +680,7 @@ ALFRED incorporates an OS security & performance watchdog daemon actively monito
 ## 🏗️ 18. System Architecture & File Structure
 
 ```
-ALFRED-MK-VI/
+ALFRED-MK-VII/
 ├── main.py                     # Main loop, Live WebSocket / Local LLM router, audio, tool dispatcher
 ├── ui.py                       # PyQt6 HUD, audio visualizer, drawer settings
 ├── ui_overlay.py               # Minimalist floating HUD widget
@@ -806,12 +857,12 @@ python main.py
 </p>
 
 This codebase is indexed with a persistent **GraphRAG Knowledge Graph** in `graphify-out/`:
-* **📊 3,411 nodes** & **7,027 relationships** across **188 semantic communities**.
+* **📊 5,436 nodes** & **11,125 relationships** across **283 semantic communities**.
 * **🌐 Interactive Visualization**: [`graphify-out/graph.html`](file:///d:/Projects/Alfred-Mark-V/graphify-out/graph.html)
 * **📄 Architectural Report**: [`graphify-out/GRAPH_REPORT.md`](file:///d:/Projects/Alfred-Mark-V/graphify-out/GRAPH_REPORT.md)
 * **⚡ Dynamic Graph Management**: Real-time mutation, entity/relationship addition, exponential decay, 2-hop querying via `memory/graph_manager.py`.
 
-### 🎁 Mark VI New Actions (Auto-Discovered)
+### 🎁 Mark VII New Actions (Auto-Discovered)
 
 | Action | Purpose |
 |---|---|
@@ -847,12 +898,13 @@ The avatar slot transforms into a video player on demand — no browser, no floa
 | *"pause"* | Pauses video |
 | *"resume"* | Resumes video |
 | *"stop video"* / *"close player"* / *"bring back the avatar"* | Stops and restores the globe |
-| *"mute"* / *"unmute"* | Audio gate (starts muted by default) |
+| *"mute"* / *"unmute"* | Audio gate (starts unmuted with volume retention) |
 | *"louder"* / *"quieter"* | Volume ±10% |
 
 **Architecture:**
 - `HudVideoSurface` lives in slot 2 of the existing `_hud_cam_stack` (`QStackedWidget`) — zero impact on camera and globe slots
 - State machine: `IDLE → RESOLVING → LOADING → PLAYING → PAUSED → ERROR → IDLE`
+- Synchronized dual-player audio pipeline + Win32 airspace frameless tool overlays
 - Speech-before-pixels: TTS ack fires before resolve starts
 - Pause on minimise, resume on restore
 - Auto-stops after 5 min background (paused)
@@ -879,7 +931,7 @@ yt-dlp format selector explicitly excludes AV1 (`av01`) and prefers VP9+Opus, fa
 ## 👤 22. Author & Licensing
 
 * **🎩 Lead Architect & Creator:** **ADITYA MANOJ**
-* **🦇 Project:** ALFRED-MK-VI (Wayne Protocol Edition)
+* **🦇 Project:** ALFRED-MK-VII (Wayne Protocol Edition)
 * **📜 License:** [Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)](https://creativecommons.org/licenses/by-nc/4.0/)
 
 <p align="center">

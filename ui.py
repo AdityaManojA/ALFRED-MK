@@ -32,6 +32,7 @@ from core.sentry.mode_manager import get_sentry_mode_manager, SentrySnapshot
 from core.sentry.focus.card import FloatingFocusCard
 from core.logger import install_timestamped_logging
 install_timestamped_logging()
+from core.gui_thread import assert_gui_thread, is_gui_thread
 from PyQt6.QtWidgets import (
     QMenu,
     QApplication, QComboBox, QFileDialog, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit,
@@ -196,6 +197,16 @@ class TronScoreBackgroundPlayer(QObject):
     playlist_updated       = pyqtSignal(list)              # list of track paths
     spotify_state_received = pyqtSignal(object)            # worker-thread playback snapshot
 
+    # Thread marshaling signals for safe execution on Qt GUI thread
+    _req_set_ducked        = pyqtSignal(bool)
+    _req_play              = pyqtSignal()
+    _req_pause             = pyqtSignal()
+    _req_pause_core        = pyqtSignal()
+    _req_resume_core       = pyqtSignal()
+    _req_set_base_volume   = pyqtSignal(float)
+    _req_load_track        = pyqtSignal(str, bool)
+    _req_toggle_play       = pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self._normal_vol         = self.NORMAL_VOL
@@ -219,6 +230,15 @@ class TronScoreBackgroundPlayer(QObject):
         self._playlist: list[Path]        = []
         self._spotify_sync_busy = False
         self.spotify_state_received.connect(self._apply_spotify_state)
+        self._req_set_ducked.connect(self._do_set_ducked)
+        self._req_play.connect(self._do_play)
+        self._req_pause.connect(self._do_pause)
+        self._req_pause_core.connect(self._do_pause_core)
+        self._req_resume_core.connect(self._do_resume_core)
+        self._req_set_base_volume.connect(self._do_set_base_volume)
+        self._req_load_track.connect(lambda p, a: self._do_load_track(p, a))
+        self._req_toggle_play.connect(self._do_toggle_play)
+
         self._spotify_sync_timer = QTimer(self)
         self._spotify_sync_timer.setInterval(10000)
         self._spotify_sync_timer.timeout.connect(self._queue_spotify_sync)
@@ -300,6 +320,13 @@ class TronScoreBackgroundPlayer(QObject):
 
     def set_base_volume(self, vol: float):
         """Set base normal volume (0.0 to 1.0). Speech ducking scales to 50% of base."""
+        if not is_gui_thread():
+            self._req_set_base_volume.emit(vol)
+            return
+        self._do_set_base_volume(vol)
+
+    def _do_set_base_volume(self, vol: float):
+        assert_gui_thread("TronScoreBackgroundPlayer.set_base_volume")
         vol = max(0.0, min(1.0, vol))
         self._normal_vol = vol
         self._ducked_vol = vol * self.TTS_DUCK_LEVEL
@@ -314,6 +341,13 @@ class TronScoreBackgroundPlayer(QObject):
         self._save_playlist_config()
 
     def load_track(self, path: Path | str, auto_play: bool = True) -> bool:
+        if not is_gui_thread():
+            self._req_load_track.emit(str(path), auto_play)
+            return True
+        return self._do_load_track(path, auto_play)
+
+    def _do_load_track(self, path: Path | str, auto_play: bool = True) -> bool:
+        assert_gui_thread("TronScoreBackgroundPlayer.load_track")
         path = Path(path)
         if not path.exists():
             print(f"[Audio] Track not found: {path}")
@@ -361,6 +395,13 @@ class TronScoreBackgroundPlayer(QObject):
 
     def set_ducked(self, ducked: bool):
         """Duck to the media-arbiter level while TTS is active."""
+        if not is_gui_thread():
+            self._req_set_ducked.emit(ducked)
+            return
+        self._do_set_ducked(ducked)
+
+    def _do_set_ducked(self, ducked: bool):
+        assert_gui_thread("TronScoreBackgroundPlayer.set_ducked")
         self._is_speaking_ducked = ducked
         if self._is_paused:
             self._target_vol = 0.0
@@ -503,20 +544,34 @@ class TronScoreBackgroundPlayer(QObject):
             self.load_track(self._playlist[0], auto_play=True)
 
     def toggle_play(self):
+        if not is_gui_thread():
+            self._req_toggle_play.emit()
+            return
+        self._do_toggle_play()
+
+    def _do_toggle_play(self):
+        assert_gui_thread("TronScoreBackgroundPlayer.toggle_play")
         if self._source_mode == "spotify":
             if self._is_paused:
-                self.play()
+                self._do_play()
             else:
-                self.pause()
+                self._do_pause()
             return
         if not self._player:
             return
         if self._is_paused:
-            self.play()
+            self._do_play()
         else:
-            self.pause()
+            self._do_pause()
 
     def play(self):
+        if not is_gui_thread():
+            self._req_play.emit()
+            return
+        self._do_play()
+
+    def _do_play(self):
+        assert_gui_thread("TronScoreBackgroundPlayer.play")
         if self._source_mode == "spotify":
             try:
                 from actions.spotify_control import control_playback
@@ -537,6 +592,13 @@ class TronScoreBackgroundPlayer(QObject):
         self.playback_state_changed.emit(True)
 
     def pause(self):
+        if not is_gui_thread():
+            self._req_pause.emit()
+            return
+        self._do_pause()
+
+    def _do_pause(self):
+        assert_gui_thread("TronScoreBackgroundPlayer.pause")
         if self._source_mode == "spotify":
             try:
                 from actions.spotify_control import control_playback
@@ -558,18 +620,34 @@ class TronScoreBackgroundPlayer(QObject):
 
     def pause_core(self):
         """Specifically pause the local TRON audio core player regardless of mode."""
+        if not is_gui_thread():
+            self._req_pause_core.emit()
+            return
+        self._do_pause_core()
+
+    def _do_pause_core(self):
+        assert_gui_thread("TronScoreBackgroundPlayer.pause_core")
         self._is_paused = True
         self._target_vol = 0.0
+        if self._fade_timer and self._fade_timer.isActive():
+            self._fade_timer.stop()
         if self._player:
             self._player.pause()
         self.playback_state_changed.emit(False)
 
     def resume_core(self):
         """Specifically resume/play the local TRON audio core player."""
+        if not is_gui_thread():
+            self._req_resume_core.emit()
+            return
+        self._do_resume_core()
+
+    def _do_resume_core(self):
+        assert_gui_thread("TronScoreBackgroundPlayer.resume_core")
         self._source_mode = "tron"
         self._is_paused = False
         if not self._player and (self._default_tron_track or self._playlist):
-            self.load_track(self._default_tron_track or self._playlist[0], auto_play=True)
+            self._do_load_track(self._default_tron_track or self._playlist[0], auto_play=True)
         elif self._player:
             self._player.play()
             self._target_vol = self._ducked_vol if self._is_speaking_ducked else self._normal_vol
@@ -1240,11 +1318,17 @@ class _SysMetrics:
 _metrics = _SysMetrics()
 
 class HudCanvas(QWidget):
+    _req_sentry_snapshot = pyqtSignal(object)
+    _req_start_animations = pyqtSignal()
+
     def __init__(self, face_path: str, assistant_name: str = "J.A.R.V.I.S", parent=None):
         super().__init__(parent)
         self.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent)
         self.setMinimumSize(300, 300)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+
+        self._req_sentry_snapshot.connect(self._apply_sentry_snapshot)
+        self._req_start_animations.connect(self._do_start_animations)
 
         self.muted    = False
         self.speaking = False
@@ -1334,6 +1418,13 @@ class HudCanvas(QWidget):
 
     def _start_animations(self) -> None:
         """Guarantee the HUD animation step timer is started unconditionally."""
+        if not is_gui_thread():
+            self._req_start_animations.emit()
+            return
+        self._do_start_animations()
+
+    def _do_start_animations(self) -> None:
+        assert_gui_thread("HudCanvas._do_start_animations")
         if not hasattr(self, "_tmr") or self._tmr is None:
             self._tmr = QTimer(self)
             self._tmr.timeout.connect(self._step)
@@ -1342,11 +1433,18 @@ class HudCanvas(QWidget):
 
     def set_sentry_snapshot(self, snapshot: SentrySnapshot | None) -> None:
         """Update Sentry Mode (FOCUS / MONITOR) state on the HUD canvas."""
+        if not is_gui_thread():
+            self._req_sentry_snapshot.emit(snapshot)
+            return
+        self._apply_sentry_snapshot(snapshot)
+
+    def _apply_sentry_snapshot(self, snapshot: SentrySnapshot | None) -> None:
+        assert_gui_thread("HudCanvas.set_sentry_snapshot")
         self._sentry_snapshot = snapshot
         if self._on_screen():
             self.update()
         if self._tmr is None or not self._tmr.isActive():
-            self._start_animations()
+            self._do_start_animations()
 
     def glance(self, dx: float, dy: float, hold: float = 1.1) -> None:
         """No-op: gaze tracking removed (face renderer removed)."""
@@ -1444,8 +1542,6 @@ class HudCanvas(QWidget):
 
     def _step(self):
         self._tick += 1
-        if self._tick % 60 == 0:
-            print(f"[HUD] frame {self._tick}")
         now = time.time()
 
         # ── Live audio reactivity ────────────────────────────────────────────
@@ -7916,6 +8012,7 @@ class MainWindow(QMainWindow):
     _audio_status_sig = pyqtSignal(str)
     _hud_video_show_sig = pyqtSignal()   # thread-safe: show video surface
     _hud_video_hide_sig = pyqtSignal()   # thread-safe: restore avatar
+    _scheduler_event_sig = pyqtSignal(object)  # task engine event from scheduler thread
 
     def __init__(self, face_path: str):
         super().__init__()
@@ -8009,6 +8106,7 @@ class MainWindow(QMainWindow):
         # Background score player (10% default, ducks to 5% when Alfred speaks)
         self._bg_music = TronScoreBackgroundPlayer(self)
         self._image_deck = None  # Lazily instantiated on first request via get_image_viewer()
+        self._task_board = None
 
         self._left_panel = self._build_left_panel()
         body.addWidget(self._left_panel, stretch=0)
@@ -8133,6 +8231,7 @@ class MainWindow(QMainWindow):
         self._audio_status_sig.connect(self._apply_audio_status)
         self._hud_video_show_sig.connect(self._on_hud_video_show)
         self._hud_video_hide_sig.connect(self._on_hud_video_hide)
+        self._scheduler_event_sig.connect(self._on_scheduler_event)
         self._cam_stop = threading.Event()
 
         # Camera preview overlay (child of central widget, positioned in resizeEvent)
@@ -8667,6 +8766,31 @@ class MainWindow(QMainWindow):
         except Exception as e:
             self._log.append_log(f"ERR: Shortcut failed — {e}")
 
+    def pause_audio_core(self):
+        """Pause background score player."""
+        if hasattr(self, "_bg_music") and self._bg_music:
+            self._bg_music.pause_core()
+
+    def resume_audio_core(self):
+        """Resume background score player."""
+        if hasattr(self, "_bg_music") and self._bg_music:
+            self._bg_music.resume_core()
+
+    def set_audio_core_volume(self, vol: int):
+        """Set volume percentage 0-100 on background score."""
+        if hasattr(self, "_bg_music") and self._bg_music:
+            self._bg_music.set_base_volume(vol / 100.0)
+
+    def get_audio_core_status(self) -> dict:
+        """Query current state of background audio player."""
+        if not hasattr(self, "_bg_music") or not self._bg_music:
+            return {"is_playing": False, "volume": 0, "track": ""}
+        return {
+            "is_playing": self._bg_music.is_playing(),
+            "volume": int(self._bg_music.base_volume() * 100),
+            "track": self._bg_music.current_track_name(),
+        }
+
     def _toggle_fullscreen(self):
         if self.isFullScreen():
             self.showNormal()
@@ -8720,6 +8844,11 @@ class MainWindow(QMainWindow):
         if hasattr(self, '_clipboard_panel') and self._clipboard_panel.isVisible():
             self._position_clipboard_panel()
         # Quick drawer — reposition if open
+        if hasattr(self, '_quick_drawer') and self._quick_drawer.isVisible():
+            self._position_quick_drawer()
+
+    def moveEvent(self, event):
+        super().moveEvent(event)
         if hasattr(self, '_quick_drawer') and self._quick_drawer.isVisible():
             self._position_quick_drawer()
 
@@ -9179,8 +9308,10 @@ class MainWindow(QMainWindow):
             }}
         """
 
-        w = QWidget(self.centralWidget())
+        w = QWidget(self)
         w.setObjectName("QuickDrawer")
+        from core.hud_video.layering import make_frameless_overlay
+        make_frameless_overlay(w, self)
         w.setStyleSheet(f"""
             QWidget#QuickDrawer {{
                 background: rgba(5, 7, 13, 0.98);
@@ -9317,8 +9448,8 @@ class MainWindow(QMainWindow):
         if checked:
             self._refresh_wake_btns()   # resolve wake state on open (lazy)
             self._position_quick_drawer()
-            self._quick_drawer.show()
-            self._quick_drawer.raise_()
+            from core.hud_video.layering import raise_overlay
+            raise_overlay(self._quick_drawer, self)
         else:
             self._quick_drawer.hide()
 
@@ -9328,7 +9459,13 @@ class MainWindow(QMainWindow):
         _W = 286
         self._quick_drawer.setFixedWidth(_W)
         self._quick_drawer.adjustSize()
-        self._quick_drawer.setGeometry(16, 56, _W, self._quick_drawer.sizeHint().height())
+        global_pos = self.mapToGlobal(QPoint(16, 56))
+        self._quick_drawer.setGeometry(
+            global_pos.x(),
+            global_pos.y(),
+            _W,
+            self._quick_drawer.sizeHint().height(),
+        )
 
     def _build_input_row(self) -> QHBoxLayout:
         row = QHBoxLayout(); row.setSpacing(6)
@@ -11129,6 +11266,31 @@ class MainWindow(QMainWindow):
         self._image_deck = viewer
         viewer.show_image(path, caption=caption, host=extract_host(path))
 
+    def set_scheduler(self, scheduler) -> None:
+        """Attach the local task scheduler after application startup."""
+        from core.ui.task_board import TaskBoard
+        if self._task_board is None:
+            self._task_board = TaskBoard(scheduler, self)
+            self._task_board.move(28, 145)
+        else:
+            self._task_board.scheduler = scheduler
+
+    def _on_scheduler_event(self, task: object) -> None:
+        if self._task_board is None or not isinstance(task, dict):
+            return
+        self._task_board.present_event(task)
+        try:
+            status = str(task.get("status", "pending")).upper()
+            self._log.append_log(f"TASK: {task.get('name', task.get('action_type', 'task'))} // {status}")
+        except Exception:
+            pass
+
+    def show_task_board(self) -> None:
+        if self._task_board is not None:
+            self._task_board.refresh()
+            self._task_board.show()
+            self._task_board.raise_()
+
     def set_spotify_playback(
         self, title: str, artist: str = "", uri: str = "", is_playing: bool = True
     ):
@@ -11377,6 +11539,16 @@ class JarvisUI:
     def set_media_arbiter(self, arbiter) -> None:
         """Connect application-level media state to MainWindow."""
         self._win.set_media_arbiter(arbiter)
+
+    def set_scheduler(self, scheduler) -> None:
+        """Attach the local scheduler and marshal events through the Qt UI."""
+        self._win.set_scheduler(scheduler)
+
+    def scheduler_event(self, task: dict) -> None:
+        self._win._scheduler_event_sig.emit(dict(task))
+
+    def show_task_board(self) -> None:
+        self._win.show_task_board()
 
     @property
     def current_file(self) -> str | None:

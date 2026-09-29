@@ -420,12 +420,18 @@ class SpotifyClient:
 
     def control_playback(self, action: str, device_id: Optional[str] = None) -> bool:
         """
-        Controls playback: pause, resume, skip_next, skip_previous.
+        Controls playback: toggle, pause, resume, skip_next, skip_previous.
         Uses Spotify's Web API only, so failures cannot affect another media app.
         """
         act = action.lower().strip()
         if not self.has_user_authorization():
+            self._last_playback_error = "Spotify not connected, sir"
             return False
+
+        if act == "toggle":
+            cur = self.get_current_playback()
+            act = "pause" if cur.get("is_playing") else "resume"
+
         token = self.get_token()
         success = False
 
@@ -449,7 +455,18 @@ class SpotifyClient:
                     resp = self._session.request(method, url, headers=self._auth_headers(), timeout=4)
                     if resp.status_code in (200, 204):
                         success = True
+                        self._last_playback_error = ""
+                    else:
+                        if resp.status_code == 404:
+                            self._last_playback_error = "No active Spotify device found"
+                        elif resp.status_code == 403:
+                            self._last_playback_error = "Spotify Premium required for Web API playback"
+                        elif resp.status_code == 401:
+                            self._last_playback_error = "Spotify authorization expired"
+                        else:
+                            self._last_playback_error = f"Spotify API error: {resp.status_code}"
                 except Exception as e:
+                    self._last_playback_error = f"Spotify network error: {e}"
                     logger.debug(f"Web API control '{act}' error: {e}")
 
         return success

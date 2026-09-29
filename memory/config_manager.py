@@ -456,6 +456,22 @@ def save_plugin_config(namespace: str, values: dict) -> None:
     _update_config(update)
 
 
+def get_media_settings() -> dict:
+    """Privacy-safe Media Command settings stored with existing config data."""
+    defaults = {
+        "resume_external_on_stop": False,
+        "speak_on_suppress": True,
+        "local_image_roots": [],
+    }
+    defaults.update(get_plugin_config("media_command"))
+    return defaults
+
+
+def save_media_settings(values: dict) -> None:
+    allowed = {"resume_external_on_stop", "speak_on_suppress", "local_image_roots"}
+    save_plugin_config("media_command", {key: value for key, value in values.items() if key in allowed})
+
+
 def save_plugin_enabled(plugin_name: str, enabled: bool) -> None:
     """Legacy helper maintained for backward compatibility; eligible plugins are active by default."""
     def update(data: dict) -> None:
@@ -480,3 +496,21 @@ def save_app_icon(icon_name_or_path: str) -> None:
         _patch_config(app_icon=icon_name_or_path.strip())
     except Exception as e:
         print(f"❌ Failed to save app_icon: {e}")
+
+
+def get_video_play_destination() -> str | None:
+    """Return remembered video play destination ('app', 'youtube', 'default', etc.) or None."""
+    with _CONFIG_LOCK:
+        cfg = _read_config_unlocked()
+        return cfg.get("video_play_destination")
+
+
+def save_video_play_destination(dest: str | None) -> None:
+    """Save or clear remembered video play destination."""
+    def _mut(data: dict) -> None:
+        if dest is None:
+            data.pop("video_play_destination", None)
+        else:
+            data["video_play_destination"] = str(dest).strip().lower()
+    _update_config(_mut)
+
