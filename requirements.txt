@@ -34,6 +34,7 @@ mss>=9,<11
 psutil>=5.9,<8
 send2trash
 youtube-transcript-api
+yt-dlp>=2024.1,<2027        # hud_video: extracts YouTube CDN stream URLs for in-HUD playback
 python-pptx
 openpyxl
 

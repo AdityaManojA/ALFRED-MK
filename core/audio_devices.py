@@ -319,7 +319,7 @@ def _query() -> dict[str, list[str]]:
     return out
 
 
-def prefetch() -> None:
+def prefetch(on_ready=None) -> None:
     """Warm the cache on a background thread. Called once at startup so the
     settings drawer never pays for enumeration on the Qt thread."""
     def _work():
@@ -329,16 +329,37 @@ def prefetch() -> None:
             _cache = result
         print(f"[Audio] {len(result['input'])} input / "
               f"{len(result['output'])} output devices found")
+        if on_ready is not None:
+            try:
+                on_ready()
+            except Exception:
+                pass
     threading.Thread(target=_work, daemon=True, name="audio-devices").start()
 
 
 def list_devices(kind: str, refresh: bool = False) -> list[str]:
     """Device names for 'input' or 'output'. Falls back to a synchronous query
-    if the prefetch has not landed yet — correctness over the cache."""
+    if the prefetch has not landed yet — correctness over the cache, but never blocks Qt main thread."""
     global _cache
     with _cache_lock:
         cached = None if refresh else _cache
     if cached is None:
+        # Check if caller is on the Qt main GUI thread
+        is_main_gui = False
+        try:
+            from PyQt6.QtCore import QThread
+            from PyQt6.QtWidgets import QApplication
+            app = QApplication.instance()
+            if app is not None and QThread.currentThread() == app.thread():
+                is_main_gui = True
+        except Exception:
+            pass
+
+        if is_main_gui:
+            # Main GUI thread must never run synchronous _query() (probes take ~1s)
+            prefetch()
+            return []
+
         cached = _query()
         with _cache_lock:
             _cache = cached

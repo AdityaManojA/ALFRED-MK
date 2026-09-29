@@ -2163,9 +2163,15 @@ function speakOnMobile(text) {
     });
     // ── Bidirectional Audio WebSocket ─────────────────────────────────────
     let _audioWs = null;
-    let _audioCtx = null;
+    let _audioCtx = null;          // shared by both audio-ws playback and voice mic
     let _audioProcessor = null;
     let _audioOutputBuffer = [];
+
+    // ── Real-time Voice state ─────────────────────────────────────────────
+    const micBtn  = document.getElementById('mic-btn');
+    let _voiceWs  = null;
+    let _micStm   = null;
+    let _audioNd  = null;
 
     function _setupAudioWebSocket() {
       // Close any existing audio WebSocket
@@ -2272,88 +2278,7 @@ function speakOnMobile(text) {
       }
     }
 
-    // Mic button handler for push-to-talk audio transmission
-    async function doMic() {
-      if (_voiceWs) { _stopVoice(); return; }
-
-      if (!navigator.mediaDevices?.getUserMedia) {
-        _showVoiceSetup();
-        return;
-      }
-      let stream;
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
-        });
-      } catch (e) {
-        sys(e.name === 'NotAllowedError'
-          ? 'Microphone permission denied.'
-          : 'Mic error: ' + e.message);
-        return;
-      }
-
-      let ctx;
-      try { ctx = new AudioContext({ sampleRate: 16000 }); }
-      catch (_) { ctx = new AudioContext(); }
-      if (ctx.state === 'suspended') await ctx.resume();
-
-      // Phone audio WebSocket (existing)
-      const curTok = _authToken || localStorage.getItem('jarvis_token') || '';
-      const devTok = localStorage.getItem('jarvis_device_token') || '';
-      const wsProto = location.protocol === 'https:' ? 'wss' : 'ws';
-      const phoneWs = new WebSocket(
-        `${wsProto}://${location.host}/ws/phone-audio?token=${encodeURIComponent(curTok)}&device_token=${encodeURIComponent(devTok)}`
-      );
-      phoneWs.binaryType = 'arraybuffer';
-
-      phoneWs.onopen = async () => {
-        const rate = ctx.sampleRate;
-        const src  = ctx.createMediaStreamSource(stream);
-
-        const wCode = `class J extends AudioWorkletProcessor{process(i){const c=i[0]?.[0];if(c)this.port.postMessage(c.slice());return true;}}registerProcessor('j',J);`;
-        try {
-          const burl = URL.createObjectURL(new Blob([wCode], { type: 'application/javascript' }));
-          await ctx.audioWorklet.addModule(burl);
-          URL.revokeObjectURL(burl);
-          const nd = new AudioWorkletNode(ctx, 'j');
-          let _pbuf = [], _plen = 0;
-          nd.port.onmessage = e => {
-            const chunk = new Int16Array(_f32toPcm16(e.data, rate));
-            _pbuf.push(chunk); _plen += chunk.length;
-            reactorAmp = 0.5 + Math.random() * 0.4;
-            if (_plen >= 1024) {
-              const out = new Int16Array(_plen); let off = 0;
-              for (const c of _pbuf) { out.set(c, off); off += c.length; }
-              if (phoneWs.readyState === 1) phoneWs.send(out.buffer);
-              _pbuf = []; _plen = 0;
-            }
-          };
-          src.connect(nd);
-          _audioNd = nd;
-        } catch (_) {
-          const sp = ctx.createScriptProcessor(4096, 1, 1);
-          sp.onaudioprocess = e => {
-            reactorAmp = 0.5 + Math.random() * 0.4;
-            if (phoneWs.readyState === 1) phoneWs.send(_f32toPcm16(e.inputBuffer.getChannelData(0), rate));
-          };
-          src.connect(sp); sp.connect(ctx.destination);
-          _audioNd = sp;
-        }
-
-        micBtn.innerHTML = '⏹';
-        micBtn.title     = 'Tap to terminate voice channel';
-        micBtn.classList.add('recording');
-        sys('Voice channel live.');
-        toast('🎤 Voice Relay Live');
-      };
-
-      phoneWs.onclose = () => { _stopVoice(); };
-      phoneWs.onerror = () => { sys('Voice connection disrupted.'); _stopVoice(); };
-
-      _voiceWs  = phoneWs;
-      _audioCtx = ctx;
-      _micStm   = stream;
-    }
+    // doMic — defined below alongside _stopVoice and voice helpers
 
     function _stopVoice() {
       if (_audioNd)  { try { _audioNd.disconnect(); }  catch (_) {}; _audioNd  = null; }
@@ -2652,12 +2577,6 @@ function speakOnMobile(text) {
     }
 
     // ── Real-time Voice — PCM16 WebSocket → Gemini Live ──────────────────────
-    const micBtn  = document.getElementById('mic-btn');
-    let _voiceWs  = null;
-    let _audioCtx = null;
-    let _micStm   = null;
-    let _audioNd  = null;
-
     function _micIdle() {
       micBtn.innerHTML = '🎤';
       micBtn.title     = 'Voice — tap to speak';
@@ -2732,12 +2651,12 @@ function speakOnMobile(text) {
       if (ctx.state === 'suspended') await ctx.resume();
 
       const wsProto = location.protocol === 'https:' ? 'wss' : 'ws';
-      const ws = new WebSocket(
+      const voiceWs = new WebSocket(
         `${wsProto}://${location.host}/ws/phone-audio?token=${encodeURIComponent(_authToken)}`
       );
-      ws.binaryType = 'arraybuffer';
+      voiceWs.binaryType = 'arraybuffer';
 
-      ws.onopen = async () => {
+      voiceWs.onopen = async () => {
         const rate = ctx.sampleRate;
         const src  = ctx.createMediaStreamSource(stream);
 
@@ -2755,7 +2674,7 @@ function speakOnMobile(text) {
             if (_plen >= 1024) {
               const out = new Int16Array(_plen); let off = 0;
               for (const c of _pbuf) { out.set(c, off); off += c.length; }
-              if (ws.readyState === 1) ws.send(out.buffer);
+              if (voiceWs.readyState === 1) voiceWs.send(out.buffer);
               _pbuf = []; _plen = 0;
             }
           };
@@ -2765,7 +2684,7 @@ function speakOnMobile(text) {
           const sp = ctx.createScriptProcessor(4096, 1, 1);
           sp.onaudioprocess = e => {
             reactorAmp = 0.5 + Math.random() * 0.4;
-            if (ws.readyState === 1) ws.send(_f32toPcm16(e.inputBuffer.getChannelData(0), rate));
+            if (voiceWs.readyState === 1) voiceWs.send(_f32toPcm16(e.inputBuffer.getChannelData(0), rate));
           };
           src.connect(sp); sp.connect(ctx.destination);
           _audioNd = sp;
@@ -2778,10 +2697,10 @@ function speakOnMobile(text) {
         toast('🎤 Voice Relay Live');
       };
 
-      ws.onclose = () => { _stopVoice(); };
-      ws.onerror = () => { sys('Voice connection disrupted.'); _stopVoice(); };
+      voiceWs.onclose = () => { _stopVoice(); };
+      voiceWs.onerror = () => { sys('Voice connection disrupted.'); _stopVoice(); };
 
-      _voiceWs  = ws;
+      _voiceWs  = voiceWs;
       _audioCtx = ctx;
       _micStm   = stream;
     }

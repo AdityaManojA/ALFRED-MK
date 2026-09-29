@@ -6,63 +6,103 @@ currently focused window — without touching the mouse.
 """
 from __future__ import annotations
 
-import ctypes
-import ctypes.wintypes
-import subprocess
 import sys
 from typing import Optional
 
 # ── Win32 constants ───────────────────────────────────────────────────────────
-SW_MAXIMIZE   = 3
-SW_MINIMIZE   = 6
-SW_RESTORE    = 9
-SWP_NOZORDER  = 0x0004
+SW_MAXIMIZE    = 3
+SW_MINIMIZE    = 6
+SW_RESTORE     = 9
+SWP_NOZORDER   = 0x0004
 SWP_SHOWWINDOW = 0x0040
 
-user32 = ctypes.windll.user32
+user32 = None
+if sys.platform == "win32":
+    try:
+        import ctypes
+        import ctypes.wintypes
+        user32 = ctypes.windll.user32
+    except Exception:
+        user32 = None
+
+
+def _get_user32():
+    if sys.platform != "win32":
+        return None
+    global user32
+    if user32 is None:
+        try:
+            import ctypes
+            import ctypes.wintypes
+            user32 = ctypes.windll.user32
+        except Exception:
+            user32 = None
+    return user32
 
 
 def _get_screen() -> tuple[int, int]:
     """Return (width, height) of the primary monitor."""
-    return user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
+    u32 = _get_user32()
+    if u32 is None:
+        return 1920, 1080
+    return u32.GetSystemMetrics(0), u32.GetSystemMetrics(1)
 
 
 def _focused_hwnd() -> Optional[int]:
-    hwnd = user32.GetForegroundWindow()
+    u32 = _get_user32()
+    if u32 is None:
+        return None
+    hwnd = u32.GetForegroundWindow()
     return hwnd if hwnd else None
 
 
 def _find_hwnd_by_title(title_fragment: str) -> Optional[int]:
     """Find the first visible window whose title contains title_fragment (case-insensitive)."""
+    u32 = _get_user32()
+    if u32 is None:
+        return None
+    import ctypes
+    import ctypes.wintypes
+
     fragment = title_fragment.lower()
     found = []
 
     def _cb(hwnd, _):
-        if user32.IsWindowVisible(hwnd):
-            length = user32.GetWindowTextLengthW(hwnd)
+        if u32.IsWindowVisible(hwnd):
+            length = u32.GetWindowTextLengthW(hwnd)
             if length > 0:
                 buf = ctypes.create_unicode_buffer(length + 1)
-                user32.GetWindowTextW(hwnd, buf, length + 1)
+                u32.GetWindowTextW(hwnd, buf, length + 1)
                 if fragment in buf.value.lower():
                     found.append(hwnd)
         return True
 
     EnumWindowsProc = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.wintypes.HWND, ctypes.wintypes.LPARAM)
-    user32.EnumWindows(EnumWindowsProc(_cb), 0)
+    u32.EnumWindows(EnumWindowsProc(_cb), 0)
     return found[0] if found else None
 
 
 def _get_title(hwnd: int) -> str:
-    length = user32.GetWindowTextLengthW(hwnd)
+    u32 = _get_user32()
+    if u32 is None:
+        return ""
+    import ctypes
+    length = u32.GetWindowTextLengthW(hwnd)
     buf = ctypes.create_unicode_buffer(length + 1)
-    user32.GetWindowTextW(hwnd, buf, length + 1)
+    u32.GetWindowTextW(hwnd, buf, length + 1)
     return buf.value
 
 
-def _move_resize(hwnd: int, x: int, y: int, w: int, h: int) -> None:
+def _move_resize(hwnd: int, x: Optional[int], y: Optional[int], w: int, h: int) -> None:
+    u32 = _get_user32()
+    if u32 is None:
+        return
     # Restore first in case it is maximised (SetWindowPos won't move a maximised window)
-    ctypes.windll.user32.ShowWindow(hwnd, SW_RESTORE)
-    user32.SetWindowPos(hwnd, None, x, y, w, h, SWP_NOZORDER | SWP_SHOWWINDOW)
+    u32.ShowWindow(hwnd, SW_RESTORE)
+    target_x = x if x is not None else 0
+    target_y = y if y is not None else 0
+    flags = SWP_NOZORDER | SWP_SHOWWINDOW
+    u32.SetWindowPos(hwnd, None, target_x, target_y, w, h, flags)
 
 
 def _resolve_hwnd(parameters: dict) -> tuple[Optional[int], str]:
@@ -80,21 +120,26 @@ def _resolve_hwnd(parameters: dict) -> tuple[Optional[int], str]:
 
 
 def _list_windows() -> list[str]:
+    u32 = _get_user32()
+    if u32 is None:
+        return []
+    import ctypes
+    import ctypes.wintypes
     titles = []
 
     def _cb(hwnd, _):
-        if user32.IsWindowVisible(hwnd):
-            length = user32.GetWindowTextLengthW(hwnd)
+        if u32.IsWindowVisible(hwnd):
+            length = u32.GetWindowTextLengthW(hwnd)
             if length > 0:
                 buf = ctypes.create_unicode_buffer(length + 1)
-                user32.GetWindowTextW(hwnd, buf, length + 1)
+                u32.GetWindowTextW(hwnd, buf, length + 1)
                 title = buf.value.strip()
                 if title:
                     titles.append(title)
         return True
 
     EnumWindowsProc = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.wintypes.HWND, ctypes.wintypes.LPARAM)
-    user32.EnumWindows(EnumWindowsProc(_cb), 0)
+    u32.EnumWindows(EnumWindowsProc(_cb), 0)
     return titles
 
 
@@ -103,6 +148,10 @@ def _list_windows() -> list[str]:
 def window_manager_action(parameters: dict, **kwargs) -> str:
     if sys.platform != "win32":
         return "Window management is only supported on Windows."
+
+    u32 = _get_user32()
+    if u32 is None:
+        return "Window management backend unavailable on this platform."
 
     action = str(parameters.get("action", "")).lower().strip()
 
@@ -153,15 +202,15 @@ def window_manager_action(parameters: dict, **kwargs) -> str:
         return f"Snapped '{title}' to the bottom-right quarter."
 
     if action in ("fullscreen", "maximise", "maximize"):
-        ctypes.windll.user32.ShowWindow(hwnd, SW_MAXIMIZE)
+        u32.ShowWindow(hwnd, SW_MAXIMIZE)
         return f"Maximised '{title}'."
 
     if action in ("minimise", "minimize"):
-        ctypes.windll.user32.ShowWindow(hwnd, SW_MINIMIZE)
+        u32.ShowWindow(hwnd, SW_MINIMIZE)
         return f"Minimised '{title}'."
 
     if action in ("restore", "unmaximise", "unmaximize"):
-        ctypes.windll.user32.ShowWindow(hwnd, SW_RESTORE)
+        u32.ShowWindow(hwnd, SW_RESTORE)
         return f"Restored '{title}'."
 
     if action == "tile":
@@ -187,7 +236,7 @@ def window_manager_action(parameters: dict, **kwargs) -> str:
     if action == "resize":
         w = int(parameters.get("width", sw // 2))
         h = int(parameters.get("height", sh // 2))
-        _move_resize(hwnd, None, None, w, h)  # type: ignore[arg-type]
+        _move_resize(hwnd, None, None, w, h)
         return f"Resized '{title}' to {w}×{h}."
 
     return (

@@ -222,9 +222,22 @@ def discover_actions(actions_dir: Path, reserved_names: set[str] | None = None,
                                    error=f"Name '{rec.name}' already used by action '{other}' — rejected.")
 
         except Exception as e:
-            rec = ActionRecord(name=path.stem, file=path.name,
-                               error=f"Failed to load: {e}")
-            traceback.print_exc()
+            err_msg = str(e)
+            is_platform_unsupported = any(
+                p_err in err_msg for p_err in (
+                    "only supported on Windows",
+                    "only supported on Linux",
+                    "only supported on macOS",
+                    "windll",
+                )
+            )
+            rec = ActionRecord(
+                name=path.stem,
+                file=path.name,
+                error=f"Unsupported on this OS: {e}" if is_platform_unsupported else f"Failed to load: {e}",
+            )
+            if not is_platform_unsupported:
+                traceback.print_exc()
 
         all_records.append(rec)
         if rec.valid:

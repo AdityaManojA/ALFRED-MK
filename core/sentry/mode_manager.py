@@ -36,6 +36,7 @@ class MonitorState:
     target_count: int = 0
     last_alert_s: float = 0.0
     label: str = ""
+    waiting_for_answer: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -123,6 +124,11 @@ class SentryModeManager(QObject):
         with self._lock:
             return self._focus_state
 
+    def is_waiting_for_answer(self) -> bool:
+        """Thread-safe query for whether an AnswerWindow is awaiting user reply."""
+        with self._lock:
+            return bool(self._monitor_state.waiting_for_answer)
+
     def get_snapshot(self) -> SentrySnapshot:
         with self._lock:
             return SentrySnapshot(
@@ -178,6 +184,7 @@ class SentryModeManager(QObject):
         active = bool(result.get("active", True))
         label = str(result.get("label", goal or "Active"))
         target_count = int(result.get("target_count", 1 if active else 0))
+        waiting_for_answer = bool(result.get("waiting_for_answer", target_count == 0 if active else False))
 
         with self._lock:
             self._monitor_state = MonitorState(
@@ -185,6 +192,7 @@ class SentryModeManager(QObject):
                 target_count=target_count,
                 last_alert_s=time.time(),
                 label=label,
+                waiting_for_answer=waiting_for_answer,
             )
 
         self._emit_state_change()
@@ -212,16 +220,21 @@ class SentryModeManager(QObject):
                 target_count=0,
                 last_alert_s=self._monitor_state.last_alert_s,
                 label=reason,
+                waiting_for_answer=False,
             )
 
         self._emit_state_change()
         return result
 
-    def toggle_monitor(self) -> dict[str, Any]:
+    def toggle_monitor(
+        self,
+        goal: str = "",
+        interval_seconds: float = MONITOR_DEFAULT_INTERVAL_S,
+    ) -> dict[str, Any]:
         """Toggle MONITOR mode on or off."""
         if self.monitor_state.active:
             return self.stop_monitor("Toggled off from UI.")
-        return self.start_monitor()
+        return self.start_monitor(goal=goal, interval_seconds=interval_seconds)
 
     def update_monitor_state(self, **kwargs: Any) -> None:
         """Update monitor state fields from target drivers."""

@@ -42,6 +42,15 @@ for _stream in ("stdout", "stderr"):
 
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
+from core.logger import install_timestamped_logging
+install_timestamped_logging()
+
+# Suppress FFmpeg AV1 hwaccel noise before QApplication is constructed.
+# Qt reads QT_LOGGING_RULES at init time; setting it here ensures it's in
+# place even if the user hasn't set it in their environment.
+import os as _os
+_os.environ.setdefault("QT_LOGGING_RULES", "qt.multimedia.ffmpeg=false")
+
 # Crash reporting
 import traceback
 import sys
@@ -774,6 +783,9 @@ def _keep_context_of(exc: BaseException) -> bool:
 class JarvisLive:
     def __init__(self, ui: JarvisUI):
         self.ui             = ui
+        from core.media import get_media_arbiter
+        self.media_arbiter = get_media_arbiter()
+        self.ui.set_media_arbiter(self.media_arbiter)
         self._asst_name     = "ALFRED"   # updated each session from config
         self.session              = None
         self._is_local_mode       = False
@@ -1309,6 +1321,8 @@ class JarvisLive:
             self._is_speaking = value
         if value:
             self._tail_until = 0.0
+            from core.media import AudioSource
+            self.media_arbiter.claim(AudioSource.TTS)
             if not was_speaking:
                 try:
                     from core.audio_ducker import duck_media_apps
@@ -1316,6 +1330,8 @@ class JarvisLive:
                 except Exception:
                     pass
         else:
+            from core.media import AudioSource
+            self.media_arbiter.release(AudioSource.TTS)
             # Hold the guard open across the device's own output latency plus a
             # margin for the room. The microphone is NOT muted during it â€” the
             # guard still lets a genuine reply through, so answering instantly
@@ -1399,7 +1415,7 @@ class JarvisLive:
                 except Exception:
                     break
             if drained:
-                _tlog("ALFRED", "halt", f"Interrupted â€” {drained} audio chunks discarded", getattr(self, "_dashboard", None))
+                _tlog("ALFRED", "halt", f"Interrupted — {drained} audio chunks discarded", getattr(self, "_dashboard", None))
         self.set_speaking(False)
         # The words we were about to mouth are never going to be spoken now.
         self._visemes.reset()
@@ -1411,7 +1427,7 @@ class JarvisLive:
             _tlog("control", "background halted", "Background tasks halted by interrupt event", getattr(self, "_dashboard", None))
             if hasattr(self, "ui") and self.ui:
                 self.ui.write_log("[control] [background halted] Tasks halted by interrupt")
-        self.ui.write_log("SYS: Interrupted â€” listening...")
+        self.ui.write_log("SYS: Interrupted — listening...")
 
     async def queue_background_task(self, task_type: str, payload: str = "") -> dict:
         """Queue a background task and return task metadata immediately."""
@@ -1989,9 +2005,8 @@ class JarvisLive:
         except Exception as e:
             result = f"Tool '{name}' failed: {e}"
             traceback.print_exc()
-            self.speak_error(name, e)
 
-        _tlog("ALFRED", "out", f"{name} â†’ {str(result)[:80]}", self._dashboard)
+        _tlog("ALFRED", "out", f"{name} → {str(result)[:80]}", self._dashboard)
 
         # Notify dashboard / phone if a screenshot was produced
         if name == "computer_control" and args.get("action") == "screenshot":
@@ -2277,6 +2292,7 @@ class JarvisLive:
                                 if getattr(_p, "thought", False):
                                     _th = (getattr(_p, "text", "") or "").strip()
                                     if _th:
+                                        self.ui.set_state("THINKING")
                                         self.ui.write_log(f"THINK: {_th}")
 
                         if sc.output_transcription and sc.output_transcription.text:
@@ -2419,19 +2435,19 @@ class JarvisLive:
             # cost the user their voice. Fall back to the default and say so.
             if _spk_dev is None:
                 raise
-            _tlog("ALFRED", "warn", f"Output device '{_spk_name}' failed: {_e} â€” using default", self._dashboard)
-            self.ui.write_log(f"SYS: Speaker '{_spk_name}' unavailable â€” using system default.")
+            _tlog("ALFRED", "warn", f"Output device '{_spk_name}' failed: {_e} — using default", self._dashboard)
+            self.ui.write_log(f"SYS: Speaker '{_spk_name}' unavailable — using system default.")
             stream = _open_spk(None)
 
         # Ask the device how far behind the speakers actually are, rather than
         # assuming. This is what the echo tail is sized from, so a machine with a
-        # large audio buffer gets a correspondingly longer guard â€” and one with a
+        # large audio buffer gets a correspondingly longer guard — and one with a
         # tiny buffer is not penalised with a delay it does not need.
         try:
             lat = float(getattr(stream, "latency", 0.0) or 0.0)
             if 0.0 < lat < 1.0:
                 self._out_latency = lat
-            _tlog("ALFRED", "speaker", f"Output latency {self._out_latency*1000:.0f} ms â†’ echo tail {(self._out_latency + _TAIL_MARGIN)*1000:.0f} ms", self._dashboard)
+            _tlog("ALFRED", "speaker", f"Output latency {self._out_latency*1000:.0f} ms → echo tail {(self._out_latency + _TAIL_MARGIN)*1000:.0f} ms", self._dashboard)
         except Exception:
             pass
 
@@ -3322,7 +3338,10 @@ class JarvisLive:
         set_trim_notifier(self.ui.write_log)
 
         audio_devices.configure(SEND_SAMPLE_RATE, RECEIVE_SAMPLE_RATE)
-        audio_devices.prefetch()
+        def _audio_ready_cb():
+            if self.ui and hasattr(self.ui, "set_audio_status"):
+                self.ui.set_audio_status("READY")
+        audio_devices.prefetch(on_ready=_audio_ready_cb)
 
         # Start dashboard (optional)
         try:
@@ -3357,7 +3376,7 @@ class JarvisLive:
         while True:
             try:
                 _tlog("ALFRED", "link", "Connecting...", self._dashboard)
-                self.ui.set_state("THINKING")
+                self.ui.set_state("INITIALISING")
                 _resumed_with = self._resume_handle is not None
                 config = self._build_config()
 

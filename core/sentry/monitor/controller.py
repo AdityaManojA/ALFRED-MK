@@ -146,12 +146,14 @@ class MonitorController:
                 active=True,
                 target_count=self.scheduler.target_count,
                 label=label,
+                waiting_for_answer=False,
             )
             self._update_status(f"Monitoring: {label}")
             return {
                 "active": True,
                 "target_count": len(targets),
                 "label": label,
+                "waiting_for_answer": False,
             }
 
         # No target given -> Open answer window and ask
@@ -160,6 +162,7 @@ class MonitorController:
             "active": True,
             "target_count": 0,
             "label": "Awaiting target...",
+            "waiting_for_answer": True,
         }
 
     def stop(self, reason: str = "Stopped by user.") -> dict[str, Any]:
@@ -268,6 +271,7 @@ class MonitorController:
             active=True,
             target_count=len(targets),
             label=label,
+            waiting_for_answer=False,
         )
         desc = ", ".join(t.describe() for t in targets)
         self._speak(f"Understood, sir. Monitoring {desc}.")

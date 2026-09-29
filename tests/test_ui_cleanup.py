@@ -155,14 +155,17 @@ class TestUICleanup(unittest.TestCase):
         )
         try:
             # Check theme card buttons
-            self.assertEqual(len(overlay._theme_btns), 3)
+            self.assertGreaterEqual(len(overlay._theme_btns), 3)
+            core_themes = ["DEFAULT BATCAVE", "BANE MODE", "BATMAN BEYOND"]
+            for ct in core_themes:
+                self.assertIn(ct, overlay._theme_btns)
+
             for theme_name, btn in overlay._theme_btns.items():
                 text = btn.text()
-                # Verify no leading emoji characters
+                # Verify no leading emoji characters across any registered theme
                 self.assertNotIn("🦇", text)
                 self.assertNotIn("🔥", text)
                 self.assertNotIn("⚡", text)
-                self.assertIn(text, ["DEFAULT BATCAVE", "BANE MODE", "BATMAN BEYOND"])
 
             # Test picking and saving theme
             overlay._set_color("#a8ff3e", update_wheel=True, preview=True)

@@ -193,6 +193,45 @@ def save_voice(voice_name: str) -> None:
     _patch_config(voice_name=v if v in AVAILABLE_VOICES else DEFAULT_VOICE)
 
 
+# ── Voice Engine (Default vs Jarvis) ──────────────────────────────────────────
+VOICE_ENGINES = ("default", "jarvis")
+DEFAULT_VOICE_ENGINE = "default"
+
+
+def get_voice_engine() -> str:
+    """Return the selected voice engine ('default' or 'jarvis')."""
+    cfg = load_api_keys()
+    val = cfg.get("voice_engine")
+    if not val and isinstance(cfg.get("voice"), dict):
+        val = cfg["voice"].get("engine")
+    v = str(val or DEFAULT_VOICE_ENGINE).strip().lower()
+    return v if v in VOICE_ENGINES else DEFAULT_VOICE_ENGINE
+
+
+def save_voice_engine(engine: str) -> None:
+    """Persist the selected voice engine ('default' or 'jarvis')."""
+    v = str(engine or "").strip().lower()
+    val = v if v in VOICE_ENGINES else DEFAULT_VOICE_ENGINE
+
+    def update(data: dict) -> None:
+        data["voice_engine"] = val
+        if "voice" not in data or not isinstance(data["voice"], dict):
+            data["voice"] = {}
+        data["voice"]["engine"] = val
+
+    _update_config(update)
+
+
+def get_jarvis_allow_cpu() -> bool:
+    """Whether Jarvis inference is permitted on CPU when CUDA is absent."""
+    return bool(load_api_keys().get("jarvis_allow_cpu", False))
+
+
+def save_jarvis_allow_cpu(enabled: bool) -> None:
+    """Persist CPU inference toggle for Jarvis voice."""
+    _save_flag("jarvis_allow_cpu", enabled)
+
+
 def get_wake_word_enabled() -> bool:
     """Whether local wake-word gating is on (assistant sleeps until 'Hey Alfred')."""
     return load_api_keys().get("wake_word_enabled", False)

@@ -662,7 +662,18 @@ ALFRED-MK-VI/
 │   ├── confirm.py              # Cryptographic UI gate
 │   ├── audio_devices.py        # Host API enumeration
 │   ├── path_guard.py           # Path validation + Heavenly Restriction
-│   └── wake_word.py            # Offline openwakeword thread
+│   ├── registry.py             # Process-wide service registry (cross-module singletons)
+│   ├── wake_word.py            # Offline openwakeword thread
+│   └── hud_video/              # In-HUD video surface package
+│       ├── __init__.py
+│       ├── controller.py       # State machine: IDLE→RESOLVING→LOADING→PLAYING→PAUSED
+│       ├── surface.py          # HudVideoSurface Qt widget (stack slot 2)
+│       ├── resolve.py          # Unified resolver: YouTube / direct URL / local file
+│       ├── intent.py           # Locus-phrase detection + transport command parser
+│       └── backends/
+│           ├── __init__.py     # BackendBase (plain class, no ABCMeta — QObject compat)
+│           ├── local_url.py    # QMediaPlayer adapter (local + HTTP streams)
+│           └── youtube.py      # yt-dlp VP9/H.264 stream extractor (AV1 excluded)
 ├── actions/                    # Self-describing operational tools
 │   ├── audio_core.py           # TRON ambient score
 │   ├── spotify_control.py      # Spotify AI Agent
@@ -695,7 +706,8 @@ ALFRED-MK-VI/
 │   ├── news_brief.py           # RSS/DDG digest, 15-min cache
 │   ├── process_manager.py      # CPU hog detection
 │   ├── quick_translate.py      # Gemini instant translation
-│   └── window_manager.py       # Win32 window snapping
+│   ├── window_manager.py       # Win32 window snapping
+│   └── hud_video.py            # In-HUD video player (locus gate + transport commands)
 ├── config/
 │   ├── protocols.yaml          # Compound playbooks
 │   ├── api_keys.json           # Credentials + settings
@@ -809,11 +821,58 @@ This codebase is indexed with a persistent **GraphRAG Knowledge Graph** in `grap
 | `network_tools` | Speed test, public/local IP, ping, active connections. |
 | `process_manager` | Kill / find / list CPU hogs by name or PID. |
 | `news_brief` | On-demand headlines with topic filter. 15-min cache. |
+| `hud_video` | In-HUD video player. YouTube, direct URLs, local files. |
+
+### 🎬 In-HUD Video Surface
+
+The avatar slot transforms into a video player on demand — no browser, no floating window.
+
+**Trigger phrases:** say the target *plus* a locus phrase:  
+*"in the app" · "in the player" · "in the HUD" · "on screen" · "in the batcomputer"*
+
+```
+"Play the new Dune trailer in the app"
+"Watch this in the player"        ← clipboard URL used
+"Show me the Blender demo on screen"
+```
+
+**One shared pipeline for all sources:**
+- **YouTube URL or search** — yt-dlp extracts a VP9+Opus CDN stream; `QMediaPlayer` plays it natively, zero browser opened
+- **Direct HTTP media URL** — mp4, webm, mkv, m3u8 and more, played immediately
+- **Local file path** — path-guard validated, `file://` URI handed to `QMediaPlayer`
+
+**Controls:**
+| Voice | Action |
+|---|---|
+| *"pause"* | Pauses video |
+| *"resume"* | Resumes video |
+| *"stop video"* / *"close player"* / *"bring back the avatar"* | Stops and restores the globe |
+| *"mute"* / *"unmute"* | Audio gate (starts muted by default) |
+| *"louder"* / *"quieter"* | Volume ±10% |
+
+**Architecture:**
+- `HudVideoSurface` lives in slot 2 of the existing `_hud_cam_stack` (`QStackedWidget`) — zero impact on camera and globe slots
+- State machine: `IDLE → RESOLVING → LOADING → PLAYING → PAUSED → ERROR → IDLE`
+- Speech-before-pixels: TTS ack fires before resolve starts
+- Pause on minimise, resume on restore
+- Auto-stops after 5 min background (paused)
+- Background music ducks when video sound is enabled
+- Controller registered via `core/registry.py` — process-wide service dict; eliminates the `__main__` vs `import main` module-identity split that silently voids cross-module references in `python main.py` sessions
+
+**Codec policy:**
+yt-dlp format selector explicitly excludes AV1 (`av01`) and prefers VP9+Opus, falling back to H.264+AAC. FFmpeg has full software VP9 decode; no hardware acceleration required. `QT_LOGGING_RULES=qt.multimedia.ffmpeg=false` suppresses FFmpeg hwaccel noise at boot.
+
 
 ### 🔧 Network Resilience & UI Performance
 * Windows-specific socket error strings added to reconnect classifier: `wsarecv`, `wsasend`, `stream reading error`, `WinError`, `BrokenPipeError`, `ConnectionResetError`, `ConnectionAbortedError`.
 * Serial startup replaced with concurrent execution (`ThreadPoolExecutor`).
 * Vector HUD: cached static CRT grid + batched globe wireframe (`drawLines`) for silky 60 FPS.
+
+### 🔩 Infrastructure Fixes
+* **`core/registry.py`** — process-wide service dictionary solving the `__main__` vs `import main` Python module-identity split. Any subsystem can `register("key", obj)` / `lookup("key")` across the process boundary without circular imports or ghost-module writes.
+* **`BackendBase` metaclass fix** — Qt's `pyqtWrapperType` and Python's `ABCMeta` cannot coexist in a MRO. `BackendBase` is now a plain class with `NotImplementedError` stubs — identical interface contract, zero metaclass conflict.
+* **VP9 codec policy** — yt-dlp format selector excludes AV1 (`av01`) system-wide. VP9+Opus is selected first (full FFmpeg software decode, no GPU required), with H.264+AAC as fallback.
+* **FFmpeg AV1 noise suppression** — `QT_LOGGING_RULES=qt.multimedia.ffmpeg=false` set at boot in `main.py` before `QApplication` is constructed.
 
 ---
 

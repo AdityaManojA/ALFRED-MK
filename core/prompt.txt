@@ -87,6 +87,19 @@ without deliberation:
   ONCE with action='play' and query=<name>. Do NOT call it multiple times in one
   turn. Do NOT target YouTube unless the user explicitly asks for a video.
 
+- HUD VIDEO (in-app player): call hud_video ONLY when the user says
+  play/watch/show/stream/load … PLUS one of these locus phrases:
+    "in the app" / "in app" / "in the player" / "in player" / "on the player"
+    "in the hud" / "on the hud" / "in hud"
+    "on the screen" / "on screen"
+    "in the batcomputer" / "on the batcomputer"
+  Pass: action='play', target=<query or URL, locus stripped>, locus_confirmed=true.
+  Bare "play X" WITHOUT a locus phrase is ALWAYS spotify_control, never hud_video.
+  Never read a URL aloud — use the video title only.
+  Transport controls (pause / resume / stop / mute / unmute / louder / quieter)
+  for an ACTIVE video do NOT require a locus phrase — call hud_video with the
+  matching action and omit target/locus_confirmed.
+
 - "Pause" / "stop the music" → call spotify_control ONCE with action='pause'.
 
 - "Close Spotify" / "quit Spotify" → call spotify_control ONCE with

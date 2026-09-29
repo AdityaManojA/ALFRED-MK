@@ -106,6 +106,29 @@ class TestConfigCache(unittest.TestCase):
         self.assertEqual(config["output_device"], "Speakers")
         self.assertEqual(config["preserved"], "yes")
 
+    def test_voice_engine_round_trip_and_defaults(self):
+        # Default when unset
+        self.assertEqual(config_manager.get_voice_engine(), "default")
+        self.assertFalse(config_manager.get_jarvis_allow_cpu())
+
+        # Save jarvis
+        config_manager.save_voice_engine("jarvis")
+        self.assertEqual(config_manager.get_voice_engine(), "jarvis")
+
+        # Round trips in stored JSON
+        raw = json.loads(self.config_file.read_text(encoding="utf-8"))
+        self.assertEqual(raw.get("voice_engine"), "jarvis")
+        self.assertEqual(raw.get("voice", {}).get("engine"), "jarvis")
+
+        # Invalid engine falls back to default
+        config_manager.save_voice_engine("non_existent_engine")
+        self.assertEqual(config_manager.get_voice_engine(), "default")
+
+        # CPU allow toggle
+        config_manager.save_jarvis_allow_cpu(True)
+        self.assertTrue(config_manager.get_jarvis_allow_cpu())
+
 
 if __name__ == "__main__":
     unittest.main()
+

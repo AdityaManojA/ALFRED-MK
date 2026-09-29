@@ -88,7 +88,7 @@ class TestSentryModeManager(unittest.TestCase):
         mon_fields = set(MonitorState.__dataclass_fields__.keys())
         foc_fields = set(FocusState.__dataclass_fields__.keys())
 
-        expected_mon = {"active", "target_count", "last_alert_s", "label"}
+        expected_mon = {"active", "target_count", "last_alert_s", "label", "waiting_for_answer"}
         expected_foc = {
             "active", "paused", "deferred_lock", "locked_app", "locked_tab",
             "planned_s", "elapsed_s", "on_target_s", "remaining_s",
@@ -115,6 +115,22 @@ class TestSentryModeManager(unittest.TestCase):
         self.mgr._emit_state_change(force=True)
         self.assertEqual(len(emitted_snapshots), 2)
 
+    def test_waiting_for_answer_state_and_transitions(self):
+        # Initial state should be False
+        self.assertFalse(self.mgr.is_waiting_for_answer())
+        self.assertFalse(self.mgr.get_snapshot().monitor.waiting_for_answer)
+
+        # Transition to True
+        self.mgr.update_monitor_state(waiting_for_answer=True)
+        self.assertTrue(self.mgr.is_waiting_for_answer())
+        self.assertTrue(self.mgr.get_snapshot().monitor.waiting_for_answer)
+
+        # Transition to False
+        self.mgr.update_monitor_state(waiting_for_answer=False)
+        self.assertFalse(self.mgr.is_waiting_for_answer())
+        self.assertFalse(self.mgr.get_snapshot().monitor.waiting_for_answer)
+
 
 if __name__ == "__main__":
     unittest.main()
+
