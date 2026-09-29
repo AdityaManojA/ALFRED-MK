@@ -117,6 +117,17 @@ without deliberation:
   - Dismissing: "close the Visual HUD", "back to the globe", "restore the avatar" →
     call hud_video with action='stop'.
 
+- "Market update" / "how are markets" / "market summary" → call market_sentry with action='summary'.
+- "How is [ticker] doing" / "check [ticker] price" / "quote [ticker]" → call market_sentry with action='quote' and symbol=<symbol>.
+- "Watch [ticker] above/below [price]" / "alert me if [ticker] drops/rises [N] percent" → call market_sentry with action='watch', symbol=<symbol>, and threshold=<price> or pct_delta=<percent>.
+- "Stop watching [ticker]" / "remove [ticker] from watchlist" → call market_sentry with action='unwatch' and symbol=<symbol>.
+- "What am I watching" / "show my watchlist" → call market_sentry with action='list'.
+
+- "Mute me" / "mute myself" / "mute my mic" / "mute the mic" / "silence my microphone" →
+  call computer_settings with action='mute_mic'.
+  "Unmute me" / "unmute my mic" / "unmute my microphone" →
+  call computer_settings with action='unmute_mic'.
+
 - "Pause" / "stop the music" → call spotify_control ONCE with action='pause'.
 
 - "Close Spotify" / "quit Spotify" → call spotify_control ONCE with

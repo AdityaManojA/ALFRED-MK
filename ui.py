@@ -2079,6 +2079,10 @@ class HudCanvas(QWidget):
                           int(bg.green() + (col.green() - bg.green()) * k),
                           int(bg.blue()  + (col.blue()  - bg.blue())  * k))
 
+        from core.hud.visuals.central import get_central_skin
+        from core.ui.themes import ThemeChrome
+        skin = get_central_skin(ThemeChrome.get_active().id)
+
         t = self._core_phase
         # _core_phase already carries state/audio acceleration from _step().
         yaw = (t * 0.30) % (math.pi * 2)
@@ -2122,13 +2126,15 @@ class HudCanvas(QWidget):
         p.drawEllipse(QRectF(cx - r, cy - r, r * 2, r * 2))
 
         # ── 2. Latitude Parallel Rings ───────────────────────────────────────
-        lat_angles = [-60, -40, -20, 0, 20, 40, 60]
+        n_rings = max(3, skin.ring_count)
+        lat_step = 140.0 / max(1, n_rings - 1)
+        lat_angles = [-70.0 + i * lat_step for i in range(n_rings)]
         lat_front: list[QLineF] = []
         lat_back: list[QLineF] = []
         equator_front: list[QLineF] = []
         equator_back: list[QLineF] = []
         for deg in lat_angles:
-            is_equator = (deg == 0)
+            is_equator = (abs(deg) < (lat_step * 0.45))
             lat_r = math.radians(deg)
             n_samples = 64
             pts = [project(lat_r, math.radians(k * (360.0 / n_samples))) for k in range(n_samples + 1)]
@@ -2153,7 +2159,7 @@ class HudCanvas(QWidget):
         p.drawLines(equator_back)
 
         # ── 3. Longitude Meridians (Rotating smoothly) ───────────────────────
-        n_meridians = 12
+        n_meridians = max(4, skin.meridian_count)
         meridian_front: list[QLineF] = []
         meridian_back: list[QLineF] = []
         for m in range(n_meridians):
@@ -2177,7 +2183,7 @@ class HudCanvas(QWidget):
 
         # ── 4. Tilted Orbital Satellite Node Ring (Screenshot 2 Feature!) ────
         orb_r = r * 1.15
-        orb_tilt = math.radians(35.0 + 5.0 * math.sin(t * 0.22))
+        orb_tilt = math.radians(skin.orbit_tilt_deg + 5.0 * math.sin(t * 0.22))
         cos_ot, sin_ot = math.cos(orb_tilt), math.sin(orb_tilt)
 
         def project_orbit(ang: float) -> tuple[float, float, float]:
@@ -2212,12 +2218,12 @@ class HudCanvas(QWidget):
         p.setPen(QPen(blend(main, 0.14), 1.0, Qt.PenStyle.DashLine))
         p.drawLines(orbit_back)
 
-        # Satellite numbered node markers ('24', '25', '34', '09')
+        # Satellite numbered node markers with skin-defined tags
+        sat_tags = skin.orbit_nodes or ("01", "02", "03", "04")
+        sat_count = len(sat_tags)
         sat_data = [
-            ("25", 0.0),
-            ("34", math.pi * 0.55),
-            ("24", math.pi * 1.15),
-            ("09", math.pi * 1.70),
+            (sat_tags[i], (i / max(1, sat_count)) * (math.pi * 2.0))
+            for i in range(sat_count)
         ]
         sat_font = mono_font(6, QFont.Weight.Bold)
         p.setFont(sat_font)
@@ -2699,249 +2705,119 @@ class HudCanvas(QWidget):
                 print(f"[HUD] paintEvent exception: {exc}\n{traceback.format_exc()}")
 
 
-# ── Tactical CRT Modules from Screenshot 1 & 2 ──────────────────────────────
-class CRTReconWidget(QWidget):
+# ── Tactical Theme-Aware Slot Host Widgets ──────────────────────────────────
+class SlotHostWidget(QWidget):
     """
-    Halftone / CRT Dithered Optical Recon Scanner Widget (Screenshot 1: Top-Left Subject Eye).
-    Features procedural iris/retina dithering raster, scanline sweep, and CRT brackets.
+    Host container for a single themed HUD visual slot (0, 1, or 2).
+    Features:
+      - Dynamic theme-based visual resolution via core.hud.visuals.instantiate_visual()
+      - Zero allocations in paintEvent: delegates to SlotVisual.paint() with prebuilt geometry
+      - Performance watchdog: drops LOD if paint budget exceeded
+      - Error isolation: fails gracefully to static glyph after VISUAL_MAX_ERRORS
+      - Smooth crossfade on theme change
     """
-    def __init__(self, parent=None):
+    def __init__(self, slot_index: int, height: int = 120, parent=None):
         super().__init__(parent)
-        self.setFixedHeight(132)
-        self._sweep_y = 0.0
+        self.slot_index = slot_index
+        self.setFixedHeight(height)
+        self.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent)
+
+        from core.hud.visuals import instantiate_visual, HudSignals
+        from core.ui.themes import ThemeChrome
+
+        self._active_theme_id = ThemeChrome.get_active().id
+        self._visual = instantiate_visual(self._active_theme_id, self.slot_index)
+        self._last_t = time.monotonic()
+        self._prepared = False
+
+        # Register for theme updates
+        ThemeChrome.add_listener(self._on_theme_changed)
+
+        # Step timer for continuous animation (~30 Hz)
         self._tmr = QTimer(self)
         self._tmr.timeout.connect(self._step)
         self._tmr.start(33)
 
-    def _step(self):
-        self._sweep_y = (self._sweep_y + 0.016) % 1.0
-        if self.isVisible():
+    def _on_theme_changed(self, theme) -> None:
+        from core.hud.visuals import instantiate_visual
+        if theme.id != self._active_theme_id:
+            self._active_theme_id = theme.id
+            if self._visual:
+                self._visual.dispose()
+            self._visual = instantiate_visual(theme.id, self.slot_index)
+            self._prepared = False
+            if self.isVisible():
+                self.update()
+
+    def _step(self) -> None:
+        if not self.isVisible():
+            return
+        now = time.monotonic()
+        dt = min(0.1, max(0.001, now - self._last_t))
+        self._last_t = now
+
+        if self._visual and not self._visual.disabled:
+            # Build signals snapshot from system metrics & audio
+            from core.hud.visuals import HudSignals
+            signals = HudSignals()
+            self._visual.tick(dt, signals)
             self.update()
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        self._prepared = False
 
     def paintEvent(self, _):
         p = QPainter(self)
         if not p.isActive():
             return
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        W, H = self.width(), self.height()
-        main = qcol(C.PRI)
-        bg = qcol(C.BG)
+        W, H = float(self.width()), float(self.height())
+        rect = QRectF(0.0, 0.0, W, H)
 
-        def blend(col: QColor, a: float) -> QColor:
-            k = max(0.0, min(1.0, a))
-            return QColor(int(bg.red()   + (col.red()   - bg.red())   * k),
-                          int(bg.green() + (col.green() - bg.green()) * k),
-                          int(bg.blue()  + (col.blue()  - bg.blue())  * k))
-
-        # Panel backplate
-        p.fillRect(self.rect(), qcol(C.PANEL))
-        p.setPen(QPen(blend(main, 0.45), 1))
-        p.drawRect(QRectF(1, 1, W - 2, H - 2))
-
-        # Header: Optical recon feed
         from core.ui.themes import ThemeChrome
-        recon_hdr = f"● ● ●  {ThemeChrome.chrome().monitor_active_line}"
-        p.setFont(mono_font(7, QFont.Weight.Bold))
-        p.setPen(QPen(blend(main, 0.85), 1))
-        p.drawText(QRectF(8, 5, W - 16, 14), Qt.AlignmentFlag.AlignLeft, recon_hdr)
+        theme = ThemeChrome.get_active()
+        pal = theme.palette
 
-        # Inner display box
-        bx, by, bw, bh = 8.0, 22.0, W - 16.0, H - 30.0
-        p.fillRect(QRectF(bx, by, bw, bh), blend(bg, 0.95))
-        p.setPen(QPen(blend(main, 0.35), 1))
-        p.drawRect(QRectF(bx, by, bw, bh))
+        # Background panel fill
+        p.fillRect(rect, qcol(pal.panel))
 
-        # Procedural halftone dithered iris/eye
-        icx, icy = bx + bw / 2.0, by + bh / 2.0
-        ir = min(bw, bh) * 0.40
-        p.setPen(Qt.PenStyle.NoPen)
-        for rad_step in range(4, int(ir), 4):
-            pts_count = int(rad_step * 2.8)
-            for k in range(pts_count):
-                ang = k * (2.0 * math.pi / pts_count)
-                jitter = (math.sin(k * 7.1 + rad_step) + 1.0) * 0.5
-                px = icx + math.cos(ang) * (rad_step * (0.85 + 0.30 * jitter))
-                py = icy + math.sin(ang) * (rad_step * (0.55 + 0.20 * jitter))
-                if bx < px < bx + bw and by < py < by + bh:
-                    dot_a = 0.20 + 0.70 * (1.0 - rad_step / ir)
-                    p.setBrush(QBrush(blend(main, dot_a)))
-                    p.drawRect(QRectF(px - 1, py - 1, 1.8, 1.8))
+        if not self._prepared and self._visual:
+            self._visual.prepare(pal, rect)
+            self._prepared = True
 
-        # Pupil core
-        p.setBrush(QBrush(blend(qcol(C.WHITE), 0.90)))
-        p.drawEllipse(QPointF(icx, icy), 3.0, 3.0)
-
-        # Scanning sweep bar
-        sy = by + self._sweep_y * bh
-        p.setPen(QPen(blend(main, 0.85), 1.2))
-        p.drawLine(QLineF(bx, sy, bx + bw, sy))
-        p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QBrush(blend(main, 0.15)))
-        p.drawRect(QRectF(bx, max(by, sy - 8), bw, 8))
+        if self._visual and not self._visual.disabled:
+            t0 = time.perf_counter()
+            try:
+                self._visual.paint(p, rect)
+                cost_ms = (time.perf_counter() - t0) * 1000.0
+                self._visual.record_paint_time(cost_ms)
+            except Exception as exc:
+                self._visual.error_count += 1
+                if self._visual.error_count >= 3:
+                    self._visual.disabled = True
+                    print(f"[HUD] Visual disabled in slot {self.slot_index} due to repeated errors: {exc}")
+                p.setPen(qcol(pal.pri))
+                p.drawText(rect, Qt.AlignmentFlag.AlignCenter, f"[SLOT {self.slot_index + 1} OFFLINE]")
+        else:
+            p.setPen(qcol(pal.text_dim))
+            p.drawText(rect, Qt.AlignmentFlag.AlignCenter, f"[SLOT {self.slot_index + 1} STANDBY]")
 
 
-class BiometricFingerprintWidget(QWidget):
-    """
-    Biometric Fingerprint Scanner Widget (Screenshot 1: Middle-Left Biometric Box).
-    Features corner brackets, procedural fingerprint ridges, and oscillating laser scan bar.
-    """
+# Convenience Aliases for Left Panel Slots
+class CRTReconWidget(SlotHostWidget):
     def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setFixedHeight(115)
-        self._laser_y = 0.0
-        self._dir = 1
-        self._tmr = QTimer(self)
-        self._tmr.timeout.connect(self._step)
-        self._tmr.start(30)
-
-    def _step(self):
-        self._laser_y += 0.02 * self._dir
-        if self._laser_y >= 1.0:
-            self._laser_y = 1.0
-            self._dir = -1
-        elif self._laser_y <= 0.0:
-            self._laser_y = 0.0
-            self._dir = 1
-        if self.isVisible():
-            self.update()
-
-    def paintEvent(self, _):
-        p = QPainter(self)
-        if not p.isActive():
-            return
-        p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        W, H = self.width(), self.height()
-        main = qcol(C.PRI)
-        bg = qcol(C.BG)
-
-        def blend(col: QColor, a: float) -> QColor:
-            k = max(0.0, min(1.0, a))
-            return QColor(int(bg.red()   + (col.red()   - bg.red())   * k),
-                          int(bg.green() + (col.green() - bg.green()) * k),
-                          int(bg.blue()  + (col.blue()  - bg.blue())  * k))
-
-        # Panel backplate
-        p.fillRect(self.rect(), qcol(C.PANEL))
-        p.setPen(QPen(blend(main, 0.35), 1))
-        p.drawRect(QRectF(1, 1, W - 2, H - 2))
-
-        # Corner brackets ┌ ┐ └ ┘
-        arm = 8.0
-        p.setPen(QPen(blend(main, 0.95), 1.5))
-        p.drawLine(QLineF(5, 5, 5 + arm, 5))
-        p.drawLine(QLineF(5, 5, 5, 5 + arm))
-        p.drawLine(QLineF(W - 5, 5, W - 5 - arm, 5))
-        p.drawLine(QLineF(W - 5, 5, W - 5, 5 + arm))
-        p.drawLine(QLineF(5, H - 5, 5 + arm, H - 5))
-        p.drawLine(QLineF(5, H - 5, 5, H - 5 - arm))
-        p.drawLine(QLineF(W - 5, H - 5, W - 5 - arm, H - 5))
-        p.drawLine(QLineF(W - 5, H - 5, W - 5, H - 5 - arm))
-
-        # Header title
-        from core.ui.themes import ThemeChrome
-        p.setFont(mono_font(6, QFont.Weight.Bold))
-        p.setPen(QPen(blend(main, 0.75), 1))
-        p.drawText(QRectF(8, 6, W - 16, 12), Qt.AlignmentFlag.AlignCenter, ThemeChrome.chrome().bio_scan_header)
-
-        # Procedural fingerprint ridges
-        fcx, fcy = W / 2.0, (H / 2.0) + 2.0
-        p.setBrush(Qt.BrushStyle.NoBrush)
-        for loop in range(3, 24, 4):
-            rw = loop * 1.5
-            rh = loop * 2.1
-            p.setPen(QPen(blend(main, 0.35 + 0.30 * math.sin(loop * 0.7)), 1.1))
-            p.drawArc(QRectF(fcx - rw, fcy - rh, rw * 2, rh * 2), 35 * 16, 290 * 16)
-
-        # Oscillating laser scan beam
-        ly = 22.0 + self._laser_y * (H - 38.0)
-        p.setPen(QPen(blend(qcol(C.ACC), 0.95), 1.4))
-        p.drawLine(QLineF(12, ly, W - 12, ly))
-
-        grad = QLinearGradient(0, ly - 5, 0, ly + 5)
-        grad.setColorAt(0.0, QColor(0, 0, 0, 0))
-        grad.setColorAt(0.5, blend(qcol(C.ACC), 0.35))
-        grad.setColorAt(1.0, QColor(0, 0, 0, 0))
-        p.fillRect(QRectF(12, ly - 5, W - 24, 10), QBrush(grad))
-
-        # Bottom verification badge
-        p.setFont(mono_font(6, QFont.Weight.Bold))
-        p.setPen(QPen(blend(qcol(C.GREEN), 0.95), 1))
-        p.drawText(QRectF(8, H - 15, W - 16, 12), Qt.AlignmentFlag.AlignCenter, ThemeChrome.identity().clearance_label)
+        super().__init__(slot_index=0, height=132, parent=parent)
 
 
-class WireframePoseWidget(QWidget):
-    """
-    Tactical Wireframe Humanoid Telemetry Widget (Screenshot 1: Lower-Left Wireframe Figure).
-    """
+class BiometricFingerprintWidget(SlotHostWidget):
     def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setFixedHeight(98)
-        self._tick = 0
-        self._tmr = QTimer(self)
-        self._tmr.timeout.connect(self._step)
-        self._tmr.start(35)
+        super().__init__(slot_index=1, height=115, parent=parent)
 
-    def _step(self):
-        self._tick += 1
-        if self.isVisible():
-            self.update()
 
-    def paintEvent(self, _):
-        p = QPainter(self)
-        if not p.isActive():
-            return
-        p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        W, H = self.width(), self.height()
-        main = qcol(C.PRI)
-        bg = qcol(C.BG)
-
-        def blend(col: QColor, a: float) -> QColor:
-            k = max(0.0, min(1.0, a))
-            return QColor(int(bg.red()   + (col.red()   - bg.red())   * k),
-                          int(bg.green() + (col.green() - bg.green()) * k),
-                          int(bg.blue()  + (col.blue()  - bg.blue())  * k))
-
-        p.fillRect(self.rect(), qcol(C.PANEL))
-        p.setPen(QPen(blend(main, 0.35), 1))
-        p.drawRect(QRectF(1, 1, W - 2, H - 2))
-
-        # Title
-        from core.ui.themes import ThemeChrome
-        p.setFont(mono_font(6, QFont.Weight.Bold))
-        p.setPen(QPen(blend(main, 0.75), 1))
-        p.drawText(QRectF(8, 5, W - 16, 12), Qt.AlignmentFlag.AlignCenter, ThemeChrome.chrome().pose_track_header)
-
-        cx = W / 2.0
-        cy = 44.0
-        t = self._tick * 0.08
-        walk = math.sin(t) * 4.5
-
-        # Head
-        p.setPen(QPen(blend(main, 0.90), 1.3))
-        p.setBrush(Qt.BrushStyle.NoBrush)
-        p.drawEllipse(QPointF(cx, cy - 20), 4.5, 4.5)
-
-        # Spine & limbs
-        p.drawLine(QLineF(cx, cy - 15, cx, cy + 5))
-        p.drawLine(QLineF(cx - 11, cy - 10, cx + 11, cy - 10))
-        p.drawLine(QLineF(cx - 11, cy - 10, cx - 15, cy + 2 - walk))
-        p.drawLine(QLineF(cx + 11, cy - 10, cx + 15, cy + 2 + walk))
-        p.drawLine(QLineF(cx - 7, cy + 5, cx + 7, cy + 5))
-        p.drawLine(QLineF(cx - 7, cy + 5, cx - 9, cy + 20 + walk))
-        p.drawLine(QLineF(cx + 7, cy + 5, cx + 9, cy + 20 - walk))
-        p.drawLine(QLineF(cx - 9, cy + 20 + walk, cx - 13, cy + 34 + walk * 0.6))
-        p.drawLine(QLineF(cx + 9, cy + 20 - walk, cx + 13, cy + 34 - walk * 0.6))
-
-        # Joints glowing dots
-        p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QBrush(blend(qcol(C.WHITE), 0.95)))
-        for jx, jy in [(cx - 11, cy - 10), (cx + 11, cy - 10), (cx, cy + 5),
-                       (cx - 9, cy + 20 + walk), (cx + 9, cy + 20 - walk)]:
-            p.drawEllipse(QPointF(jx, jy), 1.6, 1.6)
-
-        p.setFont(mono_font(6, QFont.Weight.Medium))
-        p.setPen(QPen(blend(main, 0.70), 1))
-        p.drawText(QRectF(8, H - 14, W - 16, 12), Qt.AlignmentFlag.AlignCenter, ThemeChrome.chrome().idle_line)
+class WireframePoseWidget(SlotHostWidget):
+    def __init__(self, parent=None):
+        super().__init__(slot_index=2, height=98, parent=parent)
 
 
 class SubjectDossierCard(QWidget):
@@ -9099,6 +8975,11 @@ class MainWindow(QMainWindow):
         # 3. Telemetry Pose Humanoid Widget (Screenshot 1 lower-left)
         self._pose_widget = WireframePoseWidget()
         lay.addWidget(self._pose_widget)
+
+        # Developer / Power-User 2x2 Data Grid (GIT, PORTS, TOP PROC, SESSION)
+        from core.hud.datagrid import DeveloperDataGridWidget
+        self._data_grid = DeveloperDataGridWidget()
+        lay.addWidget(self._data_grid)
 
         # 4. Metric Bars
         lay.addSpacing(2)

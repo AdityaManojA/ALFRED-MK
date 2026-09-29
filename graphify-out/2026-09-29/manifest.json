@@ -24,9 +24,9 @@
     "semantic_hash": ""
   },
   "actions/computer_settings.py": {
-    "mtime": 1790626987.153339,
-    "seen": 1790628576.709097,
-    "ast_hash": "c97e6c9e6a337bd4f6d63ab2f1ec932f",
+    "mtime": 1790698829.9150925,
+    "seen": 1790701585.2525544,
+    "ast_hash": "7c393cf8bd8cf9e02e388feb6157183c",
     "semantic_hash": ""
   },
   "actions/desktop.py": {
@@ -270,9 +270,9 @@
     "semantic_hash": ""
   },
   "ui.py": {
-    "mtime": 1790690171.821372,
-    "seen": 1790690248.5853007,
-    "ast_hash": "ff188ac89e158eaaa5e90df3cd4ee154",
+    "mtime": 1790701264.4784653,
+    "seen": 1790701585.2525544,
+    "ast_hash": "e46d7b3afeaea9cbd006e98ec4a7256d",
     "semantic_hash": ""
   },
   ".agents/rules/graphify.md": {
@@ -312,9 +312,9 @@
     "semantic_hash": ""
   },
   "readme.md": {
-    "mtime": 1790692711.5723226,
-    "seen": 1790692742.522642,
-    "ast_hash": "5fdde3cdfb233c8d2e4876e8ae71700a",
+    "mtime": 1790699565.5145319,
+    "seen": 1790701585.2535284,
+    "ast_hash": "96e83ea67bf646efefda42394fb08926",
     "semantic_hash": ""
   },
   "requirements.txt": {
@@ -432,8 +432,8 @@
     "semantic_hash": "0c2178c383f8edcbe38ee55ce1b8bc8e"
   },
   "config/music_playlist.json": {
-    "mtime": 1790692440.532695,
-    "seen": 1790692742.5210528,
+    "mtime": 1790701567.7423337,
+    "seen": 1790701585.2525544,
     "ast_hash": "1f9e15365dde86f74ae7aef8fd3a130b",
     "semantic_hash": ""
   },
@@ -1116,8 +1116,8 @@
     "semantic_hash": ""
   },
   "config/users/Master_Wayne/protocols.yaml": {
-    "mtime": 1790691596.7239609,
-    "seen": 1790691628.595802,
+    "mtime": 1790701562.4103892,
+    "seen": 1790701585.2525544,
     "ast_hash": "9615a7dbeb0ff72ed036cca3442dfd42",
     "semantic_hash": ""
   },
@@ -2079,6 +2079,216 @@
     "mtime": 1790692502.222794,
     "seen": 1790692742.5228236,
     "ast_hash": "3615b30fbeeed831db99893b66267b79",
+    "semantic_hash": ""
+  },
+  "core/hud/datagrid/__init__.py": {
+    "mtime": 1790701091.6787913,
+    "seen": 1790701585.2525544,
+    "ast_hash": "6c727d1fcebcac42211f472df304e4f1",
+    "semantic_hash": ""
+  },
+  "core/hud/datagrid/grid.py": {
+    "mtime": 1790701422.8513417,
+    "seen": 1790701585.2525544,
+    "ast_hash": "d676cf00f7490743436a46cb16821aa9",
+    "semantic_hash": ""
+  },
+  "core/hud/datagrid/providers.py": {
+    "mtime": 1790701075.1056328,
+    "seen": 1790701585.2525544,
+    "ast_hash": "506cb29c31daa77427e9b44f09084a02",
+    "semantic_hash": ""
+  },
+  "core/hud/visuals/__init__.py": {
+    "mtime": 1790701063.827376,
+    "seen": 1790701585.2525544,
+    "ast_hash": "f995f164d89fedd7926b23f42b44415d",
+    "semantic_hash": ""
+  },
+  "core/hud/visuals/base.py": {
+    "mtime": 1790701348.5830572,
+    "seen": 1790701585.2525544,
+    "ast_hash": "9b62558fe2628f95a2bd650241ff8f23",
+    "semantic_hash": ""
+  },
+  "core/hud/visuals/central.py": {
+    "mtime": 1790701057.236534,
+    "seen": 1790701585.2525544,
+    "ast_hash": "e4a6a3d768200747e7f692dbbfde3d70",
+    "semantic_hash": ""
+  },
+  "core/hud/visuals/primitives.py": {
+    "mtime": 1790700930.7382455,
+    "seen": 1790701585.2525544,
+    "ast_hash": "40440a356cc178079a0e016cf219cc4b",
+    "semantic_hash": ""
+  },
+  "core/hud/visuals/registry.py": {
+    "mtime": 1790701048.5549479,
+    "seen": 1790701585.2525544,
+    "ast_hash": "323a0df054ccfbaa0ca34b412ee6860a",
+    "semantic_hash": ""
+  },
+  "core/hud/visuals/slots/__init__.py": {
+    "mtime": 1790701039.6438777,
+    "seen": 1790701585.2525544,
+    "ast_hash": "8d8d817a329ac86b536fbfa0f5ea81d4",
+    "semantic_hash": ""
+  },
+  "core/hud/visuals/slots/arkham.py": {
+    "mtime": 1790701022.6827538,
+    "seen": 1790701585.2525544,
+    "ast_hash": "67e6372b83531004ed57abf29b3f5c57",
+    "semantic_hash": ""
+  },
+  "core/hud/visuals/slots/bane.py": {
+    "mtime": 1790700967.64998,
+    "seen": 1790701585.2525544,
+    "ast_hash": "5fdde466a89d50a20265dd7936c9f253",
+    "semantic_hash": ""
+  },
+  "core/hud/visuals/slots/batcave.py": {
+    "mtime": 1790701499.084756,
+    "seen": 1790701585.2525544,
+    "ast_hash": "c639642216f0b485d11867ed136af596",
+    "semantic_hash": ""
+  },
+  "core/hud/visuals/slots/beyond.py": {
+    "mtime": 1790700978.198939,
+    "seen": 1790701585.2525544,
+    "ast_hash": "26226b29a70a699bb02913fe61553c72",
+    "semantic_hash": ""
+  },
+  "core/hud/visuals/slots/catwoman.py": {
+    "mtime": 1790700957.6798794,
+    "seen": 1790701585.2525544,
+    "ast_hash": "ba199469724e06b90f2f5c52cdd029c6",
+    "semantic_hash": ""
+  },
+  "core/hud/visuals/slots/freeze.py": {
+    "mtime": 1790700989.821484,
+    "seen": 1790701585.2525544,
+    "ast_hash": "e79a37bd59f84db2779c3d802218f137",
+    "semantic_hash": ""
+  },
+  "core/hud/visuals/slots/joker.py": {
+    "mtime": 1790701000.9619248,
+    "seen": 1790701585.2525544,
+    "ast_hash": "b447a42b3a72f028fa6e16d0000160bc",
+    "semantic_hash": ""
+  },
+  "core/hud/visuals/slots/two_face.py": {
+    "mtime": 1790701012.0496802,
+    "seen": 1790701585.2525544,
+    "ast_hash": "e8af27690e92eaed704677fbb941bb09",
+    "semantic_hash": ""
+  },
+  "core/hud/visuals/slots/watchtower.py": {
+    "mtime": 1790701032.186176,
+    "seen": 1790701585.2525544,
+    "ast_hash": "8ec2f9c3c1eaf5c053a1dd5b92a0a414",
+    "semantic_hash": ""
+  },
+  "core/platform/__init__.py": {
+    "mtime": 1790698589.1494286,
+    "seen": 1790701585.2525544,
+    "ast_hash": "af0a1b435788fc759e79a1a6ffc08217",
+    "semantic_hash": ""
+  },
+  "core/platform/base.py": {
+    "mtime": 1790698551.2988508,
+    "seen": 1790701585.2525544,
+    "ast_hash": "ed900ba9519923d7943bc7692e243417",
+    "semantic_hash": ""
+  },
+  "core/platform/linux.py": {
+    "mtime": 1790698582.241616,
+    "seen": 1790701585.2525544,
+    "ast_hash": "908ba5fc232f990c81c2798b8fbdd387",
+    "semantic_hash": ""
+  },
+  "core/platform/mac.py": {
+    "mtime": 1790698573.2654388,
+    "seen": 1790701585.2525544,
+    "ast_hash": "cf4b3b8aebd1061ce9b3ae93b4155af0",
+    "semantic_hash": ""
+  },
+  "core/platform/win.py": {
+    "mtime": 1790698561.110909,
+    "seen": 1790701585.2525544,
+    "ast_hash": "209c41f21388148b9dfe624ee7a39823",
+    "semantic_hash": ""
+  },
+  "tests/hud_visuals/test_visuals.py": {
+    "mtime": 1790701472.747859,
+    "seen": 1790701585.2525544,
+    "ast_hash": "f8c2c59ddbfb474e511d8197a8c92eac",
+    "semantic_hash": ""
+  },
+  "tests/test_crossplatform_backend.py": {
+    "mtime": 1790698596.3426077,
+    "seen": 1790701585.2525544,
+    "ast_hash": "f1735e7f2b46bec6900cf5ab0630dc54",
+    "semantic_hash": ""
+  },
+  "docs/crossplatform/PHASE_0_NOTES.md": {
+    "mtime": 1790698541.4182901,
+    "seen": 1790701585.2525544,
+    "ast_hash": "cdf7ba8cf18d81e791a9d4ac24ba1eaf",
+    "semantic_hash": ""
+  },
+  "docs/crossplatform/PHASE_1_NOTES.md": {
+    "mtime": 1790698736.7727149,
+    "seen": 1790701585.2525544,
+    "ast_hash": "4c489ad29e8e26bd42cc65d0a4f05e42",
+    "semantic_hash": ""
+  },
+  "docs/crossplatform/PHASE_2_NOTES.md": {
+    "mtime": 1790698788.7874427,
+    "seen": 1790701585.2525544,
+    "ast_hash": "f45896ec2c6c3443eab135a7ad92bb29",
+    "semantic_hash": ""
+  },
+  "docs/crossplatform/PHASE_3_NOTES.md": {
+    "mtime": 1790698803.9752576,
+    "seen": 1790701585.2525544,
+    "ast_hash": "c17252a77120f5c151432bd27aa2834a",
+    "semantic_hash": ""
+  },
+  "docs/crossplatform/PHASE_4_NOTES.md": {
+    "mtime": 1790698820.188416,
+    "seen": 1790701585.2525544,
+    "ast_hash": "c83f32750cf866ac32fd0cf6be46b44e",
+    "semantic_hash": ""
+  },
+  "docs/crossplatform/PHASE_5_NOTES.md": {
+    "mtime": 1790698838.186547,
+    "seen": 1790701585.2525544,
+    "ast_hash": "afce0fe8fbb402ff55b1b28deb4158ff",
+    "semantic_hash": ""
+  },
+  "docs/crossplatform/SETUP.md": {
+    "mtime": 1790698848.1324546,
+    "seen": 1790701585.2525544,
+    "ast_hash": "694c228b2d5ff279f00c4e16dd2826ad",
+    "semantic_hash": ""
+  },
+  "docs/crossplatform/VERIFY.md": {
+    "mtime": 1790698858.067788,
+    "seen": 1790701585.2525544,
+    "ast_hash": "7e03e31048774676cb3fd103d2c52eb3",
+    "semantic_hash": ""
+  },
+  "docs/hud_visuals/PHASE_0_NOTES.md": {
+    "mtime": 1790700894.081127,
+    "seen": 1790701585.2525544,
+    "ast_hash": "89cfe698ef8ddabb85ee6fa8db4d5a1b",
+    "semantic_hash": ""
+  },
+  "docs/hud_visuals/VERIFY.md": {
+    "mtime": 1790701527.6660483,
+    "seen": 1790701585.2525544,
+    "ast_hash": "c482a9e531c0843b657f5ae86407c225",
     "semantic_hash": ""
   }
 }

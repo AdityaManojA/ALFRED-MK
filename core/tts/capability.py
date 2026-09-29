@@ -31,12 +31,17 @@ def check_python_version() -> bool:
 
 
 def check_dependencies() -> bool:
-    """Check if all optional packages required for Jarvis are installed."""
+    """Check if all optional packages required for Jarvis are installed without full import."""
+    import importlib.util
     required = ("torch", "soundfile", "huggingface_hub", "voxcpm")
     for mod in required:
         try:
-            __import__(mod)
-        except ImportError:
+            if mod in sys.modules:
+                continue
+            spec = importlib.util.find_spec(mod)
+            if spec is None:
+                return False
+        except Exception:
             return False
     return True
 
@@ -46,6 +51,11 @@ def check_cuda_and_vram() -> tuple[bool, bool, float]:
     Check CUDA availability and device 0 total memory in GB.
     Returns (has_cuda, has_min_vram, vram_gb).
     """
+    if "torch" not in sys.modules:
+        # Don't import torch synchronously during UI boot if not already loaded
+        import importlib.util
+        if importlib.util.find_spec("torch") is None:
+            return False, False, 0.0
     try:
         import torch
         if not torch.cuda.is_available():
