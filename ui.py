@@ -8008,6 +8008,7 @@ class MainWindow(QMainWindow):
 
         # Background score player (10% default, ducks to 5% when Alfred speaks)
         self._bg_music = TronScoreBackgroundPlayer(self)
+        self._image_deck = None  # Lazily instantiated on first request via get_image_viewer()
 
         self._left_panel = self._build_left_panel()
         body.addWidget(self._left_panel, stretch=0)
@@ -8261,12 +8262,16 @@ class MainWindow(QMainWindow):
                 on_backend_stop=backend.stop,
                 on_backend_set_muted=backend.set_muted,
                 on_backend_set_volume=backend.set_volume,
+                on_backend_seek=backend.seek,
             )
 
-            # Backend readiness -> controller
+            # Backend signals -> controller
             backend.on_ready.connect(ctrl.on_backend_ready)
-            backend.on_error.connect(lambda msg: ctrl.signal_error(msg[:60]))
-            backend.on_ended.connect(ctrl.stop)
+            backend.on_error.connect(lambda msg: ctrl.on_backend_error(msg[:60]))
+            backend.on_ended.connect(ctrl.on_backend_ended)
+            backend.on_position_changed.connect(ctrl.on_backend_position)
+            backend.on_duration_changed.connect(ctrl.on_backend_duration)
+            backend.on_seekable_changed.connect(ctrl.on_backend_seekable)
 
             # Surface close button -> stop
             surf.stop_requested.connect(ctrl.stop)
@@ -10640,6 +10645,7 @@ class MainWindow(QMainWindow):
 
     def _centre_overlay(self, ov) -> None:
         """Place a floating overlay in the middle of the HUD and show it."""
+        from core.hud_video.layering import raise_overlay
         cw = self.centralWidget()
         ov.adjustSize()
         ov.setGeometry(
@@ -10647,8 +10653,7 @@ class MainWindow(QMainWindow):
             max(0, (cw.height() - ov.height()) // 2),
             ov.width(), ov.height(),
         )
-        ov.show()
-        ov.raise_()
+        raise_overlay(ov, cw)
 
     # ── Audio devices ────────────────────────────────────────────────────────
 
@@ -11090,6 +11095,11 @@ class MainWindow(QMainWindow):
     def _apply_state(self, state: str):
         self.hud.state    = state
         self.hud.speaking = (state == "SPEAKING")
+        if hasattr(self, "_hud_video_controller") and self._hud_video_controller is not None:
+            if state == "SPEAKING":
+                self._hud_video_controller.duck()
+            else:
+                self._hud_video_controller.unduck()
 
     def set_media_arbiter(self, arbiter) -> None:
         """Connect application-level media state to the UI-owned audio player."""
@@ -11101,6 +11111,23 @@ class MainWindow(QMainWindow):
     def _on_media_state_changed(self, state) -> None:
         if hasattr(self, "_bg_music") and self._bg_music:
             self._bg_music.set_ducked(bool(state.tts_ducking))
+        if hasattr(self, "_hud_video_controller") and self._hud_video_controller is not None:
+            if bool(state.tts_ducking):
+                self._hud_video_controller.duck()
+            else:
+                self._hud_video_controller.unduck()
+        if state.overridden:
+            self.set_audio_status("SHARED")
+        elif state.external_suppressed:
+            self.set_audio_status("EXCLUSIVE")
+        else:
+            self.set_audio_status("READY")
+
+    def show_image_deck(self, path: str, caption: str = "") -> None:
+        from core.image_viewer import get_image_viewer, extract_host
+        viewer = get_image_viewer(self)
+        self._image_deck = viewer
+        viewer.show_image(path, caption=caption, host=extract_host(path))
 
     def set_spotify_playback(
         self, title: str, artist: str = "", uri: str = "", is_playing: bool = True
@@ -11343,6 +11370,14 @@ class JarvisUI:
         if v != self._win._muted:
             self._win._toggle_mute()
 
+    def toggle_mute(self) -> None:
+        """Toggle audio mute state."""
+        self._win._toggle_mute()
+
+    def set_media_arbiter(self, arbiter) -> None:
+        """Connect application-level media state to MainWindow."""
+        self._win.set_media_arbiter(arbiter)
+
     @property
     def current_file(self) -> str | None:
         return self._win._drop_zone.current_file()
@@ -11452,6 +11487,30 @@ class JarvisUI:
     def wake_get_state(self, cb):
         self._win.wake_get_state = cb
 
+    @property
+    def on_wake_install(self):
+        return getattr(self._win, "on_wake_install", None)
+
+    @on_wake_install.setter
+    def on_wake_install(self, cb):
+        self._win.on_wake_install = cb
+
+    @property
+    def wake_is_ready(self):
+        return getattr(self._win, "wake_is_ready", None)
+
+    @wake_is_ready.setter
+    def wake_is_ready(self, cb):
+        self._win.wake_is_ready = cb
+
+    @property
+    def request_say(self):
+        return getattr(self._win, "request_say", None)
+
+    @request_say.setter
+    def request_say(self, cb):
+        self._win.request_say = cb
+
     def set_audio_level(self, level: float) -> None:
         """Thread-safe: feed a 0.0–1.0 live audio level to the HUD waveform.
         Called from the audio threads; a plain float store is atomic under the
@@ -11496,6 +11555,9 @@ class JarvisUI:
     def set_audio_status(self, status: str):
         if hasattr(self, "_win") and self._win is not None:
             self._win.set_audio_status(status)
+
+    def show_image_deck(self, path: str, caption: str = "") -> None:
+        self._win.show_image_deck(path, caption)
 
     def set_state(self, state: str):
         self._win._state_sig.emit(state)
