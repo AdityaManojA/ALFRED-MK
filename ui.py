@@ -4888,7 +4888,7 @@ class SetupOverlay(QWidget):
         self._key_input.setFixedHeight(30)
         self._key_input.setStyleSheet(_inp_style)
         gemini_lay.addWidget(self._key_input)
-        gemini_hint = QLabel("Sub-second bidirectional voice stream via Google AI Studio WebSocket.")
+        gemini_hint = QLabel("⚡ Cloud Multimodal WebSocket — Zero local compute/Ollama required. Recommended for macOS & all platforms.")
         gemini_hint.setFont(tech_font(7))
         gemini_hint.setStyleSheet(f"color: {C.TEXT_MUTED}; background: transparent;")
         gemini_lay.addWidget(gemini_hint)
@@ -5266,7 +5266,10 @@ class SetupOverlay(QWidget):
                 self._probe_status.setText(f"● ONLINE // Models: {found}")
                 self._probe_status.setStyleSheet(f"color: {C.GREEN}; background: transparent;")
             else:
-                self._probe_status.setText("▲ OFFLINE — Run 'ollama serve' in terminal")
+                hint = "Run 'ollama serve' in terminal"
+                if self._sel_os == "mac":
+                    hint = "Run 'brew install ollama && ollama serve' (CLI works on macOS 11+)"
+                self._probe_status.setText(f"▲ OFFLINE — {hint}")
                 self._probe_status.setStyleSheet(f"color: {C.RED}; background: transparent;")
             return
 

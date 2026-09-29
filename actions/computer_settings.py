@@ -59,26 +59,32 @@ def _get_macos_wifi_interface() -> str:
     return "en0" 
 
 def volume_up():
-    if _OS == "Windows":
-        for _ in range(5): pyautogui.press("volumeup")
-    elif _OS == "Darwin":
-        subprocess.run(["osascript", "-e",
-            "set volume output volume (output volume of (get volume settings) + 10)"],
-            capture_output=True)
+    from core.platform import get_backend
+    backend = get_backend()
+    cur = backend.get_volume()
+    if cur is not None:
+        backend.set_volume(min(100, cur + 10))
     else:
-        subprocess.run(["pactl", "set-sink-volume", "@DEFAULT_SINK@", "+10%"],
-            capture_output=True)
+        if _OS == "Windows":
+            for _ in range(5): pyautogui.press("volumeup")
+        elif _OS == "Darwin":
+            subprocess.run(["osascript", "-e", "set volume output volume (output volume of (get volume settings) + 10)"], capture_output=True)
+        else:
+            subprocess.run(["pactl", "set-sink-volume", "@DEFAULT_SINK@", "+10%"], capture_output=True)
 
 def volume_down():
-    if _OS == "Windows":
-        for _ in range(5): pyautogui.press("volumedown")
-    elif _OS == "Darwin":
-        subprocess.run(["osascript", "-e",
-            "set volume output volume (output volume of (get volume settings) - 10)"],
-            capture_output=True)
+    from core.platform import get_backend
+    backend = get_backend()
+    cur = backend.get_volume()
+    if cur is not None:
+        backend.set_volume(max(0, cur - 10))
     else:
-        subprocess.run(["pactl", "set-sink-volume", "@DEFAULT_SINK@", "-10%"],
-            capture_output=True)
+        if _OS == "Windows":
+            for _ in range(5): pyautogui.press("volumedown")
+        elif _OS == "Darwin":
+            subprocess.run(["osascript", "-e", "set volume output volume (output volume of (get volume settings) - 10)"], capture_output=True)
+        else:
+            subprocess.run(["pactl", "set-sink-volume", "@DEFAULT_SINK@", "-10%"], capture_output=True)
 
 def volume_mute():
     if _OS == "Windows":
@@ -91,33 +97,8 @@ def volume_mute():
             capture_output=True)
 
 def volume_get() -> int | None:
-    """Current master volume 0-100, or None if this platform will not say.
-
-    Undo needs a "before" value, and reading one is cheap on every OS we
-    support. Where it is not readable the action simply is not registered as
-    undoable — a wrong undo is worse than no undo."""
-    try:
-        if _OS == "Windows":
-            from ctypes import cast, POINTER
-            from comtypes import CLSCTX_ALL
-            from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
-            devices = AudioUtilities.GetSpeakers()
-            vol = getattr(devices, "EndpointVolume", None)
-            if vol is None:
-                interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-                vol = cast(interface, POINTER(IAudioEndpointVolume))
-            scalar = vol.GetMasterVolumeLevelScalar()
-            return max(0, min(100, round(scalar * 100)))
-        if _OS == "Darwin":
-            r = subprocess.run(["osascript", "-e", "output volume of (get volume settings)"],
-                               capture_output=True, text=True, timeout=5)
-            return max(0, min(100, int(r.stdout.strip())))
-        r = subprocess.run(["pactl", "get-sink-volume", "@DEFAULT_SINK@"],
-                           capture_output=True, text=True, timeout=5)
-        m = re.search(r"(\d+)%", r.stdout)
-        return max(0, min(100, int(m.group(1)))) if m else None
-    except Exception:
-        return None
+    from core.platform import get_backend
+    return get_backend().get_volume()
 
 
 def brightness_get() -> int | None:

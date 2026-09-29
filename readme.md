@@ -133,7 +133,8 @@ export GEMINI_API_KEY="AIzaSyYOUR_ACTUAL_GEMINI_API_KEY_HERE"
 ### 🔧 Step-by-Step: Switch to Local
 
 #### 🅰️ Option A: Ollama (Simplest)
-1. Install from [ollama.com](https://ollama.com/).
+1. Install from [ollama.com](https://ollama.com/) (macOS 14.0+, Windows, Linux).
+   * *Note for macOS 11/12/13 (Big Sur / Monterey / Ventura):* Install the CLI via `brew install ollama` and run `ollama serve`.
 2. Pull a model:
    ```powershell
    # 8 GB VRAM (Fast & Accurate):
