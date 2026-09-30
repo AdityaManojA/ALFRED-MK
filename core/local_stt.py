@@ -9,13 +9,19 @@ import threading
 import time
 from typing import Optional, Callable
 
+# ── Configuration Constants ──────────────────────────────────────────────────
+STT_PROVIDER: str = "whisper"
+STT_TIMEOUT_S: float = 2.0
+STT_STREAMING_ENABLED: bool = True
+STT_RETRY_MAX_ATTEMPTS: int = 2
+
 # ── Speech-finalisation debounce ──────────────────────────────────────────────
 # Vosk fires a "final" result every time the user pauses, even mid-sentence.
 # Instead of dispatching immediately, accumulate finals and wait FINISH_MS for
 # more speech. If the timer fires without new input the full sentence is sent.
 # Short interrupt words (single word, in _INTERRUPT_WORDS) skip this entirely
 # and fire at once.
-FINISH_MS = 900          # milliseconds to wait before committing a sentence
+FINISH_MS: int = 350         # milliseconds to wait before committing a sentence (compressed from 900ms)
 
 _INTERRUPT_WORDS: frozenset[str] = frozenset({
     "stop", "wait", "pause", "cancel", "abort", "halt",
@@ -244,8 +250,12 @@ class LocalSTTManager:
             # Convert to float32 numpy array for Whisper
             audio_np = np.frombuffer(audio_data, dtype=np.int16).astype(np.float32) / 32768.0
 
-            # Transcribe using Whisper
+            # Transcribe using Whisper with latency measurement
+            t0 = time.perf_counter()
             text = self.stt.transcribe(audio_np)
+            elapsed_ms = (time.perf_counter() - t0) * 1000.0
+            if elapsed_ms > 100.0:
+                print(f"[STT latency] Whisper transcribe: {elapsed_ms:.1f}ms")
 
             if text and text.strip():
                 self.transcript_queue.put(text.strip())

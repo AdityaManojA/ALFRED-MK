@@ -143,6 +143,9 @@ CHANNELS            = 1
 SEND_SAMPLE_RATE    = 16000 
 RECEIVE_SAMPLE_RATE = 24000
 CHUNK_SIZE          = 1024
+RECONNECT_BASE_S: float = 0.5       # Fast initial reconnect backoff
+RECONNECT_MAX_S: float = 5.0        # Cap backoff at 5s instead of 60s
+UPLINK_TIMEOUT_S: float = 5.0       # Uplink connection timeout budget
 
 # RMS below which 16-bit PCM is treated as room silence; above _LEVEL_FULL it
 # reads as a full-height waveform. Tuned so ordinary speech lands mid-range and
@@ -3678,26 +3681,26 @@ class JarvisLive:
                     except Exception:
                         pass
                     _tlog("ALFRED", "link", "Reconnecting...", self._dashboard)
-                    _conn_backoff = 3
+                    _conn_backoff = RECONNECT_BASE_S
                     continue
 
-                # Network / timeout errors â€” log clearly and back off
+                # Network / timeout errors — log clearly and back off with tight bounds
                 is_net_err = any(k in err_str for k in (
                     "TimeoutError", "timed out", "getaddrinfo", "CancelledError",
                     "ConnectionRefusedError", "OSError", "Cannot connect",
                 ))
                 if is_net_err:
-                    _conn_backoff = min(getattr(self, "_conn_backoff", 3) * 2, 60)
+                    _conn_backoff = min(getattr(self, "_conn_backoff", RECONNECT_BASE_S) * 2, RECONNECT_MAX_S)
                     self._conn_backoff = _conn_backoff
                     self.ui.write_log(
-                        f"NET: Connection failed â€” retrying in {_conn_backoff}s. "
+                        f"NET: Connection failed — retrying in {_conn_backoff:.1f}s. "
                         "(a VPN may be required)"
                     )
                 else:
-                    self._conn_backoff = 3
+                    self._conn_backoff = RECONNECT_BASE_S
             finally:
                 self.session = None
-                # Only save if there was a real conversation (â‰¥3 turns)
+                # Only save if there was a real conversation (≥3 turns)
                 if len(self._session_log) >= 3:
                     asyncio.create_task(self._save_session_summary())
 
@@ -3707,8 +3710,8 @@ class JarvisLive:
             if self._dashboard:
                 await self._dashboard.broadcast({"type": "status", "state": "sleeping"})
 
-            delay = getattr(self, "_conn_backoff", 3)
-            _tlog("ALFRED", "link", f"Reconnecting in {delay}s...", self._dashboard)
+            delay = getattr(self, "_conn_backoff", RECONNECT_BASE_S)
+            _tlog("ALFRED", "link", f"Reconnecting in {delay:.1f}s...", self._dashboard)
             await asyncio.sleep(delay)
 
 def main():

@@ -6,10 +6,10 @@
     "semantic_hash": ""
   },
   "actions/browser_control.py": {
-    "mtime": 1790407580.9866397,
-    "seen": 1790414772.298371,
-    "ast_hash": "b9b053b2b6b0bf4063f2e031d906af2d",
-    "semantic_hash": "b9b053b2b6b0bf4063f2e031d906af2d"
+    "mtime": 1790771007.5113611,
+    "seen": 1790771648.3469498,
+    "ast_hash": "5c7d23df2558855225b35bd55783e520",
+    "semantic_hash": ""
   },
   "actions/code_helper.py": {
     "mtime": 1790407557.5634246,
@@ -24,9 +24,9 @@
     "semantic_hash": ""
   },
   "actions/computer_settings.py": {
-    "mtime": 1790704816.277439,
-    "seen": 1790705121.6078317,
-    "ast_hash": "0d656cfa83e8f516409de8ffec032d8e",
+    "mtime": 1790771139.1958058,
+    "seen": 1790771648.3469613,
+    "ast_hash": "28bf37b1427f12cffe389ffd4fcbd0b4",
     "semantic_hash": ""
   },
   "actions/desktop.py": {
@@ -432,8 +432,8 @@
     "semantic_hash": "0c2178c383f8edcbe38ee55ce1b8bc8e"
   },
   "config/music_playlist.json": {
-    "mtime": 1790770489.221964,
-    "seen": 1790770540.6156127,
+    "mtime": 1790771195.282202,
+    "seen": 1790771648.3470454,
     "ast_hash": "1f9e15365dde86f74ae7aef8fd3a130b",
     "semantic_hash": ""
   },
@@ -630,9 +630,9 @@
     "semantic_hash": ""
   },
   "actions/spotify_control.py": {
-    "mtime": 1790707997.6150386,
-    "seen": 1790709696.8816288,
-    "ast_hash": "5d8c977905cc778e32c49fb12b2b71ba",
+    "mtime": 1790771565.369877,
+    "seen": 1790771648.3470266,
+    "ast_hash": "d78606ef809977c26c1c5c85a2dfc3b9",
     "semantic_hash": ""
   },
   "actions/audio_core.py": {
@@ -1116,8 +1116,8 @@
     "semantic_hash": ""
   },
   "config/users/Master_Wayne/protocols.yaml": {
-    "mtime": 1790715064.839069,
-    "seen": 1790715399.6184757,
+    "mtime": 1790771187.9697185,
+    "seen": 1790771648.3475206,
     "ast_hash": "9615a7dbeb0ff72ed036cca3442dfd42",
     "semantic_hash": ""
   },
@@ -1440,9 +1440,9 @@
     "semantic_hash": ""
   },
   "actions/hud_video.py": {
-    "mtime": 1790689260.4552739,
-    "seen": 1790689399.590242,
-    "ast_hash": "746d375ab0d6a32b7cbebdd799e1f501",
+    "mtime": 1790771507.039872,
+    "seen": 1790771648.3469794,
+    "ast_hash": "aa60613e95fb373231327980c0bcd789",
     "semantic_hash": ""
   },
   "core/hud_video/__init__.py": {
@@ -1902,9 +1902,9 @@
     "semantic_hash": ""
   },
   "core/hud_video/destination.py": {
-    "mtime": 1790686790.363233,
-    "seen": 1790687104.6498954,
-    "ast_hash": "feb1a4eb02f1c57fdf5ccac20f6aa1df",
+    "mtime": 1790771495.0327454,
+    "seen": 1790771648.3471332,
+    "ast_hash": "e621115ffc018a82ebf3303a2c2a386f",
     "semantic_hash": ""
   },
   "tests/hud_video/test_destination_prompt.py": {
@@ -2571,6 +2571,150 @@
     "mtime": 1790770449.158675,
     "seen": 1790770540.6160393,
     "ast_hash": "b125c5742372b1fcb7ddcc95a10c127b",
+    "semantic_hash": ""
+  },
+  "actions/netflix_pilot.py": {
+    "mtime": 1790771529.0236483,
+    "seen": 1790771648.3469875,
+    "ast_hash": "cb4cf3a138b3f351262a2b1673c9ece8",
+    "semantic_hash": ""
+  },
+  "core/browser/__init__.py": {
+    "mtime": 1790770890.6412961,
+    "seen": 1790771648.3470614,
+    "ast_hash": "ec9ce0b466e0a9c1513539ce127176e7",
+    "semantic_hash": ""
+  },
+  "core/browser/controller.py": {
+    "mtime": 1790771539.355402,
+    "seen": 1790771648.347063,
+    "ast_hash": "5bc1afff9456ab1feca1c9d925e1625b",
+    "semantic_hash": ""
+  },
+  "core/browser/platform/__init__.py": {
+    "mtime": 1790770872.7334552,
+    "seen": 1790771648.3470647,
+    "ast_hash": "afdfdd427d35c6ec123d66188ce9f612",
+    "semantic_hash": ""
+  },
+  "core/browser/platform/base.py": {
+    "mtime": 1790770830.9990673,
+    "seen": 1790771648.3470664,
+    "ast_hash": "4dd28be82b574286fd5f35a568353388",
+    "semantic_hash": ""
+  },
+  "core/browser/platform/linux.py": {
+    "mtime": 1790770861.854252,
+    "seen": 1790771648.3470676,
+    "ast_hash": "c8af4ca2b98eeb29fcf71efae6722984",
+    "semantic_hash": ""
+  },
+  "core/browser/platform/mac.py": {
+    "mtime": 1790770851.0387275,
+    "seen": 1790771648.3470693,
+    "ast_hash": "252e7ac4a1e35fdaffac892a7d1df220",
+    "semantic_hash": ""
+  },
+  "core/browser/platform/win.py": {
+    "mtime": 1790771085.5663784,
+    "seen": 1790771648.3470707,
+    "ast_hash": "55a54e2e89187d3d9c5e3c43a3476731",
+    "semantic_hash": ""
+  },
+  "core/pilots/netflix/__init__.py": {
+    "mtime": 1790771218.5366595,
+    "seen": 1790771648.3471968,
+    "ast_hash": "594a1ce898708a90ac489753ad23dcd6",
+    "semantic_hash": ""
+  },
+  "core/pilots/netflix/actions.py": {
+    "mtime": 1790771316.4985113,
+    "seen": 1790771648.3471987,
+    "ast_hash": "76588a38f7db0823604c409167f814c7",
+    "semantic_hash": ""
+  },
+  "core/pilots/netflix/detector.py": {
+    "mtime": 1790771231.8159947,
+    "seen": 1790771648.3472,
+    "ast_hash": "93613586a7ae5c3cde442594a2c709bd",
+    "semantic_hash": ""
+  },
+  "tests/test_browser_controller.py": {
+    "mtime": 1790771146.3759391,
+    "seen": 1790771648.3474135,
+    "ast_hash": "464c9cea373e533174a7f2d895655e59",
+    "semantic_hash": ""
+  },
+  "tests/test_browser_netflix_pilot.py": {
+    "mtime": 1790771592.5520332,
+    "seen": 1790771648.347415,
+    "ast_hash": "a22fb8b923faa9759e8b666c7c194ba5",
+    "semantic_hash": ""
+  },
+  "tests/test_collision_guards.py": {
+    "mtime": 1790771550.355712,
+    "seen": 1790771648.3474202,
+    "ast_hash": "6f3c7d9c35cdb90abf799ec1554c3c93",
+    "semantic_hash": ""
+  },
+  "tests/test_netflix_actions.py": {
+    "mtime": 1790771325.978623,
+    "seen": 1790771648.3474474,
+    "ast_hash": "2b45187a54b59af846326589b39e534a",
+    "semantic_hash": ""
+  },
+  "tests/test_netflix_detector.py": {
+    "mtime": 1790771241.526981,
+    "seen": 1790771648.3474488,
+    "ast_hash": "0759e59d999fc82616334907d12701d9",
+    "semantic_hash": ""
+  },
+  "docs/browser_netflix/PHASE_0_NOTES.md": {
+    "mtime": 1790770815.2952783,
+    "seen": 1790771648.3475459,
+    "ast_hash": "87115d88a6b1c5c12a7b945af012a2f4",
+    "semantic_hash": ""
+  },
+  "docs/browser_netflix/PHASE_1_NOTES.md": {
+    "mtime": 1790771171.2813692,
+    "seen": 1790771648.347547,
+    "ast_hash": "03505234410ece7992bc666b78a1e181",
+    "semantic_hash": ""
+  },
+  "docs/browser_netflix/PHASE_2_NOTES.md": {
+    "mtime": 1790771254.3676853,
+    "seen": 1790771648.3475485,
+    "ast_hash": "d4a8f4d3c79b151627796459df86637e",
+    "semantic_hash": ""
+  },
+  "docs/browser_netflix/PHASE_3_NOTES.md": {
+    "mtime": 1790771339.7375207,
+    "seen": 1790771648.3475497,
+    "ast_hash": "1f2bfae5f1cf40c9e60ca7ce757a6147",
+    "semantic_hash": ""
+  },
+  "docs/browser_netflix/PHASE_4_NOTES.md": {
+    "mtime": 1790771349.1370146,
+    "seen": 1790771648.3475513,
+    "ast_hash": "4522b76c8effbc9f43c363f7df13b2be",
+    "semantic_hash": ""
+  },
+  "docs/browser_netflix/PHASE_5_NOTES.md": {
+    "mtime": 1790771581.4903255,
+    "seen": 1790771648.3475525,
+    "ast_hash": "7debcef15da963ced8f26aa742d49548",
+    "semantic_hash": ""
+  },
+  "docs/browser_netflix/PHASE_6_NOTES.md": {
+    "mtime": 1790771621.3656957,
+    "seen": 1790771648.347554,
+    "ast_hash": "c273a300712d890f919f265df0dc013a",
+    "semantic_hash": ""
+  },
+  "docs/browser_netflix/VERIFY.md": {
+    "mtime": 1790771614.3598173,
+    "seen": 1790771648.3475554,
+    "ast_hash": "8210602fbb6de848a40165dbe9269da0",
     "semantic_hash": ""
   }
 }

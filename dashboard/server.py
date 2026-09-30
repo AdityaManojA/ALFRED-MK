@@ -40,8 +40,9 @@ BASE_DIR    = Path(__file__).resolve().parent.parent
 STATIC_DIR  = Path(__file__).parent / "static"
 PORT        = 8000
 MAX_UPLOAD_MB = 500
-RECONNECT_BASE_S: float = 2.0
-RECONNECT_MAX_S: float = 30.0
+UPLINK_TIMEOUT_S: float = 5.0
+RECONNECT_BASE_S: float = 0.5
+RECONNECT_MAX_S: float = 5.0
 UPLINK_HISTORY_N: int = 100
 
 

@@ -1318,6 +1318,9 @@ class _SysMetrics:
             }
 
 
+FRAME_TIME_BUDGET_MS: float = 16.7       # 60 FPS target budget (~16.7 ms per frame)
+PAINT_WARN_THRESHOLD_MS: float = 20.0     # Warn if single paint event exceeds 20ms
+
 _metrics = _SysMetrics()
 
 class HudCanvas(QWidget):
@@ -1415,9 +1418,10 @@ class HudCanvas(QWidget):
         self.on_visual_level = None
         self._sentry_snapshot: SentrySnapshot | None = None
         self._paint_error_logged = False
+        self._blend_cache: dict[tuple, QColor] = {}
         self._tmr = QTimer(self)
         self._tmr.timeout.connect(self._step)
-        self._tmr.start(33)
+        self._tmr.start(int(FRAME_TIME_BUDGET_MS))
 
     def _start_animations(self) -> None:
         """Guarantee the HUD animation step timer is started unconditionally."""
@@ -2615,6 +2619,7 @@ class HudCanvas(QWidget):
 
 
     def paintEvent(self, _):
+        t_paint_start = time.perf_counter()
         try:
             W, H = self.width(), self.height()
             if W <= 1 or H <= 1:
@@ -2634,9 +2639,16 @@ class HudCanvas(QWidget):
 
                 def blend(col: QColor, a: float) -> QColor:
                     k = max(0.0, min(1.0, a))
-                    return QColor(int(bg.red()   + (col.red()   - bg.red())   * k),
-                                  int(bg.green() + (col.green() - bg.green()) * k),
-                                  int(bg.blue()  + (col.blue()  - bg.blue())  * k))
+                    key = (col.rgb(), bg.rgb(), int(k * 100))
+                    cached = self._blend_cache.get(key)
+                    if cached is not None:
+                        return cached
+                    c = QColor(int(bg.red()   + (col.red()   - bg.red())   * k),
+                               int(bg.green() + (col.green() - bg.green()) * k),
+                               int(bg.blue()  + (col.blue()  - bg.blue())  * k))
+                    if len(self._blend_cache) < 512:
+                        self._blend_cache[key] = c
+                    return c
 
                 # 1. Subtle CRT coordinate background grid with crosshairs (Screenshot 2)
                 self._paint_crt_grid(p, W, H)
@@ -2701,6 +2713,9 @@ class HudCanvas(QWidget):
                 self._paint_crt_scanlines_and_reticles(p, W, H)
             finally:
                 p.end()
+                t_paint_ms = (time.perf_counter() - t_paint_start) * 1000.0
+                if t_paint_ms > PAINT_WARN_THRESHOLD_MS:
+                    print(f"[HUD] Slow paintEvent: {t_paint_ms:.1f}ms exceeds {PAINT_WARN_THRESHOLD_MS}ms budget")
         except Exception as exc:
             if not getattr(self, "_paint_error_logged", False):
                 self._paint_error_logged = True
@@ -10326,13 +10341,21 @@ class JarvisUI:
     def clear_intel_notes(self):
         """Thread-safe: clear the dedicated Notes Terminal."""
         try:
-            self._win._notes_terminal.clear_notes()
+            from core.thread_safety import run_on_gui_thread
+            run_on_gui_thread(self._win._notes_terminal.clear_notes)
         except Exception:
             pass
 
     def wait_for_api_key(self):
-        while not self._win._ready:
-            time.sleep(0.1)
+        from core.thread_safety import is_gui_thread
+        if is_gui_thread():
+            from PyQt6.QtCore import QCoreApplication
+            while not self._win._ready:
+                QCoreApplication.processEvents()
+                time.sleep(0.02)
+        else:
+            while not self._win._ready:
+                time.sleep(0.05)
 
     def show_content(self, title: str, text: str):
         """Thread-safe: display content in the panel below the HUD."""
