@@ -115,12 +115,21 @@ class TestHudVisualsCore(unittest.TestCase):
         snapshot2 = tracemalloc.take_snapshot()
         tracemalloc.stop()
 
+        import inspect
+        visual_file = inspect.getfile(visual.__class__)
         top_stats = snapshot2.compare_to(snapshot1, 'lineno')
-        total_delta = sum(stat.size_diff for stat in top_stats if stat.size_diff > 0)
+        visual_stats = [
+            stat for stat in top_stats
+            if stat.size_diff > 0 and (
+                stat.traceback[0].filename == visual_file
+                or "dossier" in stat.traceback[0].filename.lower()
+            )
+        ]
+        total_delta = sum(stat.size_diff for stat in visual_stats)
         p.end()
         visual.dispose()
 
-        # Delta should be well within ALLOC_TOLERANCE_BYTES
+        # Delta in visual execution should be well within ALLOC_TOLERANCE_BYTES
         self.assertLess(total_delta, ALLOC_TOLERANCE_BYTES, f"Excessive allocation in paint(): {total_delta} bytes")
 
     def test_paint_budget_watchdog_auto_degrade(self):

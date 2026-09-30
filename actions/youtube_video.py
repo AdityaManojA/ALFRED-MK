@@ -116,23 +116,6 @@ def _is_valid_youtube_url(url: str) -> bool:
     return bool(re.search(r"(youtube\.com|youtu\.be)", url or ""))
 
 
-def _ask_for_url(prompt_text: str = "YouTube video URL:") -> str | None:
-    try:
-        import tkinter as tk
-        from tkinter import simpledialog
-
-        root = tk._default_root
-        if root is None:
-            root = tk.Tk()
-            root.withdraw()
-
-        url = simpledialog.askstring("J.A.R.V.I.S", prompt_text, parent=root)
-        return url.strip() if url else None
-    except Exception as e:
-        print(f"[YouTube] ⚠️ URL dialog failed: {e}")
-        return None
-
-
 def _get_transcript(video_id: str) -> str | None:
     if not _TRANSCRIPT_OK:
         return None
@@ -313,9 +296,14 @@ def _handle_summarize(parameters: dict, player, speak) -> str:
     if not _TRANSCRIPT_OK:
         return "youtube-transcript-api is not installed. Run: pip install youtube-transcript-api"
 
-    url = _ask_for_url("Please paste the YouTube video URL:")
+    url = (parameters.get("url") or parameters.get("query") or "").strip()
+    if url and not _is_valid_youtube_url(url):
+        found_url = _scrape_first_video_url(url)
+        if found_url:
+            url = found_url
+
     if not url:
-        return "No URL provided, sir. Summary cancelled."
+        return "Please provide a YouTube video URL or search query to summarize, sir."
     if not _is_valid_youtube_url(url):
         return "That doesn't appear to be a valid YouTube URL, sir."
 
@@ -351,11 +339,14 @@ def _handle_summarize(parameters: dict, player, speak) -> str:
 
 
 def _handle_get_info(parameters: dict, player, speak) -> str:
-    url = parameters.get("url", "").strip()
-    if not url:
-        url = _ask_for_url("Please paste the YouTube video URL:")
+    url = (parameters.get("url") or parameters.get("query") or "").strip()
+    if url and not _is_valid_youtube_url(url):
+        found_url = _scrape_first_video_url(url)
+        if found_url:
+            url = found_url
+
     if not url or not _is_valid_youtube_url(url):
-        return "Please provide a valid YouTube URL, sir."
+        return "Please provide a valid YouTube URL or title, sir."
 
     video_id = _extract_video_id(url)
     if not video_id:
@@ -455,7 +446,7 @@ TOOL = {
             },
             "query": {
                 "type": "STRING",
-                "description": "Search query for play action"
+                "description": "Search query for play, summarize, or get_info action"
             },
             "save": {
                 "type": "BOOLEAN",
@@ -467,7 +458,7 @@ TOOL = {
             },
             "url": {
                 "type": "STRING",
-                "description": "Video URL for get_info action"
+                "description": "Video URL or link for summarize or get_info action"
             }
         },
         "required": []

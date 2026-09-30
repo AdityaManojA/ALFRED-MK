@@ -51,9 +51,6 @@ def check_cuda_and_vram() -> tuple[bool, bool, float]:
     Check CUDA availability and device 0 total memory in GB.
     Returns (has_cuda, has_min_vram, vram_gb).
     """
-    if "torch" not in sys.modules:
-        # Avoid importing torch synchronously on the UI thread as it causes a 10+ second freeze
-        return False, False, 0.0
     try:
         import torch
         if not torch.cuda.is_available():
@@ -69,9 +66,37 @@ def check_cuda_and_vram() -> tuple[bool, bool, float]:
 _CAPABILITY_CACHE: tuple[bool, Capability] | None = None
 _CACHE_TIMESTAMP: float = 0.0
 _CACHE_TTL: float = 60.0  # cache for 60 seconds
+_PREWARM_THREAD_ACTIVE: bool = False
 
 
-def check_jarvis_capability(allow_cpu: bool = False, use_cache: bool = True) -> Capability:
+def invalidate_capability_cache() -> None:
+    """Invalidate cached capability result so the next check performs a fresh scan."""
+    global _CAPABILITY_CACHE, _CACHE_TIMESTAMP
+    _CAPABILITY_CACHE = None
+    _CACHE_TIMESTAMP = 0.0
+
+
+def prewarm_jarvis_capability_async() -> None:
+    """Prewarm capability check in a background thread to prevent UI stalls."""
+    global _PREWARM_THREAD_ACTIVE
+    import threading
+    if _PREWARM_THREAD_ACTIVE:
+        return
+    _PREWARM_THREAD_ACTIVE = True
+
+    def _worker():
+        global _PREWARM_THREAD_ACTIVE
+        try:
+            check_jarvis_capability(allow_cpu=False, use_cache=False)
+            check_jarvis_capability(allow_cpu=True, use_cache=False)
+        finally:
+            _PREWARM_THREAD_ACTIVE = False
+
+    t = threading.Thread(target=_worker, daemon=True, name="jarvis-cap-prewarm")
+    t.start()
+
+
+def check_jarvis_capability(allow_cpu: bool = False, use_cache: bool = False) -> Capability:
     """
     Determine the current capability status for the Jarvis voice option.
     Evaluates sequentially without raising unhandled exceptions.
@@ -80,10 +105,19 @@ def check_jarvis_capability(allow_cpu: bool = False, use_cache: bool = True) -> 
     global _CAPABILITY_CACHE, _CACHE_TIMESTAMP
     import time
     now = time.time()
-    if use_cache and _CAPABILITY_CACHE is not None:
-        cached_allow_cpu, cached_cap = _CAPABILITY_CACHE
-        if cached_allow_cpu == allow_cpu and (now - _CACHE_TIMESTAMP) < _CACHE_TTL:
-            return cached_cap
+    if use_cache:
+        if _CAPABILITY_CACHE is not None:
+            cached_allow_cpu, cached_cap = _CAPABILITY_CACHE
+            if cached_allow_cpu == allow_cpu and (now - _CACHE_TIMESTAMP) < _CACHE_TTL:
+                return cached_cap
+        # If cache is cold and torch is not imported, avoid UI thread stall
+        if "torch" not in sys.modules:
+            prewarm_jarvis_capability_async()
+            if not check_python_version():
+                return Capability.PYTHON_VERSION
+            if not check_dependencies():
+                return Capability.MISSING_DEPS
+            return Capability.NOT_DOWNLOADED
 
     if not check_python_version():
         res = Capability.PYTHON_VERSION

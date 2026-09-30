@@ -39,6 +39,8 @@ class BatcaveRadarVisual(SlotVisual):
         self.reticle_lines1: list[QLineF] = [QLineF() for _ in range(8)]
         self.reticle_lines2: list[QLineF] = [QLineF() for _ in range(8)]
         self.blip_points: list[QPointF] = [QPointF() for _ in range(self.radar.max_blips)]
+        self.align_hdr: int = int(Qt.AlignmentFlag.AlignLeft)
+        self.title_text: str = "● ● ●  ORBITAL RECON // RADAR"
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
         c_pri = QColor(palette.pri)
@@ -102,7 +104,7 @@ class BatcaveRadarVisual(SlotVisual):
         painter.drawRect(self.rect_inner)
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_sweep)
-        painter.drawText(self.rect_hdr, Qt.AlignmentFlag.AlignLeft, "● ● ●  ORBITAL RECON // RADAR")
+        painter.drawText(self.rect_hdr, self.align_hdr, self.title_text)
 
         # Range rings
         painter.setPen(self.pen_grid)
@@ -142,6 +144,9 @@ class BatcaveSpectrumVisual(SlotVisual):
         self.pen_border = QPen()
         self.font_hdr = QFont("Consolas", 6, QFont.Weight.Bold)
         self.rect_inner = QRectF()
+        self.rect_hdr = QRectF()
+        self.align_hdr: int = int(Qt.AlignmentFlag.AlignCenter)
+        self.title_text: str = "16-BAND ACOUSTIC SPECTRUM // COWL"
         self.sim_values = [0.0] * 16
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
@@ -156,6 +161,7 @@ class BatcaveSpectrumVisual(SlotVisual):
 
         bx, by, bw, bh = rect.x() + 8.0, rect.y() + 20.0, rect.width() - 16.0, rect.height() - 28.0
         self.rect_inner = QRectF(bx, by, bw, bh)
+        self.rect_hdr = QRectF(rect.x() + 8.0, rect.y() + 4.0, rect.width() - 16.0, 12.0)
         self.bars.layout(bx + 4.0, by + 4.0, bw - 8.0, bh - 8.0, gap=3.0)
 
     def tick(self, dt: float, signals: HudSignals) -> None:
@@ -171,8 +177,7 @@ class BatcaveSpectrumVisual(SlotVisual):
         painter.drawRect(self.rect_inner)
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_bar)
-        painter.drawText(QRectF(rect.x() + 8, rect.y() + 4, rect.width() - 16, 12),
-                         Qt.AlignmentFlag.AlignCenter, "16-BAND ACOUSTIC SPECTRUM // COWL")
+        painter.drawText(self.rect_hdr, self.align_hdr, self.title_text)
 
         painter.setBrush(self.brush_bar)
         for i in range(self.bars.count):
@@ -224,6 +229,15 @@ class BatcaveBlueprintVisual(SlotVisual):
         self.font_hdr = QFont("Consolas", 6, QFont.Weight.Bold)
         self.font_tele = QFont("Consolas", 5, QFont.Weight.Normal)
         self.rect_inner = QRectF()
+        self.rect_hdr = QRectF()
+        self.rect_aero = QRectF()
+        self.rect_vector = QRectF()
+        self.align_center: int = int(Qt.AlignmentFlag.AlignCenter)
+        self.align_left: int = int(Qt.AlignmentFlag.AlignLeft)
+        self.align_right: int = int(Qt.AlignmentFlag.AlignRight)
+        self.title_text: str = "BATWING MK-VII BLUEPRINT // 3D"
+        self.aero_text: str = "AERO: 99.4%"
+        self.vector_text: str = "VECTOR: LOCK"
         self.cx: float = 0.0
         self.cy: float = 0.0
 
@@ -236,6 +250,9 @@ class BatcaveBlueprintVisual(SlotVisual):
 
         bx, by, bw, bh = rect.x() + 8.0, rect.y() + 18.0, rect.width() - 16.0, rect.height() - 24.0
         self.rect_inner = QRectF(bx, by, bw, bh)
+        self.rect_hdr = QRectF(rect.x() + 8.0, rect.y() + 3.0, rect.width() - 16.0, 12.0)
+        self.rect_aero = QRectF(self.rect_inner.x() + 4.0, self.rect_inner.bottom() - 12.0, 100.0, 10.0)
+        self.rect_vector = QRectF(self.rect_inner.right() - 84.0, self.rect_inner.bottom() - 12.0, 80.0, 10.0)
         self.cx = bx + bw / 2.0
         self.cy = by + bh / 2.0
 
@@ -249,15 +266,12 @@ class BatcaveBlueprintVisual(SlotVisual):
         painter.drawRect(self.rect_inner)
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_wire)
-        painter.drawText(QRectF(rect.x() + 8, rect.y() + 3, rect.width() - 16, 12),
-                         Qt.AlignmentFlag.AlignCenter, "BATWING MK-VII BLUEPRINT // 3D")
+        painter.drawText(self.rect_hdr, self.align_center, self.title_text)
 
         # 3D Mesh
         self.model.draw(painter, self.pen_wire)
 
         # Micro telemetry
         painter.setFont(self.font_tele)
-        painter.drawText(QRectF(self.rect_inner.x() + 4, self.rect_inner.bottom() - 12, 100, 10),
-                         Qt.AlignmentFlag.AlignLeft, "AERO: 99.4%")
-        painter.drawText(QRectF(self.rect_inner.right() - 84, self.rect_inner.bottom() - 12, 80, 10),
-                         Qt.AlignmentFlag.AlignRight, "VECTOR: LOCK")
+        painter.drawText(self.rect_aero, self.align_left, self.aero_text)
+        painter.drawText(self.rect_vector, self.align_right, self.vector_text)

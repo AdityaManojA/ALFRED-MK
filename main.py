@@ -1,3 +1,6 @@
+from core.crash_handler import install_crash_handler
+install_crash_handler()
+
 import platform as _platform
 import subprocess as _subprocess
 
@@ -48,41 +51,13 @@ install_timestamped_logging()
 # Suppress FFmpeg AV1 hwaccel noise before QApplication is constructed.
 # Qt reads QT_LOGGING_RULES at init time; setting it here ensures it's in
 # place even if the user hasn't set it in their environment.
+import os
 import os as _os
 _os.environ.setdefault(
     "QT_LOGGING_RULES",
     "qt.multimedia.ffmpeg=false;qt.multimedia.ffmpeg.*=false;qt.tls.*=false",
 )
 
-# Crash reporting
-import traceback
-import sys
-import threading
-from datetime import datetime
-from pathlib import Path
-
-def log_unhandled_exception(exc_type, exc_value, exc_traceback):
-    if issubclass(exc_type, KeyboardInterrupt):
-        sys.__excepthook__(exc_type, exc_value, exc_traceback)
-        return
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    crash_msg = f"\n{'='*60}\nCRASH REPORT - {timestamp}\n{'='*60}\n"
-    crash_msg += f"Exception: {exc_type.__name__}: {exc_value}\n"
-    crash_msg += "Traceback:\n"
-    crash_msg += ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
-    crash_msg += f"\n{'='*60}\n"
-    try:
-        crash_dir = Path(__file__).resolve().parent / "config"
-        crash_dir.mkdir(exist_ok=True)
-        crash_file = crash_dir / "crash.log"
-        with open(crash_file, "a", encoding="utf-8") as f:
-            f.write(crash_msg)
-    except Exception:
-        pass
-    sys.__excepthook__(exc_type, exc_value, exc_traceback)
-
-# Also set threading excepthook for threads
-threading.excepthook = lambda args: log_unhandled_exception(args.exc_type, args.exc_value, args.exc_traceback)
 
 import asyncio
 import base64
@@ -834,6 +809,11 @@ class JarvisLive:
         )
         from core.sentry.focus.engine import get_focus_engine
         self.focus_engine = get_focus_engine()
+        self.focus_engine.set_callbacks(
+            speak_fn=self.speak,
+            un_gate_fn=self._set_mic_ungated,
+            loop_provider=lambda: self._loop,
+        )
         self.sentry_mgr.register_focus_handlers(
             on_start=self.focus_engine.start,
             on_stop=self.focus_engine.abort,
@@ -863,6 +843,12 @@ class JarvisLive:
         self._ptt_enabled          = False
         self._ptt_held             = False
         self._ptt                  = None    # core.hotkey.PushToTalk
+        try:
+            from core.hotkey import PushToTalk
+            self._ptt = PushToTalk(self._on_ptt)
+            self._ptt.start()
+        except Exception:
+            pass
         self._out_level            = 0.0     # level of the audio being played right now
         self._echo                 = EchoGuard()
         # `stream.write()` returns when the buffer accepts the audio, not when the
@@ -1160,6 +1146,10 @@ class JarvisLive:
             if self.monitor_controller.submit_answer(text):
                 self.ui.write_log(f"You (Answer): {text}")
                 return
+        if getattr(self, "focus_engine", None) and self.focus_engine.is_waiting_for_answer:
+            if self.focus_engine.answer_window.submit_answer(text):
+                self.ui.write_log(f"You (Focus Answer): {text}")
+                return
 
         # Respect wake-word sleep: a typed command must not be answered while
         # asleep either (the sleep gate is not just for the mic). Wake first with
@@ -1353,12 +1343,12 @@ class JarvisLive:
             # guard still lets a genuine reply through, so answering instantly
             # still works. Only our own echo is dropped.
             self._tail_until = time.monotonic() + self._out_latency + _TAIL_MARGIN
-            if was_speaking:
-                try:
-                    from core.audio_ducker import unduck_media_apps
+            try:
+                from core.audio_ducker import unduck_media_apps, is_ducked
+                if was_speaking or is_ducked():
                     unduck_media_apps()
-                except Exception:
-                    pass
+            except Exception:
+                pass
         if not value:
             # The echo history is deliberately NOT cleared here: the tail above
             # still needs it to recognise our own voice. It is dropped when the
@@ -1397,7 +1387,6 @@ class JarvisLive:
         return scope
 
     def _on_ptt(self, held: bool) -> None:
-        """Chord pressed or released â€” may arrive on the hotkey thread."""
         self._ptt_held = held
         if held:
             # Holding the key is also a way to wake it, so push-to-talk works
@@ -1406,7 +1395,13 @@ class JarvisLive:
                 self._awake = True
                 self._last_user_speech = time.monotonic()
         try:
-            self.ui.set_state("LISTENING" if held else "SLEEPING")
+            if held:
+                self.ui.set_state("LISTENING")
+            else:
+                if self._wake_enabled and not self._awake:
+                    self.ui.set_state("SLEEPING")
+                else:
+                    self.ui.set_state("IDLE")
         except Exception:
             pass
 
@@ -1668,20 +1663,29 @@ class JarvisLive:
 
     def _speak_local(self, text: str) -> None:
         """Play speech through local core.tts engine without silent drop."""
+        if not text or not text.strip():
+            return
+        if hasattr(self, "ui") and self.ui and getattr(self.ui, "muted", False):
+            return
+
         def _synth_worker():
             try:
-                from core.tts import get_engine
-                engine = get_engine()
-                engine.speak(text)
+                import re
+                clean = re.sub(r'[*_`#~]', '', text).strip()
+                if not clean:
+                    return
+                self.set_speaking(True)
+                try:
+                    from core.tts import get_engine
+                    engine = get_engine()
+                    engine.speak(clean)
+                finally:
+                    self.set_speaking(False)
             except Exception as e:
                 _tlog("TTS", "error", f"Local TTS synthesis error: {e}", getattr(self, "_dashboard", None))
                 print(f"[TTS] Local synthesis failure: {e}")
 
         threading.Thread(target=_synth_worker, daemon=True, name="LocalTTSSynth").start()
-
-    async def _safe_background_announce(self, text: str) -> None:
-        """Announce background events via active session or local TTS."""
-        self.speak(text)
 
     def speak_error(self, tool_name: str, error: str):
         short = str(error)[:120]
@@ -2194,6 +2198,15 @@ class JarvisLive:
             if self._ptt_enabled and not self._ptt_held:
                 return
 
+            # Visual HUD Video Audio Suppression:
+            # When Visual HUD is actively playing video with audio, speakers output
+            # the video speech/sound into the room. Suppress mic streaming so Alfred
+            # does not hear the video and mistake it for user speech, unless the user
+            # explicitly holds Push-to-Talk (Ctrl+Space).
+            if getattr(self, "ui", None) and hasattr(self.ui, "is_hud_video_playing"):
+                if self.ui.is_hud_video_playing() and not self._ptt_held:
+                    return
+
             if not self.ui.muted and not self._phone_active:
                 data = indata.tobytes()
                 def _push_mic():
@@ -2327,10 +2340,11 @@ class JarvisLive:
                         else:
                             if self._turn_done_event and self._turn_done_event.is_set():
                                 self._turn_done_event.clear()
-                            # Split into ~50 ms chunks so interrupt() stops audio within 50 ms
-                            # (24000 Hz Ã— 2 bytes/sample Ã— 0.05 s = 2400 bytes per slice)
+                            # Split into ~100 ms chunks so interrupt() stops audio rapidly
+                            # while avoiding queue starvation and excessive context switches.
+                            # (24000 Hz × 2 bytes/sample × 0.10 s = 4800 bytes per slice)
                             _audio_data = response.data
-                            _SLICE = 2400
+                            _SLICE = 4800
                             for _i in range(0, len(_audio_data), _SLICE):
                                 self.audio_in_queue.put_nowait(_audio_data[_i : _i + _SLICE])
 
@@ -2396,6 +2410,8 @@ class JarvisLive:
                             if full_in:
                                 if getattr(self, "monitor_controller", None) and self.monitor_controller.is_waiting_for_answer:
                                     self.monitor_controller.submit_answer(full_in)
+                                elif getattr(self, "focus_engine", None) and self.focus_engine.is_waiting_for_answer:
+                                    self.focus_engine.answer_window.submit_answer(full_in)
                                 self._last_out_logged = ""   # new exchange
                                 self.ui.write_log(f"You: {full_in}")
                                 self._session_log.append(f"User: {full_in}")
@@ -2483,7 +2499,7 @@ class JarvisLive:
                 dtype="int16",
                 blocksize=0,
                 device=dev,
-                latency="high",
+                latency="low",
             )
             st.start()
             return st
@@ -2521,37 +2537,47 @@ class JarvisLive:
                         timeout=0.12
                     )
                 except asyncio.TimeoutError:
-                    if (
-                        self._turn_done_event
-                        and self._turn_done_event.is_set()
-                        and self.audio_in_queue.empty()
-                    ):
+                    if self._is_speaking and self.audio_in_queue.empty():
                         empty_count += 1
-                        if empty_count >= 3:
+                        # If turn_done is explicitly signaled, wait 3 timeouts (~360ms) for soundcard drain.
+                        # If turn_done is delayed or not signaled, maintain speaking across inter-clause pauses
+                        # for up to 18 timeouts (~2.16s silence watchdog) to eliminate choppy speech breaks.
+                        threshold = 3 if (self._turn_done_event and self._turn_done_event.is_set()) else 18
+                        if empty_count >= threshold:
                             self.set_speaking(False)
-                            self._turn_done_event.clear()
+                            if self._turn_done_event:
+                                self._turn_done_event.clear()
                             empty_count = 0
+                    continue
+
+                if self._interrupted:
+                    empty_count = 0
                     continue
 
                 empty_count = 0
                 batch = bytearray(chunk)
 
                 # Pre-buffering jitter cushion for fresh utterance to prevent buffer underrun crackle
-                if not self._is_speaking:
+                if not self._is_speaking and not self._interrupted:
                     t_pre = time.monotonic()
-                    # Buffer up to ~250 ms (12000 bytes) or max 200 ms wait before starting speech
-                    while len(batch) < 12000 and (time.monotonic() - t_pre) < 0.20:
+                    # Buffer up to ~100 ms (4800 bytes) or max 80 ms wait before starting speech
+                    while len(batch) < 4800 and (time.monotonic() - t_pre) < 0.08:
+                        if self._interrupted:
+                            break
                         if self._turn_done_event and self._turn_done_event.is_set():
                             break
                         try:
                             batch.extend(self.audio_in_queue.get_nowait())
                         except asyncio.QueueEmpty:
-                            await asyncio.sleep(0.015)
-                    self.set_speaking(True)
+                            await asyncio.sleep(0.010)
+                    if not self._interrupted:
+                        self.set_speaking(True)
+                    else:
+                        continue
 
                 # Batch available chunks into one write to reduce thread-pool round-trips
-                # (12000 bytes â‰ˆ 250 ms at 24 kHz / 16-bit mono)
-                while len(batch) < 12000:
+                # (9600 bytes ≈ 200 ms at 24 kHz / 16-bit mono)
+                while len(batch) < 9600:
                     try:
                         batch.extend(self.audio_in_queue.get_nowait())
                     except asyncio.QueueEmpty:
@@ -3204,20 +3230,6 @@ class JarvisLive:
                 print(f"[Dashboard] Command error: {e}")
                 await asyncio.sleep(0.5)
 
-    def _speak_local(self, text: str):
-        if not text or not text.strip() or self.ui.muted:
-            return
-        def _tts():
-            try:
-                import win32com.client
-                voice = win32com.client.Dispatch("SAPI.SpVoice")
-                clean = re.sub(r'[*_`#~]', '', text).strip()
-                if clean:
-                    voice.Speak(clean)
-            except Exception:
-                pass
-        threading.Thread(target=_tts, daemon=True).start()
-
     async def run_local(self, provider: str = "ollama"):
         from core.llm_client import (
             call_llm_stream, call_llm_text, ensure_ollama_running,
@@ -3272,8 +3284,14 @@ class JarvisLive:
 
         history: list[dict] = [{"role": "system", "content": system_instruction}]
 
-        # Warm up prefix cache off-thread
-        asyncio.to_thread(warmup_model, system_instruction)
+        # Warm up prefix cache off-thread in background task
+        async def _warmup_worker():
+            try:
+                await asyncio.to_thread(warmup_model, system_instruction)
+            except Exception as _e:
+                print(f"[LLM] Model warmup notice: {_e}")
+
+        asyncio.create_task(_warmup_worker())
 
         # Background system monitor tasks
         asyncio.create_task(self._run_system_monitor())
@@ -3290,6 +3308,10 @@ class JarvisLive:
                 if getattr(self, "monitor_controller", None) and self.monitor_controller.is_waiting_for_answer:
                     if self.monitor_controller.submit_answer(user_text):
                         self.ui.write_log(f"You (Answer): {user_text}")
+                        continue
+                if getattr(self, "focus_engine", None) and self.focus_engine.is_waiting_for_answer:
+                    if self.focus_engine.answer_window.submit_answer(user_text):
+                        self.ui.write_log(f"You (Focus Answer): {user_text}")
                         continue
                 self.ui.write_log(f"You: {user_text}")
                 self.ui.set_state("THINKING")
@@ -3690,6 +3712,11 @@ class JarvisLive:
             await asyncio.sleep(delay)
 
 def main():
+    try:
+        from core.tts.capability import prewarm_jarvis_capability_async
+        prewarm_jarvis_capability_async()
+    except Exception:
+        pass
     ui = JarvisUI("face.png")
 
     def runner():

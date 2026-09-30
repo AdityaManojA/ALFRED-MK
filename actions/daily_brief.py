@@ -155,6 +155,44 @@ def _get_system_vitals() -> str:
         return "All internal systems nominal."
 
 
+def search_news(params: dict) -> str:
+    """Fallback helper to search news headlines by parameter dict."""
+    topic = params.get("topic", "") if isinstance(params, dict) else str(params)
+    try:
+        from actions.web_search import search_news as _ws_search_news
+        return _ws_search_news(params)
+    except Exception:
+        pass
+    try:
+        from actions.web_search import _news
+        return _news(topic)
+    except Exception:
+        pass
+    try:
+        from actions.news_brief import news_brief_action
+        return news_brief_action({"topic": topic, "count": 2})
+    except Exception:
+        return ""
+
+
+def _get_preferred_news(topic: str = "") -> str:
+    """Fetch top news headline regarding user's preferred topic with graceful fallback."""
+    if not topic:
+        return ""
+    try:
+        from actions.web_search import _news
+        res = _news(topic)
+        if res and not res.startswith("No news found"):
+            return res
+    except Exception:
+        pass
+
+    try:
+        return search_news({"topic": topic})
+    except Exception:
+        return ""
+
+
 def daily_brief(
     parameters: dict,
     player=None,
@@ -232,7 +270,7 @@ def daily_brief(
             jobs["system"] = pool.submit(_get_system_vitals)
         jobs["market"] = pool.submit(_get_market_brief)
         if brief_pref:
-            jobs["news"] = pool.submit(_get_preferred_news)
+            jobs["news"] = pool.submit(_get_preferred_news, brief_pref)
 
         results = {}
         for key, future in jobs.items():

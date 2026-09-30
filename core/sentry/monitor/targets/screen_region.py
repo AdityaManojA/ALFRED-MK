@@ -30,7 +30,7 @@ class ScreenRegionTarget(MonitorTarget):
             from actions.screen_processor import capture_screen
             obs = capture_screen(monitor=self.monitor_id)
             # Compare payload or image size hash
-            img_bytes = obs.payload().get("image_bytes") if hasattr(obs, "payload") else b""
+            img_bytes = getattr(obs, "img_bytes", None) or (obs[0] if isinstance(obs, tuple) and len(obs) > 0 else b"")
             if img_bytes:
                 h = hash(img_bytes[:1024])
                 if self._last_hash is not None and h != self._last_hash:

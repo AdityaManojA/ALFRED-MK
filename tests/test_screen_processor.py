@@ -1,4 +1,4 @@
-﻿"""
+"""
 Unit and integration tests for screen_processor.py window context grounding.
 Verifies:
 1. Native OS window API querying (`get_active_window_info`, `get_active_window_context`).

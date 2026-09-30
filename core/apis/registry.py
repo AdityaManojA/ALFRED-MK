@@ -160,7 +160,8 @@ def save_backend_credentials(backend_id: str, fields: dict[str, str], store: Opt
     if not valid:
         return False, err
 
-    st = store or get_secret_store()
+    import core.secrets.store
+    st = store or core.secrets.store.get_secret_store()
     prefix = str(backend_id).strip().lower()
 
     for k, v in fields.items():
@@ -175,7 +176,8 @@ def save_backend_credentials(backend_id: str, fields: dict[str, str], store: Opt
 
 def get_configured_backends_count(store: Optional[SecretStore] = None) -> tuple[int, int]:
     """Return (configured_count, total_backends_count)."""
-    st = store or get_secret_store()
+    import core.secrets.store
+    st = store or core.secrets.store.get_secret_store()
     configured = 0
     total = len(_BACKENDS)
 

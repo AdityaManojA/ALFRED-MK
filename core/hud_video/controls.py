@@ -18,7 +18,7 @@ import math
 from typing import Optional
 
 from PyQt6.QtCore import Qt, QRectF, QPointF, pyqtSignal
-from PyQt6.QtGui import QColor, QFont, QPen, QBrush, QPainter, QKeyEvent, QMouseEvent
+from PyQt6.QtGui import QColor, QFont, QPen, QBrush, QPainter, QKeyEvent, QMouseEvent, QPolygonF
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QPushButton, QLabel, QSizePolicy
 
 from core.hud_video.controller import HudVideoController
@@ -81,9 +81,15 @@ class VideoTimeline(QWidget):
         self._pri_dim_color = QColor("#007A9A")
         self._bg_color = QColor("#000308")
         self._border_color = QColor("#222748")
-        self._text_dim_color = QColor("#707AB0")
+        self._rect_track = QRectF()
+        self._rect_fill = QRectF()
+        self._pt_thumb = QPointF()
 
-        self._pen_track_bg = QPen(self._border_color, 1.0)
+        self._update_palette()
+
+    def _update_palette(self) -> None:
+        """Cache brushes and pens in _update_palette()."""
+        self._pen_track_bg = QPen(self._pri_dim_color, 1.0)
         self._brush_track_bg = QBrush(QColor(16, 18, 34))
         self._brush_track_fg = QBrush(self._pri_color)
         self._pen_thumb_normal = QPen(QColor(255, 255, 255), 1.5)
@@ -98,13 +104,7 @@ class VideoTimeline(QWidget):
         self._pri_dim_color = QColor(pri_dim)
         self._bg_color = QColor(bg)
         self._text_dim_color = QColor(text_dim)
-
-        self._pen_track_bg = QPen(self._pri_dim_color, 1.0)
-        self._brush_track_bg = QBrush(QColor(16, 18, 34))
-        self._brush_track_fg = QBrush(self._pri_color)
-        self._pen_thumb_normal = QPen(QColor(255, 255, 255), 1.5)
-        self._brush_thumb_normal = QBrush(self._pri_color)
-        self._brush_thumb_hover = QBrush(QColor("#00FFFF"))
+        self._update_palette()
         if self.isVisible():
             self.update()
 
@@ -218,16 +218,18 @@ class VideoTimeline(QWidget):
         track_w = max(1.0, W - THUMB_RADIUS * 2.0)
         track_x = THUMB_RADIUS
 
+        self._rect_track.setRect(track_x, track_y, track_w, TRACK_HEIGHT)
+
         # 1. Background channel groove
         p.setPen(self._pen_track_bg)
         p.setBrush(self._brush_track_bg)
-        p.drawRoundedRect(QRectF(track_x, track_y, track_w, TRACK_HEIGHT), 2.0, 2.0)
+        p.drawRoundedRect(self._rect_track, 2.0, 2.0)
 
         # 2. Live or unseekable fallback
         if self._is_live or not self._seekable or self._duration_s <= 0.0:
             p.setPen(self._pen_live)
             p.setBrush(self._brush_live)
-            p.drawRoundedRect(QRectF(track_x, track_y, track_w, TRACK_HEIGHT), 2.0, 2.0)
+            p.drawRoundedRect(self._rect_track, 2.0, 2.0)
             p.end()
             return
 
@@ -237,9 +239,10 @@ class VideoTimeline(QWidget):
         fill_w = track_w * progress
 
         if fill_w > 0:
+            self._rect_fill.setRect(track_x, track_y, fill_w, TRACK_HEIGHT)
             p.setPen(Qt.PenStyle.NoPen)
             p.setBrush(self._brush_track_fg)
-            p.drawRoundedRect(QRectF(track_x, track_y, fill_w, TRACK_HEIGHT), 2.0, 2.0)
+            p.drawRoundedRect(self._rect_fill, 2.0, 2.0)
 
         # 4. Scrubber thumb handle
         thumb_cx = track_x + fill_w
@@ -247,7 +250,9 @@ class VideoTimeline(QWidget):
 
         p.setPen(self._pen_thumb_normal)
         p.setBrush(self._brush_thumb_hover if (self._hovered or self._scrubbing) else self._brush_thumb_normal)
-        p.drawEllipse(QPointF(thumb_cx, thumb_cy), THUMB_RADIUS, THUMB_RADIUS)
+        self._pt_thumb.setX(thumb_cx)
+        self._pt_thumb.setY(thumb_cy)
+        p.drawEllipse(self._pt_thumb, THUMB_RADIUS, THUMB_RADIUS)
 
         p.end()
 
@@ -270,6 +275,79 @@ class CyberTransportButton(QPushButton):
 
         self._pri_color = QColor("#00D4FF")
         self._border_color = QColor("#222748")
+
+        self._update_palette()
+
+        self._rect_btn = QRectF(1, 1, BTN_SIZE - 2, BTN_SIZE - 2)
+        self._rect_bar1 = QRectF()
+        self._rect_bar2 = QRectF()
+        self._tri_poly = QPolygonF()
+        self._arrow_p1 = QPointF()
+        self._arrow_p2 = QPointF()
+        self._arrow_p3 = QPointF()
+        self._arc_x = 0
+        self._arc_y = 0
+        self._arc_w = 0
+        self._arc_h = 0
+        self._update_geometry_cache()
+
+    def _update_palette(self, pri: Optional[str] = None, border: Optional[str] = None) -> None:
+        """Cache brushes and pens in _update_palette()."""
+        if pri:
+            self._pri_color = QColor(pri)
+        if border:
+            self._border_color = QColor(border)
+
+        self._c_hl_bdr = QColor("#FFD166")
+        self._c_hl_bg = QColor(255, 209, 102, 50)
+        self._c_white = QColor("#FFFFFF")
+        self._c_norm_bg = QColor(13, 15, 30, 180)
+        self._c_hover_bg = QColor(self._pri_color.red(), self._pri_color.green(), self._pri_color.blue(), 40)
+        self._c_press_bg = QColor(self._pri_color.red(), self._pri_color.green(), self._pri_color.blue(), 80)
+
+        self._pen_hl_bdr = QPen(self._c_hl_bdr, 1.0)
+        self._pen_pri_bdr = QPen(self._pri_color, 1.0)
+        self._pen_norm_bdr = QPen(self._border_color, 1.0)
+
+        self._pen_white_fg = QPen(self._c_white, 1.8, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
+        self._pen_pri_fg = QPen(self._pri_color, 1.8, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
+        self._pen_arrow_white = QPen(self._c_white, 1.5)
+        self._pen_arrow_pri = QPen(self._pri_color, 1.5)
+
+        self._brush_white = QBrush(self._c_white)
+        self._brush_pri = QBrush(self._pri_color)
+        self._brush_hl_bg = QBrush(self._c_hl_bg)
+        self._brush_norm_bg = QBrush(self._c_norm_bg)
+        self._brush_hover_bg = QBrush(self._c_hover_bg)
+        self._brush_press_bg = QBrush(self._c_press_bg)
+
+    def apply_theme(self, pri: str, border: str) -> None:
+        """Apply theme palette and rebuild cached pens and brushes."""
+        self._update_palette(pri=pri, border=border)
+        if self.isVisible():
+            self.update()
+
+    def _update_geometry_cache(self) -> None:
+        cx = BTN_SIZE / 2.0
+        cy = BTN_SIZE / 2.0
+        r = 4.5
+        self._tri_poly = QPolygonF([
+            QPointF(cx - r * 0.7, cy - r),
+            QPointF(cx + r * 1.0, cy),
+            QPointF(cx - r * 0.7, cy + r),
+        ])
+        bw = 2.5
+        bh = 9.0
+        self._rect_bar1.setRect(cx - 4.5, cy - bh / 2.0, bw, bh)
+        self._rect_bar2.setRect(cx + 2.0, cy - bh / 2.0, bw, bh)
+        ar = 5.0
+        self._arc_x = int(cx - ar)
+        self._arc_y = int(cy - ar)
+        self._arc_w = int(ar * 2)
+        self._arc_h = int(ar * 2)
+        self._arrow_p1 = QPointF(cx + 3.0, cy - 5.5)
+        self._arrow_p2 = QPointF(cx + 5.5, cy - 3.0)
+        self._arrow_p3 = QPointF(cx + 2.0, cy - 2.5)
 
     def set_mode(self, mode: str) -> None:
         if self._mode != mode:
@@ -309,66 +387,48 @@ class CyberTransportButton(QPushButton):
             return
         p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
-        W = float(self.width())
-        H = float(self.height())
-        cx = W / 2.0
-        cy = H / 2.0
-
-        # Colors based on state
+        # State-based selection of precomputed resources
         if self._highlighted:
-            bdr = QColor("#FFD166")
-            bg = QColor(255, 209, 102, 50)
-            fg = QColor("#FFFFFF")
+            pen_bdr = self._pen_hl_bdr
+            bg_brush = self._brush_hl_bg
+            pen_fg = self._pen_white_fg
+            brush_fg = self._brush_white
+            pen_arrow = self._pen_arrow_white
         elif self._hovered:
-            bdr = self._pri_color
-            bg = QColor(self._pri_color.red(), self._pri_color.green(), self._pri_color.blue(), 40)
-            fg = QColor("#FFFFFF")
+            pen_bdr = self._pen_pri_bdr
+            bg_brush = self._brush_press_bg if self._pressed else self._brush_hover_bg
+            pen_fg = self._pen_white_fg
+            brush_fg = self._brush_white
+            pen_arrow = self._pen_arrow_white
         else:
-            bdr = self._border_color
-            bg = QColor(13, 15, 30, 180)
-            fg = self._pri_color
-
-        if self._pressed:
-            bg = QColor(self._pri_color.red(), self._pri_color.green(), self._pri_color.blue(), 80)
+            pen_bdr = self._pen_norm_bdr
+            bg_brush = self._brush_press_bg if self._pressed else self._brush_norm_bg
+            pen_fg = self._pen_pri_fg
+            brush_fg = self._brush_pri
+            pen_arrow = self._pen_arrow_pri
 
         # Background box
-        p.fillRect(QRectF(1, 1, W - 2, H - 2), bg)
-        p.setPen(QPen(bdr, 1.0))
-        p.drawRect(QRectF(1, 1, W - 2, H - 2))
+        p.fillRect(self._rect_btn, bg_brush)
+        p.setPen(pen_bdr)
+        p.drawRect(self._rect_btn)
 
         # Vector Icon
-        p.setPen(QPen(fg, 1.8, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
+        p.setPen(pen_fg)
 
         if self._mode == "play":
-            # Triangle pointing right
-            p.setBrush(QBrush(fg))
-            r = 4.5
-            from PyQt6.QtGui import QPolygonF
-            tri = QPolygonF([
-                QPointF(cx - r * 0.7, cy - r),
-                QPointF(cx + r * 1.0, cy),
-                QPointF(cx - r * 0.7, cy + r),
-            ])
-            p.drawPolygon(tri)
+            p.setBrush(brush_fg)
+            p.drawPolygon(self._tri_poly)
         elif self._mode == "pause":
-            # Two vertical bars
-            p.setBrush(QBrush(fg))
+            p.setBrush(brush_fg)
             p.setPen(Qt.PenStyle.NoPen)
-            bw = 2.5
-            bh = 9.0
-            p.drawRect(QRectF(cx - 4.5, cy - bh / 2.0, bw, bh))
-            p.drawRect(QRectF(cx + 2.0, cy - bh / 2.0, bw, bh))
+            p.drawRect(self._rect_bar1)
+            p.drawRect(self._rect_bar2)
         elif self._mode == "replay":
-            # Circular arrow
             p.setBrush(Qt.BrushStyle.NoBrush)
-            r = 5.0
-            start_angle = int(45 * 16)
-            span_angle = int(280 * 16)
-            p.drawArc(int(cx - r), int(cy - r), int(r * 2), int(r * 2), start_angle, span_angle)
-            # Arrowhead
-            p.setPen(QPen(fg, 1.5))
-            p.drawLine(QPointF(cx + 3.0, cy - 5.5), QPointF(cx + 5.5, cy - 3.0))
-            p.drawLine(QPointF(cx + 5.5, cy - 3.0), QPointF(cx + 2.0, cy - 2.5))
+            p.drawArc(self._arc_x, self._arc_y, self._arc_w, self._arc_h, 45 * 16, 280 * 16)
+            p.setPen(pen_arrow)
+            p.drawLine(self._arrow_p1, self._arrow_p2)
+            p.drawLine(self._arrow_p2, self._arrow_p3)
 
         p.end()
 

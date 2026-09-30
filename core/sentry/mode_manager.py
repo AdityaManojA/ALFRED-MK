@@ -8,7 +8,7 @@ from __future__ import annotations
 import logging
 import threading
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from typing import Any, Callable
 
 from PyQt6.QtCore import QObject, pyqtSignal
@@ -70,7 +70,7 @@ class SentrySnapshot:
     """Consolidated immutable snapshot of Sentry Mode state."""
     monitor: MonitorState
     focus: FocusState
-    timestamp: float
+    timestamp: float = 0.0
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -195,7 +195,7 @@ class SentryModeManager(QObject):
                 waiting_for_answer=waiting_for_answer,
             )
 
-        self._emit_state_change()
+        self._emit_state_change(force=True)
         return result
 
     def stop_monitor(self, reason: str = "Stopped by user.") -> dict[str, Any]:
@@ -223,7 +223,7 @@ class SentryModeManager(QObject):
                 waiting_for_answer=False,
             )
 
-        self._emit_state_change()
+        self._emit_state_change(force=True)
         return result
 
     def toggle_monitor(
@@ -291,7 +291,7 @@ class SentryModeManager(QObject):
                 intent_set=bool(intent.strip()),
             )
 
-        self._emit_state_change()
+        self._emit_state_change(force=True)
         return result
 
     def stop_focus(self, reason: str = "Stopped by user.") -> dict[str, Any]:
@@ -331,7 +331,7 @@ class SentryModeManager(QObject):
                 intent_set=False,
             )
 
-        self._emit_state_change()
+        self._emit_state_change(force=True)
         return result
 
     def toggle_focus(self) -> dict[str, Any]:

@@ -206,6 +206,8 @@ class ScreenMonitorController:
         self._interval_seconds = self._default_interval
         self._latest_observation: ScreenObservation | None = None
         self._consecutive_failures = 0
+        self._consecutive_degraded_frames = 0
+        self._max_degraded_frames = 12
         self._capture_count = 0
         self._completed = False
         self._stopped_reason: str | None = None
@@ -237,6 +239,7 @@ class ScreenMonitorController:
             self._interval_seconds = interval
             self._latest_observation = None
             self._consecutive_failures = 0
+            self._consecutive_degraded_frames = 0
             self._capture_count = 0
             self._completed = False
             self._stopped_reason = None
@@ -283,14 +286,36 @@ class ScreenMonitorController:
     def _run(self) -> None:
         try:
             while not self._stop_event.is_set():
+                sleep_s = self._interval_seconds
                 try:
                     observation = self._capture_observation()
                 except Exception as exc:
                     if self._record_capture_failure(exc):
                         return
-                    if self._stop_event.wait(self._interval_seconds):
+                    backoff = min(self._interval_seconds * (1.5 ** min(self._consecutive_failures, 5)), 30.0)
+                    if self._stop_event.wait(backoff):
                         return
                     continue
+
+                # Detect degraded GDI / BitBlt fallback frames (e.g. 1x1 black frame or Unknown context)
+                is_degraded = (
+                    len(observation.image_bytes) < 700
+                    and "Unknown" in observation.window_context
+                )
+
+                if is_degraded:
+                    self._consecutive_degraded_frames += 1
+                    sleep_s = min(self._interval_seconds * (1.5 ** min(self._consecutive_degraded_frames, 6)), 30.0)
+                    if self._consecutive_degraded_frames >= self._max_degraded_frames:
+                        _LOGGER.warning(
+                            "Screen monitor entered degraded GDI fallback mode (%d consecutive attempts). Display may be locked or asleep.",
+                            self._consecutive_degraded_frames,
+                        )
+                        if self._record_capture_failure(RuntimeError("GDI screen capture failed: screen unavailable or locked")):
+                            return
+                else:
+                    self._consecutive_degraded_frames = 0
+                    sleep_s = self._interval_seconds
 
                 with self._lock:
                     previous = self._latest_observation
@@ -308,7 +333,7 @@ class ScreenMonitorController:
                     if self._emit_analysis(result, observation, goal):
                         return
 
-                if self._stop_event.wait(self._interval_seconds):
+                if self._stop_event.wait(sleep_s):
                     return
         finally:
             with self._lock:

@@ -74,6 +74,34 @@ class TestApiSetupUI(unittest.TestCase):
         self.assertEqual(len(saved_signal_emitted), 0)
         self.assertIn("Spotify Client ID must be exactly 32 alphanumeric characters", modal._footer_status.text())
 
+    def test_customize_overlay_has_services_setup_button(self):
+        from ui import CustomizeOverlay
+        from PyQt6.QtWidgets import QPushButton
+        cov = CustomizeOverlay()
+        self.assertTrue(hasattr(cov, "_services_api_btn"))
+        self.assertIn("SETUP SPOTIFY, GMAIL & WORKSPACE", cov._services_api_btn.text())
+
+        signal_emitted = []
+        cov.setup_api_requested.connect(lambda: signal_emitted.append(True))
+        cov._services_api_btn.click()
+        self.assertTrue(signal_emitted)
+
+    def test_setup_overlay_has_services_setup_button(self):
+        from ui import SetupOverlay
+        from PyQt6.QtWidgets import QPushButton
+        sov = SetupOverlay()
+        self.assertTrue(hasattr(sov, "setup_api_requested"))
+        btn = None
+        for b in sov.findChildren(QPushButton):
+            if "SETUP SPOTIFY" in b.text():
+                btn = b
+                break
+        self.assertIsNotNone(btn)
+        signal_emitted = []
+        sov.setup_api_requested.connect(lambda: signal_emitted.append(True))
+        btn.click()
+        self.assertTrue(signal_emitted)
+
 
 if __name__ == "__main__":
     unittest.main()

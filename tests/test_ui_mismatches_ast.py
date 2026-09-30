@@ -69,6 +69,63 @@ class TestUiMismatchesAST(unittest.TestCase):
         params = list(sig.parameters.keys())
         self.assertEqual(params, ["self", "arbiter"], f"Expected (self, arbiter), got {params}")
 
+    def test_no_duplicate_methods_in_classes(self):
+        """Assert that no class in the repository redefines/shadows an existing method."""
+        duplicates = []
+        for path in [WORKSPACE_ROOT / "main.py", WORKSPACE_ROOT / "ui.py"]:
+            with open(path, "r", encoding="utf-8") as f:
+                tree = ast.parse(f.read(), filename=str(path))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ClassDef):
+                    seen = {}
+                    for item in node.body:
+                        if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                            is_prop_setter = False
+                            for dec in item.decorator_list:
+                                if isinstance(dec, ast.Attribute) and dec.attr in ("setter", "deleter"):
+                                    is_prop_setter = True
+                                    break
+                            if is_prop_setter:
+                                continue
+                            seen.setdefault(item.name, []).append(item.lineno)
+                    for m, lines in seen.items():
+                        if len(lines) > 1:
+                            duplicates.append(f"{path.name} -> {node.name}.{m} defined on lines {lines}")
+
+        self.assertEqual(duplicates, [], f"Found duplicate shadowed methods: {duplicates}")
+
+    def test_duplicate_methods_in_main_window_and_jarvis_live(self):
+        """Specifically verify MainWindow in ui.py and JarvisLive in main.py have no duplicate methods."""
+        target_classes = {
+            WORKSPACE_ROOT / "ui.py": "MainWindow",
+            WORKSPACE_ROOT / "main.py": "JarvisLive",
+        }
+        duplicates = []
+        found_classes = set()
+        for path, target_cls in target_classes.items():
+            with open(path, "r", encoding="utf-8") as f:
+                tree = ast.parse(f.read(), filename=str(path))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ClassDef) and node.name == target_cls:
+                    found_classes.add(target_cls)
+                    seen = {}
+                    for item in node.body:
+                        if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                            is_prop_setter = False
+                            for dec in item.decorator_list:
+                                if isinstance(dec, ast.Attribute) and dec.attr in ("setter", "deleter"):
+                                    is_prop_setter = True
+                                    break
+                            if is_prop_setter:
+                                continue
+                            seen.setdefault(item.name, []).append(item.lineno)
+                    for m, lines in seen.items():
+                        if len(lines) > 1:
+                            duplicates.append(f"{target_cls}.{m} defined multiple times on lines {lines}")
+
+        self.assertEqual(found_classes, {"MainWindow", "JarvisLive"}, "Both MainWindow and JarvisLive classes must be found and scanned")
+        self.assertEqual(duplicates, [], f"Duplicate method definitions found in core classes: {duplicates}")
+
 
 if __name__ == "__main__":
     unittest.main()

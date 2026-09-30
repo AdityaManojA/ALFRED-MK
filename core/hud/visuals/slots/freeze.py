@@ -73,7 +73,8 @@ class FreezeThermalColumnVisual(SlotVisual):
         painter.drawText(QRectF(rect.x() + 8, rect.y() + 4, rect.width() - 16, 12),
                          Qt.AlignmentFlag.AlignCenter, "THERMAL DELTA // 0 KELVIN")
         painter.drawRect(self.col_rect)
-        painter.fillRect(self.fill_rect, self.brush_ice)
+        painter.setBrush(self.brush_ice)
+        painter.drawRect(self.fill_rect)
 
 
 class FreezeCoolantLoopVisual(SlotVisual):
