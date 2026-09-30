@@ -459,7 +459,7 @@ def save_plugin_config(namespace: str, values: dict) -> None:
 def get_media_settings() -> dict:
     """Privacy-safe Media Command settings stored with existing config data."""
     defaults = {
-        "resume_external_on_stop": False,
+        "resume_external_on_stop": True,
         "speak_on_suppress": True,
         "local_image_roots": [],
     }

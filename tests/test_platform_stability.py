@@ -19,6 +19,7 @@ from core.sentry.mode_manager import (
     SentryModeManager,
     SentrySnapshot,
 )
+from ui import MainWindow
 
 
 class TestSentrySnapshotStability(unittest.TestCase):

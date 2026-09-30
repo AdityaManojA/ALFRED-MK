@@ -1,29 +1,24 @@
 """
 core/gui_thread.py — Qt GUI thread assertions and marshalling helpers.
+
+Now powered by core.thread_safety.
 """
 
 from __future__ import annotations
 
-from PyQt6.QtCore import QThread
-from PyQt6.QtWidgets import QApplication
-
-
-def is_gui_thread() -> bool:
-    """Return True if the current thread is the Qt main GUI thread."""
-    app = QApplication.instance()
-    if app is None:
-        return True
-    return QThread.currentThread() == app.thread()
+from core.thread_safety import (
+    assert_gui_thread as _base_assert,
+    is_gui_thread,
+    run_on_gui_thread,
+    gui_thread_only,
+    STRICT_GUI_ASSERTIONS,
+    LOG_STACK_TRACE_ON_VIOLATION,
+)
 
 
 def assert_gui_thread(context_name: str = "method") -> None:
     """Assert that the current code is running on the Qt GUI thread.
-    
+
     Raises RuntimeError if called from a background / worker thread.
     """
-    app = QApplication.instance()
-    if app is not None and QThread.currentThread() != app.thread():
-        raise RuntimeError(
-            f"Thread assertion failed: {context_name} must be called on Qt GUI thread ({app.thread()}), "
-            f"but was called on {QThread.currentThread()}"
-        )
+    _base_assert(context_name=context_name, raise_error=True)

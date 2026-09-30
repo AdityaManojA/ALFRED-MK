@@ -112,8 +112,8 @@ class TestSentryUIRoutingAndDisplay(unittest.TestCase):
         # Trigger toggle monitor with screen goal
         mock_win._toggle_monitor_mode(goal="screen")
 
-        # Verify monitor handler was called with screen goal
-        mock_mon_start.assert_called_once_with("screen", 5.0)
+        # Verify monitor handler was called with screen goal and default interval
+        mock_mon_start.assert_called_once_with("screen", 3.0)
 
     def test_minimized_and_full_hud_remain_consistent(self):
         """Both HUD displays receive and maintain identical Sentry state."""

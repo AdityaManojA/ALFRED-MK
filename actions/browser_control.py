@@ -962,6 +962,44 @@ def browser_control(
         _log(player, result)
         return result
 
+    # ── Tab and Window Control (Native / Lightweight) ─────────────────────────
+    # close_tab / switch_tab / reopen_closed_tab / close_window
+    # Standardised cross-platform tab control across Chrome, Brave, Edge, Firefox, Arc, Safari.
+    # Never launches Playwright or about:blank if not already running in an automation session.
+    if action in ("close_tab", "switch_tab", "reopen_closed_tab", "close_window"):
+        if browser and _registry.has(browser):
+            sess = _registry.get(browser)
+            try:
+                if action == "close_tab":
+                    result = sess.run(sess.close_tab())
+                elif action == "close_window":
+                    result = sess.run(sess.close_all())
+                else:
+                    result = f"Action '{action}' handled natively."
+            except concurrent.futures.TimeoutError:
+                result = f"Browser action '{action}' timed out (60s)."
+            except Exception as e:
+                result = f"Browser error ({action}): {e}"
+            _log(player, result)
+            return result
+
+        from core.browser.controller import (
+            close_active_tab,
+            switch_tab,
+            reopen_closed_tab,
+            close_window,
+        )
+        if action == "close_tab":
+            result = close_active_tab()
+        elif action == "switch_tab":
+            result = switch_tab(direction=params.get("direction", "next"))
+        elif action == "reopen_closed_tab":
+            result = reopen_closed_tab()
+        elif action == "close_window":
+            result = close_window()
+        _log(player, result)
+        return result
+
     # ── Navigation is ALWAYS native ──────────────────────────────────────────
     # go_to / search / new_tab open the site in the user's own browser —
     # their own profile, logged-in accounts and start page; exactly as if the
@@ -992,6 +1030,12 @@ def browser_control(
             nav_url = base + params.get("query", "").replace(" ", "+")
         else:
             nav_url = params.get("url", "").strip()
+
+        if not nav_url and action == "new_tab":
+            from core.browser.controller import new_tab as ctrl_new_tab
+            result = ctrl_new_tab()
+            _log(player, result)
+            return result
 
         result = _open_native(nav_url, browser)
         if result.startswith("Opened") and nav_url:

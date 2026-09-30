@@ -46,6 +46,7 @@ log = logging.getLogger(__name__)
 
 SURFACE_SPINNER_INTERVAL_MS: int = 40   # ~25 fps spinner animation
 SURFACE_MUTE_INDICATOR_TIMEOUT_MS: int = 2_000  # "MUTED" badge auto-hide
+SURFACE_TOAST_DURATION_MS: int = 1_800  # HUD toast display duration
 
 
 # ---------------------------------------------------------------------------
@@ -146,7 +147,11 @@ class HudVideoSurface(QWidget):
 
     def show_toast(self, text: str) -> None:
         """Display a tactical toast overlay over the video."""
-        if not text:
+        from core.thread_safety import is_gui_thread, run_on_gui_thread
+        if not is_gui_thread():
+            run_on_gui_thread(self.show_toast, text)
+            return
+        if not text or not self._toast_lbl or not self._toast_timer:
             return
         self._toast_lbl.setText(f"◈  {text.upper()}  ◈")
         self._toast_lbl.adjustSize()
@@ -158,10 +163,15 @@ class HudVideoSurface(QWidget):
         self._toast_lbl.move(cx, cy)
         self._toast_lbl.show()
         self._toast_lbl.raise_()
-        self._toast_timer.start(1800)
+        self._toast_timer.start(SURFACE_TOAST_DURATION_MS)
 
     def _hide_toast(self) -> None:
-        self._toast_lbl.hide()
+        from core.thread_safety import is_gui_thread, run_on_gui_thread
+        if not is_gui_thread():
+            run_on_gui_thread(self._hide_toast)
+            return
+        if self._toast_lbl:
+            self._toast_lbl.hide()
 
     def video_widget(self) -> QVideoWidget:
         """Return the QVideoWidget for the backend to attach to."""
@@ -409,7 +419,12 @@ class HudVideoSurface(QWidget):
             return f
 
     def _hide_mute_badge(self) -> None:
-        self._mute_badge.hide()
+        from core.thread_safety import is_gui_thread, run_on_gui_thread
+        if not is_gui_thread():
+            run_on_gui_thread(self._hide_mute_badge)
+            return
+        if hasattr(self, "_mute_badge") and self._mute_badge:
+            self._mute_badge.hide()
 
     def resizeEvent(self, event) -> None:
         super().resizeEvent(event)

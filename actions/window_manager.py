@@ -291,3 +291,5 @@ TOOL = {
     },
     "handler": window_manager_action,
 }
+
+run = window_manager_action

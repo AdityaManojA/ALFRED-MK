@@ -38,6 +38,8 @@ class TestRemoteKeyOverlay(unittest.TestCase):
             expiry_secs=600,
             parent=self.parent,
         )
+        self.parent.show()
+        self.overlay.show()
 
     def tearDown(self) -> None:
         self.overlay.close()

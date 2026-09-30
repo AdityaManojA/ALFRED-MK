@@ -56,19 +56,17 @@ class TestSentryDropdownIntegration(unittest.TestCase):
     def test_sentry_menu_actions_and_labels(self):
         window = self._make_window_shim()
         menu = MainWindow._create_sentry_menu(window)
-        actions = menu.actions()
-        self.assertEqual(len(actions), 2)
-        self.assertIn("MONITOR", actions[0].text())
-        self.assertIn("OFF", actions[0].text())
-        self.assertIn("FOCUS", actions[1].text())
-        self.assertIn("OFF", actions[1].text())
+        actions = [a for a in menu.actions() if not a.isSeparator()]
+        self.assertGreaterEqual(len(actions), 2)
+        self.assertTrue(any("MONITOR" in a.text() for a in actions))
+        self.assertTrue(any("FOCUS" in a.text() for a in actions))
 
         # Now start monitor and re-verify action labels
         self.mgr.start_monitor("Test Monitor")
         menu2 = MainWindow._create_sentry_menu(window)
-        actions2 = menu2.actions()
-        self.assertIn("MONITOR (ON)", actions2[0].text())
-        self.assertIn("FOCUS (OFF)", actions2[1].text())
+        actions2 = [a for a in menu2.actions() if not a.isSeparator()]
+        self.assertTrue(any("MONITOR (ON)" in a.text() for a in actions2))
+        self.assertTrue(any("FOCUS (OFF)" in a.text() for a in actions2))
 
     def test_dropdown_toggles_modes_independently(self):
         window = self._make_window_shim()

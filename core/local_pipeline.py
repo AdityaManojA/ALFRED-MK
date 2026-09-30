@@ -19,6 +19,9 @@ from core.llm_client import (
 from core.echo import EchoGuard
 
 
+PIPELINE_POLL_INTERVAL_S: float = 0.02  # 20ms non-blocking check interval
+
+
 class LocalLLMManager:
     """Manages local LLM interactions."""
 
@@ -245,16 +248,17 @@ class LocalPipelineCoordinator:
 
         while self.is_running:
             try:
-                # Get audio chunk with timeout
+                # Non-blocking audio chunk retrieval to avoid blocking asyncio event loop
                 try:
-                    audio_bytes = self.audio_queue.get(timeout=0.1)
+                    audio_bytes = self.audio_queue.get_nowait()
                 except queue.Empty:
-                    # Timeout - check if we should process buffered audio
+                    # Timeout / empty check - process buffered audio if silence counter met
                     if (len(audio_buffer) > 0 and
                         silence_counter >= max_silence_chunks):
                         await self._process_utterance(bytes(audio_buffer))
                         audio_buffer = bytearray()
                         silence_counter = 0
+                    await asyncio.sleep(PIPELINE_POLL_INTERVAL_S)
                     continue
 
                 if not self.is_speaking:  # Don't process while speaking (barge-in protection)

@@ -155,6 +155,44 @@ def _get_system_vitals() -> str:
         return "All internal systems nominal."
 
 
+def search_news(params: dict) -> str:
+    """Fallback helper to search news headlines by parameter dict."""
+    topic = params.get("topic", "") if isinstance(params, dict) else str(params)
+    try:
+        from actions.web_search import search_news as _ws_search_news
+        return _ws_search_news(params)
+    except Exception:
+        pass
+    try:
+        from actions.web_search import _news
+        return _news(topic)
+    except Exception:
+        pass
+    try:
+        from actions.news_brief import news_brief_action
+        return news_brief_action({"topic": topic, "count": 2})
+    except Exception:
+        return ""
+
+
+def _get_preferred_news(topic: str = "") -> str:
+    """Fetch top news headline regarding user's preferred topic with graceful fallback."""
+    if not topic:
+        return ""
+    try:
+        from actions.web_search import _news
+        res = _news(topic)
+        if res and not res.startswith("No news found"):
+            return res
+    except Exception:
+        pass
+
+    try:
+        return search_news({"topic": topic})
+    except Exception:
+        return ""
+
+
 def daily_brief(
     parameters: dict,
     player=None,
@@ -194,16 +232,34 @@ def daily_brief(
     sys_text = ""
     pref_news = ""
 
-    def _get_preferred_news() -> str:
-        if not brief_pref:
-            return ""
-        from actions.web_search import _news
-        return _news(f"{brief_pref} today")
+    def _get_market_brief() -> str:
+        try:
+            from core.market.watchlist import WatchlistManager
+            from core.market.provider import MarketProvider
+            mgr = WatchlistManager.instance()
+            watches = mgr.list_active()
+            provider = MarketProvider.instance()
+            # If watches exist, summarize top mover; else summarize S&P / Nasdaq
+            if watches:
+                quotes = [provider.get_quote(w.symbol) for w in watches[:4]]
+                valid_quotes = [q for q in quotes if q is not None]
+                if valid_quotes:
+                    top = max(valid_quotes, key=lambda q: abs(q.change_pct))
+                    dir_str = "up" if top.change_pct >= 0 else "down"
+                    return f"On your watchlist, {top.display_name or top.symbol} is {dir_str} {abs(top.change_pct):.1f}%."
+            else:
+                sp = provider.get_quote("^GSPC")
+                if sp:
+                    dir_str = "up" if sp.change_pct >= 0 else "down"
+                    return f"S&P 500 is {dir_str} {abs(sp.change_pct):.1f}%."
+        except Exception:
+            pass
+        return ""
 
     # These sections are independent. Serial execution made the user wait for
     # the sum of every network timeout before the model could speak.
     jobs = {}
-    with ThreadPoolExecutor(max_workers=5, thread_name_prefix="daily-brief") as pool:
+    with ThreadPoolExecutor(max_workers=6, thread_name_prefix="daily-brief") as pool:
         if inc_weather:
             jobs["weather"] = pool.submit(_get_live_weather, city)
         if inc_email:
@@ -212,8 +268,9 @@ def daily_brief(
             jobs["reminders"] = pool.submit(_get_reminders_brief)
         if inc_system:
             jobs["system"] = pool.submit(_get_system_vitals)
+        jobs["market"] = pool.submit(_get_market_brief)
         if brief_pref:
-            jobs["news"] = pool.submit(_get_preferred_news)
+            jobs["news"] = pool.submit(_get_preferred_news, brief_pref)
 
         results = {}
         for key, future in jobs.items():
@@ -226,10 +283,11 @@ def daily_brief(
     email_text = results.get("email", "")
     rem_text = results.get("reminders", "")
     sys_text = results.get("system", "")
+    market_text = results.get("market", "")
     pref_news = results.get("news", "")
 
     components = [greeting]
-    components.extend(text for text in (weather_text, email_text, rem_text, sys_text) if text)
+    components.extend(text for text in (weather_text, market_text, email_text, rem_text, sys_text) if text)
     if pref_news and not pref_news.startswith(("No news", "Search failed", "Please provide")):
         news_lines = [line.strip() for line in pref_news.splitlines() if line.strip()]
         headline = next(

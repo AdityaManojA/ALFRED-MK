@@ -346,6 +346,11 @@ def hud_video(
             t.start()
             return terminal_msg
 
+        if dest_kind == "netflix":
+            from core.pilots.netflix.actions import get_netflix_actions
+            target_to_play = clean_target or target
+            return get_netflix_actions().play_netflix(target_to_play)
+
         if dest_kind in ("youtube", "default", "window"):
             target_to_play = clean_target or target
             return execute_destination(

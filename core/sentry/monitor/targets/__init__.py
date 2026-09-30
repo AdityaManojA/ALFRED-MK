@@ -12,12 +12,14 @@ from core.sentry.monitor.targets.process import ProcessTarget
 from core.sentry.monitor.targets.command import CommandTarget
 from core.sentry.monitor.targets.clipboard import ClipboardTarget
 from core.sentry.monitor.targets.screen_region import ScreenRegionTarget
+from core.sentry.monitor.targets.market import MarketTarget
 
 __all__ = [
     "AlertSeverity",
     "ClipboardTarget",
     "CommandTarget",
     "FileLogTarget",
+    "MarketTarget",
     "MonitorTarget",
     "ProcessTarget",
     "ScreenRegionTarget",

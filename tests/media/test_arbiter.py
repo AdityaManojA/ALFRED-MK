@@ -1,3 +1,4 @@
+import unittest
 from core.media.arbiter import AudioSource, MediaArbiter
 
 
@@ -23,33 +24,53 @@ class _FakeSuppressor:
         return self.playing[handle]
 
 
-def test_claim_release_and_tts_duck_state():
-    arbiter = MediaArbiter()
+class TestMediaArbiter(unittest.TestCase):
+    def test_claim_release_and_tts_duck_state(self):
+        arbiter = MediaArbiter()
 
-    assert not arbiter.state.app_playing
-    arbiter.claim(AudioSource.APP_PLAYER)
-    assert arbiter.state.app_playing
-    assert not arbiter.state.tts_ducking
+        self.assertFalse(arbiter.state.app_playing)
+        arbiter.claim(AudioSource.APP_PLAYER)
+        self.assertTrue(arbiter.state.app_playing)
+        self.assertFalse(arbiter.state.tts_ducking)
 
-    arbiter.claim(AudioSource.TTS)
-    assert arbiter.state.tts_ducking
+        arbiter.claim(AudioSource.TTS)
+        self.assertTrue(arbiter.state.tts_ducking)
 
-    arbiter.release(AudioSource.TTS)
-    assert not arbiter.state.tts_ducking
-    arbiter.release(AudioSource.APP_PLAYER)
-    assert not arbiter.state.app_playing
+        arbiter.release(AudioSource.TTS)
+        self.assertFalse(arbiter.state.tts_ducking)
+        arbiter.release(AudioSource.APP_PLAYER)
+        self.assertFalse(arbiter.state.app_playing)
+
+    def test_app_player_claim_suppresses_external_player(self):
+        suppressor = _FakeSuppressor()
+        arbiter = MediaArbiter(suppressor=suppressor)
+        arbiter.claim(AudioSource.APP_PLAYER)
+
+        import time
+        deadline = time.monotonic() + 1.0
+        while not suppressor.paused and time.monotonic() < deadline:
+            time.sleep(0.01)
+        self.assertEqual(suppressor.paused, ["external-player"])
+        self.assertTrue(arbiter.state.external_suppressed)
+        self.assertEqual(arbiter.state.suppressed_count, 1)
+
+    def test_app_player_release_resumes_external_player(self):
+        suppressor = _FakeSuppressor()
+        arbiter = MediaArbiter(suppressor=suppressor)
+        arbiter.claim(AudioSource.APP_PLAYER)
+
+        import time
+        deadline = time.monotonic() + 1.0
+        while not suppressor.paused and time.monotonic() < deadline:
+            time.sleep(0.01)
+        self.assertFalse(suppressor.is_playing("external-player"))
+
+        # Release APP_PLAYER: with RESUME_EXTERNAL_ON_STOP=True, it resumes!
+        arbiter.release(AudioSource.APP_PLAYER)
+        self.assertTrue(suppressor.is_playing("external-player"))
+        self.assertFalse(arbiter.state.app_playing)
 
 
-def test_app_player_claim_suppresses_external_player():
-    suppressor = _FakeSuppressor()
-    arbiter = MediaArbiter(suppressor=suppressor)
-    arbiter.claim(AudioSource.APP_PLAYER)
+if __name__ == "__main__":
+    unittest.main()
 
-    # The watchdog sweeps immediately, but this assertion remains event-loop independent.
-    import time
-    deadline = time.monotonic() + 1.0
-    while not suppressor.paused and time.monotonic() < deadline:
-        time.sleep(0.01)
-    assert suppressor.paused == ["external-player"]
-    assert arbiter.state.external_suppressed
-    assert arbiter.state.suppressed_count == 1

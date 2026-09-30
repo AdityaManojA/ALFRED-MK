@@ -100,6 +100,87 @@ class TestAudioDucker(unittest.TestCase):
             self.assertEqual(restored["spotify"], 0.9)
             mock_pulse.volume_set_all_flat.assert_called_with(mock_sink, 0.9)
 
+    @patch("core.audio_ducker.platform.system", return_value="Windows")
+    def test_duck_windows_resilient_to_access_denied_session(self, mock_system):
+        """A session whose .Process throws an exception does not abort ducking/unducking of other sessions."""
+        # Malformed / AccessDenied session
+        bad_session = MagicMock()
+        type(bad_session).Process = unittest.mock.PropertyMock(side_effect=PermissionError("Access denied"))
+
+        # Valid Spotify session
+        spotify_proc = MagicMock()
+        spotify_proc.name.return_value = "Spotify.exe"
+        spotify_proc.pid = 4321
+        spotify_vol = MagicMock()
+        spotify_vol.GetMasterVolume.return_value = 0.7
+        spotify_session = MagicMock()
+        spotify_session.Process = spotify_proc
+        spotify_session._ctl.QueryInterface.return_value = spotify_vol
+
+        mock_sessions = [bad_session, spotify_session]
+        with patch("pycaw.pycaw.AudioUtilities.GetAllSessions", return_value=mock_sessions):
+            result = audio_ducker.duck_media_apps(volume_factor=0.3, sync=True)
+            self.assertIn("spotify.exe", result)
+            self.assertAlmostEqual(result["spotify.exe"], 0.21, places=2)
+
+            restored = audio_ducker.unduck_media_apps(sync=True)
+            self.assertIn("spotify.exe", restored)
+            self.assertEqual(restored["spotify.exe"], 0.7)
+            self.assertFalse(audio_ducker.is_ducked())
+
+    @patch("core.audio_ducker.platform.system", return_value="Windows")
+    def test_duck_windows_double_duck_preserves_original(self, mock_system):
+        """Calling duck_media_apps twice must not overwrite original volume with already-ducked volume."""
+        spotify_proc = MagicMock()
+        spotify_proc.name.return_value = "Spotify.exe"
+        spotify_proc.pid = 8888
+        spotify_vol = MagicMock()
+        spotify_vol.GetMasterVolume.return_value = 1.0
+        spotify_session = MagicMock()
+        spotify_session.Process = spotify_proc
+        spotify_session._ctl.QueryInterface.return_value = spotify_vol
+
+        mock_sessions = [spotify_session]
+        with patch("pycaw.pycaw.AudioUtilities.GetAllSessions", return_value=mock_sessions):
+            # First duck
+            audio_ducker.duck_media_apps(volume_factor=0.3, sync=True)
+            self.assertEqual(audio_ducker._original_volumes[8888], 1.0)
+
+            # Simulate volume is now 0.3
+            spotify_vol.GetMasterVolume.return_value = 0.3
+
+            # Second duck
+            audio_ducker.duck_media_apps(volume_factor=0.3, sync=True)
+            # Original volume MUST still be 1.0, not 0.3!
+            self.assertEqual(audio_ducker._original_volumes[8888], 1.0)
+
+            # Unduck restores to original 1.0
+            restored = audio_ducker.unduck_media_apps(sync=True)
+            self.assertEqual(restored["spotify.exe"], 1.0)
+            spotify_vol.SetMasterVolume.assert_called_with(1.0, None)
+
+    @patch("core.audio_ducker.platform.system", return_value="Windows")
+    def test_watchdog_auto_unducks_on_timeout(self, mock_system):
+        """If unduck_media_apps is not called, watchdog auto-restores volume."""
+        spotify_proc = MagicMock()
+        spotify_proc.name.return_value = "Spotify.exe"
+        spotify_proc.pid = 9999
+        spotify_vol = MagicMock()
+        spotify_vol.GetMasterVolume.return_value = 0.5
+        spotify_session = MagicMock()
+        spotify_session.Process = spotify_proc
+        spotify_session._ctl.QueryInterface.return_value = spotify_vol
+
+        mock_sessions = [spotify_session]
+        with patch("pycaw.pycaw.AudioUtilities.GetAllSessions", return_value=mock_sessions):
+            audio_ducker.duck_media_apps(volume_factor=0.3, sync=True)
+            self.assertTrue(audio_ducker.is_ducked())
+
+            # Trigger watchdog callback directly
+            audio_ducker._on_watchdog_timeout()
+            self.assertFalse(audio_ducker.is_ducked())
+            spotify_vol.SetMasterVolume.assert_called_with(0.5, None)
+
 
 if __name__ == "__main__":
     unittest.main()

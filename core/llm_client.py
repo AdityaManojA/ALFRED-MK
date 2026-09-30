@@ -17,6 +17,7 @@ Supports two backends — selected via  "llm_provider"  in config/api_keys.json:
         supports function/tool calls (e.g. Qwen2.5, Llama-3.1, Mistral).
 """
 import json
+import os
 import re
 import subprocess
 import sys

@@ -28,6 +28,9 @@ from typing import Callable
 WAKE_PHRASE = "Hey Alfred"
 WAKE_MODEL = "alfred"
 WAKE_MODEL_PATH = Path(__file__).resolve().parent.parent / "models" / "alfred.onnx"
+WAKEWORD_MODEL_PATH = WAKE_MODEL_PATH
+AUDIO_BUFFER_SIZE: int = 1280       # 80ms at 16kHz int16 (native OpenWakeWord chunk size)
+WAKEWORD_TIMEOUT_S: float = 5.0     # Maximum wait time for detection cycle
 WAKE_MODEL_URL = (
     "https://raw.githubusercontent.com/fwartner/"
     "home-assistant-wakewords-collection/main/en/alfred/alfred.onnx"
@@ -37,6 +40,23 @@ WAKE_MODEL_SHA256 = "6b67237ff9da3bf00cb443438503ef842655263b62323f7da48e3f7c2e8
 DEFAULT_THRESHOLD = 0.5
 # Mic frames arrive at 16 kHz int16; this is just the detector's input rate.
 SAMPLE_RATE = 16000
+
+# Global shared model cache to eliminate 1.5s cold-start on subsequent detector inits
+_SHARED_MODEL = None
+_SHARED_MODEL_LOCK = threading.Lock()
+
+
+def get_shared_model():
+    """Lazy-load the wake word model once and keep cached in memory."""
+    global _SHARED_MODEL
+    with _SHARED_MODEL_LOCK:
+        if _SHARED_MODEL is None:
+            from openwakeword.model import Model
+            _SHARED_MODEL = Model(
+                wakeword_models=[str(WAKEWORD_MODEL_PATH)],
+                inference_framework="onnx",
+            )
+        return _SHARED_MODEL
 
 
 def _prediction_score(scores: object) -> float:
@@ -152,16 +172,12 @@ class WakeWordDetector:
         self._ready = False
 
     def start(self) -> bool:
-        """Load the model and spawn the inference thread. Returns True on success.
+        """Load the model (cached) and spawn the inference thread. Returns True on success.
         Safe to call again — a no-op if already running. Never raises."""
         if self._running:
             return True
         try:
-            from openwakeword.model import Model
-            self._model = Model(
-                wakeword_models=[str(WAKE_MODEL_PATH)],
-                inference_framework="onnx",
-            )
+            self._model = get_shared_model()
         except Exception as e:
             self._logger(f"Wake word: could not load model — {e}")
             self._notify("Wake word unavailable — use the WAKE NOW button.")
@@ -181,41 +197,55 @@ class WakeWordDetector:
             self._queue.put_nowait(None)
         except Exception:
             pass
-        self._model = None
         self._ready = False
 
     @property
     def ready(self) -> bool:
         return self._ready
 
-    def feed(self, frame_int16) -> None:
+    def feed(self, frame_int16, timestamp: float | None = None) -> None:
         """Called from the mic callback (real-time thread). Must stay cheap and
         never block — the frame is copied and dropped if the queue is backed up."""
         if not self._running:
             return
         try:
+            import time
+            feed_ts = timestamp if timestamp is not None else time.perf_counter()
             # frame_int16 is a numpy int16 array (possibly 2-D mono) — flatten to 1-D
             data = frame_int16[:, 0].copy() if getattr(frame_int16, "ndim", 1) > 1 else frame_int16.copy()
-            self._queue.put_nowait(data)
+            self._queue.put_nowait((data, feed_ts))
         except queue.Full:
             pass
         except Exception:
             pass
 
     def _loop(self) -> None:
+        import time
         import numpy as np
         while self._running:
             try:
-                frame = self._queue.get()
-                if frame is None or not self._running:
+                item = self._queue.get()
+                if item is None or not self._running:
                     break
+                if isinstance(item, tuple):
+                    frame, feed_ts = item
+                else:
+                    frame, feed_ts = item, time.perf_counter()
+
                 scores = self._model.predict(np.asarray(frame, dtype=np.int16))
                 score = _prediction_score(scores)
                 if score >= self._threshold:
+                    match_ts = time.perf_counter()
+                    gate_latency_ms = (match_ts - feed_ts) * 1000.0
+                    self._logger(f"[WakeWord] Match detected (score={score:.2f}) gate_latency={gate_latency_ms:.1f}ms")
                     # drain any backlog so we don't double-fire on the same utterance
                     self._drain()
                     try:
+                        detect_start = time.perf_counter()
                         self._on_detect()
+                        start_latency_ms = (time.perf_counter() - detect_start) * 1000.0
+                        if start_latency_ms > 20.0:
+                            self._logger(f"[WakeWord] on_detect dispatch time={start_latency_ms:.1f}ms")
                     except Exception as e:
                         self._logger(f"Wake word: on_detect error — {e}")
             except Exception as e:

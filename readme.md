@@ -2,7 +2,7 @@
 ### 🎩 Autonomous Multimodal AI Desktop Assistant & Tactical Terminal
 **Architect & Lead Creator:** **ADITYA MANOJ**
 
-[![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
+[![Python 3.12 (Recommended)](https://img.shields.io/badge/Python-3.12%20(Recommended)-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![AI Backend](https://img.shields.io/badge/AI-Gemini%203.1%20Flash%20Live%20%7C%20Local%20Ollama-8E75B2.svg?logo=google&logoColor=white)](https://ai.google.dev/)
 [![Local LLMs](https://img.shields.io/badge/Local%20LLM-Ollama%20%7C%20LM%20Studio%20%7C%20vLLM-orange.svg)](https://ollama.com)
 [![PyQt6](https://img.shields.io/badge/GUI-PyQt6%20Software%20Renderer-41CD52.svg?logo=qt&logoColor=white)](https://riverbankcomputing.com/software/pyqt/)
@@ -51,7 +51,7 @@
 
 ### 📋 Prerequisites
 * **Operating System**: Windows 10/11, macOS, or Linux.
-* **Python**: `3.11`, `3.12`, or `3.13`.
+* **Python**: **`3.12.x` (Recommended)**. *(Note: Python `3.11` is also supported. Python `3.13` is not recommended due to upstream binary wheel and C-extension compatibility issues with PyAudio, PyQt6, and PyAutoGUI).*
 * **Hardware**: Standard microphone and speakers. *No dedicated GPU required — runs on lightweight software rendering.*
 * **Intelligence Backend**: Free Gemini API key from [Google AI Studio](https://aistudio.google.com/) **OR** local Ollama / LM Studio.
 

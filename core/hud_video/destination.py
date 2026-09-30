@@ -112,6 +112,14 @@ def parse_explicit_destination(text: str) -> tuple[str | None, str, str | None]:
             clean = _clean_play_verbs(clean)
             return ("youtube", clean, None)
 
+    # 2b. Netflix (Collision Guard)
+    netflix_patterns = [r"\bon netflix\b", r"\bin netflix\b"]
+    for pat in netflix_patterns:
+        if re.search(pat, lower):
+            clean = re.sub(pat, "", text, flags=re.IGNORECASE).strip()
+            clean = _clean_play_verbs(clean)
+            return ("netflix", clean, "netflix")
+
     # 3. Default player / browser
     def_patterns = [
         r"\bin (the )?default player\b",

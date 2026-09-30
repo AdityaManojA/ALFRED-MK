@@ -18,6 +18,7 @@ from typing import Dict, Optional
 logger = logging.getLogger("audio_ducker")
 
 # Default target media processes (case-insensitive)
+# Default target media processes (case-insensitive)
 DEFAULT_MEDIA_PROCESSES = {
     "spotify.exe",
     "chrome.exe",
@@ -32,6 +33,21 @@ DEFAULT_MEDIA_PROCESSES = {
     "itunes.exe",
     "tidal.exe",
     "foobar2000.exe",
+    "mpv.exe",
+    "potplayer.exe",
+    "potplayermini64.exe",
+    "kmplayer.exe",
+    "aimp.exe",
+    "audacity.exe",
+    "netflix.exe",
+    "steam.exe",
+    "vivaldi.exe",
+    "arc.exe",
+    "thorium.exe",
+    "zen.exe",
+    "waterfox.exe",
+    "chromium.exe",
+    "apple music.exe",
     # Linux common process names (without .exe)
     "spotify",
     "chrome",
@@ -41,6 +57,8 @@ DEFAULT_MEDIA_PROCESSES = {
     "firefox",
     "opera",
     "discord",
+    "mpv",
+    "chromium",
 }
 
 _duck_lock = threading.Lock()
@@ -48,9 +66,36 @@ _duck_lock = threading.Lock()
 _original_volumes: Dict[int, float] = {}
 _is_ducked = False
 
+# Watchdog to guarantee ducked apps are NEVER stuck ducked permanently
+_watchdog_timer: Optional[threading.Timer] = None
+_watchdog_lock = threading.Lock()
+
+
+def _cancel_auto_unduck_watchdog() -> None:
+    global _watchdog_timer
+    with _watchdog_lock:
+        if _watchdog_timer:
+            _watchdog_timer.cancel()
+            _watchdog_timer = None
+
+
+def _schedule_auto_unduck_watchdog(timeout_s: float = 30.0) -> None:
+    global _watchdog_timer
+    with _watchdog_lock:
+        if _watchdog_timer:
+            _watchdog_timer.cancel()
+        _watchdog_timer = threading.Timer(timeout_s, _on_watchdog_timeout)
+        _watchdog_timer.daemon = True
+        _watchdog_timer.start()
+
+
+def _on_watchdog_timeout() -> None:
+    logger.warning("Audio ducker watchdog timeout: auto-restoring external media app volume levels.")
+    unduck_media_apps(sync=True)
+
 
 def _duck_windows(volume_factor: float, targets: set[str]) -> dict[str, float]:
-    """Execute ducking on Windows via pycaw."""
+    """Execute ducking on Windows via pycaw with resilient session inspection."""
     global _is_ducked
     ducked_apps: dict[str, float] = {}
     current_pid = os.getpid()
@@ -66,36 +111,62 @@ def _duck_windows(volume_factor: float, targets: set[str]) -> dict[str, float]:
 
         sessions = AudioUtilities.GetAllSessions()
         for session in sessions:
-            proc = session.Process
-            if not proc:
-                continue
-
             try:
-                pid = proc.pid
-                pname = proc.name().lower()
+                proc = session.Process
             except Exception:
+                proc = None
+
+            pid = None
+            raw_pid = getattr(session, "ProcessId", None)
+            if isinstance(raw_pid, int):
+                pid = raw_pid
+            elif proc and isinstance(getattr(proc, "pid", None), int):
+                pid = proc.pid
+
+            # Constraint: Do not affect ALFRED's own process audio or invalid PIDs
+            if not pid or pid == current_pid:
                 continue
 
-            # Constraint: Do not affect ALFRED's own process audio
-            if pid == current_pid:
-                continue
-
-            if pname in targets:
+            pname = ""
+            if proc:
                 try:
-                    vol_ctrl = session._ctl.QueryInterface(ISimpleAudioVolume)
-                    cur_vol = float(vol_ctrl.GetMasterVolume())
+                    pname = proc.name().lower()
+                except Exception:
+                    pass
+            if not pname and pid:
+                try:
+                    import psutil
+                    pname = psutil.Process(pid).name().lower()
+                except Exception:
+                    pass
 
-                    # Record original volume if not already stored
-                    if pid not in _original_volumes:
-                        _original_volumes[pid] = cur_vol
+            if pname in targets or "*" in targets or "all" in targets:
+                try:
+                    vol_ctrl = None
+                    if hasattr(session, "_ctl") and hasattr(session._ctl, "QueryInterface"):
+                        try:
+                            vol_ctrl = session._ctl.QueryInterface(ISimpleAudioVolume)
+                        except Exception:
+                            vol_ctrl = None
+                    if vol_ctrl is None:
+                        vol_ctrl = getattr(session, "SimpleAudioVolume", None)
 
-                    target_vol = max(0.0, min(1.0, _original_volumes[pid] * volume_factor))
-                    vol_ctrl.SetMasterVolume(target_vol, None)
-                    ducked_apps[pname] = target_vol
+                    if vol_ctrl is not None:
+                        cur_vol = float(vol_ctrl.GetMasterVolume())
+
+                        # Record original volume only if not already recorded
+                        if pid not in _original_volumes:
+                            _original_volumes[pid] = cur_vol
+
+                        target_vol = max(0.0, min(1.0, _original_volumes[pid] * volume_factor))
+                        vol_ctrl.SetMasterVolume(target_vol, None)
+                        ducked_apps[pname or str(pid)] = target_vol
                 except Exception as e:
                     logger.debug(f"Failed to duck session {pname} (PID {pid}): {e}")
 
-        _is_ducked = True
+        if ducked_apps or _original_volumes:
+            _is_ducked = True
+            _schedule_auto_unduck_watchdog(timeout_s=30.0)
     except Exception as e:
         logger.debug(f"Windows pycaw audio ducking error: {e}")
     finally:
@@ -115,6 +186,7 @@ def _unduck_windows(targets: set[str]) -> dict[str, float]:
 
     if not _original_volumes:
         _is_ducked = False
+        _cancel_auto_unduck_watchdog()
         return restored_apps
 
     try:
@@ -127,30 +199,80 @@ def _unduck_windows(targets: set[str]) -> dict[str, float]:
         from pycaw.pycaw import AudioUtilities, ISimpleAudioVolume
 
         sessions = AudioUtilities.GetAllSessions()
+        restored_pids = set()
+
         for session in sessions:
-            proc = session.Process
-            if not proc:
+            try:
+                proc = session.Process
+            except Exception:
+                proc = None
+
+            pid = None
+            raw_pid = getattr(session, "ProcessId", None)
+            if isinstance(raw_pid, int):
+                pid = raw_pid
+            elif proc and isinstance(getattr(proc, "pid", None), int):
+                pid = proc.pid
+
+            if not pid:
                 continue
 
-            try:
-                pid = proc.pid
-                pname = proc.name().lower()
-            except Exception:
-                continue
+            pname = ""
+            if proc:
+                try:
+                    pname = proc.name().lower()
+                except Exception:
+                    pass
+            if not pname and pid:
+                try:
+                    import psutil
+                    pname = psutil.Process(pid).name().lower()
+                except Exception:
+                    pass
 
             if pid in _original_volumes:
                 try:
                     orig_vol = _original_volumes[pid]
-                    vol_ctrl = session._ctl.QueryInterface(ISimpleAudioVolume)
-                    vol_ctrl.SetMasterVolume(orig_vol, None)
-                    restored_apps[pname] = orig_vol
+                    vol_ctrl = None
+                    if hasattr(session, "_ctl") and hasattr(session._ctl, "QueryInterface"):
+                        try:
+                            vol_ctrl = session._ctl.QueryInterface(ISimpleAudioVolume)
+                        except Exception:
+                            vol_ctrl = None
+                    if vol_ctrl is None:
+                        vol_ctrl = getattr(session, "SimpleAudioVolume", None)
+
+                    if vol_ctrl is not None:
+                        vol_ctrl.SetMasterVolume(orig_vol, None)
+                        restored_apps[pname or str(pid)] = orig_vol
+                        restored_pids.add(pid)
                 except Exception as e:
                     logger.debug(f"Failed to restore volume for {pname} (PID {pid}): {e}")
 
-        _original_volumes.clear()
-        _is_ducked = False
+        # Remove restored sessions from original volumes tracking
+        for pid in restored_pids:
+            _original_volumes.pop(pid, None)
+
+        # Also purge any PIDs whose processes have exited in the meantime
+        try:
+            import psutil
+            stale_pids = [p for p in _original_volumes if not psutil.pid_exists(p)]
+            for p in stale_pids:
+                _original_volumes.pop(p, None)
+        except Exception:
+            pass
+
+        # Clear tracking if everything restored or no active sessions remain
+        if not _original_volumes or len(restored_apps) > 0:
+            _original_volumes.clear()
+            _is_ducked = False
+            _cancel_auto_unduck_watchdog()
     except Exception as e:
         logger.debug(f"Windows pycaw audio unducking error: {e}")
+        # On error, if all or most were handled, ensure we don't leave ducked state permanently
+        if not _original_volumes:
+            _is_ducked = False
+            _cancel_auto_unduck_watchdog()
     finally:
         try:
             import comtypes
@@ -182,16 +304,18 @@ def _duck_linux(volume_factor: float, targets: set[str]) -> dict[str, float]:
                 if pid == current_pid:
                     continue
 
-                if pname in targets:
+                if pname in targets or "*" in targets or "all" in targets:
                     cur_vol = sink_input.volume.value_flat
                     if pid not in _original_volumes:
                         _original_volumes[pid] = cur_vol
 
                     target_vol = max(0.0, min(1.0, _original_volumes[pid] * volume_factor))
                     pulse.volume_set_all_flat(sink_input, target_vol)
-                    ducked_apps[pname] = target_vol
+                    ducked_apps[pname or str(pid)] = target_vol
 
-            _is_ducked = True
+            if ducked_apps or _original_volumes:
+                _is_ducked = True
+                _schedule_auto_unduck_watchdog(timeout_s=30.0)
     except Exception as e:
         logger.debug(f"Linux pulsectl audio ducking error: {e}")
 
@@ -205,6 +329,7 @@ def _unduck_linux(targets: set[str]) -> dict[str, float]:
 
     if not _original_volumes:
         _is_ducked = False
+        _cancel_auto_unduck_watchdog()
         return restored_apps
 
     try:
@@ -222,10 +347,11 @@ def _unduck_linux(targets: set[str]) -> dict[str, float]:
                 if pid in _original_volumes:
                     orig_vol = _original_volumes[pid]
                     pulse.volume_set_all_flat(sink_input, orig_vol)
-                    restored_apps[pname] = orig_vol
+                    restored_apps[pname or str(pid)] = orig_vol
 
             _original_volumes.clear()
             _is_ducked = False
+            _cancel_auto_unduck_watchdog()
     except Exception as e:
         logger.debug(f"Linux pulsectl audio unducking error: {e}")
 
@@ -295,3 +421,4 @@ def unduck_media_apps(
 def is_ducked() -> bool:
     """Return whether media ducking is currently active."""
     return _is_ducked
+

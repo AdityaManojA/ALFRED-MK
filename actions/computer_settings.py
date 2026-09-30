@@ -320,20 +320,59 @@ def refresh_page():
     else:               pyautogui.press("f5")
 
 def close_tab():
+    try:
+        from core.browser.controller import close_active_tab
+        msg = close_active_tab()
+        print(f"[ComputerSettings] {msg}")
+        return
+    except Exception as e:
+        print(f"[ComputerSettings] Controller close_tab fallback: {e}")
     if _OS == "Darwin": pyautogui.hotkey("command", "w")
     else:               pyautogui.hotkey("ctrl", "w")
 
 def new_tab():
+    try:
+        from core.browser.controller import new_tab as ctrl_new_tab
+        msg = ctrl_new_tab()
+        print(f"[ComputerSettings] {msg}")
+        return
+    except Exception as e:
+        print(f"[ComputerSettings] Controller new_tab fallback: {e}")
     if _OS == "Darwin": pyautogui.hotkey("command", "t")
     else:               pyautogui.hotkey("ctrl", "t")
 
 def next_tab():
+    try:
+        from core.browser.controller import switch_tab
+        msg = switch_tab("next")
+        print(f"[ComputerSettings] {msg}")
+        return
+    except Exception as e:
+        print(f"[ComputerSettings] Controller switch_tab fallback: {e}")
     if _OS == "Darwin": pyautogui.hotkey("command", "shift", "bracketright")
     else:               pyautogui.hotkey("ctrl", "tab")
 
 def prev_tab():
+    try:
+        from core.browser.controller import switch_tab
+        msg = switch_tab("prev")
+        print(f"[ComputerSettings] {msg}")
+        return
+    except Exception as e:
+        print(f"[ComputerSettings] Controller switch_tab fallback: {e}")
     if _OS == "Darwin": pyautogui.hotkey("command", "shift", "bracketleft")
     else:               pyautogui.hotkey("ctrl", "shift", "tab")
+
+def reopen_closed_tab():
+    try:
+        from core.browser.controller import reopen_closed_tab as ctrl_reopen
+        msg = ctrl_reopen()
+        print(f"[ComputerSettings] {msg}")
+        return
+    except Exception as e:
+        print(f"[ComputerSettings] Controller reopen_closed_tab fallback: {e}")
+    if _OS == "Darwin": pyautogui.hotkey("command", "shift", "t")
+    else:               pyautogui.hotkey("ctrl", "shift", "t")
 
 def go_back():
     if _OS == "Darwin": pyautogui.hotkey("command", "left")
@@ -578,6 +617,9 @@ ACTION_MAP: dict[str, callable] = {
     "mute":                volume_mute,
     "unmute":              volume_mute,
     "toggle_mute":         volume_mute,
+    "mute_mic":            volume_mute,
+    "unmute_mic":          volume_mute,
+    "toggle_mic":          volume_mute,
     "brightness_up":       brightness_up,
     "brightness_down":     brightness_down,
     "sleep_display":       sleep_display,
@@ -599,6 +641,8 @@ ACTION_MAP: dict[str, callable] = {
     "refresh_page":        refresh_page,
     "reload":              refresh_page,
     "close_tab":           close_tab,
+    "reopen_tab":          reopen_closed_tab,
+    "reopen_closed_tab":   reopen_closed_tab,
     "new_tab":             new_tab,
     "next_tab":            next_tab,
     "prev_tab":            prev_tab,
@@ -696,9 +740,15 @@ _DANGEROUS_ACTIONS = set(_IRREVERSIBLE)
 # out in full. What is left is spelling tolerance, and difflib does that in
 # microseconds instead of ~600 ms and a quota unit.
 _ALIASES = {
+    "reopen_tab":      ("reopen tab", "reopen closed tab", "undo close tab"),
+    "close_tab":       ("close tab", "close this tab", "shut this tab", "kill tab", "close active tab"),
+    "new_tab":         ("open a tab", "open new tab"),
     "volume_up":       ("louder", "raise volume", "turn it up", "increase volume"),
     "volume_down":     ("quieter", "lower volume", "turn it down", "decrease volume"),
     "mute":            ("silence", "sound off", "no sound"),
+    "mute_mic":        ("mute my mic", "mute mic", "mute microphone", "mute myself", "mute me", "silence mic", "stop listening"),
+    "unmute_mic":      ("unmute my mic", "unmute mic", "unmute microphone", "unmute myself", "unmute me", "start listening"),
+    "toggle_mic":      ("toggle mic", "toggle microphone"),
     "brightness_up":   ("brighter", "raise brightness", "increase brightness"),
     "brightness_down": ("dimmer", "dim", "lower brightness", "decrease brightness"),
     "close_window":    ("close this", "close it"),
@@ -711,7 +761,6 @@ _ALIASES = {
     "task_manager":    ("processes", "task list"),
     "screenshot":      ("capture screen", "take a screenshot", "snip"),
     "refresh_page":    ("refresh", "reload page"),
-    "new_tab":         ("open a tab", "open new tab"),
     "shutdown":        ("power off", "turn off the computer", "switch off the pc"),
     "restart":         ("reboot", "restart the pc"),
 }
@@ -757,6 +806,8 @@ def _detect_action(description: str) -> dict:
 
     # 3. Alias phrases.
     for action, phrases in _ALIASES.items():
+        if "tab" in low and action == "close_window":
+            continue
         if any(_normalise(p) == norm or p in low for p in phrases):
             return {"action": action, "value": None}
 
@@ -873,6 +924,23 @@ def computer_settings(
         scroll_down(int(value or 500))
         return "Scrolled down."
 
+    # ── Dedicated Microphone / Cowl Acoustic Mute ────────────────────────────
+    if action in ("mute_mic", "unmute_mic", "toggle_mic"):
+        if player and hasattr(player, "toggle_mute"):
+            if action == "mute_mic":
+                if not getattr(player, "muted", False):
+                    player.toggle_mute()
+                return "Microphone muted, sir."
+            elif action == "unmute_mic":
+                if getattr(player, "muted", False):
+                    player.toggle_mute()
+                return "Microphone unmuted, sir."
+            else:
+                player.toggle_mute()
+                st = "muted" if getattr(player, "muted", False) else "unmuted"
+                return f"Microphone {st}, sir."
+        return "Microphone mute toggled, sir."
+
     func = ACTION_MAP.get(action)
     if not func:
         return _suggest(raw_action or description)
@@ -932,7 +1000,7 @@ TOOL = {
                 "type": "STRING",
                 "description": (
                     "The exact action. Prefer this over `description` — pick one of: "
-                    "volume_up | volume_down | volume_set | mute | "
+                    "volume_up | volume_down | volume_set | mute | mute_mic | unmute_mic | toggle_mic | "
                     "brightness_up | brightness_down | sleep_display | "
                     "pause_video | close_app | close_window | full_screen | "
                     "minimize | maximize | snap_left | snap_right | "

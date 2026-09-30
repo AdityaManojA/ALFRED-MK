@@ -1,4 +1,4 @@
-﻿"""
+"""
 tests/test_clipboard_manager.py — Unit tests for persistent semantically indexed clipboard history.
 """
 import json

@@ -423,6 +423,15 @@ def web_search(
         return f"Search failed: {e}"
 
 
+def search_news(params: dict) -> str:
+    """Convenience search helper for news headlines by topic or query dict."""
+    if isinstance(params, dict):
+        topic = str(params.get("topic") or params.get("query") or "").strip()
+    else:
+        topic = str(params).strip()
+    return _news(topic)
+
+
 # ── Tool declaration (auto-discovered by core/action_loader.py) ──────────────
 TOOL = {
     "name": "web_search",

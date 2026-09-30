@@ -251,3 +251,13 @@ def discover_actions(actions_dir: Path, reserved_names: set[str] | None = None,
     registry._all_records = all_records
     logger(f"Action discovery complete: {len(valid)} active.")
     return registry
+
+
+class ActionLoader:
+    """Convenience class wrapper for action discovery."""
+    def __init__(self, actions_dir: Path | None = None, logger: Callable[[str], None] | None = None):
+        self.actions_dir = actions_dir or (Path(__file__).resolve().parent.parent / "actions")
+        self.logger = logger or (lambda msg: None)
+
+    def discover_actions(self, reserved_names: set[str] | None = None) -> ActionRegistry:
+        return discover_actions(self.actions_dir, reserved_names=reserved_names, logger=self.logger)

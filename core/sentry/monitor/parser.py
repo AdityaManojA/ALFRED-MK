@@ -13,6 +13,8 @@ from core.sentry.monitor.targets.process import ProcessTarget
 from core.sentry.monitor.targets.command import CommandTarget
 from core.sentry.monitor.targets.clipboard import ClipboardTarget
 from core.sentry.monitor.targets.screen_region import ScreenRegionTarget
+from core.sentry.monitor.targets.market import MarketTarget
+from core.market.rules import AlertRule, RuleType
 
 
 def parse_monitoring_request(request: str) -> list[MonitorTarget]:
@@ -37,6 +39,49 @@ def parse_monitoring_request(request: str) -> list[MonitorTarget]:
 
 def _parse_clause(clause: str, index: int = 1) -> MonitorTarget:
     uid = str(uuid.uuid4())[:8]
+
+    # Pattern: Market monitoring — "watch NVDA above 140" / "alert me if TSLA drops 5 percent"
+    mkt_thresh = re.search(
+        r"(?:watch|track|monitor|alert me if)?\s*([a-zA-Z0-9\^=\-]+)\s*(?:above|over|exceeds|crosses above|>=|>)\s*\$?([0-9]+(?:\.[0-9]+)?)",
+        clause,
+        re.I,
+    )
+    if mkt_thresh and mkt_thresh.group(1).lower() not in ("process", "window", "file", "tab", "app", "log", "clipboard", "screen"):
+        sym = mkt_thresh.group(1).strip()
+        val = float(mkt_thresh.group(2))
+        return MarketTarget(
+            target_id=f"mkt_{uid}",
+            symbol=sym,
+            rule=AlertRule(rule_type=RuleType.THRESHOLD_ABOVE, threshold_value=val),
+        )
+
+    mkt_thresh_below = re.search(
+        r"(?:watch|track|monitor|alert me if)?\s*([a-zA-Z0-9\^=\-]+)\s*(?:below|under|drops below|crosses below|<=|<)\s*\$?([0-9]+(?:\.[0-9]+)?)",
+        clause,
+        re.I,
+    )
+    if mkt_thresh_below and mkt_thresh_below.group(1).lower() not in ("process", "window", "file", "tab", "app", "log", "clipboard", "screen"):
+        sym = mkt_thresh_below.group(1).strip()
+        val = float(mkt_thresh_below.group(2))
+        return MarketTarget(
+            target_id=f"mkt_{uid}",
+            symbol=sym,
+            rule=AlertRule(rule_type=RuleType.THRESHOLD_BELOW, threshold_value=val),
+        )
+
+    mkt_pct = re.search(
+        r"(?:watch|alert me if)?\s*([a-zA-Z0-9\^=\-]+)\s*(?:drops|grows|moves|changes|falls|rises)?\s*(?:by)?\s*([0-9]+(?:\.[0-9]+)?)\s*(?:percent|%|pct)",
+        clause,
+        re.I,
+    )
+    if mkt_pct and mkt_pct.group(1).lower() not in ("process", "window", "file", "tab", "app", "log", "clipboard", "screen"):
+        sym = mkt_pct.group(1).strip()
+        val = float(mkt_pct.group(2))
+        return MarketTarget(
+            target_id=f"mkt_{uid}",
+            symbol=sym,
+            rule=AlertRule(rule_type=RuleType.PCT_DELTA, threshold_value=val),
+        )
 
     # Pattern: "tell me when Chrome's title says Deployed" / "Chrome title is X"
     win_match = re.search(
