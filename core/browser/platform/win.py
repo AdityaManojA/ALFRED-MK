@@ -38,6 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 
 class WinBrowserDriver(BaseBrowserPlatformDriver):
     """Windows browser driver using targeted Win32 virtual keys and process inspection."""
+    KNOWN_WIN_BROWSERS = KNOWN_WIN_BROWSERS
 
     def __init__(self) -> None:
         self._user32 = getattr(ctypes.windll, "user32", None)

@@ -16,6 +16,7 @@ import base64
 import json
 import logging
 import os
+import re
 import subprocess
 import sys
 import threading
@@ -697,6 +698,17 @@ def spotify_control(
 
     try:
         if action in ("play", "start"):
+            # Collision Guard 1: Netflix playback request
+            if query and "netflix" in query.lower():
+                from core.pilots.netflix.actions import get_netflix_actions
+                clean_query = re.sub(r"\b(on|in)\s+netflix\b", "", query, flags=re.IGNORECASE).strip()
+                return get_netflix_actions().play_netflix(clean_query or query)
+
+            # Collision Guard 2: Video Trailer request
+            if query and re.search(r"\b(trailer|teaser|clip)\b", query.lower()):
+                from actions.hud_video import hud_video
+                return hud_video(parameters={"action": "play", "target": query}, player=player, speak=speak)
+
             res = client.play(
                 query=query if query else None,
                 uri=uri if uri else None,
