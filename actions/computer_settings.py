@@ -456,7 +456,7 @@ def open_system_settings():
     if _OS == "Windows":
         pyautogui.hotkey("win", "i")
     elif _OS == "Darwin":
-        subprocess.Popen(["open", "-a", "System Preferences"])
+        subprocess.Popen(["open", "-a", "System Settings"])
     else:
         for cmd in [["gnome-control-center"], ["xfce4-settings-manager"], ["kcmshell5"]]:
             if subprocess.run(["which", cmd[0]], capture_output=True).returncode == 0:
@@ -633,6 +633,22 @@ ACTION_MAP: dict[str, callable] = {
     "restart":             restart_computer,
     "shutdown":            shutdown_computer,
 }
+
+# macOS: the generic key-code / hotkey versions above are unreliable there
+# (unmute used to mute again; brightness keys need Accessibility; "lock" only
+# slept the display). Route them to the native implementations.
+if _OS == "Darwin":
+    try:
+        from core.mac import system as _macsys
+        ACTION_MAP.update({
+            "unmute":          lambda: _macsys.set_muted(False),
+            "toggle_mute":     lambda: _macsys.set_muted(None),
+            "brightness_up":   lambda: _macsys.brightness_step(10),
+            "brightness_down": lambda: _macsys.brightness_step(-10),
+            "lock_screen":     _macsys.lock_screen,
+        })
+    except Exception as _e:
+        print(f"[computer_settings] macOS overrides unavailable: {_e}")
 
 # ── What needs a human, and what just needs an undo ──────────────────────────
 #

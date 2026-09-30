@@ -82,6 +82,11 @@ pip install -r requirements.txt
 python main.py
 ```
 
+**Siri-style mode (recommended on macOS):** `mac/build.sh` installs `ALFRED.app` — a native
+“Hey Alfred” listener that idles at ~0.03 % of one CPU core, starts the agent on demand, and
+gives it Calendar, Reminders, alarms, browser tabs, iMessage and system control. See
+[`docs/crossplatform/MACOS_SIRI.md`](docs/crossplatform/MACOS_SIRI.md).
+
 #### Linux (Ubuntu / Debian / Fedora / Arch)
 ```bash
 # 1. Install prerequisites

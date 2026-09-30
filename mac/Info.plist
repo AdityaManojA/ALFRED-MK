@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleName</key><string>ALFRED</string>
+  <key>CFBundleDisplayName</key><string>ALFRED</string>
+  <key>CFBundleIdentifier</key><string>local.alfred.assistant</string>
+  <key>CFBundleExecutable</key><string>ALFRED</string>
+  <key>CFBundleIconFile</key><string>alfred</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>CFBundleVersion</key><string>2.0</string>
+  <key>CFBundleShortVersionString</key><string>2.0</string>
+  <key>LSMinimumSystemVersion</key><string>14.0</string>
+  <!-- The listener has no Dock icon; the agent shows one while its window is open. -->
+  <key>LSUIElement</key><true/>
+  <key>NSHighResolutionCapable</key><true/>
+
+  <!-- Every privacy prompt the listener or the agent (its child) can raise. -->
+  <key>NSMicrophoneUsageDescription</key><string>ALFRED listens for “Hey Alfred” and for what you say after it.</string>
+  <key>NSSpeechRecognitionUsageDescription</key><string>ALFRED recognises “Hey Alfred” on this Mac, without sending audio anywhere.</string>
+  <key>NSCalendarsFullAccessUsageDescription</key><string>ALFRED reads and adds events when you ask about your calendar.</string>
+  <key>NSCalendarsUsageDescription</key><string>ALFRED reads and adds events when you ask about your calendar.</string>
+  <key>NSRemindersFullAccessUsageDescription</key><string>ALFRED reads and adds reminders when you ask.</string>
+  <key>NSRemindersUsageDescription</key><string>ALFRED reads and adds reminders when you ask.</string>
+  <key>NSContactsUsageDescription</key><string>ALFRED looks up people you ask it to message or call.</string>
+  <key>NSAppleEventsUsageDescription</key><string>ALFRED controls apps like your browser, Music, Notes and Messages when you ask.</string>
+  <key>NSCameraUsageDescription</key><string>ALFRED uses the camera when you ask it to look at something.</string>
+  <key>NSBluetoothAlwaysUsageDescription</key><string>ALFRED turns Bluetooth on or off when you ask.</string>
+</dict>
+</plist>

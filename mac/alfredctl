@@ -1,0 +1,55 @@
+#!/usr/bin/env python3
+"""Talk to the running ALFRED listener (alfredd).
+
+    alfredctl status              listener / agent / alarm state
+    alfredctl say "open youtube"  run a command as if you had said "Hey Alfred, …"
+    alfredctl show                open the ALFRED window
+    alfredctl pause | resume      stop / start listening for "Hey Alfred"
+    alfredctl alarms              list alarms and timers
+    alfredctl stop                stop a ringing alarm
+"""
+import json
+import os
+import socket
+import sys
+
+SOCK = os.path.expanduser("~/Library/Application Support/ALFRED/alfredd.sock")
+
+
+def call(msg: dict) -> dict:
+    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    try:
+        s.connect(SOCK)
+    except OSError:
+        sys.exit("ALFRED's listener isn't running (install it with mac/build.sh).")
+    s.settimeout(5)
+    s.sendall((json.dumps({**msg, "req": 1}) + "\n").encode())
+    buf = b""
+    while b"\n" not in buf:
+        chunk = s.recv(65536)
+        if not chunk:
+            break
+        buf += chunk
+    s.close()
+    return json.loads(buf.split(b"\n", 1)[0] or b"{}")
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    cmd = args[0] if args else "status"
+    msg = {
+        "status": {"type": "status"},
+        "say": {"type": "inject", "text": " ".join(args[1:])},
+        "show": {"type": "show"},
+        "pause": {"type": "listening", "enabled": False},
+        "resume": {"type": "listening", "enabled": True},
+        "alarms": {"type": "alarm_list"},
+        "stop": {"type": "alarm_stop"},
+    }.get(cmd)
+    if msg is None:
+        sys.exit(__doc__)
+    print(json.dumps(call(msg), indent=2, ensure_ascii=False))
+
+
+if __name__ == "__main__":
+    main()

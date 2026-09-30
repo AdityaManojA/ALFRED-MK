@@ -17,6 +17,7 @@ Enforces:
 from __future__ import annotations
 
 import logging
+import sys
 import threading
 import time
 from typing import Callable, Any
@@ -484,6 +485,16 @@ class HudVideoController(QObject):
 
     def _do_play(self, ref: PlayableRef | None, muted: bool) -> None:
         assert_gui_thread()
+        if sys.platform == "darwin":
+            # One video at a time: starting the HUD player pauses YouTube in
+            # the user's browsers (off-thread — it talks to other apps).
+            def _pause_browsers():
+                try:
+                    from core.mac.browsers import pause_other_youtube
+                    pause_other_youtube()
+                except Exception:
+                    pass
+            threading.Thread(target=_pause_browsers, daemon=True).start()
         if ref is not None:
             # New media reference: stop existing and load
             if self.is_active:

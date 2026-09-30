@@ -61,6 +61,15 @@ pywin32;    sys_platform == "win32"
 wmi;        sys_platform == "win32"
 winsdk;     sys_platform == "win32"  # SMTC session pause for exclusive playback
 
+# ── macOS-only: Siri-style integration (mac/, core/mac/, actions/mac_*) ───────
+# pip skips these on Windows / Linux. The native "Hey Alfred" listener itself is
+# Swift (mac/alfredd) and is built by mac/build.sh, not pip.
+pyobjc-framework-Cocoa;     sys_platform == "darwin"   # NSWorkspace, app control
+pyobjc-framework-Quartz;    sys_platform == "darwin"   # media keys
+pyobjc-framework-EventKit;  sys_platform == "darwin"   # Calendar + Reminders
+pyobjc-framework-Contacts;  sys_platform == "darwin"   # Contacts lookup for Messages / Mail
+lz4;                        sys_platform == "darwin"   # reading Firefox's open tabs
+
 # ── Documents, media & hardware readouts ──────────────────────────────────────
 # Every one of these is imported inside a try/except at the point of use, so a
 # missing package disables exactly one feature and never stops the app. They are

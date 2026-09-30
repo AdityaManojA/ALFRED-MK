@@ -8016,6 +8016,7 @@ class MainWindow(QMainWindow):
     _hud_video_show_sig = pyqtSignal()   # thread-safe: show video surface
     _hud_video_hide_sig = pyqtSignal()   # thread-safe: restore avatar
     _scheduler_event_sig = pyqtSignal(object)  # task engine event from scheduler thread
+    _call_sig = pyqtSignal(object)             # run a callable on the GUI thread (macOS lifecycle)
 
     def __init__(self, face_path: str):
         super().__init__()
@@ -8235,6 +8236,7 @@ class MainWindow(QMainWindow):
         self._hud_video_show_sig.connect(self._on_hud_video_show)
         self._hud_video_hide_sig.connect(self._on_hud_video_hide)
         self._scheduler_event_sig.connect(self._on_scheduler_event)
+        self._call_sig.connect(lambda fn: fn())
         self._cam_stop = threading.Event()
 
         # Camera preview overlay (child of central widget, positioned in resizeEvent)
@@ -11352,6 +11354,15 @@ class MainWindow(QMainWindow):
         return {"is_playing": False, "volume": 10, "source_mode": "tron", "track": "The Son of Flynn"}
 
     def closeEvent(self, e):
+        # macOS under alfredd: the red button puts ALFRED away (like dismissing
+        # Siri) instead of quitting; ⌘Q or the menu-bar icon still quits.
+        # The red button arrives as a spontaneous (window-system) close; ⌘Q
+        # closes windows programmatically and must still be allowed through.
+        on_close = getattr(self, "_mac_on_close", None)
+        if on_close is not None and e.spontaneous():
+            e.ignore()
+            on_close()
+            return
         try:
             from core.ui.themes import ThemeChrome
             ThemeChrome.remove_listener(self._on_theme_chrome_updated)
@@ -11506,6 +11517,17 @@ class _RootShim:
         pass
 
 
+def _mac_set_dock_visible(visible: bool) -> None:
+    """Regular app (Dock icon) while the HUD window is open, menu-bar-only otherwise."""
+    if sys.platform != "darwin":
+        return
+    try:
+        from AppKit import NSApplication
+        NSApplication.sharedApplication().setActivationPolicy_(0 if visible else 1)
+    except Exception:
+        pass
+
+
 class JarvisUI:
     def __init__(self, face_path: str, size=None):
         if sys.platform == "win32":
@@ -11518,12 +11540,102 @@ class JarvisUI:
         self._app.setStyle("Fusion")
         self._win = MainWindow(face_path)
         self.root = _RootShim(self._app)
-        self._win.show()
+        self._mac = None
+        self._mac_tray = None
+        self._mac_overlay_auto = False
+        # Launched by "Hey Alfred": come up as the small floating panel only,
+        # the way Siri does, not the full HUD window.
+        if sys.platform == "darwin" and os.environ.get("ALFRED_LAUNCH_REASON") == "voice":
+            self._app.setQuitOnLastWindowClosed(False)
+            _mac_set_dock_visible(False)
+        else:
+            self._win.show()
         QTimer.singleShot(0, self._win._start_animations)
 
     def set_app_icon(self, icon_path_or_name: str) -> bool:
         """Update application and window icon in realtime."""
         return self._win.set_app_icon(icon_path_or_name)
+
+    # ── macOS lifecycle (alfredd) — all thread-safe ─────────────────────────
+
+    def run_on_ui(self, fn) -> None:
+        self._win._call_sig.emit(fn)
+
+    def mac_attach(self, mac) -> None:
+        """Called by JarvisLive when the native listener manages us."""
+        self._mac = mac
+
+        def _setup():
+            self._app.setQuitOnLastWindowClosed(False)
+            self._win._mac_on_close = self._mac_close_window
+            overlay = getattr(self._win, "_hud_overlay", None)
+            if overlay is not None:
+                overlay._restore_main_window = self.mac_show_main
+            try:
+                from core.mac.tray import MacTray
+                self._mac_tray = MacTray(self, mac)
+            except Exception as e:
+                print(f"[mac] menu-bar icon unavailable: {e}")
+            if os.environ.get("ALFRED_LAUNCH_REASON") == "voice":
+                self._mac_show_overlay()
+        self.run_on_ui(_setup)
+
+    def _mac_show_overlay(self) -> None:
+        overlay = getattr(self._win, "_hud_overlay", None)
+        if overlay is not None and not self._win.isVisible():
+            overlay.begin_minimize_session()
+            self._mac_overlay_auto = True
+
+    def _mac_close_window(self) -> None:
+        self.mac_hide_main()
+        if self._mac is not None:
+            self._mac.request_sleep()
+
+    def mac_on_wake(self) -> None:
+        self.run_on_ui(self._mac_show_overlay)
+
+    def mac_on_dormant(self) -> None:
+        def _hide():
+            overlay = getattr(self._win, "_hud_overlay", None)
+            if self._mac_overlay_auto and overlay is not None:
+                overlay.hide_overlay()
+            self._mac_overlay_auto = False
+        self.run_on_ui(_hide)
+
+    def mac_show_main(self) -> None:
+        def _show():
+            _mac_set_dock_visible(True)
+            overlay = getattr(self._win, "_hud_overlay", None)
+            if overlay is not None:
+                overlay.hide_overlay()
+            self._mac_overlay_auto = False
+            self._win.showNormal()
+            self._win.raise_()
+            self._win.activateWindow()
+            try:
+                from AppKit import NSApplication
+                NSApplication.sharedApplication().activateIgnoringOtherApps_(True)
+            except Exception:
+                pass
+        self.run_on_ui(_show)
+
+    def mac_hide_main(self) -> None:
+        def _hide():
+            self._win.hide()
+            overlay = getattr(self._win, "_hud_overlay", None)
+            if overlay is not None:
+                overlay.hide_overlay()
+            self._mac_overlay_auto = False
+            _mac_set_dock_visible(False)
+        self.run_on_ui(_hide)
+
+    def pause_hud_video(self) -> None:
+        ctrl = getattr(self._win, "_hud_video_controller", None)
+        if ctrl is not None:
+            try:
+                ctrl.pause()
+            except Exception:
+                pass
 
 
     @property

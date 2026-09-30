@@ -290,6 +290,18 @@ def _handle_play(parameters: dict, player) -> str:
     if player:
         player.write_log(f"[YouTube] Searching: {query}")
 
+    if is_mac():
+        # Real browser, and every other YouTube video (tabs + HUD) pauses.
+        try:
+            from core.mac.browsers import play_youtube
+            r = play_youtube(query=query, browser=parameters.get("browser"))
+            note = ""
+            if r.get("could_not_pause_in"):
+                note = " (" + " ".join(b["reason"] for b in r["could_not_pause_in"]) + ")"
+            return f"Playing {r['playing']} in {r['browser']}.{note}"
+        except Exception as e:
+            print(f"[YouTube] mac browser path failed, falling back: {e}")
+
     print(f"[YouTube] 🔍 Scraping first non-Shorts video for: {query}")
 
     video_url = _scrape_first_video_url(query)

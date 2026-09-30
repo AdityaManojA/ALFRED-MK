@@ -61,6 +61,16 @@ import threading
 from datetime import datetime
 from pathlib import Path
 
+# `kill -USR1 <pid>` dumps every thread's Python stack to the log — the only
+# practical way to see what a hung assistant is waiting on.
+try:
+    import faulthandler as _faulthandler
+    import signal as _signal
+    if hasattr(_signal, "SIGUSR1"):
+        _faulthandler.register(_signal.SIGUSR1, all_threads=True)
+except Exception:
+    pass
+
 def log_unhandled_exception(exc_type, exc_value, exc_traceback):
     if issubclass(exc_type, KeyboardInterrupt):
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
@@ -109,6 +119,16 @@ import sounddevice as sd
 import numpy as np
 from google import genai
 from google.genai import types
+if sys.platform == "darwin":
+    # Name the process "ALFRED" in the menu bar / Dock instead of "python3.12".
+    # Must happen before QApplication creates NSApplication.
+    try:
+        from Foundation import NSBundle
+        _info = NSBundle.mainBundle().infoDictionary()
+        if _info is not None:
+            _info["CFBundleName"] = "ALFRED"
+    except Exception:
+        pass
 from ui import JarvisUI
 from memory.memory_manager import (
     load_memory, update_memory, format_memory_for_prompt,
@@ -970,6 +990,23 @@ class JarvisLive:
         self.ui.on_wake_toggle   = self._ui_wake_toggle   # (enable: bool) -> str
         self.ui.on_wake_manual   = self._ui_wake_manual   # () -> toggle awake/asleep
         self.ui.on_wake_install  = self._ui_wake_install  # () -> (ok, msg)
+
+        # ── macOS: run under alfredd (native "Hey Alfred" listener) ─────────
+        # When ALFRED.app's listener started us (or is simply running), it owns
+        # the wake word and we connect only while there is something to do.
+        self._mac = None
+        if sys.platform == "darwin":
+            try:
+                from core.registry import register
+                register("mac_ui", self.ui)
+                from core.mac.lifecycle import MacLifecycle
+                self._mac = MacLifecycle(self)
+                if not self._mac.managed:
+                    self._mac = None
+                else:
+                    self.ui.mac_attach(self._mac)
+            except Exception as e:
+                print(f"[mac] lifecycle unavailable: {e}")
         self._tts_self_check()
 
     # â”€â”€ Wake word: state machine â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -1161,6 +1198,12 @@ class JarvisLive:
                 self.ui.write_log(f"You (Answer): {text}")
                 return
 
+        # Dormant under alfredd: typing wakes the session and sends the text.
+        if self._mac is not None and self._mac.wake_from_text(text):
+            return
+        if self._mac is not None:
+            self._mac.last_wake = time.monotonic()     # typing counts as talking to ALFRED
+
         # Respect wake-word sleep: a typed command must not be answered while
         # asleep either (the sleep gate is not just for the mic). Wake first with
         # "Hey Alfred" or the WAKE NOW button.
@@ -1335,6 +1378,9 @@ class JarvisLive:
         with self._speaking_lock:
             was_speaking = self._is_speaking
             self._is_speaking = value
+        # Last time ALFRED itself said something: the macOS idle clock runs from
+        # this, not from any speech the mic picks up (a TV would never let it sleep).
+        self._last_assistant_activity = time.monotonic()
         if value:
             self._tail_until = 0.0
             from core.media import AudioSource
@@ -1762,6 +1808,12 @@ class JarvisLive:
         if mem_str:
             parts.append(mem_str)
         parts.append(sys_prompt)
+        if sys.platform == "darwin":
+            try:
+                from core.mac.prompt import mac_guide
+                parts.append(mac_guide(_names))
+            except Exception as e:
+                print(f"[mac] prompt addendum skipped: {e}")
 
         return "\n".join(parts), _all_decls
 
@@ -2147,6 +2199,10 @@ class JarvisLive:
                 if det is not None:
                     det.feed(indata)
                 return
+            # alfredd is still recording the words after "Hey Alfred" and will
+            # hand them over as audio; don't stream the same speech twice.
+            if self._mac is not None and self._mac.mic_gated():
+                return
             with self._speaking_lock:
                 jarvis_speaking = self._is_speaking
 
@@ -2211,8 +2267,8 @@ class JarvisLive:
                     pass
 
         try:
-            def _open_mic(dev):
-                return sd.InputStream(
+            def _open_mic_blocking(dev):
+                s = sd.InputStream(
                     samplerate=SEND_SAMPLE_RATE,
                     channels=CHANNELS,
                     dtype="int16",
@@ -2220,6 +2276,26 @@ class JarvisLive:
                     device=dev,
                     callback=callback,
                 )
+                s.start()
+                return s
+
+            async def _open_mic(dev):
+                # Opening/starting the device can block for as long as macOS
+                # shows its microphone permission prompt (or a driver is slow).
+                # Do it off the event loop so the session — typed commands,
+                # tool calls, replies — keeps working meanwhile.
+                fut = loop.run_in_executor(None, _open_mic_blocking, dev)
+                try:
+                    return await fut
+                except asyncio.CancelledError:
+                    def _close_late(f):
+                        if not f.cancelled() and f.exception() is None:
+                            try:
+                                f.result().close()
+                            except Exception:
+                                pass
+                    fut.add_done_callback(_close_late)
+                    raise
 
             # Which microphone. resolve() returns None for "system default" and
             # for a saved device that is no longer present â€” so a headset
@@ -2230,7 +2306,7 @@ class JarvisLive:
             if _mic_dev is not None:
                 _tlog("ALFRED", "mic", f"Input device: {_mic_name}", self._dashboard)
             try:
-                _mic_stream = _open_mic(_mic_dev)
+                _mic_stream = await _open_mic(_mic_dev)
             except Exception as _e:
                 # A device the picker listed but the driver will not open right
                 # now â€” exclusive mode, a webcam already in use, a virtual mic
@@ -2242,12 +2318,18 @@ class JarvisLive:
                 self.ui.write_log(
                     f"SYS: Microphone '{_mic_name}' unavailable â€” using system default."
                 )
-                _mic_stream = _open_mic(None)
+                _mic_stream = await _open_mic(None)
 
-            with _mic_stream:
+            try:                # already started by _open_mic
                 _tlog("ALFRED", "mic", "Mic stream open", self._dashboard)
                 while True:
                     await asyncio.sleep(0.1)
+            finally:
+                try:
+                    _mic_stream.stop()
+                    _mic_stream.close()
+                except Exception:
+                    pass
         except Exception as e:
             _tlog("ALFRED", "error", f"Mic: {e}", self._dashboard)
             raise
@@ -2621,8 +2703,16 @@ class JarvisLive:
                 unduck_media_apps()
             except Exception:
                 pass
-            stream.stop()
-            stream.close()
+            # PortAudio serialises its calls: while another thread is stuck
+            # opening the mic (macOS permission prompt still up), close() here
+            # would freeze the event loop and with it the whole teardown.
+            def _close_stream(s=stream):
+                try:
+                    s.stop()
+                    s.close()
+                except Exception:
+                    pass
+            threading.Thread(target=_close_stream, daemon=True).start()
 
     # â”€â”€ Morning briefing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -3431,6 +3521,8 @@ class JarvisLive:
         self._loop.set_exception_handler(_proactor_exc_handler)
         self._local_msg_queue = asyncio.Queue()
         self._reconnect_event = asyncio.Event()
+        if self._mac is not None:
+            self._mac.attach_loop(self._loop)
 
         # â”€â”€ Wire the shared core services to the interface â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         confirm_gate.bind(
@@ -3477,6 +3569,10 @@ class JarvisLive:
             return
 
         while True:
+            if self._mac is not None:
+                # Dormant: stay disconnected (no mic, no tokens) until alfredd
+                # hears "Hey Alfred" — or exit after a long quiet spell.
+                await self._mac.wait_until_awake()
             try:
                 _tlog("ALFRED", "link", "Connecting...", self._dashboard)
                 self.ui.set_state("INITIALISING")
@@ -3545,11 +3641,18 @@ class JarvisLive:
                     tg.create_task(self._run_gc_manager())
                     if self._dashboard:
                         tg.create_task(self._relay_phone_audio())
+                    if self._mac is not None:
+                        tg.create_task(self._mac.idle_watch(
+                            lambda: _ReconnectSignal(keep_context=True)))
+                        self._mac.on_session_ready()
 
                     # Morning briefing â€” fires once per process launch (if enabled).
                     # Skipped in wake-word mode: it comes up asleep, and a briefing
                     # would mean talking while "asleep".
-                    if not self._briefing_sent and get_brief_enabled() and self._awake:
+                    # Also skipped when "Hey Alfred" launched us: the user
+                    # asked for something specific.
+                    if (not self._briefing_sent and get_brief_enabled() and self._awake
+                            and self._mac is None):
                         self._briefing_sent = True
                         tg.create_task(self._send_startup_briefing())
 
@@ -3566,7 +3669,10 @@ class JarvisLive:
                 # Voluntary reconnect (voice change) â€” not an error. Rebuild the
                 # session immediately with no backoff and no scary logs.
                 if _is_reconnect_signal(e):
-                    _tlog("ALFRED", "link", "Voluntary reconnect requested.", self._dashboard)
+                    if self._mac is not None and self._mac.dormant:
+                        _tlog("ALFRED", "link", "Idle — disconnecting until the wake word.", self._dashboard)
+                    else:
+                        _tlog("ALFRED", "link", "Voluntary reconnect requested.", self._dashboard)
                     if not _keep_context_of(e):
                         # A deliberate clean slate (voice change) â€” drop the
                         # handle so the next connect really does start empty.
