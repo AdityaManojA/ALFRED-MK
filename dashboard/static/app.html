@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ALFRED — Wayne Mark-IV Tactical Uplink</title>
+  <title>ALFRED — Wayne Mark-VIII Tactical Uplink</title>
   <script src="/static/crypto.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1149,7 +1149,7 @@
     </div>
     <div class="brand-wrap">
       <div class="logo"><em>A</em>LFRED</div>
-      <div class="sub-brand">WAYNE MARK-IV</div>
+      <div class="sub-brand">WAYNE MARK-VIII</div>
     </div>
     <div class="pill" id="pill"><span class="dot"></span><span id="st">CONNECTING</span></div>
     <div class="pill on tts-btn" id="tts-btn" onclick="toggleTTS()" title="Toggle Voice Readout on Uplink">
@@ -1178,7 +1178,7 @@
     <div class="feed-welcome" id="feed-welcome">
       <div class="welcome-badge">◈ UPLINK SYNCHRONIZED</div>
       <div class="welcome-title">ALFRED QUANTUM TERMINAL</div>
-      <div class="welcome-sub">WAYNE ENTERPRISES // MOBILE UPLINK ACTIVE [MK-IV]</div>
+      <div class="welcome-sub">WAYNE ENTERPRISES // MOBILE UPLINK ACTIVE [MK-VIII]</div>
       <div class="welcome-hints">
         <span>🔊 TTS Vocalizer Active</span>
         <span>•</span>
@@ -1259,10 +1259,10 @@
     const SERVER_THEME_COLOR = "__THEME_COLOR__";
     const THEMES = ['dossier', 'vector', 'beyond', 'wayne'];
     const THEME_INFO = {
-      'dossier': { icon: '🦇', label: 'DOSSIER', name: 'DEFAULT BATCAVE', sub: 'WAYNE ENTERPRISES // MOBILE UPLINK ACTIVE [MK-IV]' },
-      'vector':  { icon: '☣️', label: 'BANE',    name: 'BANE VECTOR MODE', sub: 'SANTA PRISCA PROTOCOL // BANE VECTOR [MK-IV]' },
+      'dossier': { icon: '🦇', label: 'DOSSIER', name: 'DEFAULT BATCAVE', sub: 'WAYNE ENTERPRISES // MOBILE UPLINK ACTIVE [MK-VIII]' },
+      'vector':  { icon: '☣️', label: 'BANE',    name: 'BANE VECTOR MODE', sub: 'SANTA PRISCA PROTOCOL // BANE VECTOR [MK-VIII]' },
       'beyond':  { icon: '⚡', label: 'BEYOND',  name: 'BATMAN BEYOND',    sub: 'WAYNE-POWERS // BATMAN BEYOND UPLINK [NEO-GOTHAM]' },
-      'wayne':   { icon: '⚜️', label: 'WAYNE',   name: 'WAYNE GOLD',       sub: 'WAYNE TOWER OVERRIDE // OBSIDIAN GOLD [MK-IV]' },
+      'wayne':   { icon: '⚜️', label: 'WAYNE',   name: 'WAYNE GOLD',       sub: 'WAYNE TOWER OVERRIDE // OBSIDIAN GOLD [MK-VIII]' },
     };
     let activeTheme = 'dossier';
 
@@ -2351,7 +2351,7 @@ function speakOnMobile(text) {
         d.className = 'msg msg-j';
         d.innerHTML = `
           <div class="msg-header">
-            <span class="lbl">ALFRED // WAYNE MK-IV</span>
+            <span class="lbl">ALFRED // WAYNE MK-VIII</span>
             <span class="msg-time">${timeStr}</span>
           </div>
           <div class="msg-text">${esc(text)}</div>

@@ -1,18 +1,19 @@
-# 🦇 ALFRED — MARK-VII (Wayne Protocol Edition)
+# 🦇 ALFRED — MARK-VIII (Wayne Protocol Edition)
 ### 🎩 Autonomous Multimodal AI Desktop Assistant & Tactical Terminal
-**Architect & Lead Creator:** **ADITYA MANOJ**
+**Version 8 — Stable Build (Windows)** | **Architect & Lead Creator:** **ADITYA MANOJ**
 
+[![Version 8 (Stable Build · Windows)](https://img.shields.io/badge/Build-Version%208%20(Stable%20Build%20%7C%20Windows)-00f0ff.svg?logo=windows&logoColor=white)](#)
 [![Python 3.12 (Recommended)](https://img.shields.io/badge/Python-3.12%20(Recommended)-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![AI Backend](https://img.shields.io/badge/AI-Gemini%203.1%20Flash%20Live%20%7C%20Local%20Ollama-8E75B2.svg?logo=google&logoColor=white)](https://ai.google.dev/)
 [![Local LLMs](https://img.shields.io/badge/Local%20LLM-Ollama%20%7C%20LM%20Studio%20%7C%20vLLM-orange.svg)](https://ollama.com)
 [![PyQt6](https://img.shields.io/badge/GUI-PyQt6%20Software%20Renderer-41CD52.svg?logo=qt&logoColor=white)](https://riverbankcomputing.com/software/pyqt/)
-[![AES-256 Remote](https://img.shields.io/badge/Mobile-Quantum%20Dashboard%20(iOS%2FAndroid)-00f0ff.svg)](https://github.com/AdityaManojA/ALFRED-MK-V)
+[![AES-256 Remote](https://img.shields.io/badge/Mobile-Quantum%20Dashboard%20(iOS%2FAndroid)-00f0ff.svg)](https://github.com/AdityaManojA/ALFRED-MK-VIII)
 [![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
 
-> **ALFRED MARK-VII** is an autonomous, real-time voice, vision, and system-control executive assistant built for complete digital sovereignty and tactical computing. Native bidirectional audio streaming, real-time visual grounding, full desktop automation, high-performance long-term memory, and encrypted mobile remote telemetry — engineered as one of the **most function-dense, production-hardened tactical AI assistants** in the open ecosystem.
+> **ALFRED MARK-VIII (Version 8 — Stable Build · Windows)** is an autonomous, real-time voice, vision, and system-control executive assistant built for complete digital sovereignty and tactical computing. Native bidirectional audio streaming, real-time visual grounding, full desktop automation, high-performance long-term memory, and encrypted mobile remote telemetry — engineered as one of the **most function-dense, production-hardened tactical AI assistants** in the open ecosystem.
 
 <p align="center">
-  <img src="Screenies/Default_theme.png" alt="ALFRED MARK-VII Tactical HUD Interface" width="92%">
+  <img src="Screenies/Default_theme.png" alt="ALFRED MARK-VIII Tactical HUD Interface" width="92%">
 </p>
 
 ---
@@ -23,7 +24,7 @@
 2. [🔑 Gemini API Key Setup & Configuration](#gemini-api-key)
 3. [🌐 100% Local & Air-Gapped Operation](#local-operation)
 4. [🏆 Why ALFRED Outclasses Every Other "Jarvis"](#why-alfred)
-5. [🆕 What's New in Mark VII](#whats-new)
+5. [🆕 What's New in Version 8 (Stable Build · Windows)](#whats-new)
 6. [🎭 Example Tactical Commands](#tactical-commands)
 7. [🛡️ Security, Privacy & Defensive Architecture](#security-privacy)
 8. [🎙️ Master Voice Command Codex](#voice-codex)
@@ -50,7 +51,7 @@
 ## 🚀 1. Quick Start & Installation
 
 ### 📋 Prerequisites
-* **Operating System**: Windows 10/11, macOS, or Linux.
+* **Operating System**: **Windows 10/11 (Primary Target — Version 8 Stable Build)**, macOS, or Linux.
 * **Python**: **`3.12.x` (Recommended)**. *(Note: Python `3.11` is also supported. Python `3.13` is not recommended due to upstream binary wheel and C-extension compatibility issues with PyAudio, PyQt6, and PyAutoGUI).*
 * **Hardware**: Standard microphone and speakers. *No dedicated GPU required — runs on lightweight software rendering.*
 * **Intelligence Backend**: Free Gemini API key from [Google AI Studio](https://aistudio.google.com/) **OR** local Ollama / LM Studio.
@@ -60,8 +61,8 @@
 #### Windows
 ```powershell
 # 1. Clone repository & install dependencies
-git clone https://github.com/AdityaManojA/ALFRED-MK-V.git
-cd ALFRED-MK-V
+git clone https://github.com/AdityaManojA/ALFRED-MK-VIII.git
+cd ALFRED-MK-VIII
 python setup.py
 
 # 2. Launch ALFRED
@@ -74,8 +75,8 @@ python main.py
 brew install yt-dlp ffmpeg portaudio python-tk@3.12
 
 # 2. Clone repository & install dependencies
-git clone https://github.com/AdityaManojA/ALFRED-MK-V.git
-cd ALFRED-MK-V
+git clone https://github.com/AdityaManojA/ALFRED-MK-VIII.git
+cd ALFRED-MK-VIII
 pip install -r requirements.txt
 
 # 3. Launch ALFRED (zero Ollama required - defaults to Gemini Live)
@@ -88,8 +89,8 @@ python main.py
 sudo apt install -y python3-pyqt6 python3-tk yt-dlp ffmpeg gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-libav xdotool wmctrl playerctl libportaudio2 maim
 
 # 2. Clone & launch
-git clone https://github.com/AdityaManojA/ALFRED-MK-V.git
-cd ALFRED-MK-V
+git clone https://github.com/AdityaManojA/ALFRED-MK-VIII.git
+cd ALFRED-MK-VIII
 pip install -r requirements.txt
 python main.py
 ```
@@ -251,11 +252,11 @@ ALFRED automatically prioritizes Gemini Live when a valid key is detected.
 <a id="why-alfred"></a>
 ## 🏆 4. Why ALFRED Outclasses Every Other "Jarvis"
 
-Most projects branded as "Jarvis clones" ship with a wake word, a chat window, and a handful of shell scripts. **ALFRED MARK-VII is fundamentally different** — it is a full executive control plane for the operating system, engineered around latency, reliability, structural privacy, and the **sheer density of real, production-hardened functions** it dispatches to your machine.
+Most projects branded as "Jarvis clones" ship with a wake word, a chat window, and a handful of shell scripts. **ALFRED MARK-VIII is fundamentally different** — it is a full executive control plane for the operating system, engineered around latency, reliability, structural privacy, and the **sheer density of real, production-hardened functions** it dispatches to your machine.
 
 ### 🎯 What "Best-in-Class Optimisation" Actually Means Here
 
-| Pillar | ALFRED MARK-VII | Typical "Jarvis Clone" |
+| Pillar | ALFRED MARK-VIII | Typical "Jarvis Clone" |
 |---|---|---|
 | **Action Surface** | 30+ self-describing, auto-discovered tools (OS, files, vision, music, protocols, sentry, network, windows, clipboard, news, translate, process control, and beyond) | 5–15 brittle, hardcoded scripts |
 | **Dual Cognitive Backend** | Gemini Live **or** fully local Ollama / LM Studio / vLLM / OpenRouter — same codebase, single config flip | Cloud-only or local-only |
@@ -277,14 +278,14 @@ Film Jarvis is narrative UI — a beautiful HUD without an OS underneath. **ALFR
 These optimise for safe, shallow, cloud-mediated skills. **ALFRED optimises for power-user sovereignty**: local models, filesystem law, YAML compound protocols, watchdog throttling, and a tactical PyQt6 chassis you can theme and hot-swap insignia on at runtime.
 
 ### 🧪 Compared to Other Open "Agent" Repos
-Many maximise model hype and under-ship the glue. MARK-VII invests in the glue that **fails in production for everyone else**: debounce, explicit OS media commands, encoding resilience, reconnect classifiers, background workers, cache TTLs, hybrid grounding, and structural privacy for focus telemetry.
+Many maximise model hype and under-ship the glue. MARK-VIII invests in the glue that **fails in production for everyone else**: debounce, explicit OS media commands, encoding resilience, reconnect classifiers, background workers, cache TTLs, hybrid grounding, and structural privacy for focus telemetry.
 
-> **The Verdict:** ALFRED MARK-VII is not "another Jarvis skin." It is one of the most **function-dense, optimisation-conscious, safety-instrumented** open tactical assistants ever released in the Wayne-protocol class — built to *run the desk*, not merely answer questions.
+> **The Verdict:** ALFRED MARK-VIII is not "another Jarvis skin." It is one of the most **function-dense, optimisation-conscious, safety-instrumented** open tactical assistants ever released in the Wayne-protocol class — built to *run the desk*, not merely answer questions.
 
 ---
 
 <a id="whats-new"></a>
-## 🆕 5. What's New in Mark VII
+## 🆕 5. What's New in Version 8 / Mark VIII (Stable Build · Windows)
 
 ### 🌐 Cross-Platform Parity (macOS + Linux Architecture)
 * **Unified Platform Dispatch (`core/platform/`)**: Centralized OS backend interface providing clean runtime abstraction for windowing flags, master volume (`osascript`, `pactl`, `pycaw`), native TTS fallbacks (`say`, `espeak-ng`), media pause/resume (`playerctl`, AppleScript, `WM_APPCOMMAND`), and screen capture.
@@ -804,7 +805,7 @@ ALFRED incorporates an OS security & performance watchdog daemon actively monito
 ## 🏗️ 21. System Architecture & File Structure
 
 ```
-ALFRED-MK-VII/
+ALFRED-MK-VIII/
 ├── main.py                     # Main loop, Live WebSocket / Local LLM router, audio, tool dispatcher
 ├── ui.py                       # PyQt6 HUD, audio visualizer, drawer settings
 ├── ui_overlay.py               # Minimalist floating HUD widget
@@ -958,11 +959,11 @@ ALFRED-MK-VII/
 
 This codebase is indexed with a persistent **GraphRAG Knowledge Graph** in `graphify-out/`:
 * **📊 5,436 nodes** & **11,125 relationships** across **283 semantic communities**.
-* **🌐 Interactive Visualization**: [`graphify-out/graph.html`](file:///d:/Projects/Alfred-Mark-V/graphify-out/graph.html)
-* **📄 Architectural Report**: [`graphify-out/GRAPH_REPORT.md`](file:///d:/Projects/Alfred-Mark-V/graphify-out/GRAPH_REPORT.md)
+* **🌐 Interactive Visualization**: [`graphify-out/graph.html`](file:///d:/Projects/Alfred-Mark-VIII/graphify-out/graph.html)
+* **📄 Architectural Report**: [`graphify-out/GRAPH_REPORT.md`](file:///d:/Projects/Alfred-Mark-VIII/graphify-out/GRAPH_REPORT.md)
 * **⚡ Dynamic Graph Management**: Real-time mutation, entity/relationship addition, exponential decay, 2-hop querying via `memory/graph_manager.py`.
 
-### 🎁 Mark VII New Actions (Auto-Discovered)
+### 🎁 Mark VIII New Actions (Auto-Discovered)
 
 | Action | Purpose |
 |---|---|
@@ -1032,7 +1033,7 @@ yt-dlp format selector explicitly excludes AV1 (`av01`) and prefers VP9+Opus, fa
 ## 👤 24. Author & Licensing
 
 * **🎩 Lead Architect & Creator:** **ADITYA MANOJ**
-* **🦇 Project:** ALFRED-MK-VII (Wayne Protocol Edition)
+* **🦇 Project:** ALFRED-MK-VIII — Version 8 (Stable Build · Windows, Wayne Protocol Edition)
 * **📜 License:** [Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)](https://creativecommons.org/licenses/by-nc/4.0/)
 
 <p align="center">

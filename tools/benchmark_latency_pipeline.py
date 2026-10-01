@@ -32,7 +32,7 @@ from ui import HudCanvas, FRAME_TIME_BUDGET_MS
 
 
 def run_benchmark():
-    print("=== Running ALFRED-MK-V Latency Profiling Benchmark ===")
+    print("=== Running ALFRED-MK-VIII Latency Profiling Benchmark ===")
     profile = cProfile.Profile()
     profile.enable()
 

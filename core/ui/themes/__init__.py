@@ -1,5 +1,5 @@
 """
-ALFRED-MK-V Thematic UI Skins.
+ALFRED-MK-VIII Thematic UI Skins.
 Provides structured theme schema, in-memory registry, unified apply path,
 and ThemeChrome contextual string accessors.
 """

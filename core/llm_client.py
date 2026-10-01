@@ -71,8 +71,8 @@ def _get_headers(provider: str) -> dict:
         key = cfg.get("openrouter_api_key") or cfg.get("OPENROUTER_API_KEY") or os.environ.get("OPENROUTER_API_KEY", "")
         if key:
             headers["Authorization"] = f"Bearer {key}"
-        headers["HTTP-Referer"] = "https://github.com/AdityaManojA/ALFRED-MK-IV"
-        headers["X-Title"] = "ALFRED-Mark-IV"
+        headers["HTTP-Referer"] = "https://github.com/AdityaManojA/ALFRED-MK-VIII"
+        headers["X-Title"] = "ALFRED-Mark-VIII"
     elif provider == "openai":
         key = cfg.get("openai_api_key") or cfg.get("api_key") or os.environ.get("OPENAI_API_KEY", "")
         if key:

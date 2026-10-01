@@ -1,4 +1,4 @@
-# ── MARK LIV — Python dependencies ────────────────────────────────────────────
+# ── MARK-VIII — Python dependencies ────────────────────────────────────────────
 # pip skips any line whose sys_platform marker does not match your OS, so this
 # one file serves Windows, macOS and Linux. `python setup.py` runs it for you.
 

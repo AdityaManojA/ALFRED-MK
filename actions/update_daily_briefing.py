@@ -1,5 +1,5 @@
 """
-Update Daily Briefing Preferences Action for ALFRED Mark-LIV.
+Update Daily Briefing Preferences Action for ALFRED Mark-VIII.
 Permanently updates and saves briefing preferences to long-term memory.
 """
 from __future__ import annotations

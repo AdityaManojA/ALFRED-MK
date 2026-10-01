@@ -1,5 +1,5 @@
 """
-Calendar Sync Plugin for ALFRED Mark-LIV.
+Calendar Sync Plugin for ALFRED Mark-VIII.
 Tracks agenda, meetings, appointments, and daily schedules.
 Stores events in ~/.alfred/calendar.json (or ~/.jarvis/calendar.json fallback).
 Auto-discovered by core/plugin_loader.py.

@@ -1,5 +1,5 @@
 """
-Focus Protocol Plugin for ALFRED Mark-LIV.
+Focus Protocol Plugin for ALFRED Mark-VIII.
 Manages deep work intervals, Pomodoro timers, and distraction-free focus sessions.
 Stores state in ~/.alfred/focus_state.json (or ~/.jarvis/focus_state.json fallback).
 Auto-discovered by core/plugin_loader.py.

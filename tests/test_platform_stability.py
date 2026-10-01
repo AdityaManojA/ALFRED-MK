@@ -1,4 +1,4 @@
-"""Unit tests for Windows and Linux runtime stability fixes in ALFRED-MK-VI.
+"""Unit tests for Windows and Linux runtime stability fixes in ALFRED-MK-VIII.
 
 Covers:
 - Phase 1: Sentry Mode Manager is_waiting_for_answer state & UI snapshot safety boundary

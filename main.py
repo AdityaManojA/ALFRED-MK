@@ -14,7 +14,7 @@ import subprocess as _subprocess
 if _platform.system() == "Windows":
     try:
         import ctypes
-        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("alfred.wayne.batcomputer.mk4")
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("alfred.wayne.batcomputer.mk8")
     except Exception:
         pass
 

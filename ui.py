@@ -742,8 +742,8 @@ def _read_full_config() -> dict:
 
 # Single source of truth for the release name — the window title, the header
 # badge and the readme must never disagree again.
-APP_VERSION  = "MK-IV"
-APP_PROTOCOL = "MK-IV"
+APP_VERSION  = "MARK-VIII"
+APP_PROTOCOL = "MARK-VIII"
 
 _DEFAULT_W, _DEFAULT_H = 1120, 720
 _MIN_W,     _MIN_H     = 920, 600
@@ -1864,7 +1864,7 @@ class HudCanvas(QWidget):
             p.setFont(f_tele)
             p.setPen(QPen(blend(main, 0.40), 1))
             p.drawText(QRectF(cx - W / 2 + m + 6, cy - H / 2 + m, 120, 14),
-                       Qt.AlignmentFlag.AlignLeft, "MK-IV // ARC-GEN")
+                       Qt.AlignmentFlag.AlignLeft, "MK-VIII // ARC-GEN")
             p.drawText(QRectF(cx + W / 2 - m - 126, cy - H / 2 + m, 120, 14),
                        Qt.AlignmentFlag.AlignRight, "FREQ 142.8MHz")
             p.drawText(QRectF(cx - W / 2 + m + 6, cy + H / 2 - m - 14, 120, 14),
@@ -2513,7 +2513,7 @@ class HudCanvas(QWidget):
             txt = "⊘  SILENCE PROTOCOL ENGAGED // ACOUSTICS MUTED"
             bar_col = qcol(C.MUTED_C)
         elif self.speaking:
-            txt = "●  REACTIVE HUD // VOCAL SYNTHESIS ACTIVE // ALFRED MK-IV"
+            txt = "●  REACTIVE HUD // VOCAL SYNTHESIS ACTIVE // ALFRED MARK-VIII"
             bar_col = main
         elif self.state in ("THINKING", "PROCESSING"):
             txt = "NEURAL INFERENCE ACTIVE // PROCESSING DIRECTIVE"
@@ -2604,10 +2604,10 @@ class HudCanvas(QWidget):
         f_badge = mono_font(6, QFont.Weight.Bold)
         lp.setFont(f_badge)
         lp.setPen(QPen(QColor(main.red(), main.green(), main.blue(), 160), 1))
-        lp.drawText(QRectF(m + 4, m + 2, 180, 12), Qt.AlignmentFlag.AlignLeft, "SUBJECT ALFRED.MK-IV // VECTOR HUD")
+        lp.drawText(QRectF(m + 4, m + 2, 180, 12), Qt.AlignmentFlag.AlignLeft, "SUBJECT ALFRED.MK-VIII // VECTOR HUD")
         lp.drawText(QRectF(W - m - 184, m + 2, 180, 12), Qt.AlignmentFlag.AlignRight, "ORBITAL MATRIX: 4 ACTIVE")
         lp.drawText(QRectF(m + 4, H - m - 14, 180, 12), Qt.AlignmentFlag.AlignLeft, "COORDS: 42°19'N 71°05'W")
-        lp.drawText(QRectF(W - m - 184, H - m - 14, 180, 12), Qt.AlignmentFlag.AlignRight, "WAYNE TECH PROTOCOL MK-IV")
+        lp.drawText(QRectF(W - m - 184, H - m - 14, 180, 12), Qt.AlignmentFlag.AlignRight, "WAYNE TECH PROTOCOL MK-VIII")
 
         # Subtle CRT scanlines every 3px
         scan_col = QColor(main.red(), main.green(), main.blue(), 12)
@@ -2914,7 +2914,7 @@ class SubjectDossierCard(QWidget):
     """
     Tactical Dossier Card Widget (Screenshot 1: Exact recreation of SUBJECT A-34 metadata dossier).
     """
-    def __init__(self, assistant_name="ALFRED.MK-IV", parent=None):
+    def __init__(self, assistant_name="ALFRED.MK-VIII", parent=None):
         super().__init__(parent)
         self.setFixedHeight(152)
         self._asst_name = assistant_name
@@ -3872,7 +3872,7 @@ class MinimizedHudOverlay(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, True)
         self.setFixedSize(420, 230)
         from core.ui.themes import ThemeChrome
-        self.setWindowTitle(f"ALFRED MK-IV // {ThemeChrome.chrome().window_title_suffix}")
+        self.setWindowTitle(f"ALFRED MARK-VIII // {ThemeChrome.chrome().window_title_suffix}")
         self.setObjectName("minimizedHudOverlay")
         self._build_ui()
         self.set_assistant_name(assistant_name)
@@ -9368,7 +9368,7 @@ class MainWindow(QMainWindow):
                 from memory.config_manager import save_app_icon
                 save_app_icon(resolved_path)
                 display_name = format_icon_display_name(Path(resolved_path).name)
-                # Update top header app icon next to MK-IV
+                # Update top header app icon next to MARK-VIII
                 if hasattr(self, "_header_icon_lbl") and self._header_icon_lbl:
                     pm = _scaled_icon_pixmap(resolved_path, 22, 22)
                     if not pm.isNull():

@@ -1,5 +1,5 @@
 """
-core/cache.py — Centralized Caching Layer for ALFRED Mark-II.
+core/cache.py — Centralized Caching Layer for ALFRED Mark-VIII.
 
 Provides high-throughput in-memory and optional Redis caching with:
 - Cache-aside execution pattern.
