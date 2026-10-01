@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools
 import json
 import math
 import os
@@ -239,6 +240,7 @@ class TronScoreBackgroundPlayer(QObject):
         self._playlist: list[Path]        = []
         self._spotify_sync_busy = False
         self.spotify_state_received.connect(self._apply_spotify_state)
+        self.playback_state_changed.connect(self._sync_audio_gate)
         self._req_set_ducked.connect(self._do_set_ducked)
         self._req_play.connect(self._do_play)
         self._req_pause.connect(self._do_pause)
@@ -429,6 +431,16 @@ class TronScoreBackgroundPlayer(QObject):
         self._media_arbiter = arbiter
         self.playback_state_changed.connect(self._sync_arbiter_playback)
         self._sync_arbiter_playback(self.is_playing())
+
+    def _sync_audio_gate(self, is_playing: bool) -> None:
+        try:
+            from core.audio.gate import get_audio_gate, GATE_MEDIA
+            if is_playing:
+                get_audio_gate().hold(GATE_MEDIA)
+            else:
+                get_audio_gate().release(GATE_MEDIA)
+        except Exception:
+            pass
 
     def _sync_arbiter_playback(self, is_playing: bool) -> None:
         if self._media_arbiter is None:
@@ -891,6 +903,7 @@ _MONO_FONT_FAMILIES = (
 )
 
 
+@functools.lru_cache(maxsize=128)
 def tech_font(size: int | float, weight: QFont.Weight = QFont.Weight.Normal, letter_spacing: float | None = None) -> QFont:
     f = QFont()
     f.setFamilies(list(_TECH_FONT_FAMILIES))
@@ -906,6 +919,7 @@ def tech_font(size: int | float, weight: QFont.Weight = QFont.Weight.Normal, let
     return f
 
 
+@functools.lru_cache(maxsize=128)
 def mono_font(size: int | float, weight: QFont.Weight = QFont.Weight.Normal, letter_spacing: float | None = None) -> QFont:
     f = QFont()
     f.setFamilies(list(_MONO_FONT_FAMILIES))
@@ -1331,8 +1345,11 @@ class _SysMetrics:
             }
 
 
-FRAME_TIME_BUDGET_MS: float = 16.7       # 60 FPS target budget (~16.7 ms per frame)
-PAINT_WARN_THRESHOLD_MS: float = 45.0     # Warn if single paint event exceeds 45ms
+FRAME_BUDGET_MS: float = 16.7             # 60 FPS target budget (~16.7 ms per frame)
+FRAME_TIME_BUDGET_MS: float = 16.7        # backward compat alias
+FRAME_WARN_MS: float = 25.0               # Warn threshold for paint spikes (tightened from 45.0)
+PAINT_WARN_THRESHOLD_MS: float = 45.0     # legacy test backward compat
+FRAME_WARN_COOLDOWN_S: float = 5.0        # Rate limit warning logs to avoid spam
 
 _metrics = _SysMetrics()
 
@@ -1432,9 +1449,44 @@ class HudCanvas(QWidget):
         self._sentry_snapshot: SentrySnapshot | None = None
         self._paint_error_logged = False
         self._blend_cache: dict[tuple, QColor] = {}
+        self._pen_cache: dict[tuple, QPen] = {}
+        self._brush_cache: dict[int, QBrush] = {}
         self._tmr = QTimer(self)
         self._tmr.timeout.connect(self._step)
         self._tmr.start(int(FRAME_TIME_BUDGET_MS))
+
+    def _blend(self, col: QColor, a: float, bg: QColor | None = None) -> QColor:
+        k = max(0.0, min(1.0, a))
+        if bg is None:
+            bg = qcol(C.BG)
+        key = (col.rgb(), bg.rgb(), int(k * 100))
+        c = self._blend_cache.get(key)
+        if c is not None:
+            return c
+        c = QColor(int(bg.red()   + (col.red()   - bg.red())   * k),
+                   int(bg.green() + (col.green() - bg.green()) * k),
+                   int(bg.blue()  + (col.blue()  - bg.blue())  * k))
+        if len(self._blend_cache) < 2048:
+            self._blend_cache[key] = c
+        return c
+
+    def _get_pen(self, col: QColor, width: float = 1.0, style: Qt.PenStyle = Qt.PenStyle.SolidLine) -> QPen:
+        key = (col.rgb(), int(width * 10), style)
+        pen = self._pen_cache.get(key)
+        if pen is None:
+            pen = QPen(col, width, style)
+            if len(self._pen_cache) < 1024:
+                self._pen_cache[key] = pen
+        return pen
+
+    def _get_brush(self, col: QColor) -> QBrush:
+        key = col.rgb()
+        brush = self._brush_cache.get(key)
+        if brush is None:
+            brush = QBrush(col)
+            if len(self._brush_cache) < 512:
+                self._brush_cache[key] = brush
+        return brush
 
     def _start_animations(self) -> None:
         """Guarantee the HUD animation step timer is started unconditionally."""
@@ -1516,6 +1568,8 @@ class HudCanvas(QWidget):
                             t0 += played * hop
                             if self._vis_i is not None:
                                 self._vis_i = max(0, self._vis_i - played)
+                        if len(merged) > 500:
+                            merged = merged[-500:]
                         self._visemes = (merged, t0, hop)
                         return
             self._visemes = (new, at, hop)
@@ -2755,9 +2809,9 @@ class HudCanvas(QWidget):
                 t_paint_ms = (time.perf_counter() - t_paint_start) * 1000.0
                 now = time.monotonic()
                 # Ignore initial cold-cache frames (tick <= 2) for slow paint warning
-                if self._tick > 2 and t_paint_ms > PAINT_WARN_THRESHOLD_MS and (now - getattr(self, "_last_slow_paint_warn", 0.0)) > 5.0:
+                if self._tick > 2 and t_paint_ms > FRAME_WARN_MS and (now - getattr(self, "_last_slow_paint_warn", 0.0)) > FRAME_WARN_COOLDOWN_S:
                     self._last_slow_paint_warn = now
-                    print(f"[HUD] Slow paintEvent: {t_paint_ms:.1f}ms exceeds {PAINT_WARN_THRESHOLD_MS:.0f}ms budget (throttled)")
+                    print(f"[HUD] Slow paintEvent: {t_paint_ms:.1f}ms exceeds {FRAME_WARN_MS:.0f}ms budget (throttled)")
         except Exception as exc:
             if not getattr(self, "_paint_error_logged", False):
                 self._paint_error_logged = True

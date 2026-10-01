@@ -27,6 +27,46 @@ def _is_debug_timestamps_enabled() -> bool:
     return True
 
 
+import re
+import urllib.parse
+
+# Pattern matching full HTTP/HTTPS URLs with query parameters or signed tokens
+_SIGNED_URL_PATTERN = re.compile(r'https?://[^\s<>"\'\)]+')
+
+def redact_signed_urls(text: str) -> str:
+    """Redact full URLs with query parameters/signatures to scheme://host/… before emission."""
+    if "://" not in text:
+        return text
+
+    def _replace(match: re.Match) -> str:
+        url = match.group(0)
+        try:
+            parsed = urllib.parse.urlsplit(url)
+            if parsed.netloc:
+                return f"{parsed.scheme}://{parsed.netloc}/…"
+        except Exception:
+            pass
+        return url
+
+    return _SIGNED_URL_PATTERN.sub(_replace, text)
+
+
+def _is_ffmpeg_banner(line: str) -> bool:
+    """Return True if line matches an FFmpeg input/codec/metadata diagnostic banner."""
+    stripped = line.strip()
+    if not stripped:
+        return False
+    if stripped.startswith("Input #0,") or stripped.startswith("Output #0,"):
+        return True
+    if stripped.startswith("Stream #0:") or stripped.startswith("Metadata:"):
+        return True
+    if "Duration: " in stripped and "bitrate: " in stripped:
+        return True
+    if "mp3 (mp3float)" in stripped:
+        return True
+    return False
+
+
 _DEBUG_TIMESTAMPS = _is_debug_timestamps_enabled()
 
 
@@ -73,10 +113,16 @@ def ts_print(*args, **kwargs):
             _orig_print(content, end=end, file=target_file, flush=flush)
         return
 
+    # Redact signed/query URLs and strip FFmpeg stream banners
+    content = redact_signed_urls(content)
+
     lines = content.splitlines()
 
     with _print_lock:
         for i, line in enumerate(lines):
+            # Suppress FFmpeg stream/codec banners
+            if _is_ffmpeg_banner(line):
+                continue
             line_end = end if i == len(lines) - 1 else "\n"
             if line.strip():
                 _orig_print(f"{prefix} {line}", end=line_end, file=target_file, flush=flush)

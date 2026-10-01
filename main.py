@@ -61,7 +61,7 @@ import os
 import os as _os
 _os.environ.setdefault(
     "QT_LOGGING_RULES",
-    "qt.multimedia.ffmpeg=false;qt.multimedia.ffmpeg.*=false;qt.tls.*=false",
+    "qt.multimedia=false;qt.multimedia.*=false;qt.multimedia.ffmpeg=false;qt.multimedia.ffmpeg.*=false;qt.tls.*=false;qt.multimedia.audio=false",
 )
 
 
@@ -123,6 +123,11 @@ from core                      import audio_devices
 from core.action_loader        import discover_actions
 from core.echo                 import EchoGuard
 from core.viseme               import VisemeStream
+from core.audio.gate import (
+    get_audio_gate, GATE_TTS, GATE_MEDIA, GATE_RESOLVING,
+)
+from core.audio.stream import get_shared_audio_stream
+from core.net import install_transport_guard
 from core.wake_word            import (
     WakeWordDetector, is_ready as wake_is_ready, install_and_download as wake_install,
     WAKE_PHRASE, DEFAULT_THRESHOLD,
@@ -191,9 +196,9 @@ CHANNELS            = 1
 SEND_SAMPLE_RATE    = 16000 
 RECEIVE_SAMPLE_RATE = 24000
 CHUNK_SIZE          = 1024
-RECONNECT_BASE_S: float = 1.0       # Initial reconnect backoff
-RECONNECT_MAX_S: float = 10.0       # Cap backoff at 10s
-UPLINK_TIMEOUT_S: float = 5.0       # Uplink connection timeout budget
+RECONNECT_BASE_S: float = 0.5       # Initial reconnect backoff (seconds)
+RECONNECT_MAX_S: float = 5.0        # Cap backoff at 5s bound
+UPLINK_TIMEOUT_S: float = 5.0       # Uplink connection timeout budget (seconds)
 
 # RMS below which 16-bit PCM is treated as room silence; above _LEVEL_FULL it
 # reads as a full-height waveform. Tuned so ordinary speech lands mid-range and
@@ -850,6 +855,7 @@ class JarvisLive:
         self._loop                = None
         self._is_speaking         = False
         self._speaking_lock       = threading.Lock()
+        self._audio_gate          = get_audio_gate()
         self._phone_active        = False   # True while phone mic is streaming; pauses PC mic
         self._pending_vision       = None    # (img_bytes, mime_type, question, angle) to inject after tool response
         self._vision_cam_active    = False   # True if camera was opened for vision â†’ auto-close after response
@@ -1420,6 +1426,10 @@ class JarvisLive:
         return time.monotonic() < self._tail_until
 
     def set_speaking(self, value: bool):
+        if value:
+            self._audio_gate.hold(GATE_TTS)
+        else:
+            self._audio_gate.release(GATE_TTS)
         with self._speaking_lock:
             was_speaking = self._is_speaking
             self._is_speaking = value
@@ -2131,7 +2141,7 @@ class JarvisLive:
                     await asyncio.sleep(0.3)
                     self.sleep(reason="voice command")
                 asyncio.create_task(_do_voice_sleep())
-                result = "Going to sleep now, sir. Say 'Alfred' when you need me."
+                result = "Going to sleep now, sir. Call me when you need me."
 
             elif name == "shutdown_jarvis":
                 if not args.get("confirmation"):
@@ -2266,6 +2276,8 @@ class JarvisLive:
             # Mic audio NEVER goes to Gemini while sleeping.
             # Only the local wake-word detector sees the audio.
             if not self._awake:
+                if self._audio_gate.is_reason_held(GATE_TTS):
+                    return
                 if getattr(self, "_wake_enabled", False) or wake_is_ready():
                     det = self._wake_detector
                     if det is None:
@@ -2273,6 +2285,9 @@ class JarvisLive:
                         det = self._wake_detector
                     if det is not None and det.ready:
                         det.feed(indata)
+                return
+
+            if not self._audio_gate.is_open():
                 return
 
             with self._speaking_lock:
@@ -2330,43 +2345,34 @@ class JarvisLive:
                     pass
 
         try:
-            def _open_mic(dev):
-                return sd.InputStream(
-                    samplerate=SEND_SAMPLE_RATE,
-                    channels=CHANNELS,
-                    dtype="int16",
-                    blocksize=CHUNK_SIZE,
-                    device=dev,
-                    callback=callback,
-                )
+            shared_stream = get_shared_audio_stream()
 
             # Which microphone. resolve() returns None for "system default" and
-            # for a saved device that is no longer present â€” so a headset
+            # for a saved device that is no longer present — so a headset
             # unplugged since the last run falls back to the built-in mic
             # instead of raising on startup and taking the session with it.
             _mic_name = get_input_device()
             _mic_dev  = audio_devices.resolve(_mic_name, "input")
             if _mic_dev is not None:
                 _tlog("ALFRED", "mic", f"Input device: {_mic_name}", self._dashboard)
-            try:
-                _mic_stream = _open_mic(_mic_dev)
-            except Exception as _e:
-                # A device the picker listed but the driver will not open right
-                # now â€” exclusive mode, a webcam already in use, a virtual mic
-                # whose source went away. Chosen hardware failing must never
-                # mean the assistant cannot hear at all.
-                if _mic_dev is None:
-                    raise
-                _tlog("ALFRED", "warn", f"Mic '{_mic_name}' failed: {_e} â€” using default", self._dashboard)
-                self.ui.write_log(
-                    f"SYS: Microphone '{_mic_name}' unavailable â€” using system default."
-                )
-                _mic_stream = _open_mic(None)
 
-            with _mic_stream:
-                _tlog("ALFRED", "mic", "Mic stream open", self._dashboard)
+            sub_token = shared_stream.subscribe(
+                lambda raw_bytes, pcm_arr: callback(pcm_arr.reshape(-1, 1), len(pcm_arr), None, None)
+            )
+            started = shared_stream.start(device=_mic_dev)
+            if not started and _mic_dev is not None:
+                _tlog("ALFRED", "warn", f"Mic '{_mic_name}' failed — using default", self._dashboard)
+                self.ui.write_log(
+                    f"SYS: Microphone '{_mic_name}' unavailable — using system default."
+                )
+                shared_stream.start(device=None)
+
+            _tlog("ALFRED", "mic", "Mic stream open", self._dashboard)
+            try:
                 while True:
                     await asyncio.sleep(0.1)
+            finally:
+                shared_stream.unsubscribe(sub_token)
         except Exception as e:
             _tlog("ALFRED", "error", f"Mic: {e}", self._dashboard)
             raise
@@ -3581,6 +3587,7 @@ class JarvisLive:
 
     async def run(self):
         self._loop = asyncio.get_event_loop()
+        install_transport_guard(self._loop)
         self.scheduler.start()
         def _proactor_exc_handler(loop, context):
             exc = context.get("exception")

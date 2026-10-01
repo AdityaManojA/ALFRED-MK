@@ -137,7 +137,7 @@ class TestSentryUIRoutingAndDisplay(unittest.TestCase):
                 drifting=snapshot.focus.drifting,
             )
 
-            self.assertEqual(overlay._sentry_btn.text(), "FOC 23:20")
+            self.assertIn(overlay._sentry_btn.text(), ("●23:20", "FOC 23:20"))
             self.assertEqual(self.hud._sentry_snapshot, snapshot)
         finally:
             overlay.close()

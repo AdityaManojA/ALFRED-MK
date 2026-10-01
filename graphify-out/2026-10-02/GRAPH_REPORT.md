@@ -1,7 +1,7 @@
 # Graph Report - Alfred-Mark-VIII  (2026-10-02)
 
 ## Corpus Check
-- 460 files · ~696,884 words
+- 460 files · ~696,997 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 15 file(s) not represented in the graph (top: .ico 8, (none) 3, .obj 2)
 
@@ -100,7 +100,7 @@
 - detect
 - daily_brief
 - MediaArbiter
-- 🆕 5. What's New in Mark VIII
+- 🆕 5. What's New in Version 8 / Mark VIII (Stable Build · Windows)
 - LinuxPlatformBackend
 - TestBackgroundWorkerPool
 - fetch.py
@@ -705,9 +705,9 @@ Nodes (10): daily_brief(), _get_market_brief(), Executes the daily briefing and 
 Cohesion: 0.21
 Nodes (6): MediaArbiter, MediaState, QObject, The complete client-visible media state; deliberately identity-free., Coordinate local audio ownership without exposing external identities., Verification
 
-### Community 89 - "🆕 5. What's New in Mark VIII"
+### Community 89 - "🆕 5. What's New in Version 8 / Mark VIII (Stable Build · Windows)"
 Cohesion: 0.14
-Nodes (13): Called from Qt main thread when user presses Remote Control., 🆕 5. What's New in Mark VIII, 🎧 Audio & Microphone Stability Overhaul, 🌐 Cross-Platform Parity (macOS + Linux Architecture), 🛡️ Hardened Safety Interlocks & Anti-Hallucination Guard, 📱 Mobile Remote Uplink & Dashboard Repair, 🎩 Persona, Speech Debounce & Cognitive Trace, 🎨 Reactive HUD Frame Pacing (+5 more)
+Nodes (13): Called from Qt main thread when user presses Remote Control., 🆕 5. What's New in Version 8 / Mark VIII (Stable Build · Windows), 🎧 Audio & Microphone Stability Overhaul, 🌐 Cross-Platform Parity (macOS + Linux Architecture), 🛡️ Hardened Safety Interlocks & Anti-Hallucination Guard, 📱 Mobile Remote Uplink & Dashboard Repair, 🎩 Persona, Speech Debounce & Cognitive Trace, 🎨 Reactive HUD Frame Pacing (+5 more)
 
 ### Community 90 - "LinuxPlatformBackend"
 Cohesion: 0.11
@@ -1487,7 +1487,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **Why does `HudCanvas` connect `HudCanvas` to `execute_bounded_tool`, `MainWindow`, `.__init__`, `MinimizedHudOverlay`, `Test Matrix & Live Verification Status`, `SentryModeManager`, `JarvisUI`, `SetupOverlay`, `ui.py`, `PHASE 0 RECONNAISSANCE NOTES — HUD VIDEO SURFACE`, `TronScoreBackgroundPlayer`, `time`, `mono_font`, `TestHudReactivity`, `LogWidget`, `Acceptance Checklist (Phase 1)`, `QWidget`, `2. Profiling & Measurement Audit (10 Key Areas)`?**
   _High betweenness centrality (0.034) - this node is a cross-community bridge._
 - **Why does `HudVideoController` connect `HudVideoController` to `MainWindow`, `FakePlayerBackend`, `LocalUrlBackend`, `JarvisUI`, `raise_overlay`, `VideoTimeline`, `ALFRED-MK-V — Media Command v1: Phase 0 Reconnaissance`, `TestThreadMarshal`, `TestDedupeSingleFlight`, `ui.py`, `TestPlayDestinationPrompt`, `hud_video/controller.py`, `PlayableRef`, `time`, `TronScoreBackgroundPlayer`, `._init_hud_video`, `HudVideoSurface`?**
-  _High betweenness centrality (0.034) - this node is a cross-community bridge._
+  _High betweenness centrality (0.033) - this node is a cross-community bridge._
 - **Are the 43 inferred relationships involving `MainWindow` (e.g. with `Graphify nodes referenced` and ``_hud_cam_stack` (ui.py:8017)`) actually correct?**
   _`MainWindow` has 43 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 21 inferred relationships involving `HudVideoController` (e.g. with `PlayableRef` and `SeekRejectReason`) actually correct?**

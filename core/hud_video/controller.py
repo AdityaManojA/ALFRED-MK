@@ -600,6 +600,20 @@ class HudVideoController(QObject):
     def _set_state(self, status: VideoStatus) -> None:
         assert_gui_thread()
         self._status = status
+        try:
+            from core.audio.gate import get_audio_gate, GATE_MEDIA, GATE_RESOLVING
+            gate = get_audio_gate()
+            if status == VideoStatus.RESOLVING:
+                gate.hold(GATE_RESOLVING)
+            else:
+                gate.release(GATE_RESOLVING)
+
+            if status in (VideoStatus.PLAYING, VideoStatus.BUFFERING):
+                gate.hold(GATE_MEDIA)
+            else:
+                gate.release(GATE_MEDIA)
+        except Exception:
+            pass
         self._emit_state(time.monotonic())
 
     def _set_status(self, text: str) -> None:
