@@ -25,6 +25,7 @@ from core.wake_word import (
     WAKE_MODEL,
     WAKE_MODEL_PATH,
     get_shared_model,
+    get_detector,
     is_ready,
     is_installed,
     install_and_download,

@@ -1319,7 +1319,7 @@ class _SysMetrics:
 
 
 FRAME_TIME_BUDGET_MS: float = 16.7       # 60 FPS target budget (~16.7 ms per frame)
-PAINT_WARN_THRESHOLD_MS: float = 20.0     # Warn if single paint event exceeds 20ms
+PAINT_WARN_THRESHOLD_MS: float = 45.0     # Warn if single paint event exceeds 45ms
 
 _metrics = _SysMetrics()
 
@@ -2714,8 +2714,10 @@ class HudCanvas(QWidget):
             finally:
                 p.end()
                 t_paint_ms = (time.perf_counter() - t_paint_start) * 1000.0
-                if t_paint_ms > PAINT_WARN_THRESHOLD_MS:
-                    print(f"[HUD] Slow paintEvent: {t_paint_ms:.1f}ms exceeds {PAINT_WARN_THRESHOLD_MS}ms budget")
+                now = time.monotonic()
+                if t_paint_ms > PAINT_WARN_THRESHOLD_MS and (now - getattr(self, "_last_slow_paint_warn", 0.0)) > 5.0:
+                    self._last_slow_paint_warn = now
+                    print(f"[HUD] Slow paintEvent: {t_paint_ms:.1f}ms exceeds {PAINT_WARN_THRESHOLD_MS:.0f}ms budget (throttled)")
         except Exception as exc:
             if not getattr(self, "_paint_error_logged", False):
                 self._paint_error_logged = True
@@ -6291,17 +6293,20 @@ class TacticalControlsDrawer(QWidget):
 
         # Cross-platform window configuration:
         # On Windows: Tool window provides independent Win32 HWND above native video surface.
-        # On Linux/X11/Wayland: Dialog window establishes proper transient ownership with parent
-        # so it stays above MainWindow without overlapping other applications on the desktop.
-        flags = Qt.WindowType.FramelessWindowHint
+        # On Linux/X11/Wayland: In-window overlay child widget avoids compositor auto-centering
+        # (Wayland xdg_toplevel centering and GNOME Mutter attach-modal-dialogs) so it anchors
+        # cleanly beneath the [ ⚙ ] TACTICAL CONTROLS button without occluding HUD visuals.
         if sys.platform == "win32":
-            flags |= Qt.WindowType.Tool
+            flags = Qt.WindowType.Tool | Qt.WindowType.FramelessWindowHint
+            self.setWindowFlags(flags)
+            if parent is not None:
+                self.setParent(parent, flags)
         else:
-            flags |= Qt.WindowType.Dialog
-
-        self.setWindowFlags(flags)
-        if parent is not None:
-            self.setParent(parent, flags)
+            if parent is None:
+                self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
+            else:
+                self.setWindowFlags(Qt.WindowType.Widget)
+                self.setParent(parent, Qt.WindowType.Widget)
 
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
@@ -6360,18 +6365,30 @@ class TacticalControlsDrawer(QWidget):
             delta = event.globalPosition().toPoint() - self._drag_start_pos
             new_pos = self._drag_window_pos + delta
 
-            # Constrain within screen boundaries
-            screen = QApplication.screenAt(event.globalPosition().toPoint()) or self.screen()
-            if screen:
-                geo = screen.availableGeometry()
-                new_pos.setX(max(geo.left() - self.width() + 40, min(new_pos.x(), geo.right() - 40)))
-                new_pos.setY(max(geo.top(), min(new_pos.y(), geo.bottom() - 40)))
+            if self.isWindow():
+                # Constrain within screen boundaries (top-level Tool window)
+                screen = QApplication.screenAt(event.globalPosition().toPoint()) or self.screen()
+                if screen:
+                    geo = screen.availableGeometry()
+                    new_pos.setX(max(geo.left() - self.width() + 40, min(new_pos.x(), geo.right() - 40)))
+                    new_pos.setY(max(geo.top(), min(new_pos.y(), geo.bottom() - 40)))
 
-            self.move(new_pos)
-            self._user_moved = True
-            p = self.parentWidget()
-            if p is not None:
-                self._relative_offset = new_pos - p.pos()
+                self.move(new_pos)
+                self._user_moved = True
+                p = self.parentWidget()
+                if p is not None:
+                    self._relative_offset = new_pos - p.pos()
+            else:
+                # Constrain within parent widget boundaries (in-window child overlay)
+                p = self.parentWidget()
+                if p is not None:
+                    parent_rect = p.rect()
+                    new_pos.setX(max(0, min(new_pos.x(), max(0, parent_rect.width() - self.width()))))
+                    new_pos.setY(max(0, min(new_pos.y(), max(0, parent_rect.height() - self.height()))))
+                self.move(new_pos)
+                self._user_moved = True
+                self._relative_offset = new_pos
+
             event.accept()
             return
         super().mouseMoveEvent(event)
@@ -6387,8 +6404,9 @@ class TacticalControlsDrawer(QWidget):
             self._user_moved = False
             self._relative_offset = None
             p = self.parentWidget()
-            if p is not None and hasattr(p, "_position_quick_drawer"):
-                p._position_quick_drawer()
+            target = p if hasattr(p, "_position_quick_drawer") else (p.window() if p is not None and hasattr(p.window(), "_position_quick_drawer") else None)
+            if target is not None:
+                target._position_quick_drawer()
             event.accept()
             return
         super().mouseDoubleClickEvent(event)
@@ -6431,6 +6449,7 @@ class MainWindow(QMainWindow):
     _hud_video_show_sig = pyqtSignal()   # thread-safe: show video surface
     _hud_video_hide_sig = pyqtSignal()   # thread-safe: restore avatar
     _scheduler_event_sig = pyqtSignal(object)  # task engine event from scheduler thread
+    _toast_sig      = pyqtSignal(str)          # notification / barge-in toast message
 
     def __init__(self, face_path: str):
         super().__init__()
@@ -6657,6 +6676,7 @@ class MainWindow(QMainWindow):
         self._hud_video_show_sig.connect(self._on_hud_video_show)
         self._hud_video_hide_sig.connect(self._on_hud_video_hide)
         self._scheduler_event_sig.connect(self._on_scheduler_event)
+        self._toast_sig.connect(self._show_toast)
         self._cam_stop = threading.Event()
 
         # Camera preview overlay (child of central widget, positioned in resizeEvent)
@@ -7614,9 +7634,11 @@ class MainWindow(QMainWindow):
         self._terminal_stack.addWidget(self._log)
         self._terminal_stack.addWidget(self._notes_terminal)
 
-        # ── Cognitive-trace (thinking) toggle ──────────────────────────────────
-        # Sits between the dossier card and the tab row so it is clearly
-        # "above the chat" without eating space from the log itself.
+        # ── Cognitive-trace & Barge-In toggles ─────────────────────────────────
+        # Sits between the tab row and chat stack so both are clearly above the chat.
+        trace_row = QHBoxLayout()
+        trace_row.setSpacing(6)
+
         self._think_btn = QPushButton("[ ◈ ]  COGNITIVE TRACE : OFF")
         self._think_btn.setFixedHeight(24)
         self._think_btn.setFont(mono_font(7, QFont.Weight.Bold, letter_spacing=0.6))
@@ -7629,7 +7651,8 @@ class MainWindow(QMainWindow):
         )
         self._style_think_btn(False)
         self._think_btn.toggled.connect(self._toggle_think)
-        lay.addWidget(self._think_btn)
+        trace_row.addWidget(self._think_btn, stretch=1)
+        lay.addLayout(trace_row)
 
         lay.addWidget(self._terminal_stack, stretch=1)
         self._update_tab_button_styles(0)
@@ -7732,7 +7755,8 @@ class MainWindow(QMainWindow):
             }}
         """
 
-        w = TacticalControlsDrawer(self)
+        parent_target = self if sys.platform == "win32" else (self.centralWidget() or self)
+        w = TacticalControlsDrawer(parent_target)
         w.closed.connect(lambda: self._drawer_btn.setChecked(False) if hasattr(self, "_drawer_btn") else None)
         w.hide()
 
@@ -7853,7 +7877,7 @@ class MainWindow(QMainWindow):
         self._wake_btn.setFont(mono_font(8, letter_spacing=0.5))
         self._wake_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._wake_btn.clicked.connect(self._toggle_wake_word)
-        attach_hover_help(self._wake_btn, "Toggle continuous hands-free voice wake word detection for 'Alfred' and 'Jarvis'.")
+        attach_hover_help(self._wake_btn, "Toggle continuous hands-free voice wake word detection for 'Alfred'.")
         lay.addWidget(self._wake_btn)
 
         self._wake_sleep_btn = QPushButton()
@@ -7928,38 +7952,75 @@ class MainWindow(QMainWindow):
         self._quick_drawer.setFixedWidth(_W)
         self._quick_drawer.adjustSize()
 
-        # If user dragged drawer, maintain their relative offset from MainWindow
+        is_window = self._quick_drawer.isWindow()
+        parent_w = self._quick_drawer.parentWidget() or getattr(self, "centralWidget", lambda: self)() or self
+
+        # If user dragged drawer, maintain their relative offset
         if getattr(self._quick_drawer, "_user_moved", False) and getattr(self._quick_drawer, "_relative_offset", None) is not None:
-            new_pos = self.pos() + self._quick_drawer._relative_offset
-            screen = QApplication.screenAt(new_pos) or self.screen()
-            if screen:
-                geo = screen.availableGeometry()
-                new_pos.setX(max(geo.left(), min(new_pos.x(), geo.right() - _W)))
-                new_pos.setY(max(geo.top(), min(new_pos.y(), geo.bottom() - self._quick_drawer.sizeHint().height())))
-            self._quick_drawer.move(new_pos)
+            if is_window:
+                new_pos = self.pos() + self._quick_drawer._relative_offset
+                screen = QApplication.screenAt(new_pos) or self.screen()
+                if screen:
+                    geo = screen.availableGeometry()
+                    new_pos.setX(max(geo.left(), min(new_pos.x(), geo.right() - _W)))
+                    new_pos.setY(max(geo.top(), min(new_pos.y(), geo.bottom() - self._quick_drawer.sizeHint().height())))
+                self._quick_drawer.move(new_pos)
+            else:
+                new_pos = self._quick_drawer._relative_offset
+                if parent_w is not None:
+                    pw = parent_w.width()
+                    ph = parent_w.height()
+                    new_x = max(4, min(new_pos.x(), max(4, pw - _W - 4)))
+                    new_y = max(4, min(new_pos.y(), max(4, ph - self._quick_drawer.sizeHint().height() - 4)))
+                    self._quick_drawer.move(new_x, new_y)
+                else:
+                    self._quick_drawer.move(new_pos)
+                self._quick_drawer.raise_()
             return
 
         # Default anchor position: directly underneath the [ ⚙ ] TACTICAL CONTROLS button
-        if hasattr(self, '_drawer_btn') and self._drawer_btn.isVisible():
-            global_pos = self._drawer_btn.mapToGlobal(QPoint(0, self._drawer_btn.height() + 4))
+        if is_window:
+            if hasattr(self, '_drawer_btn') and self._drawer_btn.isVisible():
+                global_pos = self._drawer_btn.mapToGlobal(QPoint(0, self._drawer_btn.height() + 4))
+            else:
+                global_pos = self.mapToGlobal(QPoint(16, 56))
+
+            # Clamp within current screen bounds
+            screen = QApplication.screenAt(global_pos) or self.screen()
+            target_x = global_pos.x()
+            target_y = global_pos.y()
+            if screen:
+                geo = screen.availableGeometry()
+                target_x = max(geo.left() + 4, min(target_x, geo.right() - _W - 4))
+                target_y = max(geo.top() + 4, min(target_y, geo.bottom() - self._quick_drawer.sizeHint().height() - 4))
+
+            self._quick_drawer.setGeometry(
+                target_x,
+                target_y,
+                _W,
+                self._quick_drawer.sizeHint().height(),
+            )
         else:
-            global_pos = self.mapToGlobal(QPoint(16, 56))
+            if hasattr(self, '_drawer_btn') and self._drawer_btn.isVisible():
+                anchor_pos = self._drawer_btn.mapTo(parent_w, QPoint(0, self._drawer_btn.height() + 4))
+            else:
+                anchor_pos = QPoint(14, 50)
 
-        # Clamp within current screen bounds
-        screen = QApplication.screenAt(global_pos) or self.screen()
-        target_x = global_pos.x()
-        target_y = global_pos.y()
-        if screen:
-            geo = screen.availableGeometry()
-            target_x = max(geo.left() + 4, min(target_x, geo.right() - _W - 4))
-            target_y = max(geo.top() + 4, min(target_y, geo.bottom() - self._quick_drawer.sizeHint().height() - 4))
+            target_x = anchor_pos.x()
+            target_y = anchor_pos.y()
+            if parent_w is not None:
+                pw = parent_w.width()
+                ph = parent_w.height()
+                target_x = max(4, min(target_x, max(4, pw - _W - 4)))
+                target_y = max(4, min(target_y, max(4, ph - self._quick_drawer.sizeHint().height() - 4)))
 
-        self._quick_drawer.setGeometry(
-            target_x,
-            target_y,
-            _W,
-            self._quick_drawer.sizeHint().height(),
-        )
+            self._quick_drawer.setGeometry(
+                target_x,
+                target_y,
+                _W,
+                self._quick_drawer.sizeHint().height(),
+            )
+            self._quick_drawer.raise_()
 
     def _build_input_row(self) -> QHBoxLayout:
         row = QHBoxLayout(); row.setSpacing(6)
@@ -8763,19 +8824,21 @@ class MainWindow(QMainWindow):
             QPushButton:pressed {{ background: rgba(142, 155, 255, 0.20); }}"""
         self._wake_btn.setEnabled(True)
         if not st["ready"]:
-            self._wake_btn.setText("[ ⬇ ]  COWL SENSORS : DOWNLOAD")
+            self._wake_btn.setText("[ ⬇ ]  WAKE SENSORS : DOWNLOAD")
             self._wake_btn.setStyleSheet(_off)
             self._wake_sleep_btn.hide()
         elif st["enabled"]:
-            self._wake_btn.setText("[ ◈ ]  COWL SENSORS : ONLINE")
+            self._wake_btn.setText("[ ◈ ]  WAKE SENSORS : LISTENING ('ALFRED')")
             self._wake_btn.setStyleSheet(_on)
             self._wake_sleep_btn.show()
-            self._wake_sleep_btn.setText("[ ⊘ ]  COWL STANDBY" if st["awake"] else "[ ⚡ ]  ACTIVATE COWL")
+            self._wake_sleep_btn.setText("[ ⊘ ]  MANUAL SLEEP" if st["awake"] else "[ ⚡ ]  MANUAL WAKE")
             self._wake_sleep_btn.setStyleSheet(_off)
         else:
-            self._wake_btn.setText("[ ⊘ ]  COWL SENSORS : STANDBY")
+            self._wake_btn.setText("[ ⊘ ]  WAKE SENSORS : DISABLED")
             self._wake_btn.setStyleSheet(_off)
-            self._wake_sleep_btn.hide()
+            self._wake_sleep_btn.show()
+            self._wake_sleep_btn.setText("[ ⊘ ]  MANUAL SLEEP" if st["awake"] else "[ ⚡ ]  MANUAL WAKE")
+            self._wake_sleep_btn.setStyleSheet(_off)
 
     def _refresh_talk_btns(self):
         """Repaint the push-to-talk row from the saved setting."""
@@ -9022,6 +9085,18 @@ class MainWindow(QMainWindow):
 
     def _on_intel_note_received(self, title: str, content: str, note_type: str):
         self._notes_terminal.add_note(title, content, note_type)
+
+    def _show_toast(self, text: str):
+        """Display toast notification on HUD log."""
+        try:
+            if hasattr(self, "_log") and self._log:
+                self._log.append(f"◈ {text}")
+        except Exception:
+            pass
+
+    def show_toast(self, text: str):
+        """Thread-safe toast notification dispatch."""
+        self._toast_sig.emit(str(text))
 
     # ── Customization ────────────────────────────────────────────────────────────
 
@@ -10317,10 +10392,16 @@ class JarvisUI:
         self._win.show_image_deck(path, caption)
 
     def set_state(self, state: str):
-        self._win._state_sig.emit(state)
+        try:
+            self._win._state_sig.emit(state)
+        except (RuntimeError, AttributeError):
+            pass
 
     def write_log(self, text: str):
-        self._win._log_sig.emit(text)
+        try:
+            self._win._log_sig.emit(text)
+        except (RuntimeError, AttributeError):
+            pass
 
     def clear_chat(self):
         """Thread-safe: wipe the on-screen conversation chat feed."""
@@ -10462,3 +10543,28 @@ class JarvisUI:
         if hasattr(self, "_win") and self._win is not None and hasattr(self._win, "is_hud_video_playing"):
             return self._win.is_hud_video_playing()
         return False
+
+    # ------------------------------------------------------------------
+    # Barge-In / Interruption and HUD Input proxies
+    # ------------------------------------------------------------------
+
+    @property
+    def chat_input(self):
+        """Return the directive line input widget."""
+        return getattr(self._win, "_input", None)
+
+    @property
+    def palette(self):
+        """Return standard theme color token structure."""
+        class _PaletteWrapper:
+            bg_hex = getattr(C, "BG", "#040e19")
+            dim_hex = getattr(C, "TEXT_DIM", "#4a7a99")
+            accent_hex = getattr(C, "PRI", "#00d4ff")
+            glow_hex = getattr(C, "BORDER_B", "rgba(0, 212, 255, 0.35)")
+            warn_hex = getattr(C, "ACC2", "rgba(255, 170, 0, 0.40)")
+        return _PaletteWrapper
+
+    def show_toast(self, text: str) -> None:
+        """Thread-safe toast notification dispatch."""
+        if hasattr(self, "_win") and self._win is not None and hasattr(self._win, "show_toast"):
+            self._win.show_toast(text)

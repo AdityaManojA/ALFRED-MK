@@ -119,16 +119,12 @@ from core.echo                 import EchoGuard
 from core.viseme               import VisemeStream
 from core.wake_word            import (
     WakeWordDetector, is_ready as wake_is_ready, install_and_download as wake_install,
-    WAKE_PHRASE,
+    WAKE_PHRASE, DEFAULT_THRESHOLD,
 )
-# Local pipeline imports
-from core.local_stt            import create_local_stt_engine
-from core.local_ttt            import create_local_tts_engine
-from core.local_pipeline       import create_local_pipeline
 
 # How long the assistant stays awake with no user speech before it auto-sleeps
-# again (wake-word mode only).
-WAKE_SLEEP_TIMEOUT = 120.0   # seconds (2 minutes)
+# again (wake-word mode only). 15s allows follow-up questions without lingering awake.
+WAKE_SLEEP_TIMEOUT = 15.0   # seconds
 
 def get_base_dir():
     if getattr(sys, "frozen", False):
@@ -942,6 +938,7 @@ class JarvisLive:
         # It is True whenever wake word is OFF, so default behaviour is unchanged.
         self._wake_enabled     = get_wake_word_enabled()
         self._awake            = not self._wake_enabled
+        self._wake_lock        = threading.Lock()
         self._wake_detector: WakeWordDetector | None = None
         self._wake_sleep_timeout = WAKE_SLEEP_TIMEOUT
 
@@ -961,6 +958,7 @@ class JarvisLive:
         self.ui.on_wake_install  = self._ui_wake_install  # () -> (ok, msg)
         self._tts_self_check()
 
+
     # â”€â”€ Wake word: state machine â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def _wake_state(self) -> dict:
@@ -970,19 +968,33 @@ class JarvisLive:
         return {"enabled": self._wake_enabled, "awake": self._awake, "ready": ready}
 
     def _ensure_wake_detector(self) -> bool:
-        """Load the detector once (model loads on first start). Idempotent."""
-        if self._wake_detector is None:
-            self._wake_detector = WakeWordDetector(
-                on_detect=self._on_wake_detected,
-                logger=lambda m: print(f"[Wake] {m}"),
-                notify=lambda m: self.ui.write_log(f"SYS: {m}"),
-            )
-        if not self._wake_detector.ready:
-            return self._wake_detector.start()
+        """Create + start the detector exactly once. Thread-safe, idempotent."""
+        with self._wake_lock:
+            if self._wake_detector is None:
+                def _safe_wake():
+                    lp = getattr(self, "_loop", None)
+                    if lp is not None and lp.is_running():
+                        try:
+                            lp.call_soon_threadsafe(self._on_wake_detected)
+                            return
+                        except Exception:
+                            pass
+                    self._on_wake_detected()
+
+                self._wake_detector = WakeWordDetector(
+                    on_detect=_safe_wake,
+                    threshold=DEFAULT_THRESHOLD,
+                    logger=lambda m: _tlog("WakeWord", "info", m, getattr(self, "_dashboard", None)),
+                    notify=lambda m: self.ui.write_log(f"SYS: {m}"),
+                )
+            detector = self._wake_detector
+        if not detector.ready:
+            return detector.start()
         return True
 
     def _on_wake_detected(self) -> None:
         """Called from the detector thread when the Alfred wake phrase is heard."""
+        _tlog("ALFRED", "wake", f"Wake phrase '{WAKE_PHRASE}' detected — waking up", getattr(self, "_dashboard", None))
         self.wake(reason="wake word")
 
     def wake(self, reason: str = "wake word") -> None:
@@ -992,7 +1004,8 @@ class JarvisLive:
         self._last_user_speech = time.monotonic()   # start the auto-sleep clock now
         if not self.ui.muted:
             self.ui.set_state("LISTENING")
-        self.ui.write_log(f"SYS: Awake â€” {reason}.")
+        self.ui.write_log(f"SYS: Awake — {reason}.")
+        _tlog("ALFRED", "wake", f"Awake ({reason})", getattr(self, "_dashboard", None))
 
     def sleep(self, reason: str = "timeout") -> None:
         if not self._awake:
@@ -1000,12 +1013,18 @@ class JarvisLive:
         self._awake = False
         self.set_speaking(False)
         self.ui.set_state("SLEEPING")
-        self.ui.write_log(f"SYS: Sleeping â€” {reason}. Say '{WAKE_PHRASE}' to wake me.")
+        self.ui.write_log(f"SYS: Sleeping — {reason}. Say '{WAKE_PHRASE}' to wake me.")
+        _tlog("ALFRED", "wake", f"Sleeping ({reason})", getattr(self, "_dashboard", None))
+        if self._wake_detector is not None:
+            try:
+                self._wake_detector.reset()
+            except Exception:
+                pass
 
     async def _run_sleep_watch(self) -> None:
         """Auto-sleep after the configured silence window (wake-word mode only)."""
         while True:
-            await asyncio.sleep(5)
+            await asyncio.sleep(1.0)
             if not self._wake_enabled or not self._awake:
                 continue
             with self._speaking_lock:
@@ -1013,7 +1032,7 @@ class JarvisLive:
             if speaking:
                 continue
             if (time.monotonic() - self._last_user_speech) > self._wake_sleep_timeout:
-                self.sleep(reason="no speech for 2 minutes")
+                self.sleep(reason=f"silence for {int(self._wake_sleep_timeout)}s")
 
     # â”€â”€ Wake word: UI callbacks (called from the Qt thread) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -1036,9 +1055,8 @@ class JarvisLive:
 
     def _ui_wake_manual(self) -> None:
         """Manual sleep/wake button in the UI."""
-        if not self._wake_enabled:
-            return
         if self._awake:
+            self.interrupt()
             self.sleep(reason="you tapped sleep")
         else:
             self.wake(reason="you tapped wake")
@@ -1669,6 +1687,7 @@ class JarvisLive:
         if not text or not text.strip():
             return
         if hasattr(self, "ui") and self.ui and getattr(self.ui, "muted", False):
+            _tlog("TTS", "muted", "Local TTS skipped: UI is muted", getattr(self, "_dashboard", None))
             return
 
         def _synth_worker():
@@ -1677,11 +1696,15 @@ class JarvisLive:
                 clean = re.sub(r'[*_`#~]', '', text).strip()
                 if not clean:
                     return
+                _tlog("TTS", "synth", f"Synthesizing local speech: \"{clean}\"", getattr(self, "_dashboard", None))
                 self.set_speaking(True)
                 try:
                     from core.tts import get_engine
                     engine = get_engine()
+                    engine_name = getattr(engine, "name", type(engine).__name__)
+                    _tlog("TTS", "engine", f"Using TTS engine '{engine_name}'", getattr(self, "_dashboard", None))
                     engine.speak(clean)
+                    _tlog("TTS", "done", "Local TTS playback finished", getattr(self, "_dashboard", None))
                 finally:
                     self.set_speaking(False)
             except Exception as e:
@@ -2149,40 +2172,25 @@ class JarvisLive:
             # detector, which runs its model in ITS OWN thread â€” the cost here is
             # only a queue push, so the audio path is never slowed. When wake word
             # is off (default) or we're awake, this is a single boolean check.
+            # -- SLEEPING: wake-word gate ---------------------------------
+            # Mic audio NEVER goes to Gemini while sleeping.
+            # Only the local wake-word detector sees the audio.
             if self._wake_enabled and not self._awake:
                 det = self._wake_detector
-                if det is not None:
+                if det is None:
+                    self._ensure_wake_detector()
+                    det = self._wake_detector
+                if det is not None and det.ready:
                     det.feed(indata)
                 return
+
             with self._speaking_lock:
                 jarvis_speaking = self._is_speaking
 
-            # â”€â”€ Barge-in â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-            # While JARVIS talks the mic is not streamed, but it is still worth
-            # listening to locally: if the user starts speaking, cut the answer
-            # short the way a person would stop when interrupted.
-            #
-            # The whole difficulty is echo â€” on speakers the mic hears JARVIS.
-            # So the test is not "is the mic loud" but "is the mic louder than
-            # the echo of what we are playing right now", sustained long enough
-            # that a cough or a keystroke cannot trigger it.
+            # While Alfred speaks, mic audio is NOT sent to Gemini.
             if jarvis_speaking:
-                # Nothing is streamed while JARVIS talks.
-                #
-                # Interrupting by voice used to live here: `EchoGuard` can pick a
-                # user out from under our own echo, and `core/echo.py` still does
-                # that for the tail below. Re-enabling is small â€” classify each
-                # block here and call interrupt() after `required_blocks` of
-                # agreement â€” but it depends on the listener's room, so it stays
-                # out until it can be tried on real hardware.
                 return
 
-            # â”€â”€ Echo tail â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-            # The speaking flag has dropped but the speakers have not finished.
-            # Sending this to the model is how an assistant hears itself, decides
-            # it was addressed, and answers its own last sentence. The microphone
-            # stays OPEN â€” the guard only drops blocks that are our own voice, so
-            # replying the instant it stops still works.
             if self._tail_active():
                 try:
                     if not self._echo.is_user_speech(
@@ -2194,7 +2202,7 @@ class JarvisLive:
             elif self._echo._hist:
                 self._echo.reset()
 
-            # â”€â”€ Push-to-talk â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            # ── Push-to-talk ─────────────────────────────────────────────
             # When it is on the microphone is closed by default and the chord
             # opens it, which is the whole point: nothing leaves the machine
             # unless you are holding the key.
@@ -2211,6 +2219,10 @@ class JarvisLive:
                     return
 
             if not self.ui.muted and not self._phone_active:
+                lvl = _pcm_level(indata)
+                if lvl > 0.04:
+                    self._last_user_speech = time.monotonic()
+
                 data = indata.tobytes()
                 def _push_mic():
                     try:
@@ -2219,10 +2231,10 @@ class JarvisLive:
                         pass
                 loop.call_soon_threadsafe(_push_mic)
                 # Feed the live mic level to the HUD so the waveform reacts to
-                # the user's actual voice while listening. Purely cosmetic â€” any
+                # the user's actual voice while listening. Purely cosmetic — any
                 # failure here must never disturb the mic.
                 try:
-                    self.ui.set_audio_level(_pcm_level(indata))
+                    self.ui.set_audio_level(lvl)
                 except Exception:
                     pass
 
@@ -2347,6 +2359,11 @@ class JarvisLive:
                             # while avoiding queue starvation and excessive context switches.
                             # (24000 Hz × 2 bytes/sample × 0.10 s = 4800 bytes per slice)
                             _audio_data = response.data
+                            if not getattr(self, "_tts_stream_active", False):
+                                self._tts_stream_active = True
+                                self._tts_stream_bytes = 0
+                                _tlog("TTS", "stream", f"Receiving audio stream from model ({len(_audio_data)} bytes)", self._dashboard)
+                            self._tts_stream_bytes = getattr(self, "_tts_stream_bytes", 0) + len(_audio_data)
                             _SLICE = 4800
                             for _i in range(0, len(_audio_data), _SLICE):
                                 self.audio_in_queue.put_nowait(_audio_data[_i : _i + _SLICE])
@@ -2378,7 +2395,7 @@ class JarvisLive:
                             # A turn that involves a tool call passes through
                             # several turn_completes, and the API re-sends the
                             # tail of the transcript across them. Comparing only
-                            # against the previous chunk missed that â€” once
+                            # against the previous chunk missed that — once
                             # out_buf had been flushed and emptied, the repeat
                             # sailed straight back in, which logged the answer
                             # twice AND made the avatar mouth it twice.
@@ -2386,7 +2403,7 @@ class JarvisLive:
                                 out_buf.append(txt)
                                 # Hand the words to the mouth as they arrive, so
                                 # the avatar can form the consonants the audio
-                                # alone cannot show. Pure string work â€” it adds
+                                # alone cannot show. Pure string work — it adds
                                 # nothing measurable to the response path.
                                 self._visemes.feed_text(txt)
 
@@ -2400,6 +2417,10 @@ class JarvisLive:
                             if self._turn_done_event:
                                 self._turn_done_event.set()
 
+                            if getattr(self, "_tts_stream_active", False):
+                                self._tts_stream_active = False
+                                _tlog("TTS", "stream-end", f"Audio stream finished ({getattr(self, '_tts_stream_bytes', 0)} bytes received)", self._dashboard)
+
                             # If this turn_complete ends an interrupted response, clear the
                             # flag and skip all further processing for that turn.
                             if self._interrupted:
@@ -2411,6 +2432,7 @@ class JarvisLive:
 
                             full_in = " ".join(in_buf).strip()
                             if full_in:
+                                _tlog("ALFRED", "stt", f"User: \"{full_in}\"", self._dashboard)
                                 if getattr(self, "monitor_controller", None) and self.monitor_controller.is_waiting_for_answer:
                                     self.monitor_controller.submit_answer(full_in)
                                 elif getattr(self, "focus_engine", None) and self.focus_engine.is_waiting_for_answer:
@@ -2434,6 +2456,7 @@ class JarvisLive:
                                 if full_out in self._last_out_logged:
                                     full_out = ""
                             if full_out:
+                                _tlog("ALFRED", "tts", f"{self._asst_name}: \"{full_out}\"", self._dashboard)
                                 self._last_out_logged = full_out
                                 self.ui.write_log(f"{self._asst_name}: {full_out}")
                                 self._session_log.append(f"{self._asst_name}: {full_out}")
@@ -2509,6 +2532,7 @@ class JarvisLive:
 
         try:
             stream = _open_spk(_spk_dev)
+            _tlog("TTS", "speaker", f"Playback stream opened on '{_spk_name or 'System Default'}' (dev={_spk_dev})", self._dashboard)
         except Exception as _e:
             # A chosen output that the host API accepts by name but refuses to
             # open (exclusive mode, wrong sample rate, device asleep) must not
@@ -2518,6 +2542,7 @@ class JarvisLive:
             _tlog("ALFRED", "warn", f"Output device '{_spk_name}' failed: {_e} — using default", self._dashboard)
             self.ui.write_log(f"SYS: Speaker '{_spk_name}' unavailable — using system default.")
             stream = _open_spk(None)
+            _tlog("TTS", "speaker", "Fallback stream opened on system default", self._dashboard)
 
         # Ask the device how far behind the speakers actually are, rather than
         # assuming. This is what the echo tail is sized from, so a machine with a
@@ -2551,6 +2576,7 @@ class JarvisLive:
                             if self._turn_done_event:
                                 self._turn_done_event.clear()
                             empty_count = 0
+                            _tlog("TTS", "idle", "Audio playback finished (idle)", self._dashboard)
                     continue
 
                 if self._interrupted:
@@ -2575,6 +2601,7 @@ class JarvisLive:
                             await asyncio.sleep(0.010)
                     if not self._interrupted:
                         self.set_speaking(True)
+                        _tlog("TTS", "playback", f"Audio playback started ({len(batch)} bytes buffered)", self._dashboard)
                     else:
                         continue
 
@@ -2933,7 +2960,10 @@ class JarvisLive:
         """Background task: voice alerts when metrics exceed thresholds."""
         while True:
             await asyncio.sleep(10)
-            alert = await asyncio.to_thread(self._sys_monitor.check)
+            try:
+                alert = await asyncio.to_thread(self._sys_monitor.check)
+            except (RuntimeError, asyncio.CancelledError):
+                break
             if not alert or not self.session or not self._awake:
                 continue
             # Don't interrupt an active conversation
@@ -3317,6 +3347,7 @@ class JarvisLive:
                         self.ui.write_log(f"You (Focus Answer): {user_text}")
                         continue
                 self.ui.write_log(f"You: {user_text}")
+                _tlog("ALFRED", "input", f"User: \"{user_text}\"", self._dashboard)
                 self.ui.set_state("THINKING")
                 history.append({"role": "user", "content": user_text})
 
@@ -3353,6 +3384,7 @@ class JarvisLive:
                                 accumulated.append(stext)
                                 self.ui.set_state("SPEAKING")
                                 self.ui.write_log(f"ALFRED: {stext}")
+                                _tlog("ALFRED", "tts", f"Alfred: \"{stext}\"", self._dashboard)
                                 if not self.ui.muted:
                                     self._speak_local(stext)
                         elif mtype == "done":
@@ -3373,6 +3405,7 @@ class JarvisLive:
 
                 if full_reply and not accumulated:
                     self.ui.write_log(f"ALFRED: {full_reply}")
+                    _tlog("ALFRED", "tts", f"Alfred: \"{full_reply}\"", self._dashboard)
                     if not self.ui.muted:
                         self._speak_local(full_reply)
 
@@ -3416,6 +3449,7 @@ class JarvisLive:
                             if synth:
                                 self.ui.set_state("SPEAKING")
                                 self.ui.write_log(f"ALFRED: {synth}")
+                                _tlog("ALFRED", "tts", f"Alfred: \"{synth}\"", self._dashboard)
                                 if not self.ui.muted:
                                     self._speak_local(synth)
                                 history.append({"role": "assistant", "content": synth})

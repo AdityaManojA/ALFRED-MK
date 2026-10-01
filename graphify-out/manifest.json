@@ -204,9 +204,9 @@
     "semantic_hash": "e8db5f5ff95246fc94c67379d160264e"
   },
   "core/wake_word.py": {
-    "mtime": 1790772650.1820717,
-    "seen": 1790773326.4977663,
-    "ast_hash": "5fd0111982ff80dc972bcaf2dc9a372c",
+    "mtime": 1790861122.783909,
+    "seen": 1790861317.8233254,
+    "ast_hash": "e7ebd0c953fb07c985f017ff82472185",
     "semantic_hash": ""
   },
   "dashboard/__init__.py": {
@@ -228,9 +228,9 @@
     "semantic_hash": "d9c6de0df2bf028d93924aff92487904"
   },
   "main.py": {
-    "mtime": 1790773186.7541423,
-    "seen": 1790773326.497788,
-    "ast_hash": "9747ee5308a189de9690e4e7316a0ad9",
+    "mtime": 1790861141.8009708,
+    "seen": 1790861317.8233254,
+    "ast_hash": "280a6372f842188f2ab9fd04349ee868",
     "semantic_hash": ""
   },
   "memory/__init__.py": {
@@ -270,9 +270,9 @@
     "semantic_hash": ""
   },
   "ui.py": {
-    "mtime": 1790773032.9178317,
-    "seen": 1790773326.4983811,
-    "ast_hash": "def06d7c4abbcdcc8a93160022ce06e7",
+    "mtime": 1790803579.947574,
+    "seen": 1790803580.2064865,
+    "ast_hash": "a919b4844664004be230c1b59b507f80",
     "semantic_hash": ""
   },
   ".agents/rules/graphify.md": {
@@ -432,8 +432,8 @@
     "semantic_hash": "0c2178c383f8edcbe38ee55ce1b8bc8e"
   },
   "config/music_playlist.json": {
-    "mtime": 1790772370.2709992,
-    "seen": 1790773326.496966,
+    "mtime": 1790860765.5497577,
+    "seen": 1790861317.8233254,
     "ast_hash": "1f9e15365dde86f74ae7aef8fd3a130b",
     "semantic_hash": ""
   },
@@ -738,9 +738,9 @@
     "semantic_hash": ""
   },
   "tests/test_wake_word.py": {
-    "mtime": 1790605225.511033,
-    "seen": 1790605304.6993763,
-    "ast_hash": "3aa0694b1640b37805f0677ef01be45d",
+    "mtime": 1790787359.9324965,
+    "seen": 1790787401.7077527,
+    "ast_hash": "4e0dd7e1d0231043fdf9f852375941a3",
     "semantic_hash": ""
   },
   "graphify-out/memory/query_20260928_141445_caec2359_remove_classic_hud_mode_from_alfred_mk_iv.md": {
@@ -1116,8 +1116,8 @@
     "semantic_hash": ""
   },
   "config/users/Master_Wayne/protocols.yaml": {
-    "mtime": 1790772363.944474,
-    "seen": 1790773326.4984493,
+    "mtime": 1790859644.8869178,
+    "seen": 1790859685.6254528,
     "ast_hash": "9615a7dbeb0ff72ed036cca3442dfd42",
     "semantic_hash": ""
   },
@@ -1266,9 +1266,9 @@
     "semantic_hash": ""
   },
   "core/tts/engine_default.py": {
-    "mtime": 1790669926.1393209,
-    "seen": 1790671888.9149644,
-    "ast_hash": "40d0c4eac883ad7510c685a2876af53d",
+    "mtime": 1790857771.0555935,
+    "seen": 1790857875.540594,
+    "ast_hash": "dd8a0663a540cb82bcf0493c134d8e47",
     "semantic_hash": ""
   },
   "core/tts/jarvis_assets.py": {
@@ -2568,9 +2568,9 @@
     "semantic_hash": ""
   },
   "tests/test_tactical_controls_drawer.py": {
-    "mtime": 1790770449.158675,
-    "seen": 1790770540.6160393,
-    "ast_hash": "b125c5742372b1fcb7ddcc95a10c127b",
+    "mtime": 1790777854.7792075,
+    "seen": 1790777919.3329446,
+    "ast_hash": "b7cb20f877202285090ddcde08eadd32",
     "semantic_hash": ""
   },
   "actions/netflix_pilot.py": {
@@ -2724,9 +2724,9 @@
     "semantic_hash": ""
   },
   "core/audio/wakeword.py": {
-    "mtime": 1790772668.776725,
-    "seen": 1790773326.4969997,
-    "ast_hash": "30f3a09355c415432d702b760eda0ec8",
+    "mtime": 1790773548.1831155,
+    "seen": 1790774380.4577985,
+    "ast_hash": "6bd7bd193214ddf104a4a41e31c38b67",
     "semantic_hash": ""
   },
   "core/intents/__init__.py": {
@@ -2895,6 +2895,18 @@
     "mtime": 1790773295.7219574,
     "seen": 1790773326.4986265,
     "ast_hash": "f6c10effa3b222f613bbce070329108c",
+    "semantic_hash": ""
+  },
+  "tools/debug_voice.py": {
+    "mtime": 1790859594.3459547,
+    "seen": 1790859685.6254528,
+    "ast_hash": "5f7fe896e832a698ea2fe92db3dcf8f0",
+    "semantic_hash": ""
+  },
+  "tests/test_hybrid_wake.py": {
+    "mtime": 1790861225.1202374,
+    "seen": 1790861317.8370018,
+    "ast_hash": "f44e2f09beed6cc48f85410f985e8863",
     "semantic_hash": ""
   }
 }

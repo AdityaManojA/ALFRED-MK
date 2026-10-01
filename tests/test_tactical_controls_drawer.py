@@ -35,19 +35,23 @@ class TestTacticalControlsDrawer(unittest.TestCase):
         """Verify window flags and translucent background attributes across platforms."""
         parent = QWidget()
         drawer = TacticalControlsDrawer(parent=parent)
+        drawer_standalone = TacticalControlsDrawer()
         try:
-            flags = drawer.windowFlags()
-            self.assertTrue(bool(flags & Qt.WindowType.FramelessWindowHint))
-
             if sys.platform == "win32":
-                self.assertTrue(bool(flags & Qt.WindowType.Tool))
+                self.assertTrue(bool(drawer.windowFlags() & Qt.WindowType.FramelessWindowHint))
+                self.assertTrue(bool(drawer.windowFlags() & Qt.WindowType.Tool))
+                self.assertTrue(drawer.isWindow())
             else:
-                self.assertTrue(bool(flags & Qt.WindowType.Dialog))
+                self.assertFalse(drawer.isWindow())
+
+            self.assertTrue(bool(drawer_standalone.windowFlags() & Qt.WindowType.FramelessWindowHint))
+            self.assertTrue(drawer_standalone.isWindow())
 
             self.assertTrue(drawer.testAttribute(Qt.WidgetAttribute.WA_TranslucentBackground))
             self.assertTrue(drawer.testAttribute(Qt.WidgetAttribute.WA_StyledBackground))
         finally:
             drawer.close()
+            drawer_standalone.close()
             parent.close()
 
     def test_paint_event_runs_cleanly(self):
@@ -174,17 +178,87 @@ class TestTacticalControlsDrawer(unittest.TestCase):
 
             # Default positioning
             window._position_quick_drawer()
-            btn_pos = window._drawer_btn.mapToGlobal(QPoint(0, window._drawer_btn.height() + 4))
-            self.assertEqual(drawer.x(), btn_pos.x())
-            self.assertEqual(drawer.y(), btn_pos.y())
+            if drawer.isWindow():
+                btn_pos = window._drawer_btn.mapToGlobal(QPoint(0, window._drawer_btn.height() + 4))
+                self.assertEqual(drawer.x(), btn_pos.x())
+                self.assertEqual(drawer.y(), btn_pos.y())
 
-            # Mark user moved with offset
-            drawer._user_moved = True
-            drawer._relative_offset = QPoint(300, 200)
-            window._position_quick_drawer()
-            self.assertEqual(drawer.pos(), window.pos() + QPoint(300, 200))
+                # Mark user moved with offset
+                drawer._user_moved = True
+                drawer._relative_offset = QPoint(300, 200)
+                window._position_quick_drawer()
+                self.assertEqual(drawer.pos(), window.pos() + QPoint(300, 200))
+            else:
+                parent_w = drawer.parentWidget() or window.centralWidget() or window
+                btn_pos = window._drawer_btn.mapTo(parent_w, QPoint(0, window._drawer_btn.height() + 4))
+                self.assertEqual(drawer.x(), btn_pos.x())
+                self.assertEqual(drawer.y(), btn_pos.y())
+
+                # Mark user moved with offset
+                drawer._user_moved = True
+                drawer._relative_offset = QPoint(150, 120)
+                window._position_quick_drawer()
+                self.assertEqual(drawer.pos(), QPoint(150, 120))
         finally:
             window.close()
+
+    def test_linux_in_window_child_anchoring_and_no_center_overlap(self):
+        """Verify on Linux (non-Windows) drawer is an in-window child overlay anchored directly under button."""
+        with patch("sys.platform", "linux"):
+            window = MainWindow("")
+            try:
+                window.setGeometry(200, 100, 1120, 720)
+                window.show()
+                drawer = window._quick_drawer
+
+                # On Linux, drawer MUST NOT be a top-level window (which Mutter/Wayland centers)
+                self.assertFalse(drawer.isWindow())
+                self.assertIsNotNone(drawer.parentWidget())
+
+                # Default positioning must anchor directly underneath _drawer_btn
+                window._position_quick_drawer()
+                parent_w = drawer.parentWidget() or window.centralWidget() or window
+                expected_anchor = window._drawer_btn.mapTo(parent_w, QPoint(0, window._drawer_btn.height() + 4))
+
+                self.assertEqual(drawer.x(), expected_anchor.x())
+                self.assertEqual(drawer.y(), expected_anchor.y())
+
+                # Verify it does NOT center or overlap the middle HUD
+                # On an 1120x720 window, middle X is 560, middle Y is 360
+                self.assertLess(drawer.x(), 100)  # Near the left margin (~14px)
+                self.assertLess(drawer.y(), 100)  # Just under header bar (~34-40px)
+
+                # Simulate dragging within window bounds
+                drawer._is_dragging = True
+                drawer._drag_start_pos = QPoint(50, 50)
+                drawer._drag_window_pos = drawer.pos()
+                move_ev = QMouseEvent(
+                    QMouseEvent.Type.MouseMove,
+                    QPointF(90, 80),
+                    QPointF(90, 80),
+                    Qt.MouseButton.LeftButton,
+                    Qt.MouseButton.LeftButton,
+                    Qt.KeyboardModifier.NoModifier,
+                )
+                drawer.mouseMoveEvent(move_ev)
+                self.assertTrue(drawer._user_moved)
+                self.assertEqual(drawer.pos(), drawer._drag_window_pos + QPoint(40, 30))
+
+                # Double-click must reset directly back under _drawer_btn
+                dbl_ev = QMouseEvent(
+                    QMouseEvent.Type.MouseButtonDblClick,
+                    QPointF(10, 10),
+                    QPointF(10, 10),
+                    Qt.MouseButton.LeftButton,
+                    Qt.MouseButton.LeftButton,
+                    Qt.KeyboardModifier.NoModifier,
+                )
+                drawer.mouseDoubleClickEvent(dbl_ev)
+                self.assertFalse(drawer._user_moved)
+                self.assertEqual(drawer.x(), expected_anchor.x())
+                self.assertEqual(drawer.y(), expected_anchor.y())
+            finally:
+                window.close()
 
 
 if __name__ == "__main__":

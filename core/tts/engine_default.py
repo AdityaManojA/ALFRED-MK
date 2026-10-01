@@ -68,23 +68,64 @@ def _compress_silence(
     return np.concatenate(out) if out else arr
 
 
+def _get_output_device_idx() -> int | None:
+    """Resolve configured output device index from config, or None for system default."""
+    try:
+        from memory.config_manager import get_output_device
+        from core import audio_devices
+        out_name = get_output_device()
+        if out_name:
+            return audio_devices.resolve(out_name, "output")
+    except Exception:
+        pass
+    return None
+
+
 def _play_np(samples, sample_rate: int) -> None:
-    """Play float32 mono (or stereo) audio via sounddevice."""
-    sd.play(_to_numpy(samples), sample_rate)
-    sd.wait()
+    """Play float32 mono (or stereo) audio via sounddevice using configured output device."""
+    dev_idx = _get_output_device_idx()
+    arr = _to_numpy(samples)
+    try:
+        sd.play(arr, sample_rate, device=dev_idx)
+        sd.wait()
+    except Exception as e:
+        print(f"[TTS] [ERROR] Audio playback failed on device {dev_idx}: {e}")
+        if dev_idx is not None:
+            try:
+                print("[TTS] [INFO] Retrying playback on system default output device...")
+                sd.play(arr, sample_rate, device=None)
+                sd.wait()
+            except Exception as e2:
+                print(f"[TTS] [ERROR] Default output retry also failed: {e2}")
 
 
 def _play_audio_bytes(audio_bytes: bytes) -> None:
     """Decode MP3/WAV/OGG bytes and play via sounddevice (uses miniaudio)."""
     import miniaudio
-    decoded = miniaudio.decode(
-        audio_bytes,
-        output_format=miniaudio.SampleFormat.FLOAT32,
-        nchannels=1,
-    )
+    try:
+        decoded = miniaudio.decode(
+            audio_bytes,
+            output_format=miniaudio.SampleFormat.FLOAT32,
+            nchannels=1,
+        )
+    except Exception as e:
+        print(f"[TTS] [ERROR] Audio decoding failed ({len(audio_bytes)} bytes): {e}")
+        return
+
     samples = np.array(decoded.samples, dtype=np.float32)
-    sd.play(samples, decoded.sample_rate)
-    sd.wait()
+    dev_idx = _get_output_device_idx()
+    try:
+        sd.play(samples, decoded.sample_rate, device=dev_idx)
+        sd.wait()
+    except Exception as e:
+        print(f"[TTS] [ERROR] Audio playback failed on device {dev_idx}: {e}")
+        if dev_idx is not None:
+            try:
+                print("[TTS] [INFO] Retrying playback on system default output device...")
+                sd.play(samples, decoded.sample_rate, device=None)
+                sd.wait()
+            except Exception as e2:
+                print(f"[TTS] [ERROR] Default output retry also failed: {e2}")
 
 
 # ---------------------------------------------------------------------------
@@ -100,11 +141,19 @@ class EdgeTTSEngine:
     def speak(self, text: str) -> None:
         loop = asyncio.new_event_loop()
         try:
+            print(f"[TTS] [EdgeTTS] Synthesizing speech with voice '{self.voice}': \"{text[:60]}...\"")
             audio_bytes = loop.run_until_complete(self._synth(text))
+        except Exception as e:
+            print(f"[TTS] [EdgeTTS] [ERROR] Synthesis failed: {e}")
+            audio_bytes = None
         finally:
             loop.close()
         if audio_bytes:
+            print(f"[TTS] [EdgeTTS] Generated {len(audio_bytes)} bytes. Playing audio...")
             _play_audio_bytes(audio_bytes)
+            print("[TTS] [EdgeTTS] Playback finished.")
+        else:
+            print(f"[TTS] [EdgeTTS] [WARN] No audio returned for text: \"{text[:40]}\"")
 
     async def _synth(self, text: str) -> bytes:
         import edge_tts
