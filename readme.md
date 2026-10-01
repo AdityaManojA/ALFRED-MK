@@ -586,7 +586,7 @@ When Spotify is paused, stopped, or closed, the tactical engine automatically re
 * **Intelligent Speech Ducking**: Ambient audio plays at 10% normally, ducks to 5% when ALFRED speaks.
 * **Audio-Reactive Waveform**: Cybernetic equalizer bars animate in real time with playback frequency energy.
 * **Popup Gain Slider HUD**: Floating volume slider for instant adjustments.
-* **Telemetry HUD Overlay** (`ui_overlay.py`): Floating widget displaying real-time CPU, RAM, temperature, network speed with drag-to-move.
+* **Telemetry HUD Overlay**: Real-time display of CPU, RAM, temperature, and network speed integrated directly into the HUD.
 
 ---
 
