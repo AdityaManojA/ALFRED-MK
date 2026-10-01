@@ -1162,7 +1162,10 @@ class _SysMetrics:
         except Exception:
             self._boot_time = time.time()
         self._lock = threading.Lock()
-        self._last_net = psutil.net_io_counters()
+        try:
+            self._last_net = psutil.net_io_counters()
+        except Exception:
+            self._last_net = None
         self._last_net_t = time.time()
         self._running = True
         # Probe caches — GPU (NVML) and temperature (WMI) are the expensive
@@ -1190,16 +1193,20 @@ class _SysMetrics:
         cpu = psutil.cpu_percent(interval=None)
         mem = psutil.virtual_memory().percent
 
-        nc  = psutil.net_io_counters()
+        try:
+            nc = psutil.net_io_counters()
+        except Exception:
+            nc = None
         now = time.time()
         dt  = now - self._last_net_t
-        if dt > 0:
+        if nc is not None and self._last_net is not None and dt > 0:
             sent = (nc.bytes_sent - self._last_net.bytes_sent) / dt
             recv = (nc.bytes_recv - self._last_net.bytes_recv) / dt
             net  = (sent + recv) / (1024 * 1024)
         else:
             net = 0.0
-        self._last_net   = nc
+        if nc is not None:
+            self._last_net = nc
         self._last_net_t = now
 
         # GPU and temperature change slowly and are the most expensive probes
@@ -1749,16 +1756,20 @@ class HudCanvas(QWidget):
         # 60 Hz, but the paint is heavy.
         # Active (speaking, audio, thinking) runs at ~30 Hz;
         # Listening idle (awake) drops to ~15 Hz;
-        # SLEEPING drops to ~4 Hz (every 15 ticks) for a calm, low-power ambient pulse
-        # that saves over 80% of CPU on the Qt UI thread.
+        # Light sleep (<15s) drops to ~4 Hz (every 15 ticks) for calm transition;
+        # Deep sleep (>15s) drops to ~1 Hz (every 60 ticks) to stop page faults and minimize idle RAM.
         self._paint_tick = (self._paint_tick + 1) % 60
         _is_sleeping = (self.state == "SLEEPING")
         active = (self.speaking or amp > 0.02
                   or self.state in ("THINKING", "PROCESSING"))
-        should_paint = _blinked or (
+        _sleep_dur = (now - getattr(self, "_state_transition_at", now)) if _is_sleeping else 0.0
+        _is_deep_sleep = (_is_sleeping and _sleep_dur > 15.0 and not active)
+
+        should_paint = (_blinked and not _is_sleeping) or (
             (self._paint_tick % 2 == 0) if active
-            else ((self._paint_tick % 15 == 0) if _is_sleeping
-                  else (self._paint_tick % 4 == 0))
+            else ((self._paint_tick == 0) if _is_deep_sleep
+                  else ((self._paint_tick % 15 == 0) if _is_sleeping
+                        else (self._paint_tick % 4 == 0)))
         )
         if should_paint:
             if self.on_visual_level is not None:
@@ -2810,17 +2821,25 @@ class SlotHostWidget(QWidget):
         except Exception:
             pass
 
-        # Throttle slot updates to ~3 Hz when Alfred is sleeping
+        # Throttle slot updates when Alfred is sleeping
         is_sleeping = False
+        is_deep_sleep = False
         try:
             main_win = self.window()
-            if hasattr(main_win, "hud") and getattr(main_win.hud, "state", "") == "SLEEPING":
+            hud = getattr(main_win, "hud", None)
+            if hud and getattr(hud, "state", "") == "SLEEPING":
                 is_sleeping = True
+                _trans_t = getattr(hud, "_state_transition_at", None)
+                if _trans_t is not None and (time.time() - _trans_t) > 15.0:
+                    is_deep_sleep = True
         except Exception:
             pass
 
-        self._step_tick = (getattr(self, "_step_tick", 0) + 1) % 6
-        if is_sleeping and self._step_tick != 0:
+        self._step_tick = (getattr(self, "_step_tick", 0) + 1) % 24
+        if is_deep_sleep:
+            if (self._step_tick % 20) != 0:
+                return
+        elif is_sleeping and (self._step_tick % 6) != 0:
             return
 
         now = time.monotonic()
@@ -7344,6 +7363,13 @@ class MainWindow(QMainWindow):
             self._position_quick_drawer()
 
     def _update_metrics(self):
+        if self.isMinimized() or self.isHidden():
+            return
+        if hasattr(self, "hud") and getattr(self.hud, "state", "") == "SLEEPING":
+            self._metric_sleep_tick = (getattr(self, "_metric_sleep_tick", 0) + 1) % 3
+            if self._metric_sleep_tick != 0:
+                return
+
         snap = _metrics.snapshot()
 
         # CPU
@@ -9975,6 +10001,11 @@ class MainWindow(QMainWindow):
         self.hud.speaking = (state == "SPEAKING")
         if state == "SLEEPING":
             try:
+                if hasattr(self.hud, "_blend_cache"):
+                    self.hud._blend_cache.clear()
+                if hasattr(self.hud, "_static_layers"):
+                    self.hud._static_layers.clear()
+                self.hud._emblem_cache = None
                 from core.memory_trimmer import trim_process_memory
                 trim_process_memory()
             except Exception:

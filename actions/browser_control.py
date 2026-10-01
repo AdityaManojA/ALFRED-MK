@@ -366,7 +366,7 @@ _MAC_APP_NAMES: dict[str, str] = {
 }
 
 # Windows registry lookup names for browsers whose spec has no explicit binary
-_WIN_EXE_HINTS: dict[str, str] = {"chrome": "chrome", "edge": "msedge"}
+_WIN_EXE_HINTS: dict[str, str] = {"chrome": "chrome", "edge": "msedge", "brave": "brave"}
 
 
 def _open_native(url: str, browser_name: Optional[str]) -> str:

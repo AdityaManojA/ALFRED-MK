@@ -79,11 +79,39 @@ class TestIdleSleepOptimizations(unittest.TestCase):
             slot._tmr.stop()
 
 
+    def test_hud_canvas_deep_sleep_throttle(self):
+        """Verify that when sleeping for >15s (deep sleep), HudCanvas throttles repaints to 1 FPS (1 in 60 ticks)."""
+        canvas = HudCanvas(face_path="", assistant_name="Test")
+        try:
+            import time
+            canvas.state = "SLEEPING"
+            canvas._last_state = "SLEEPING"
+            canvas.speaking = False
+            canvas._amp_disp = 0.0
+            canvas._state_transition_at = time.time() - 30.0  # 30s ago -> deep sleep
+
+            with patch.object(canvas, "_on_screen", return_value=True), \
+                 patch.object(canvas, "update") as mock_update:
+                for _ in range(60):
+                    canvas._step()
+                self.assertEqual(mock_update.call_count, 1)
+        finally:
+            canvas._tmr.stop()
+
     def test_trim_process_memory_success(self):
         """Verify trim_process_memory runs cleanly without raising errors."""
         from core.memory_trimmer import trim_process_memory
         result = trim_process_memory()
         self.assertIsInstance(result, bool)
+
+    def test_get_process_memory_mb(self):
+        """Verify get_process_memory_mb returns valid memory metrics dictionary."""
+        from core.memory_trimmer import get_process_memory_mb
+        metrics = get_process_memory_mb()
+        self.assertIn("rss", metrics)
+        self.assertIn("vms", metrics)
+        self.assertIn("private", metrics)
+        self.assertGreater(metrics["rss"], 0.0)
 
 
 if __name__ == "__main__":

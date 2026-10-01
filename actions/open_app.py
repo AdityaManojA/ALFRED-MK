@@ -18,6 +18,7 @@ _APP_ALIASES: dict[str, dict[str, str]] = {
     "firefox":            {"Windows": "firefox",                 "Darwin": "Firefox",              "Linux": "firefox"},
     "edge":               {"Windows": "msedge",                  "Darwin": "Microsoft Edge",       "Linux": "microsoft-edge"},
     "brave":              {"Windows": "brave",                   "Darwin": "Brave Browser",        "Linux": "brave-browser"},
+    "brave browser":      {"Windows": "brave",                   "Darwin": "Brave Browser",        "Linux": "brave-browser"},
     "safari":             {"Windows": "msedge",                  "Darwin": "Safari",               "Linux": "firefox"},
     "opera":              {"Windows": "opera",                   "Darwin": "Opera",                "Linux": "opera"},
     "whatsapp":           {"Windows": "WhatsApp",                "Darwin": "WhatsApp",             "Linux": "whatsapp"},
@@ -77,39 +78,166 @@ def _normalize(raw: str) -> str:
 
     return raw  
 
+def _find_windows_app_path(app_name: str) -> str | None:
+    """Resolve full executable path or Start Menu shortcut on Windows."""
+    import os
+    clean_name = app_name.strip()
+    target_names = [clean_name]
+    if not clean_name.lower().endswith(".exe"):
+        target_names.append(f"{clean_name}.exe")
+
+    # 1. Query Windows Registry App Paths (HKLM & HKCU)
+    try:
+        import winreg
+        for root in (winreg.HKEY_LOCAL_MACHINE, winreg.HKEY_CURRENT_USER):
+            for t_name in target_names:
+                try:
+                    sub_key = rf"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\{t_name}"
+                    with winreg.OpenKey(root, sub_key) as k:
+                        val, _ = winreg.QueryValueEx(k, "")
+                        if val and os.path.exists(val):
+                            return val
+                except Exception:
+                    pass
+    except Exception:
+        pass
+
+    # 2. Query Windows Start Menu Shortcuts (.lnk files)
+    start_dirs = [
+        r"C:\ProgramData\Microsoft\Windows\Start Menu\Programs",
+        os.path.expandvars(r"%APPDATA%\Microsoft\Windows\Start Menu\Programs"),
+    ]
+    query = clean_name.lower()
+    for sfx in (" browser", " app", ".exe"):
+        if query.endswith(sfx):
+            query = query[:-len(sfx)].strip()
+
+    best_match = None
+    for s_dir in start_dirs:
+        if not os.path.exists(s_dir):
+            continue
+        try:
+            for root_dir, _, files in os.walk(s_dir):
+                for f in files:
+                    if f.lower().endswith(".lnk"):
+                        stem = f[:-4].lower()
+                        if query == stem:
+                            return os.path.join(root_dir, f)
+                        if (query in stem or stem in query) and not best_match:
+                            best_match = os.path.join(root_dir, f)
+        except Exception:
+            pass
+
+    if best_match:
+        return best_match
+
+    # 3. Known application paths
+    known_paths = [
+        # Brave
+        r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe",
+        r"C:\Program Files (x86)\BraveSoftware\Brave-Browser\Application\brave.exe",
+        os.path.expandvars(r"%LOCALAPPDATA%\BraveSoftware\Brave-Browser\Application\brave.exe"),
+        # Chrome
+        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+        os.path.expandvars(r"%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe"),
+        # Edge
+        r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+        r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+        # Firefox
+        r"C:\Program Files\Mozilla Firefox\firefox.exe",
+        r"C:\Program Files (x86)\Mozilla Firefox\firefox.exe",
+        # VS Code
+        os.path.expandvars(r"%LOCALAPPDATA%\Programs\Microsoft VS Code\Code.exe"),
+        r"C:\Program Files\Microsoft VS Code\Code.exe",
+    ]
+    for p in known_paths:
+        if os.path.exists(p):
+            p_base = os.path.basename(p).lower()
+            if query in p_base or p_base.startswith(query):
+                return p
+
+    # 4. PATH search via shutil.which
+    for t_name in target_names:
+        w = shutil.which(t_name)
+        if w and os.path.exists(w):
+            return w
+
+    return None
+
+
 def _launch_windows(app_name: str) -> bool:
+    import os
 
-    if shutil.which(app_name) or shutil.which(app_name.split(".")[0]):
+    # 1. Protocol / URI scheme launch (e.g. ms-settings:, calc:, spotify:)
+    if ":" in app_name and not ("\\" in app_name or "/" in app_name):
         try:
-            subprocess.Popen(
-                app_name,
-                shell=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-            time.sleep(1.5)
-            return True
-        except Exception as e:
-            print(f"[open_app] subprocess failed: {e}")
-
-    if ":" in app_name:
-        try:
-            subprocess.Popen(f"start {app_name}", shell=True)
+            os.startfile(app_name)
             time.sleep(1.0)
             return True
         except Exception:
             pass
 
+    # 2. Exact path or shortcut resolution (Registry App Paths, Start Menu, or Known Locations)
+    target = _find_windows_app_path(app_name)
+    if target:
+        try:
+            os.startfile(target)
+            time.sleep(1.2)
+            return True
+        except Exception as e:
+            print(f"[open_app] os.startfile failed for '{target}': {e}")
+            try:
+                subprocess.Popen(
+                    [target],
+                    shell=False,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+                time.sleep(1.2)
+                return True
+            except Exception as e2:
+                print(f"[open_app] Popen failed for '{target}': {e2}")
+
+    # 3. Direct os.startfile (ShellExecute checks App Paths and Shell associations)
+    for name in (app_name, f"{app_name}.exe"):
+        try:
+            os.startfile(name)
+            time.sleep(1.2)
+            return True
+        except Exception:
+            pass
+
+    # 4. cmd.exe /c start "" "target"
+    for name in (app_name, f"{app_name}.exe"):
+        try:
+            res = subprocess.run(
+                f'cmd.exe /c start "" "{name}"',
+                shell=True,
+                capture_output=True,
+                timeout=5,
+            )
+            if res.returncode == 0:
+                time.sleep(1.2)
+                return True
+        except Exception:
+            pass
+
+    # 5. Fallback: Start Menu search via pyautogui
     try:
         import pyautogui
-        pyautogui.PAUSE = 0.1
-        pyautogui.press("win")
-        time.sleep(0.7)
-        pyautogui.write(app_name, interval=0.05)
-        time.sleep(0.9)
-        pyautogui.press("enter")
-        time.sleep(2.5)
-        return True
+        old_failsafe = getattr(pyautogui, "FAILSAFE", True)
+        pyautogui.FAILSAFE = False
+        try:
+            pyautogui.press("win")
+            time.sleep(0.7)
+            pyautogui.write(app_name, interval=0.05)
+            time.sleep(0.9)
+            pyautogui.press("enter")
+            time.sleep(2.0)
+            return True
+        finally:
+            pyautogui.FAILSAFE = old_failsafe
     except Exception as e:
         print(f"[open_app] Start Menu search failed: {e}")
 
@@ -262,7 +390,7 @@ def open_app(
         return f"Unsupported operating system: {_SYSTEM}"
 
     normalized = _normalize(app_name)
-    print(f"[open_app] Launching: '{app_name}' → '{normalized}' ({_SYSTEM})")
+    print(f"[open_app] Launching: '{app_name}' -> '{normalized}' ({_SYSTEM})")
 
     if player:
         player.write_log(f"[open_app] {app_name}")

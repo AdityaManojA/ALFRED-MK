@@ -6,9 +6,9 @@
     "semantic_hash": ""
   },
   "actions/browser_control.py": {
-    "mtime": 1790771007.5113611,
-    "seen": 1790771648.3469498,
-    "ast_hash": "5c7d23df2558855225b35bd55783e520",
+    "mtime": 1790885587.3367393,
+    "seen": 1790885769.717696,
+    "ast_hash": "2e1347d1b78c09a88e3bd05872c04c9a",
     "semantic_hash": ""
   },
   "actions/code_helper.py": {
@@ -66,9 +66,9 @@
     "semantic_hash": "563177f5e4c0631da7be37bd4f15dd58"
   },
   "actions/open_app.py": {
-    "mtime": 1790507603.1504662,
-    "seen": 1790507619.090865,
-    "ast_hash": "a27bd5ca401c344d7fc0f53772b1e503",
+    "mtime": 1790885560.0443735,
+    "seen": 1790885769.7178268,
+    "ast_hash": "d8cbf8251bf65c0e821a1e27465bc57e",
     "semantic_hash": ""
   },
   "actions/proactive.py": {
@@ -270,9 +270,9 @@
     "semantic_hash": ""
   },
   "ui.py": {
-    "mtime": 1790881421.5878723,
-    "seen": 1790881585.2656903,
-    "ast_hash": "e406c93e2c81691a57aa295c25b8957f",
+    "mtime": 1790884493.9720025,
+    "seen": 1790884918.0619118,
+    "ast_hash": "145037751988cf7372a8d2595c225221",
     "semantic_hash": ""
   },
   ".agents/rules/graphify.md": {
@@ -432,8 +432,8 @@
     "semantic_hash": "0c2178c383f8edcbe38ee55ce1b8bc8e"
   },
   "config/music_playlist.json": {
-    "mtime": 1790880731.01306,
-    "seen": 1790881585.26417,
+    "mtime": 1790884967.0783582,
+    "seen": 1790885769.7179558,
     "ast_hash": "1f9e15365dde86f74ae7aef8fd3a130b",
     "semantic_hash": ""
   },
@@ -2910,15 +2910,21 @@
     "semantic_hash": ""
   },
   "tests/test_idle_sleep_optimizations.py": {
-    "mtime": 1790881174.8139277,
-    "seen": 1790881585.2651823,
-    "ast_hash": "533b95b7e01abb11ba3bb03358f6b1a4",
+    "mtime": 1790884390.8422542,
+    "seen": 1790884918.0617034,
+    "ast_hash": "758ffc728c618b99cdfcf914a5621b13",
     "semantic_hash": ""
   },
   "core/memory_trimmer.py": {
-    "mtime": 1790881080.7432244,
-    "seen": 1790881585.26417,
-    "ast_hash": "26f280958a62beb03985824e9f84aa7b",
+    "mtime": 1790884195.8153467,
+    "seen": 1790884918.0610251,
+    "ast_hash": "500f6aa0324ed1ae58bfdfb6047b9deb",
+    "semantic_hash": ""
+  },
+  "tests/test_open_app.py": {
+    "mtime": 1790885449.3227067,
+    "seen": 1790885769.7217295,
+    "ast_hash": "f374e275208067790a95f70e2d73746c",
     "semantic_hash": ""
   }
 }
