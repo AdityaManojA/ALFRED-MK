@@ -364,6 +364,28 @@ class SetupApiModal(QDialog):
         self._spot_secret.setStyleSheet(self._field_style())
         lay.addWidget(self._spot_secret)
 
+        oauth_row = QHBoxLayout()
+        self._spot_auth_btn = QPushButton("◈  AUTHORIZE SPOTIFY (CONNECT VIA BROWSER)")
+        self._spot_auth_btn.setFixedHeight(26)
+        self._spot_auth_btn.setFont(QFont("Consolas", 8, QFont.Weight.Bold))
+        self._spot_auth_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        pal = ThemeChrome.get_active().palette
+        self._spot_auth_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: {pal.panel2};
+                color: {pal.green};
+                border: 1px solid {pal.green};
+                border-radius: 2px;
+            }}
+            QPushButton:hover {{
+                background: {pal.green};
+                color: {pal.dark};
+            }}
+        """)
+        self._spot_auth_btn.clicked.connect(self._start_spotify_oauth)
+        oauth_row.addWidget(self._spot_auth_btn)
+        lay.addLayout(oauth_row)
+
         lay.addStretch()
         return w
 
@@ -486,7 +508,7 @@ class SetupApiModal(QDialog):
         self._status_lbl.setText("")
 
     def _load_current_values(self) -> None:
-        """Load masked credentials from SecretStore."""
+        """Load masked credentials from SecretStore with fallback to config/api_keys.json."""
         # Google
         if self.store.has("google_workspace.client_id"):
             self._gw_cid.setText(self.store.get("google_workspace.client_id") or "")
@@ -494,10 +516,25 @@ class SetupApiModal(QDialog):
             self._gw_secret.setText(self.store.get("google_workspace.client_secret") or "")
 
         # Spotify
-        if self.store.has("spotify.client_id"):
-            self._spot_cid.setText(self.store.get("spotify.client_id") or "")
-        if self.store.has("spotify.client_secret"):
-            self._spot_secret.setText(self.store.get("spotify.client_secret") or "")
+        from actions.spotify_control import _is_placeholder, API_CONFIG_PATH
+        spot_cid = self.store.get("spotify.client_id") or ""
+        spot_secret = self.store.get("spotify.client_secret") or ""
+
+        if _is_placeholder(spot_cid) or _is_placeholder(spot_secret):
+            try:
+                if API_CONFIG_PATH.exists():
+                    cfg = json.loads(API_CONFIG_PATH.read_text(encoding="utf-8"))
+                    if _is_placeholder(spot_cid):
+                        spot_cid = cfg.get("spotify_client_id", "")
+                    if _is_placeholder(spot_secret):
+                        spot_secret = cfg.get("spotify_client_secret", "")
+            except Exception:
+                pass
+
+        if spot_cid and not _is_placeholder(spot_cid):
+            self._spot_cid.setText(spot_cid)
+        if spot_secret and not _is_placeholder(spot_secret):
+            self._spot_secret.setText(spot_secret)
 
         # Gmail
         if self.store.has("gmail.email"):
@@ -526,6 +563,29 @@ class SetupApiModal(QDialog):
             self._async_validation_done.emit("Google Workspace", ok, msg)
 
         threading.Thread(target=worker, daemon=True, name="GoogleOAuthThread").start()
+
+    def _start_spotify_oauth(self) -> None:
+        cid = self._spot_cid.text().strip()
+        csecret = self._spot_secret.text().strip()
+        if not cid or not csecret:
+            self._status_lbl.setText("⚠ Please enter Spotify Client ID and Secret first.")
+            self._status_lbl.setStyleSheet("color: #ffaa00;")
+            return
+
+        self._status_lbl.setText("Opening browser for Spotify authorization...")
+        pal = ThemeChrome.get_active().palette
+        self._status_lbl.setStyleSheet(f"color: {pal.cyan};")
+
+        def worker():
+            from actions.spotify_control import authorize_user, get_spotify_client
+            client = get_spotify_client()
+            client._client_id = cid
+            client._client_secret = csecret
+            ok = authorize_user()
+            msg = "Spotify authorized and connected successfully." if ok else "Spotify authorization cancelled or timed out."
+            self._async_validation_done.emit("Spotify", ok, msg)
+
+        threading.Thread(target=worker, daemon=True, name="SpotifyOAuthThread").start()
 
     def _on_submit_current_tab(self, sync: bool = False) -> None:
         bid = self._backend_ids[self._active_tab_idx]
@@ -559,6 +619,18 @@ class SetupApiModal(QDialog):
 
         def worker():
             ok, msg = save_backend_credentials(bid, fields, store=self.store)
+            if ok and bid == "spotify":
+                try:
+                    from actions.spotify_control import API_CONFIG_PATH
+                    if API_CONFIG_PATH.exists():
+                        cfg = json.loads(API_CONFIG_PATH.read_text(encoding="utf-8"))
+                        if fields.get("client_id"):
+                            cfg["spotify_client_id"] = fields["client_id"]
+                        if fields.get("client_secret"):
+                            cfg["spotify_client_secret"] = fields["client_secret"]
+                        API_CONFIG_PATH.write_text(json.dumps(cfg, indent=4), encoding="utf-8")
+                except Exception:
+                    pass
             backend = get_backend(bid)
             name = "Spotify" if bid == "spotify" else (backend.name if backend else bid)
             self._async_validation_done.emit(name, ok, msg)

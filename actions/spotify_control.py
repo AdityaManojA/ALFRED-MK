@@ -51,6 +51,20 @@ def _get_base_dir() -> Path:
 BASE_DIR = _get_base_dir()
 API_CONFIG_PATH = BASE_DIR / "config" / "api_keys.json"
 
+
+def _is_placeholder(val: Any) -> bool:
+    """Detect test or empty placeholder credentials (e.g. 'a'*32, 'your_client_id')."""
+    if not val or not isinstance(val, str):
+        return True
+    v = val.strip().lower()
+    if not v:
+        return True
+    if len(set(v)) <= 3 and len(v) >= 16:
+        return True
+    if v in ("your_client_id", "your_client_secret", "client_id_here", "todo", "none", "null", "placeholder"):
+        return True
+    return False
+
 # Windows Virtual Key Codes and App Commands for media controls
 VK_MEDIA_NEXT_TRACK = 0xB0
 VK_MEDIA_PREV_TRACK = 0xB1
@@ -163,39 +177,110 @@ class SpotifyClient:
         try:
             from core.secrets.store import get_secret_store
             store = get_secret_store()
-            self._client_id = (store.get("spotify.client_id") or "").strip()
-            self._client_secret = (store.get("spotify.client_secret") or "").strip()
-            self._refresh_token = (store.get("spotify.refresh_token") or "").strip()
-            if store.get("spotify.access_token"):
-                self._access_token = (store.get("spotify.access_token") or "").strip()
-        except Exception:
-            pass
+            cid = (store.get("spotify.client_id") or "").strip()
+            csec = (store.get("spotify.client_secret") or "").strip()
+            rtoken = (store.get("spotify.refresh_token") or "").strip()
+            atoken = (store.get("spotify.access_token") or "").strip()
 
-        # Priority 2: config/api_keys.json
-        if not self._client_id or not self._client_secret:
-            if API_CONFIG_PATH.exists():
+            if not _is_placeholder(cid):
+                self._client_id = cid
+            else:
                 try:
-                    with open(API_CONFIG_PATH, "r", encoding="utf-8") as f:
-                        cfg = json.load(f)
-                        self._client_id = self._client_id or cfg.get("spotify_client_id", "").strip()
-                        self._client_secret = self._client_secret or cfg.get("spotify_client_secret", "").strip()
-                        self._refresh_token = self._refresh_token or cfg.get("spotify_refresh_token", "").strip()
-                        if not self._access_token and cfg.get("spotify_access_token"):
-                            self._access_token = cfg.get("spotify_access_token").strip()
-                except Exception as e:
-                    logger.warning(f"Error reading Spotify credentials from {API_CONFIG_PATH}: {e}")
+                    store.delete("spotify.client_id")
+                except Exception:
+                    pass
+
+            if not _is_placeholder(csec):
+                self._client_secret = csec
+            else:
+                try:
+                    store.delete("spotify.client_secret")
+                except Exception:
+                    pass
+
+            if rtoken and not _is_placeholder(rtoken):
+                self._refresh_token = rtoken
+            if atoken and not _is_placeholder(atoken):
+                self._access_token = atoken
+        except Exception as e:
+            logger.debug(f"Error accessing SecretStore: {e}")
+
+        # Priority 2: config/api_keys.json (Fill any missing or placeholder fields)
+        if API_CONFIG_PATH.exists():
+            try:
+                with open(API_CONFIG_PATH, "r", encoding="utf-8") as f:
+                    cfg = json.load(f)
+                    cfg_cid = (cfg.get("spotify_client_id") or "").strip()
+                    cfg_csec = (cfg.get("spotify_client_secret") or "").strip()
+                    cfg_rtoken = (cfg.get("spotify_refresh_token") or "").strip()
+                    cfg_atoken = (cfg.get("spotify_access_token") or "").strip()
+
+                    if (not self._client_id or _is_placeholder(self._client_id)) and not _is_placeholder(cfg_cid):
+                        self._client_id = cfg_cid
+                    if (not self._client_secret or _is_placeholder(self._client_secret)) and not _is_placeholder(cfg_csec):
+                        self._client_secret = cfg_csec
+                    if not self._refresh_token and not _is_placeholder(cfg_rtoken):
+                        self._refresh_token = cfg_rtoken
+                    if not self._access_token and not _is_placeholder(cfg_atoken):
+                        self._access_token = cfg_atoken
+            except Exception as e:
+                logger.warning(f"Error reading Spotify credentials from {API_CONFIG_PATH}: {e}")
 
         # Priority 3: Environment variable overrides
-        self._client_id = os.environ.get("SPOTIFY_CLIENT_ID", self._client_id)
-        self._client_secret = os.environ.get("SPOTIFY_CLIENT_SECRET", self._client_secret)
-        self._refresh_token = os.environ.get("SPOTIFY_REFRESH_TOKEN", self._refresh_token)
-        if os.environ.get("SPOTIFY_ACCESS_TOKEN"):
-            self._access_token = os.environ.get("SPOTIFY_ACCESS_TOKEN", self._access_token)
+        env_cid = os.environ.get("SPOTIFY_CLIENT_ID", "").strip()
+        if env_cid and not _is_placeholder(env_cid):
+            self._client_id = env_cid
+        env_csec = os.environ.get("SPOTIFY_CLIENT_SECRET", "").strip()
+        if env_csec and not _is_placeholder(env_csec):
+            self._client_secret = env_csec
+        env_rtoken = os.environ.get("SPOTIFY_REFRESH_TOKEN", "").strip()
+        if env_rtoken and not _is_placeholder(env_rtoken):
+            self._refresh_token = env_rtoken
+        env_atoken = os.environ.get("SPOTIFY_ACCESS_TOKEN", "").strip()
+        if env_atoken and not _is_placeholder(env_atoken):
+            self._access_token = env_atoken
 
-    def get_token(self) -> Optional[str]:
+        # Priority 4: Sync valid credentials back to SecretStore if missing or placeholder
+        if self._client_id and self._client_secret and not _is_placeholder(self._client_id):
+            try:
+                from core.secrets.store import get_secret_store
+                store = get_secret_store()
+                if not store.has("spotify.client_id") or _is_placeholder(store.get("spotify.client_id") or ""):
+                    store.set("spotify.client_id", self._client_id)
+                if not store.has("spotify.client_secret") or _is_placeholder(store.get("spotify.client_secret") or ""):
+                    store.set("spotify.client_secret", self._client_secret)
+                if self._refresh_token and not store.has("spotify.refresh_token"):
+                    store.set("spotify.refresh_token", self._refresh_token)
+            except Exception:
+                pass
+
+    def _persist_tokens(self):
+        """Persist fresh access and refresh tokens to config and encrypted store."""
+        try:
+            if API_CONFIG_PATH.exists():
+                cfg = json.loads(API_CONFIG_PATH.read_text(encoding="utf-8"))
+                if self._access_token:
+                    cfg["spotify_access_token"] = self._access_token
+                if self._refresh_token:
+                    cfg["spotify_refresh_token"] = self._refresh_token
+                API_CONFIG_PATH.write_text(json.dumps(cfg, indent=4), encoding="utf-8")
+        except Exception as e:
+            logger.debug(f"Failed to persist tokens to {API_CONFIG_PATH}: {e}")
+
+        try:
+            from core.secrets.store import get_secret_store
+            store = get_secret_store()
+            if self._access_token:
+                store.set("spotify.access_token", self._access_token)
+            if self._refresh_token:
+                store.set("spotify.refresh_token", self._refresh_token)
+        except Exception as e:
+            logger.debug(f"Failed to persist tokens to SecretStore: {e}")
+
+    def get_token(self, force_refresh: bool = False) -> Optional[str]:
         """Returns a valid access token, refreshing if needed."""
         now = time.time()
-        if self._access_token and now < (self._token_expires_at - 60):
+        if not force_refresh and self._access_token and now < (self._token_expires_at - 60):
             return self._access_token
 
         # Attempt refresh using refresh_token if present
@@ -203,6 +288,12 @@ class SpotifyClient:
             token = self._refresh_with_refresh_token()
             if token:
                 return token
+            # Stale / overwritten credentials recovery
+            self._load_credentials()
+            if self._refresh_token and self._client_id and self._client_secret:
+                token = self._refresh_with_refresh_token()
+                if token:
+                    return token
 
         # Attempt Client Credentials flow
         if self._client_id and self._client_secret:
@@ -260,8 +351,9 @@ class SpotifyClient:
                 self._access_token = data.get("access_token", "")
                 expires_in = data.get("expires_in", 3600)
                 self._token_expires_at = time.time() + expires_in
-                if "refresh_token" in data:
+                if "refresh_token" in data and data["refresh_token"]:
                     self._refresh_token = data["refresh_token"]
+                self._persist_tokens()
                 return self._access_token
         except Exception as e:
             logger.warning(f"Error refreshing Spotify token: {e}")
@@ -281,7 +373,8 @@ class SpotifyClient:
 
     def search(self, query: str, search_type: str = "track", limit: int = 5) -> List[Dict[str, Any]]:
         """Search Spotify for tracks, albums, artists, or playlists."""
-        if not self._session or not query:
+        clean_q = (query or "").strip().strip("\"'").strip()
+        if not self._session or not clean_q:
             return []
 
         token = self.get_token()
@@ -294,22 +387,38 @@ class SpotifyClient:
         if stype not in valid_types:
             stype = "track"
 
-        url = f"https://api.spotify.com/v1/search?q={quote_plus(query)}&type={stype}&limit={limit}"
+        url = f"https://api.spotify.com/v1/search?q={quote_plus(clean_q)}&type={stype}&limit={limit}"
         try:
             resp = self._session.get(url, headers=self._auth_headers(), timeout=5)
+            # Handle token expiry during runtime: refresh and retry once
+            if resp.status_code == 401:
+                token = self.get_token(force_refresh=True)
+                if token:
+                    resp = self._session.get(url, headers=self._auth_headers(), timeout=5)
+
             if resp.status_code == 200:
                 data = resp.json()
                 key = f"{stype}s"
                 items = data.get(key, {}).get("items", [])
+
+                # Fallback: if search by full phrase returned 0 results and contains " by "
+                # (e.g. voice STT "679 by Sheryl Wu" or "679 by 35"), retry with track name
+                if not items and " by " in clean_q.lower():
+                    track_only = clean_q.lower().split(" by ")[0].strip()
+                    if track_only and track_only != clean_q:
+                        retry_url = f"https://api.spotify.com/v1/search?q={quote_plus(track_only)}&type={stype}&limit={limit}"
+                        retry_resp = self._session.get(retry_url, headers=self._auth_headers(), timeout=5)
+                        if retry_resp.status_code == 200:
+                            items = retry_resp.json().get(key, {}).get("items", [])
+
                 results = []
                 for item in items:
                     artists = ", ".join(a["name"] for a in item.get("artists", [])) if "artists" in item else ""
-                    album_name = item.get("album", {}).get("name", "")
-                    # Extract popularity for sorting (higher is more popular)
+                    album_name = item.get("album", {}).get("name", "") if "album" in item else ""
                     popularity = item.get("popularity", 0)
                     results.append({
-                        "name": item.get("name"),
-                        "artist": artists,
+                        "name": item.get("name", ""),
+                        "artist": artists or (item.get("name", "") if stype == "artist" else ""),
                         "album": album_name,
                         "uri": item.get("uri"),
                         "id": item.get("id"),
@@ -343,8 +452,10 @@ class SpotifyClient:
 
         # If a query is provided, find the best match
         if query and not target_uri:
+            # Clean common command prefixes if passed in query
+            clean_q = re.sub(r"^(play|start|put on)\s+", "", query.strip(), flags=re.IGNORECASE).strip()
             # Get more results to choose from, then sort by popularity
-            results = self.search(query, search_type=search_type, limit=10)
+            results = self.search(clean_q or query, search_type=search_type, limit=10)
             if results:
                 # Sort by popularity (descending) and take the most popular
                 results.sort(key=lambda x: x.get("popularity", 0), reverse=True)
@@ -409,6 +520,15 @@ class SpotifyClient:
                 data=json.dumps(payload) if payload else None,
                 timeout=5,
             )
+            if resp.status_code == 401:
+                token = self.get_token(force_refresh=True)
+                if token:
+                    resp = self._session.put(
+                        url,
+                        headers=self._auth_headers(),
+                        data=json.dumps(payload) if payload else None,
+                        timeout=5,
+                    )
             if resp.status_code in (200, 204):
                 result["status"] = "playing"
                 track_info["is_playing"] = True
@@ -468,6 +588,10 @@ class SpotifyClient:
                     url += f"?device_id={device_id or self._active_device_id}"
                 try:
                     resp = self._session.request(method, url, headers=self._auth_headers(), timeout=4)
+                    if resp.status_code == 401:
+                        token = self.get_token(force_refresh=True)
+                        if token:
+                            resp = self._session.request(method, url, headers=self._auth_headers(), timeout=4)
                     if resp.status_code in (200, 204):
                         success = True
                         self._last_playback_error = ""
@@ -498,6 +622,10 @@ class SpotifyClient:
                 url += f"&device_id={device_id or self._active_device_id}"
             try:
                 resp = self._session.post(url, headers=self._auth_headers(), timeout=4)
+                if resp.status_code == 401:
+                    token = self.get_token(force_refresh=True)
+                    if token:
+                        resp = self._session.post(url, headers=self._auth_headers(), timeout=4)
                 return resp.status_code in (200, 204)
             except Exception as e:
                 logger.warning(f"Error adding to Spotify queue: {e}")
@@ -513,6 +641,10 @@ class SpotifyClient:
                 url += f"&device_id={device_id or self._active_device_id}"
             try:
                 resp = self._session.put(url, headers=self._auth_headers(), timeout=4)
+                if resp.status_code == 401:
+                    token = self.get_token(force_refresh=True)
+                    if token:
+                        resp = self._session.put(url, headers=self._auth_headers(), timeout=4)
                 if resp.status_code in (200, 204):
                     return True
             except Exception as e:
@@ -534,6 +666,10 @@ class SpotifyClient:
 
         try:
             resp = self._session.get("https://api.spotify.com/v1/me/player/devices", headers=self._auth_headers(), timeout=4)
+            if resp.status_code == 401:
+                token = self.get_token(force_refresh=True)
+                if token:
+                    resp = self._session.get("https://api.spotify.com/v1/me/player/devices", headers=self._auth_headers(), timeout=4)
             if resp.status_code == 200:
                 devs = resp.json().get("devices", [])
                 self._devices_cache = devs
@@ -729,7 +865,8 @@ def spotify_control(
                 elif hasattr(player, "_bg_music") and player._bg_music:
                     player._bg_music.set_spotify_playback(track_title, artist, track_uri)
 
-            return f"Playing {track_title}" + (f" by {artist}" if artist else "") + " on Spotify, sir."
+            artist_phrase = f" by {artist}" if artist and artist.strip().lower() != track_title.strip().lower() else ""
+            return f"Playing {track_title}{artist_phrase} on Spotify, sir."
 
         elif action in ("pause", "stop"):
             if "audio core" in query.lower() or "tron" in query.lower():

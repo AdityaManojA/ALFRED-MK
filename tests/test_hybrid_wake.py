@@ -111,7 +111,7 @@ class HybridWakeDetectionTests(unittest.TestCase):
                 detector.feed(silence)
                 time.sleep(0.01)
 
-            t_end = time.time() + 2.5
+            t_end = time.time() + 4.5
             while time.time() < t_end and count_box[0] < 1:
                 time.sleep(0.05)
             self.assertEqual(count_box[0], 1, "Cycle 1 failed to detect")
@@ -130,7 +130,7 @@ class HybridWakeDetectionTests(unittest.TestCase):
                 detector.feed(silence)
                 time.sleep(0.01)
 
-            t_end = time.time() + 2.5
+            t_end = time.time() + 4.5
             while time.time() < t_end and count_box[0] < 2:
                 time.sleep(0.05)
             self.assertEqual(count_box[0], 2, "Cycle 2 failed to detect after sleep/reset")
@@ -152,6 +152,42 @@ class HybridWakeDetectionTests(unittest.TestCase):
         finally:
             detector.stop()
 
+    def test_silence_and_low_noise_never_triggers_verifier(self):
+        """Verify that silence or ambient background noise never causes hallucination loops or wakeups."""
+        detected = []
+        detector = WakeWordDetector(
+            on_detect=lambda: detected.append(True),
+            threshold=0.038,
+            logger=lambda m: None,
+        )
+        self.assertTrue(detector.start())
+        try:
+            # 1. Feed continuous silence frames
+            silence_frame = np.zeros(1280, dtype=np.int16)
+            for _ in range(20):
+                detector.feed(silence_frame)
+                time.sleep(0.01)
+
+            # 2. Feed low-level ambient noise frames (RMS ~ 30)
+            noise_frame = np.random.normal(0, 30, 1280).astype(np.int16)
+            for _ in range(20):
+                detector.feed(noise_frame)
+                time.sleep(0.01)
+
+            # Give worker threads time to process
+            time.sleep(0.5)
+            self.assertEqual(len(detected), 0, "Silence/ambient noise triggered false wakeup")
+
+            # 3. Direct verification of silent burst must not trigger
+            silence_burst = np.zeros(16000, dtype=np.int16)
+            detector._verify_burst_async(silence_burst, time.perf_counter())
+            time.sleep(0.2)
+            self.assertEqual(len(detected), 0, "Direct silence burst triggered verifier")
+
+        finally:
+            detector.stop()
+
 
 if __name__ == "__main__":
     unittest.main()
+

@@ -1,6 +1,12 @@
 from core.crash_handler import install_crash_handler
 install_crash_handler()
 
+import os as _os
+_os.environ.setdefault("KMP_BLOCKTIME", "0")
+_os.environ.setdefault("OMP_WAIT_POLICY", "PASSIVE")
+_os.environ.setdefault("OMP_NUM_THREADS", "2")
+_os.environ.setdefault("MKL_NUM_THREADS", "2")
+
 import platform as _platform
 import subprocess as _subprocess
 
@@ -126,6 +132,52 @@ from core.wake_word            import (
 # again (wake-word mode only). 15s allows follow-up questions without lingering awake.
 WAKE_SLEEP_TIMEOUT = 15.0   # seconds
 
+_SLEEP_DIRECTIVE_PATTERN = re.compile(
+    r"^(?:alfred\s*[,.]?\s*)?"
+    r"(?:please\s+)?"
+    r"(?:"
+    r"go\s+to\s+sleep"
+    r"|take\s+a\s+nap"
+    r"|stand\s+down"
+    r"|stop\s+listening"
+    r"|enter\s+sleep\s+mode"
+    r"|put\s+yourself\s+to\s+sleep"
+    r"|sleep\s+now"
+    r"|sleep"
+    r")"
+    r"(?:\s+(?:alfred|now|for\s+now|sir))*"
+    r"[.!?]*$",
+    re.IGNORECASE,
+)
+
+_SLEEP_PHRASE_PATTERN = re.compile(
+    r"\b(?:go\s+to\s+sleep|take\s+a\s+nap|stand\s+down|stop\s+listening|enter\s+sleep\s+mode|put\s+yourself\s+to\s+sleep)\b",
+    re.IGNORECASE,
+)
+
+_SLEEP_NEGATION_PATTERN = re.compile(
+    r"\b(?:don'?t|do\s+not|never|not|why|before|if|how|what|when)\b",
+    re.IGNORECASE,
+)
+
+def is_sleep_command(text: str) -> bool:
+    """Returns True if the user text is an unambiguous verbal directive to put ALFRED to sleep."""
+    if not text:
+        return False
+    clean = text.strip().lower()
+    # Reject queries, negations, or conditionals
+    if _SLEEP_NEGATION_PATTERN.search(clean):
+        return False
+    # Check exact directive patterns
+    if _SLEEP_DIRECTIVE_PATTERN.match(clean):
+        return True
+    # Check explicit sleep phrases within short command utterances
+    if _SLEEP_PHRASE_PATTERN.search(clean):
+        words = clean.split()
+        if len(words) <= 8:
+            return True
+    return False
+
 def get_base_dir():
     if getattr(sys, "frozen", False):
         return Path(sys.executable).parent
@@ -139,8 +191,8 @@ CHANNELS            = 1
 SEND_SAMPLE_RATE    = 16000 
 RECEIVE_SAMPLE_RATE = 24000
 CHUNK_SIZE          = 1024
-RECONNECT_BASE_S: float = 0.5       # Fast initial reconnect backoff
-RECONNECT_MAX_S: float = 5.0        # Cap backoff at 5s instead of 60s
+RECONNECT_BASE_S: float = 1.0       # Initial reconnect backoff
+RECONNECT_MAX_S: float = 10.0       # Cap backoff at 10s
 UPLINK_TIMEOUT_S: float = 5.0       # Uplink connection timeout budget
 
 # RMS below which 16-bit PCM is treated as room silence; above _LEVEL_FULL it
@@ -595,11 +647,25 @@ TOOL_DECLARATIONS = [
         },
     },
     {
+        "name": "go_to_sleep",
+        "description": (
+            "Puts ALFRED into sleep / standby mode. "
+            "Call this whenever the user says 'go to sleep', 'sleep', 'take a nap', 'stand down', 'stop listening', or 'enter sleep mode'. "
+            "In sleep mode, ALFRED stops streaming microphone audio to Gemini and waits for the wake phrase ('Alfred' or 'Hey Alfred') to wake up. "
+            "This does NOT shut down or exit the application; it only puts ALFRED into standby."
+        ),
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {},
+        }
+    },
+    {
         "name": "shutdown_jarvis",
         "description": (
             "Shuts down the ALFRED assistant application completely. "
             "Call this ONLY when the user explicitly gives a direct, unambiguous verbal command to exit, quit, shut down, or close ALFRED (e.g. 'shut down Alfred', 'quit Alfred', 'exit the assistant'). "
             "NEVER call this on casual farewells, ambient background speech, song lyrics, music playback, or noise. "
+            "Do NOT call this when the user asks to sleep, take a nap, or stand down — use go_to_sleep for sleep/standby mode. "
             "Requires confirmation=True."
         ),
         "parameters": {
@@ -1015,11 +1081,22 @@ class JarvisLive:
         self.ui.set_state("SLEEPING")
         self.ui.write_log(f"SYS: Sleeping — {reason}. Say '{WAKE_PHRASE}' to wake me.")
         _tlog("ALFRED", "wake", f"Sleeping ({reason})", getattr(self, "_dashboard", None))
+        if self._wake_detector is None and (getattr(self, "_wake_enabled", False) or wake_is_ready()):
+            try:
+                self._ensure_wake_detector()
+            except Exception:
+                pass
         if self._wake_detector is not None:
             try:
                 self._wake_detector.reset()
             except Exception:
                 pass
+        # Trim resident memory working set and collect garbage during sleep
+        try:
+            from core.memory_trimmer import trim_process_memory
+            trim_process_memory()
+        except Exception:
+            pass
 
     async def _run_sleep_watch(self) -> None:
         """Auto-sleep after the configured silence window (wake-word mode only)."""
@@ -2041,7 +2118,20 @@ class JarvisLive:
                 self._session_log.clear()
                 if self._dashboard:
                     await self._dashboard.broadcast({"type": "clear_chat"})
-                result = "Conversation history and on-screen chat feed have been wiped clean, sir."
+            elif name in ("go_to_sleep", "sleep", "sleep_mode"):
+                self.ui.write_log("SYS: Sleep requested via voice directive.")
+                async def _do_voice_sleep():
+                    await asyncio.sleep(0.4)
+                    for _ in range(50):
+                        if not getattr(self, "_is_speaking", False) and (
+                            not hasattr(self, "audio_in_queue") or self.audio_in_queue.empty()
+                        ):
+                            break
+                        await asyncio.sleep(0.2)
+                    await asyncio.sleep(0.3)
+                    self.sleep(reason="voice command")
+                asyncio.create_task(_do_voice_sleep())
+                result = "Going to sleep now, sir. Say 'Alfred' when you need me."
 
             elif name == "shutdown_jarvis":
                 if not args.get("confirmation"):
@@ -2175,13 +2265,14 @@ class JarvisLive:
             # -- SLEEPING: wake-word gate ---------------------------------
             # Mic audio NEVER goes to Gemini while sleeping.
             # Only the local wake-word detector sees the audio.
-            if self._wake_enabled and not self._awake:
-                det = self._wake_detector
-                if det is None:
-                    self._ensure_wake_detector()
+            if not self._awake:
+                if getattr(self, "_wake_enabled", False) or wake_is_ready():
                     det = self._wake_detector
-                if det is not None and det.ready:
-                    det.feed(indata)
+                    if det is None:
+                        self._ensure_wake_detector()
+                        det = self._wake_detector
+                    if det is not None and det.ready:
+                        det.feed(indata)
                 return
 
             with self._speaking_lock:
@@ -2446,6 +2537,20 @@ class JarvisLive:
                                         "text": full_in,
                                         "ts": datetime.now().isoformat(),
                                     }))
+
+                                if self._awake and is_sleep_command(full_in):
+                                    self.ui.write_log("SYS: Sleep directive recognized in voice input.")
+                                    async def _do_stt_sleep():
+                                        await asyncio.sleep(0.4)
+                                        for _ in range(50):
+                                            if not getattr(self, "_is_speaking", False) and (
+                                                not hasattr(self, "audio_in_queue") or self.audio_in_queue.empty()
+                                            ):
+                                                break
+                                            await asyncio.sleep(0.2)
+                                        await asyncio.sleep(0.3)
+                                        self.sleep(reason="voice command")
+                                    asyncio.create_task(_do_stt_sleep())
                             in_buf = []
 
                             full_out = " ".join(out_buf).strip()
@@ -3052,8 +3157,8 @@ class JarvisLive:
 
     async def _run_gc_manager(self) -> None:
         """
-        Periodically sweeps garbage during idle silence so full Generation 2
-        collections never pause threads mid-speech or during active UI animations.
+        Periodically sweeps garbage and trims OS working set during idle silence
+        so physical memory stays under 100MB and never pauses threads mid-speech.
         """
         while True:
             await asyncio.sleep(45)
@@ -3061,7 +3166,8 @@ class JarvisLive:
                 speaking = self._is_speaking
             silent_for = time.monotonic() - self._last_user_speech
             if not speaking and silent_for > 8.0:
-                await asyncio.to_thread(gc.collect)
+                from core.memory_trimmer import trim_process_memory
+                await asyncio.to_thread(trim_process_memory)
 
     # â”€â”€ Phone audio relay â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 

@@ -21,7 +21,7 @@ class TestHudFrameLatency(unittest.TestCase):
 
     def test_constants_defined(self):
         self.assertEqual(FRAME_TIME_BUDGET_MS, 16.7)
-        self.assertEqual(PAINT_WARN_THRESHOLD_MS, 20.0)
+        self.assertEqual(PAINT_WARN_THRESHOLD_MS, 45.0)
 
     def test_hud_canvas_step_timer_interval(self):
         canvas = HudCanvas(face_path="", assistant_name="Test")

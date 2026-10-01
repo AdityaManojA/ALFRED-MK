@@ -651,3 +651,32 @@ class SetupOverlay(QWidget):
             }
 
         self.done.emit(config_dict)
+
+    def refresh_values(self):
+        """Reload configuration from disk into input fields."""
+        cur_cfg = _read_full_config()
+        self._provider = cur_cfg.get("llm_provider", "gemini").lower()
+        if self._provider not in ("gemini", "ollama", "openai", "openrouter"):
+            self._provider = "gemini"
+        self._set_backend(self._provider)
+
+        self._user_input.setText(cur_cfg.get("user_name", ""))
+        self._asst_input.setText(cur_cfg.get("assistant_name", "Alfred") or "Alfred")
+
+        existing_key = (cur_cfg.get("gemini_api_key") or cur_cfg.get("GEMINI_API_KEY")
+                        or cur_cfg.get("api_key") or os.environ.get("GEMINI_API_KEY", ""))
+        self._key_input.setText(existing_key)
+
+        self._ollama_url.setText(cur_cfg.get("llm_url", "http://localhost:11434"))
+        self._ollama_model.setText(cur_cfg.get("llm_model", "llama3.2"))
+
+        self._lm_url.setText(cur_cfg.get("llm_url", "http://localhost:1234/v1"))
+        self._lm_model.setText(cur_cfg.get("llm_model", "local-model"))
+
+        self._or_key_input.setText(cur_cfg.get("openrouter_api_key", ""))
+        self._or_model.setText(cur_cfg.get("openrouter_model", "anthropic/claude-3.5-sonnet"))
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.refresh_values()
+

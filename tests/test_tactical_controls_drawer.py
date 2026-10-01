@@ -260,6 +260,49 @@ class TestTacticalControlsDrawer(unittest.TestCase):
             finally:
                 window.close()
 
+    def test_alfred_crest_removed_from_available_icons(self):
+        """Verify Alfred Crest is excluded from available chassis insignias."""
+        from ui import get_available_app_icons
+        icons = get_available_app_icons()
+        names = [ic["name"] for ic in icons]
+        filenames = [ic["filename"].lower() for ic in icons]
+
+        self.assertNotIn("Alfred Crest", names, "Alfred Crest should not be in the insignia tab")
+        for fn in filenames:
+            self.assertFalse(fn.startswith("alfred."), f"Unexpected alfred file in insignia: {fn}")
+
+    def test_tactical_controls_has_both_neural_and_api_backend_buttons(self):
+        """Verify Tactical Controls Drawer includes both Neural Model/API config and External API Backends."""
+        window = MainWindow("")
+        try:
+            self.assertTrue(hasattr(window, "_neural_btn"), "Tactical controls must have _neural_btn for model/API switching")
+            self.assertTrue(hasattr(window, "_setup_api_btn"), "Tactical controls must have _setup_api_btn for credentials")
+            self.assertIsNotNone(window._neural_btn)
+            self.assertIsNotNone(window._setup_api_btn)
+
+            # Both buttons must be in the quick drawer layout
+            drawer = window._quick_drawer
+            self.assertIn(window._neural_btn, drawer.findChildren(QPushButton))
+            self.assertIn(window._setup_api_btn, drawer.findChildren(QPushButton))
+        finally:
+            window.close()
+
+    def test_refresh_neural_btn_reflects_provider(self):
+        """Verify _refresh_neural_btn updates text based on configured LLM provider."""
+        window = MainWindow("")
+        try:
+            with patch("ui._read_full_config", return_value={"llm_provider": "gemini"}):
+                window._refresh_neural_btn()
+                self.assertIn("GEMINI", window._neural_btn.text().upper())
+
+            with patch("ui._read_full_config", return_value={"llm_provider": "ollama", "llm_model": "llama3.2"}):
+                window._refresh_neural_btn()
+                self.assertIn("OLLAMA", window._neural_btn.text().upper())
+                self.assertIn("LLAMA3.2", window._neural_btn.text().upper())
+        finally:
+            window.close()
+
 
 if __name__ == "__main__":
     unittest.main()
+

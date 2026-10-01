@@ -3,6 +3,10 @@ from __future__ import annotations
 import json
 import math
 import os
+os.environ.setdefault("KMP_BLOCKTIME", "0")
+os.environ.setdefault("OMP_WAIT_POLICY", "PASSIVE")
+os.environ.setdefault("OMP_NUM_THREADS", "2")
+os.environ.setdefault("MKL_NUM_THREADS", "2")
 import platform
 import random
 import subprocess
@@ -85,8 +89,6 @@ def format_icon_display_name(filename: str) -> str:
         "trasparent": "Stealth Insignia",
         "transparent": "Stealth Insignia",
         "batman_logo": "Wayne Crest",
-        "alfred": "Alfred Crest",
-        "alfred_bg": "Alfred Shield",
     }
     key = stem.lower()
     if key in custom_names:
@@ -119,6 +121,8 @@ def get_available_app_icons() -> list[dict]:
             for p in sorted(idir.iterdir()):
                 if p.is_file() and p.suffix.lower() in (".png", ".ico", ".jpg", ".jpeg", ".webp", ".svg"):
                     stem_key = p.stem.lower()
+                    if stem_key in ("alfred", "alfred_bg", "alfred crest"):
+                        continue
                     if stem_key not in seen:
                         seen.add(stem_key)
                         found.append({
@@ -128,10 +132,12 @@ def get_available_app_icons() -> list[dict]:
                         })
 
     if cfg_dir.exists():
-        for name in ("batman_logo.png", "alfred.ico", "alfred.png"):
+        for name in ("batman_logo.png", "batman_logo.ico"):
             cp = cfg_dir / name
             if cp.exists():
                 stem_key = cp.stem.lower()
+                if stem_key in ("alfred", "alfred_bg", "alfred crest"):
+                    continue
                 if stem_key not in seen:
                     seen.add(stem_key)
                     found.append({
@@ -1547,7 +1553,20 @@ class HudCanvas(QWidget):
             oldest = next(iter(self._static_layers))
             self._static_layers.pop(oldest, None)
 
+    def _is_minimized(self) -> bool:
+        """True only when the parent window is explicitly minimized to the taskbar."""
+        try:
+            win = self.window()
+            return bool(win and win.isMinimized())
+        except Exception:
+            return False
+
     def _step(self):
+        # Zero-CPU when minimized: advance core phase gently and return early
+        if self._is_minimized():
+            self._core_phase = (self._core_phase + 0.02) % (math.pi * 2)
+            return
+
         self._tick += 1
         now = time.time()
 
@@ -1727,16 +1746,21 @@ class HudCanvas(QWidget):
             _blinked = False
 
         # Repaint throttling — advancing the animation state above is cheap at
-        # 60 Hz, but the paint is heavy. Active (speaking, audio, thinking) runs
-        # at ~30 Hz, which is the frame rate animation has used for talking
-        # characters forever and is indistinguishable here; idle drops to ~20 Hz
-        # so a sleeping HUD stops pinning a CPU core. The visuals stay smooth
-        # either way because the animation state keeps stepping at 60 Hz.
-        self._paint_tick = (self._paint_tick + 1) % 6
+        # 60 Hz, but the paint is heavy.
+        # Active (speaking, audio, thinking) runs at ~30 Hz;
+        # Listening idle (awake) drops to ~15 Hz;
+        # SLEEPING drops to ~4 Hz (every 15 ticks) for a calm, low-power ambient pulse
+        # that saves over 80% of CPU on the Qt UI thread.
+        self._paint_tick = (self._paint_tick + 1) % 60
+        _is_sleeping = (self.state == "SLEEPING")
         active = (self.speaking or amp > 0.02
                   or self.state in ("THINKING", "PROCESSING"))
-        if _blinked or (self._paint_tick % 2 == 0 if active
-                        else self._paint_tick % 3 == 0):
+        should_paint = _blinked or (
+            (self._paint_tick % 2 == 0) if active
+            else ((self._paint_tick % 15 == 0) if _is_sleeping
+                  else (self._paint_tick % 4 == 0))
+        )
+        if should_paint:
             if self.on_visual_level is not None:
                 try:
                     self.on_visual_level(
@@ -2133,17 +2157,18 @@ class HudCanvas(QWidget):
         p.drawEllipse(QRectF(cx - r, cy - r, r * 2, r * 2))
 
         # ── 2. Latitude Parallel Rings ───────────────────────────────────────
-        n_rings = max(3, skin.ring_count)
+        _is_sleeping = (self.state == "SLEEPING")
+        n_rings = 3 if _is_sleeping else max(3, min(6, skin.ring_count))
         lat_step = 140.0 / max(1, n_rings - 1)
         lat_angles = [-70.0 + i * lat_step for i in range(n_rings)]
         lat_front: list[QLineF] = []
         lat_back: list[QLineF] = []
         equator_front: list[QLineF] = []
         equator_back: list[QLineF] = []
+        n_samples = 16 if _is_sleeping else 32
         for deg in lat_angles:
             is_equator = (abs(deg) < (lat_step * 0.45))
             lat_r = math.radians(deg)
-            n_samples = 64
             pts = [project(lat_r, math.radians(k * (360.0 / n_samples))) for k in range(n_samples + 1)]
 
             for k in range(n_samples):
@@ -2166,18 +2191,18 @@ class HudCanvas(QWidget):
         p.drawLines(equator_back)
 
         # ── 3. Longitude Meridians (Rotating smoothly) ───────────────────────
-        n_meridians = max(4, skin.meridian_count)
+        n_meridians = 4 if _is_sleeping else max(4, min(8, skin.meridian_count))
         meridian_front: list[QLineF] = []
         meridian_back: list[QLineF] = []
+        n_mer_samples = 16 if _is_sleeping else 24
         for m in range(n_meridians):
             base_lon = math.radians(m * (360.0 / n_meridians))
-            n_samples = 48
             pts = []
-            for k in range(n_samples + 1):
-                lat = math.radians(-85.0 + k * (170.0 / n_samples))
+            for k in range(n_mer_samples + 1):
+                lat = math.radians(-85.0 + k * (170.0 / n_mer_samples))
                 pts.append(project(lat, base_lon))
 
-            for k in range(n_samples):
+            for k in range(n_mer_samples):
                 p1, p2 = pts[k], pts[k + 1]
                 mid_z = (p1[2] + p2[2]) / 2.0
                 line = QLineF(p1[0], p1[1], p2[0], p2[1])
@@ -2211,7 +2236,7 @@ class HudCanvas(QWidget):
             return (cx + ox2, cy + oy2, oz2)
 
         # Draw orbital ring track
-        n_orb_pts = 64
+        n_orb_pts = 16 if _is_sleeping else 32
         orb_pts = [project_orbit(math.radians(k * (360.0 / n_orb_pts))) for k in range(n_orb_pts + 1)]
         orbit_front: list[QLineF] = []
         orbit_back: list[QLineF] = []
@@ -2255,8 +2280,10 @@ class HudCanvas(QWidget):
         # ── 5. Polar Radiating Coordinate Rays (Screenshot 2 Feature!) ───────
         px_north, py_north, _ = project(math.radians(90.0), 0.0)
         p.setPen(QPen(blend(main, 0.45), 1.0, Qt.PenStyle.DashLine))
-        for i in range(8):
-            ray_ang = math.radians(i * 45.0 + t * 4.0)
+        n_rays = 4 if _is_sleeping else 8
+        step_deg = 360.0 / n_rays
+        for i in range(n_rays):
+            ray_ang = math.radians(i * step_deg + t * 4.0)
             rx = px_north + math.cos(ray_ang) * 26.0
             ry = py_north + math.sin(ray_ang) * 18.0
             p.drawLine(QLineF(px_north, py_north, rx, ry))
@@ -2683,17 +2710,18 @@ class HudCanvas(QWidget):
                     sz = pt['size'] * _sz_boost
                     p.drawEllipse(QPointF(px, py), sz, sz)
 
-                # Micro links
-                p.setBrush(Qt.BrushStyle.NoBrush)
-                for i in range(len(pts_coords)):
-                    px1, py1 = pts_coords[i]
-                    for j in range(i + 1, min(i + 4, len(pts_coords))):
-                        px2, py2 = pts_coords[j]
-                        d2 = (px1 - px2)**2 + (py1 - py2)**2
-                        if d2 < 3600:
-                            dist = math.sqrt(d2)
-                            p.setPen(QPen(blend(main, (1.0 - dist / 60.0) * 0.15), 1))
-                            p.drawLine(QLineF(px1, py1, px2, py2))
+                # Micro links (skipped in SLEEPING state to conserve CPU)
+                if not _is_sleeping:
+                    p.setBrush(Qt.BrushStyle.NoBrush)
+                    for i in range(len(pts_coords)):
+                        px1, py1 = pts_coords[i]
+                        for j in range(i + 1, min(i + 4, len(pts_coords))):
+                            px2, py2 = pts_coords[j]
+                            d2 = (px1 - px2)**2 + (py1 - py2)**2
+                            if d2 < 3600:
+                                dist = math.sqrt(d2)
+                                p.setPen(QPen(blend(main, (1.0 - dist / 60.0) * 0.15), 1))
+                                p.drawLine(QLineF(px1, py1, px2, py2))
 
                 # 3. Always Wayne Crest background watermark emblem
                 self._draw_custom_emblem(p, cx, cy * 0.65, fw * 0.42, fw * 0.42)
@@ -2715,7 +2743,8 @@ class HudCanvas(QWidget):
                 p.end()
                 t_paint_ms = (time.perf_counter() - t_paint_start) * 1000.0
                 now = time.monotonic()
-                if t_paint_ms > PAINT_WARN_THRESHOLD_MS and (now - getattr(self, "_last_slow_paint_warn", 0.0)) > 5.0:
+                # Ignore initial cold-cache frames (tick <= 2) for slow paint warning
+                if self._tick > 2 and t_paint_ms > PAINT_WARN_THRESHOLD_MS and (now - getattr(self, "_last_slow_paint_warn", 0.0)) > 5.0:
                     self._last_slow_paint_warn = now
                     print(f"[HUD] Slow paintEvent: {t_paint_ms:.1f}ms exceeds {PAINT_WARN_THRESHOLD_MS:.0f}ms budget (throttled)")
         except Exception as exc:
@@ -2772,6 +2801,28 @@ class SlotHostWidget(QWidget):
     def _step(self) -> None:
         if not self.isVisible():
             return
+
+        # Skip updates when the window is minimized or hidden
+        try:
+            win = self.window()
+            if win.isMinimized() or win.isHidden():
+                return
+        except Exception:
+            pass
+
+        # Throttle slot updates to ~3 Hz when Alfred is sleeping
+        is_sleeping = False
+        try:
+            main_win = self.window()
+            if hasattr(main_win, "hud") and getattr(main_win.hud, "state", "") == "SLEEPING":
+                is_sleeping = True
+        except Exception:
+            pass
+
+        self._step_tick = (getattr(self, "_step_tick", 0) + 1) % 6
+        if is_sleeping and self._step_tick != 0:
+            return
+
         now = time.monotonic()
         dt = min(0.1, max(0.001, now - self._last_t))
         self._last_t = now
@@ -6693,6 +6744,7 @@ class MainWindow(QMainWindow):
             self._show_setup()
         else:
             QTimer.singleShot(2500, self._prewarm_settings_overlays)
+        QTimer.singleShot(4000, self._initial_memory_trim)
         QTimer.singleShot(0, self._start_animations)
 
         sc_mute = QShortcut(QKeySequence("F4"), self)
@@ -7919,11 +7971,21 @@ class MainWindow(QMainWindow):
         attach_hover_help(mem_btn, "View and manage remembered facts, user habits, and long-term memory stored in the archives.")
         lay.addWidget(mem_btn)
 
+        self._neural_btn = QPushButton("[ ◈ ]  AI MODEL // GEMINI LIVE")
+        self._neural_btn.setFixedHeight(29)
+        self._neural_btn.setFont(mono_font(8, letter_spacing=0.5))
+        self._neural_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._neural_btn.setStyleSheet(_BTN_STYLE_PRI)
+        self._neural_btn.clicked.connect(self._open_neural_setup)
+        attach_hover_help(self._neural_btn, "Configure Gemini Live API key or switch intelligence backend to local models (Ollama, LM Studio, OpenRouter).")
+        lay.addWidget(self._neural_btn)
+        self._refresh_neural_btn()
+
         self._setup_api_btn = QPushButton("[ ◈ ]  SETUP API BACKENDS")
         self._setup_api_btn.setFixedHeight(29)
         self._setup_api_btn.setFont(mono_font(8, letter_spacing=0.5))
         self._setup_api_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._setup_api_btn.setStyleSheet(_BTN_STYLE_PRI)
+        self._setup_api_btn.setStyleSheet(_BTN_STYLE_DIM)
         self._setup_api_btn.clicked.connect(self._open_api_setup)
         attach_hover_help(self._setup_api_btn, "Manage encrypted credentials and OAuth tokens for Google Workspace, Spotify, and Gmail.")
         lay.addWidget(self._setup_api_btn)
@@ -7936,6 +7998,8 @@ class MainWindow(QMainWindow):
         TacticalHoverHelpManager.instance().dismiss()
         if checked:
             self._refresh_wake_btns()   # resolve wake state on open (lazy)
+            self._refresh_neural_btn()
+            self._refresh_setup_api_btn()
             self._position_quick_drawer()
             from core.hud_video.layering import raise_overlay
             raise_overlay(self._quick_drawer, self)
@@ -9516,6 +9580,26 @@ class MainWindow(QMainWindow):
                 except Exception:
                     pass
 
+    def _refresh_neural_btn(self):
+        """Update Tactical Controls button text with active neural model backend."""
+        if hasattr(self, "_neural_btn") and self._neural_btn is not None:
+            try:
+                cfg = _read_full_config()
+                prov = (cfg.get("llm_provider") or "gemini").upper()
+                if prov == "GEMINI":
+                    self._neural_btn.setText("[ ◈ ]  AI MODEL // GEMINI LIVE")
+                elif prov == "OLLAMA":
+                    model = cfg.get("llm_model", "llama3.2")
+                    self._neural_btn.setText(f"[ ◈ ]  AI MODEL // OLLAMA ({model})")
+                elif prov == "OPENAI":
+                    self._neural_btn.setText("[ ◈ ]  AI MODEL // LM STUDIO")
+                elif prov == "OPENROUTER":
+                    self._neural_btn.setText("[ ◈ ]  AI MODEL // OPENROUTER")
+                else:
+                    self._neural_btn.setText(f"[ ◈ ]  AI MODEL // {prov}")
+            except Exception:
+                self._neural_btn.setText("[ ◈ ]  AI MODEL & API CONFIG")
+
     def _refresh_setup_api_btn(self):
         """Update the Tactical Controls and Reconfigure Batcomputer button texts with configured counts."""
         if hasattr(self, "_setup_api_btn") and self._setup_api_btn is not None:
@@ -9878,9 +9962,23 @@ class MainWindow(QMainWindow):
             except Exception as e:
                 print(f"[UI] on_clear_chat error: {e}")
 
+    def _initial_memory_trim(self) -> None:
+        """Trim startup memory working set back to OS once initialization is complete."""
+        try:
+            from core.memory_trimmer import trim_process_memory
+            trim_process_memory()
+        except Exception:
+            pass
+
     def _apply_state(self, state: str):
         self.hud.state    = state
         self.hud.speaking = (state == "SPEAKING")
+        if state == "SLEEPING":
+            try:
+                from core.memory_trimmer import trim_process_memory
+                trim_process_memory()
+            except Exception:
+                pass
         if hasattr(self, "_hud_video_controller") and self._hud_video_controller is not None:
             if state in ("SPEAKING", "LISTENING"):
                 self._hud_video_controller.duck()
@@ -10093,6 +10191,8 @@ class MainWindow(QMainWindow):
     def _show_setup(self):
         started = time.perf_counter()
         ov = self._ensure_setup_overlay()
+        if hasattr(ov, "refresh_values"):
+            ov.refresh_values()
         cw = self.centralWidget()
         ow = min(580, cw.width() - 40)
         oh = min(540, cw.height() - 40)
@@ -10149,6 +10249,7 @@ class MainWindow(QMainWindow):
         self._ready = True
         if self._overlay:
             self._overlay.hide()
+        self._refresh_neural_btn()
         self._apply_state("LISTENING")
         self._assistant_name = _read_full_config().get("assistant_name", "Alfred") or "Alfred"
         self._log.append_log(f"SYS: Initialised. Mode: {prov.upper()}. OS: {str(os_name).upper()}. {self._assistant_name} online.")

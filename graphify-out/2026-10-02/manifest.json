@@ -228,9 +228,9 @@
     "semantic_hash": "d9c6de0df2bf028d93924aff92487904"
   },
   "main.py": {
-    "mtime": 1790862205.3405862,
-    "seen": 1790862406.6340923,
-    "ast_hash": "44a487b265de92196d325efc39e8b817",
+    "mtime": 1790881242.861636,
+    "seen": 1790881585.2651823,
+    "ast_hash": "c7e331e8ede66de2d09ed02e8cc0efb4",
     "semantic_hash": ""
   },
   "memory/__init__.py": {
@@ -270,9 +270,9 @@
     "semantic_hash": ""
   },
   "ui.py": {
-    "mtime": 1790863075.5869527,
-    "seen": 1790863167.8626232,
-    "ast_hash": "774193547444e33c194ffc785c0b7a3c",
+    "mtime": 1790881421.5878723,
+    "seen": 1790881585.2656903,
+    "ast_hash": "e406c93e2c81691a57aa295c25b8957f",
     "semantic_hash": ""
   },
   ".agents/rules/graphify.md": {
@@ -432,8 +432,8 @@
     "semantic_hash": "0c2178c383f8edcbe38ee55ce1b8bc8e"
   },
   "config/music_playlist.json": {
-    "mtime": 1790863586.6122785,
-    "seen": 1790863628.0161629,
+    "mtime": 1790880731.01306,
+    "seen": 1790881585.26417,
     "ast_hash": "1f9e15365dde86f74ae7aef8fd3a130b",
     "semantic_hash": ""
   },
@@ -2778,9 +2778,9 @@
     "semantic_hash": ""
   },
   "tests/test_hud_frame_latency.py": {
-    "mtime": 1790773042.4251888,
-    "seen": 1790773326.4982314,
-    "ast_hash": "69e72bdbc176480625f8e0fbb9eee6a3",
+    "mtime": 1790864158.209191,
+    "seen": 1790864415.5127954,
+    "ast_hash": "301cbc00b972bf18eb73f9a688c7ec68",
     "semantic_hash": ""
   },
   "tests/test_intent_router.py": {
@@ -2907,6 +2907,18 @@
     "mtime": 1790862308.9521601,
     "seen": 1790862406.6340923,
     "ast_hash": "c16d03d9405205fa40f8a27bdb18bbc2",
+    "semantic_hash": ""
+  },
+  "tests/test_idle_sleep_optimizations.py": {
+    "mtime": 1790881174.8139277,
+    "seen": 1790881585.2651823,
+    "ast_hash": "533b95b7e01abb11ba3bb03358f6b1a4",
+    "semantic_hash": ""
+  },
+  "core/memory_trimmer.py": {
+    "mtime": 1790881080.7432244,
+    "seen": 1790881585.26417,
+    "ast_hash": "26f280958a62beb03985824e9f84aa7b",
     "semantic_hash": ""
   }
 }

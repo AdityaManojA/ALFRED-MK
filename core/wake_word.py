@@ -74,7 +74,7 @@ def _is_alfred_wake_phrase(text: str) -> bool:
     if words.intersection(target_words):
         return True
     # Bigram & phonetic variants for natural connected speech
-    for phrase in ("al fred", "all fred", "el fred", "he alfred", "hey alfred"):
+    for phrase in ("al fred", "all fred", "el fred", "he alfred", "hey alfred", "he and fred", "hey and fred"):
         if phrase in clean:
             return True
     return False
@@ -86,8 +86,9 @@ def _prewarm_whisper_background() -> None:
         vm = _get_whisper_verifier()
         if vm is not None:
             import numpy as np
-            dummy = np.zeros(16000, dtype=np.float32)
-            list(vm.transcribe(dummy, language="en", beam_size=1, temperature=0.0)[0])
+            t = np.linspace(0, 0.4, 6400, dtype=np.float32)
+            dummy = (np.sin(2 * np.pi * 440 * t) * 0.1).astype(np.float32)
+            list(vm.transcribe(dummy, language="en", beam_size=1, temperature=0.0, vad_filter=False)[0])
     except Exception:
         pass
 
@@ -237,6 +238,7 @@ class WakeWordDetector:
         self._ready            = False
         self._triggered        = False
         self._last_trigger_time: float = 0.0
+        self._last_reset_time: float = 0.0
         self._reset_requested: bool = False
 
     # ── lifecycle ─────────────────────────────────────────────────────────────
@@ -311,6 +313,7 @@ class WakeWordDetector:
         with self._lock:
             self._triggered = False
             self._last_trigger_time = 0.0
+            self._last_reset_time = time.monotonic()
             self._reset_requested = True
         self._drain()
 
@@ -369,23 +372,53 @@ class WakeWordDetector:
         with self._lock:
             if not self._running or (now - self._last_trigger_time) < 1.2:
                 return
+            if burst_start_ts < self._last_reset_time:
+                return
         try:
+            import numpy as np
+            audio_float = audio_data.astype(np.float32) / 32768.0
+
+            # 1. Pre-verifier validation: reject bursts that are too short or too quiet (silence/pops)
+            if len(audio_float) < int(16000 * 0.35):
+                return
+            burst_rms = float(np.sqrt(np.mean(audio_float ** 2)) * 32768.0)
+            if burst_rms < 120.0:
+                return
+
             vm = _get_whisper_verifier()
             if vm is None:
                 return
             t0 = time.perf_counter()
-            import numpy as np
-            audio_float = audio_data.astype(np.float32) / 32768.0
+
+            # 2. Transcribe with Silero VAD enabled and focused prompt="Alfred"
+            # vad_filter=True and pre-verifier RMS checks completely prevent decoding silence/noise.
             segments, _ = vm.transcribe(
                 audio_float,
                 language="en",
                 beam_size=1,
                 temperature=0.0,
-                initial_prompt="Alfred, Hey Alfred, Hello Alfred",
+                initial_prompt="Alfred",
                 condition_on_previous_text=False,
-                vad_filter=False,
+                vad_filter=True,
+                vad_parameters=dict(min_silence_duration_ms=200),
             )
-            text = " ".join(s.text for s in segments).strip()
+
+            # 3. Filter hallucinated or non-speech segments
+            valid_texts = []
+            for s in segments:
+                if getattr(s, "no_speech_prob", 0.0) > 0.6:
+                    continue
+                if getattr(s, "compression_ratio", 1.0) > 2.2:
+                    continue
+                valid_texts.append(s.text)
+            text = " ".join(valid_texts).strip()
+
+            # 4. Anti-hallucination repetition guard: legitimate wake words contain at most 2 mentions
+            clean_lower = text.lower()
+            if clean_lower.count("alfred") > 2:
+                self._logger(f"[WakeWord] Verifier repetition hallucination suppressed ({clean_lower.count('alfred')} occurrences)")
+                return
+
             verif_ms = (time.perf_counter() - t0) * 1000.0
             if _is_alfred_wake_phrase(text):
                 total_latency_ms = (time.perf_counter() - burst_start_ts) * 1000.0
@@ -508,13 +541,15 @@ class WakeWordDetector:
                             dur_s = len(burst_frames) * 0.08
                             if 0.35 <= dur_s <= 3.0:
                                 concat_audio = np.concatenate(burst_frames)
-                                ex = self._verifier_executor
-                                with self._lock:
-                                    in_cooldown = (time.monotonic() - self._last_trigger_time) < 1.2
-                                if ex is not None and not in_cooldown:
-                                    ex.submit(
-                                        self._verify_burst_async, concat_audio, burst_start_ts
-                                    )
+                                max_frame_rms = max(float(np.sqrt(np.mean(f.astype(np.float32) ** 2))) for f in burst_frames)
+                                if max_frame_rms >= max(140.0, noise_floor * 1.3):
+                                    ex = self._verifier_executor
+                                    with self._lock:
+                                        in_cooldown = (time.monotonic() - self._last_trigger_time) < 1.2
+                                    if ex is not None and not in_cooldown:
+                                        ex.submit(
+                                            self._verify_burst_async, concat_audio, burst_start_ts
+                                        )
                             in_burst = False
                             burst_frames.clear()
                             silence_count = 0
