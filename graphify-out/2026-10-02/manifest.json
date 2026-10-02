@@ -204,9 +204,9 @@
     "semantic_hash": "e8db5f5ff95246fc94c67379d160264e"
   },
   "core/wake_word.py": {
-    "mtime": 1790863539.7513905,
-    "seen": 1790863628.0171618,
-    "ast_hash": "d9120ed5b7c7e06e749c26298e08d0ca",
+    "mtime": 1790925235.6065955,
+    "seen": 1790925362.642492,
+    "ast_hash": "a47555b32367f004bf6b254db607a63e",
     "semantic_hash": ""
   },
   "dashboard/__init__.py": {
@@ -270,9 +270,9 @@
     "semantic_hash": ""
   },
   "ui.py": {
-    "mtime": 1790890870.4975562,
-    "seen": 1790891683.3903494,
-    "ast_hash": "d7214c9531a22e6bd64b5f1bbc1ca354",
+    "mtime": 1790920701.48829,
+    "seen": 1790920880.1533246,
+    "ast_hash": "92073313e08652183f58afe2d0595448",
     "semantic_hash": ""
   },
   ".agents/rules/graphify.md": {
@@ -285,12 +285,6 @@
     "mtime": 1790278398.1202338,
     "seen": 1790279812.8498611,
     "ast_hash": "a831cf3669f1e6ab85d8a80ebe655f99",
-    "semantic_hash": ""
-  },
-  "GRAPHIFY_WORKFLOW.md": {
-    "mtime": 1790019072.8189073,
-    "seen": 1790279812.8498611,
-    "ast_hash": "236fb028364a07122ee18cf70f5b7f51",
     "semantic_hash": ""
   },
   "core/prompt.txt": {
@@ -432,9 +426,9 @@
     "semantic_hash": ""
   },
   "config/music_playlist.json": {
-    "mtime": 1790890189.1693275,
-    "seen": 1790891683.3896914,
-    "ast_hash": "1f9e15365dde86f74ae7aef8fd3a130b",
+    "mtime": 1790921212.8800743,
+    "seen": 1790925362.6419315,
+    "ast_hash": "7fa7e2bc71c6dc1c1d3dc72bcb692421",
     "semantic_hash": ""
   },
   "core/path_guard.py": {
@@ -558,10 +552,10 @@
     "semantic_hash": ""
   },
   "tests/test_background_worker.py": {
-    "mtime": 1790426850.9850814,
-    "seen": 1790443582.5172513,
-    "ast_hash": "c0cb4a26d13ebb69b6674d86891b47f5",
-    "semantic_hash": "c0cb4a26d13ebb69b6674d86891b47f5"
+    "mtime": 1790920617.4663064,
+    "seen": 1790920880.1532123,
+    "ast_hash": "a4003d1f43c7d7b8af2328c648fac3c7",
+    "semantic_hash": ""
   },
   "actions/clipboard_manager.py": {
     "mtime": 1790441666.166012,
@@ -1098,8 +1092,8 @@
     "semantic_hash": ""
   },
   "config/users/Master_Wayne/protocols.yaml": {
-    "mtime": 1790890020.093542,
-    "seen": 1790891683.3903935,
+    "mtime": 1790920820.3800514,
+    "seen": 1790920880.1533608,
     "ast_hash": "9615a7dbeb0ff72ed036cca3442dfd42",
     "semantic_hash": ""
   },
@@ -1308,9 +1302,9 @@
     "semantic_hash": ""
   },
   "tests/test_minimized_hud_linux.py": {
-    "mtime": 1790667796.9385417,
-    "seen": 1790671888.915062,
-    "ast_hash": "2d48037749b764de5998f1616bb67540",
+    "mtime": 1790920572.9037793,
+    "seen": 1790920880.1532586,
+    "ast_hash": "6c5d71fc99072ad7f3ec783710142665",
     "semantic_hash": ""
   },
   "tests/test_platform_stability.py": {
@@ -1980,9 +1974,9 @@
     "semantic_hash": ""
   },
   "tests/test_stability_v1.py": {
-    "mtime": 1790691537.42643,
-    "seen": 1790691628.595708,
-    "ast_hash": "2eaed562398c74fea52a3dbe0f813a7f",
+    "mtime": 1790920595.5746665,
+    "seen": 1790920880.1532884,
+    "ast_hash": "666d23019e0064ea575e87a4ad14803a",
     "semantic_hash": ""
   },
   "docs/stability_v1/PHASE_2_NOTES.md": {
@@ -2915,12 +2909,6 @@
     "ast_hash": "10f040d796a798fbbe11997c0ccc2b60",
     "semantic_hash": ""
   },
-  "VERSION_LOCATIONS.md": {
-    "mtime": 1790889006.210942,
-    "seen": 1790889041.5850213,
-    "ast_hash": "63c2dad97ddbca643fb1e378c5277348",
-    "semantic_hash": ""
-  },
   "core/audio/gate.py": {
     "mtime": 1790890252.1613133,
     "seen": 1790891683.3897085,
@@ -2940,9 +2928,9 @@
     "semantic_hash": ""
   },
   "core/audio/wakeword_tiny.py": {
-    "mtime": 1790891148.8595915,
-    "seen": 1790891683.389717,
-    "ast_hash": "daef9d428a75b69844e6682fed383ce3",
+    "mtime": 1790925216.246007,
+    "seen": 1790925362.6420107,
+    "ast_hash": "17cc5ea82a9c64513f484961aa298915",
     "semantic_hash": ""
   },
   "core/boot/__init__.py": {
@@ -3111,6 +3099,24 @@
     "mtime": 1790891646.7857234,
     "seen": 1790891683.3904674,
     "ast_hash": "3765fb139abe3a26de6d78cbfe251a93",
+    "semantic_hash": ""
+  },
+  "tools/train_personal_verifier.py": {
+    "mtime": 1790925307.047062,
+    "seen": 1790925362.6428034,
+    "ast_hash": "d319e8bc7ddf0d693b3503e20fb7155d",
+    "semantic_hash": ""
+  },
+  "docs/GRAPHIFY_WORKFLOW.md": {
+    "mtime": 1790019072.8189073,
+    "seen": 1790925362.642855,
+    "ast_hash": "236fb028364a07122ee18cf70f5b7f51",
+    "semantic_hash": ""
+  },
+  "docs/VERSION_LOCATIONS.md": {
+    "mtime": 1790889006.210942,
+    "seen": 1790925362.6428587,
+    "ast_hash": "63c2dad97ddbca643fb1e378c5277348",
     "semantic_hash": ""
   }
 }

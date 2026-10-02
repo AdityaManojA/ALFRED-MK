@@ -269,6 +269,7 @@ class WakeWordDetector:
         self._lock             = threading.Lock()
         self._running          = False
         self._model            = None
+        self._custom_verifier  = None
         self._ready            = False
         self._triggered        = False
         self._last_trigger_time: float = 0.0
@@ -296,6 +297,15 @@ class WakeWordDetector:
                 # Another thread raced and won; discard the model we just built
                 return True
             self._model   = model
+            verifier_path = Path(__file__).resolve().parent.parent / "models" / "alfred_verifier.pkl"
+            if verifier_path.exists():
+                try:
+                    import pickle
+                    with open(verifier_path, "rb") as vf:
+                        self._custom_verifier = pickle.load(vf)
+                    self._logger("Wake word: personal voice verifier loaded.")
+                except Exception as ve:
+                    self._logger(f"Wake word: voice verifier load failed: {ve}")
             self._running = True
             self._ready   = True
             self._last_trigger_time = 0.0
@@ -455,6 +465,19 @@ class WakeWordDetector:
 
             verif_ms = (time.perf_counter() - t0) * 1000.0
             if _is_alfred_wake_phrase(text):
+                if self._custom_verifier is not None and self._model is not None:
+                    try:
+                        m_name = list(self._model.models.keys())[0]
+                        feat = self._model.preprocessor.get_features(self._model.model_inputs[m_name])
+                        prob = float(self._custom_verifier.predict_proba(feat)[0][1])
+                        if prob < 0.50:
+                            self._logger(
+                                f"[WakeWord] Burst rejected by personal voice verifier (prob={prob:.2f} < 0.50)"
+                            )
+                            return
+                    except Exception as ve:
+                        self._logger(f"[WakeWord] Verifier evaluation error (fail-open): {ve}")
+
                 total_latency_ms = (time.perf_counter() - burst_start_ts) * 1000.0
                 self._logger(
                     f"[WakeWord] Match detected via speech verifier ('{text}') "
@@ -532,6 +555,23 @@ class WakeWordDetector:
 
                 # High acoustic match -> immediate fast trigger
                 if score >= self._threshold:
+                    if self._custom_verifier is not None:
+                        try:
+                            m_name = list(self._model.models.keys())[0]
+                            feat = self._model.preprocessor.get_features(self._model.model_inputs[m_name])
+                            prob = float(self._custom_verifier.predict_proba(feat)[0][1])
+                            if prob < 0.50:
+                                self._logger(
+                                    f"[WakeWord] Candidate rejected by personal voice verifier (prob={prob:.2f} < 0.50)"
+                                )
+                                in_burst = False
+                                burst_frames.clear()
+                                silence_count = 0
+                                continue
+                            self._logger(f"[WakeWord] Personal voice verifier matched (prob={prob:.2f})")
+                        except Exception as ve:
+                            self._logger(f"[WakeWord] Verifier evaluation error (fail-open): {ve}")
+
                     gate_latency_ms = (time.perf_counter() - feed_ts) * 1000.0
                     self._logger(
                         f"[WakeWord] Match detected (score={score:.2f}) "

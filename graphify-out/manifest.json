@@ -204,9 +204,9 @@
     "semantic_hash": "e8db5f5ff95246fc94c67379d160264e"
   },
   "core/wake_word.py": {
-    "mtime": 1790920648.4195454,
-    "seen": 1790920880.1530707,
-    "ast_hash": "eb22a7768331dcc159791aa274871577",
+    "mtime": 1790925235.6065955,
+    "seen": 1790925362.642492,
+    "ast_hash": "a47555b32367f004bf6b254db607a63e",
     "semantic_hash": ""
   },
   "dashboard/__init__.py": {
@@ -285,12 +285,6 @@
     "mtime": 1790278398.1202338,
     "seen": 1790279812.8498611,
     "ast_hash": "a831cf3669f1e6ab85d8a80ebe655f99",
-    "semantic_hash": ""
-  },
-  "GRAPHIFY_WORKFLOW.md": {
-    "mtime": 1790019072.8189073,
-    "seen": 1790279812.8498611,
-    "ast_hash": "236fb028364a07122ee18cf70f5b7f51",
     "semantic_hash": ""
   },
   "core/prompt.txt": {
@@ -432,8 +426,8 @@
     "semantic_hash": ""
   },
   "config/music_playlist.json": {
-    "mtime": 1790920824.9499233,
-    "seen": 1790920880.152731,
+    "mtime": 1790921212.8800743,
+    "seen": 1790925362.6419315,
     "ast_hash": "7fa7e2bc71c6dc1c1d3dc72bcb692421",
     "semantic_hash": ""
   },
@@ -2915,12 +2909,6 @@
     "ast_hash": "10f040d796a798fbbe11997c0ccc2b60",
     "semantic_hash": ""
   },
-  "VERSION_LOCATIONS.md": {
-    "mtime": 1790889006.210942,
-    "seen": 1790889041.5850213,
-    "ast_hash": "63c2dad97ddbca643fb1e378c5277348",
-    "semantic_hash": ""
-  },
   "core/audio/gate.py": {
     "mtime": 1790890252.1613133,
     "seen": 1790891683.3897085,
@@ -2940,9 +2928,9 @@
     "semantic_hash": ""
   },
   "core/audio/wakeword_tiny.py": {
-    "mtime": 1790920663.1235547,
-    "seen": 1790920880.1527553,
-    "ast_hash": "c0b5c5a6082fc8e3c92e3f5e7e6737d9",
+    "mtime": 1790925216.246007,
+    "seen": 1790925362.6420107,
+    "ast_hash": "17cc5ea82a9c64513f484961aa298915",
     "semantic_hash": ""
   },
   "core/boot/__init__.py": {
@@ -3111,6 +3099,30 @@
     "mtime": 1790891646.7857234,
     "seen": 1790891683.3904674,
     "ast_hash": "3765fb139abe3a26de6d78cbfe251a93",
+    "semantic_hash": ""
+  },
+  "tools/train_personal_verifier.py": {
+    "mtime": 1790925307.047062,
+    "seen": 1790925362.6428034,
+    "ast_hash": "d319e8bc7ddf0d693b3503e20fb7155d",
+    "semantic_hash": ""
+  },
+  "docs/GRAPHIFY_WORKFLOW.md": {
+    "mtime": 1790019072.8189073,
+    "seen": 1790925362.642855,
+    "ast_hash": "236fb028364a07122ee18cf70f5b7f51",
+    "semantic_hash": ""
+  },
+  "docs/VERSION_LOCATIONS.md": {
+    "mtime": 1790889006.210942,
+    "seen": 1790925362.6428587,
+    "ast_hash": "63c2dad97ddbca643fb1e378c5277348",
+    "semantic_hash": ""
+  },
+  "tools/record_training_samples.py": {
+    "mtime": 1790926206.1024907,
+    "seen": 1790926612.3126016,
+    "ast_hash": "6e332e9c1025f1f2c39cd15bd3f82699",
     "semantic_hash": ""
   }
 }

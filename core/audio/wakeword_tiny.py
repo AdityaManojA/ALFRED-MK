@@ -30,6 +30,7 @@ SAMPLE_RATE: int = 16000                   # 16 kHz sample rate
 AUDIO_FRAME_SAMPLES: int = 1280            # 80 ms audio window for OpenWakeWord
 MODELS_DIR = Path(__file__).resolve().parent.parent.parent / "models"
 DEFAULT_MODEL_PATH = MODELS_DIR / "alfred.onnx"
+DEFAULT_VERIFIER_PATH = MODELS_DIR / "alfred_verifier.pkl"
 
 _LOGGER = logging.getLogger("core.audio.wakeword_tiny")
 
@@ -64,6 +65,7 @@ class DualWakeWordDetector:
         self._last_trigger_time: float = 0.0
         self._lock = threading.Lock()
         self._model: Any = None
+        self._custom_verifier: Any = None
         self._model_failed: bool = False
         self._ready: bool = False
         self._buffer: bytearray = bytearray()
@@ -97,6 +99,16 @@ class DualWakeWordDetector:
                     )
                 self._ready = True
                 _LOGGER.info("DualWakeWordDetector loaded model '%s'", self.model_path.name)
+
+                # Optionally attach custom multi-user voice verifier if present
+                if DEFAULT_VERIFIER_PATH.exists():
+                    try:
+                        import pickle
+                        with open(DEFAULT_VERIFIER_PATH, "rb") as vf:
+                            self._custom_verifier = pickle.load(vf)
+                        _LOGGER.info("DualWakeWordDetector loaded personal voice verifier '%s'", DEFAULT_VERIFIER_PATH.name)
+                    except Exception as ve:
+                        _LOGGER.warning("Could not load custom voice verifier: %s", ve)
             except Exception as exc:
                 _LOGGER.warning("Could not initialize openwakeword Model: %s (fail-open)", exc)
                 self._model_failed = True
@@ -172,6 +184,23 @@ class DualWakeWordDetector:
             triggered_confidence = bare_score
 
         if triggered_phrase is not None:
+            # 5. Voice verifier check if custom multi-user verifier is loaded
+            if self._custom_verifier is not None and self._model is not None:
+                try:
+                    model_name = list(self._model.models.keys())[0]
+                    features = self._model.preprocessor.get_features(self._model.model_inputs[model_name])
+                    prob = float(self._custom_verifier.predict_proba(features)[0][1])
+                    if prob < 0.50:
+                        _LOGGER.info(
+                            "[WAKE] Candidate '%s' rejected by voice verifier (prob=%.2f < 0.50)",
+                            triggered_phrase,
+                            prob,
+                        )
+                        return None
+                    _LOGGER.info("[WAKE] Voice verifier match (prob=%.2f >= 0.50)", prob)
+                except Exception as exc:
+                    _LOGGER.debug("Custom verifier check failed: %s (fail-open)", exc)
+
             self._last_trigger_time = time.monotonic()
             result = WakeDetectionResult(
                 phrase=triggered_phrase,
