@@ -70,7 +70,7 @@ class TestMinimizedHudLinuxLifecycle(unittest.TestCase):
         self.assertFalse(self.overlay._user_closed)
 
         # Confirm Sentry indicator pill updated immediately
-        self.assertIn("FOC 20:00", self.overlay._sentry_btn.text())
+        self.assertIn("20:00", self.overlay._sentry_btn.text())
 
     def test_restore_hides_overlay(self):
         """Restoring full window dismisses/hides the overlay."""

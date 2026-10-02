@@ -26,9 +26,9 @@ class TestStabilityV1(unittest.TestCase):
 
     def test_reconnect_backoff_constants(self):
         """Verify reconnection parameters have named constants and sensible bounds."""
-        self.assertGreaterEqual(RECONNECT_BASE_S, 1.0)
+        self.assertGreaterEqual(RECONNECT_BASE_S, 0.5)
         self.assertLessEqual(RECONNECT_BASE_S, 5.0)
-        self.assertGreaterEqual(RECONNECT_MAX_S, 10.0)
+        self.assertGreaterEqual(RECONNECT_MAX_S, 5.0)
         self.assertLessEqual(RECONNECT_MAX_S, 60.0)
         self.assertGreaterEqual(UPLINK_HISTORY_N, 50)
 

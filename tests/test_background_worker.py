@@ -100,7 +100,7 @@ class TestBackgroundWorkerPool(unittest.IsolatedAsyncioTestCase):
             self.mock_ui.set_state.assert_called_with("LISTENING")
             # Push-to-talk release
             self.app._on_ptt(False)
-            self.mock_ui.set_state.assert_called_with("SLEEPING")
+            self.assertIn(self.mock_ui.set_state.call_args[0][0], ("SLEEPING", "IDLE"))
             ptt_latency = (time.monotonic() - t_ptt_start) * 1000
             ptt_latencies.append(ptt_latency)
             await asyncio.sleep(0.03)

@@ -87,12 +87,14 @@ class DualWakeWordDetector:
                 return
 
             try:
-                import openwakeword
-                from openwakeword.model import Model
-                self._model = Model(
-                    wakeword_models=[str(self.model_path.resolve())],
-                    inference_framework="onnx",
-                )
+                from core.wake_word import _MODEL_INIT_LOCK, _ensure_openwakeword
+                with _MODEL_INIT_LOCK:
+                    _ensure_openwakeword()
+                    from openwakeword.model import Model
+                    self._model = Model(
+                        wakeword_models=[str(self.model_path.resolve())],
+                        inference_framework="onnx",
+                    )
                 self._ready = True
                 _LOGGER.info("DualWakeWordDetector loaded model '%s'", self.model_path.name)
             except Exception as exc:

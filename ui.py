@@ -1347,7 +1347,7 @@ class _SysMetrics:
 
 FRAME_BUDGET_MS: float = 16.7             # 60 FPS target budget (~16.7 ms per frame)
 FRAME_TIME_BUDGET_MS: float = 16.7        # backward compat alias
-FRAME_WARN_MS: float = 25.0               # Warn threshold for paint spikes (tightened from 45.0)
+FRAME_WARN_MS: float = 50.0               # Warn threshold for paint spikes (50.0 ms ceiling)
 PAINT_WARN_THRESHOLD_MS: float = 45.0     # legacy test backward compat
 FRAME_WARN_COOLDOWN_S: float = 5.0        # Rate limit warning logs to avoid spam
 
@@ -6573,6 +6573,8 @@ class MainWindow(QMainWindow):
     _hud_video_show_sig = pyqtSignal()   # thread-safe: show video surface
     _hud_video_hide_sig = pyqtSignal()   # thread-safe: restore avatar
     _scheduler_event_sig = pyqtSignal(object)  # task engine event from scheduler thread
+    _req_set_scheduler = pyqtSignal(object)    # thread-safe marshalling of scheduler attachment
+    _req_show_task_board = pyqtSignal()        # thread-safe marshalling of task board presentation
     _toast_sig      = pyqtSignal(str)          # notification / barge-in toast message
 
     def __init__(self, face_path: str):
@@ -6800,6 +6802,8 @@ class MainWindow(QMainWindow):
         self._hud_video_show_sig.connect(self._on_hud_video_show)
         self._hud_video_hide_sig.connect(self._on_hud_video_hide)
         self._scheduler_event_sig.connect(self._on_scheduler_event)
+        self._req_set_scheduler.connect(self._do_set_scheduler)
+        self._req_show_task_board.connect(self._do_show_task_board)
         self._toast_sig.connect(self._show_toast)
         self._cam_stop = threading.Event()
 
@@ -6815,8 +6819,6 @@ class MainWindow(QMainWindow):
         self._ready = self._check_config()
         if not self._ready:
             self._show_setup()
-        else:
-            QTimer.singleShot(2500, self._prewarm_settings_overlays)
         QTimer.singleShot(4000, self._initial_memory_trim)
         QTimer.singleShot(0, self._start_animations)
 
@@ -10099,7 +10101,14 @@ class MainWindow(QMainWindow):
         viewer.show_image(path, caption=caption, host=extract_host(path))
 
     def set_scheduler(self, scheduler) -> None:
-        """Attach the local task scheduler after application startup."""
+        """Attach the local task scheduler after application startup (thread-safe)."""
+        app = QApplication.instance()
+        if app and threading.current_thread() is not threading.main_thread():
+            self._req_set_scheduler.emit(scheduler)
+            return
+        self._do_set_scheduler(scheduler)
+
+    def _do_set_scheduler(self, scheduler) -> None:
         from core.ui.task_board import TaskBoard
         if self._task_board is None:
             self._task_board = TaskBoard(scheduler, self)
@@ -10118,6 +10127,14 @@ class MainWindow(QMainWindow):
             pass
 
     def show_task_board(self) -> None:
+        """Present the task board overlay (thread-safe)."""
+        app = QApplication.instance()
+        if app and threading.current_thread() is not threading.main_thread():
+            self._req_show_task_board.emit()
+            return
+        self._do_show_task_board()
+
+    def _do_show_task_board(self) -> None:
         if self._task_board is not None:
             self._task_board.refresh()
             self._task_board.show()

@@ -93,13 +93,44 @@ def _prewarm_whisper_background() -> None:
         pass
 
 
+# Prewarm openwakeword modules at import to prevent circular import races across worker threads
+try:
+    import openwakeword
+    import openwakeword.utils
+    from openwakeword.model import Model
+except Exception:
+    pass
+
+_MODEL_INIT_LOCK = threading.Lock()
+
+
+def _ensure_openwakeword():
+    """Ensure openwakeword is completely initialized and attribute-populated."""
+    try:
+        import openwakeword
+        import openwakeword.utils
+        if not hasattr(openwakeword, "get_pretrained_model_paths"):
+            models = getattr(openwakeword, "MODELS", {})
+            def get_pretrained_model_paths(inference_framework="tflite"):
+                if inference_framework == "tflite":
+                    return [models[i]["model_path"] for i in models.keys()]
+                elif inference_framework == "onnx":
+                    return [models[i]["model_path"].replace(".tflite", ".onnx") for i in models.keys()]
+            openwakeword.get_pretrained_model_paths = get_pretrained_model_paths
+        return openwakeword
+    except Exception:
+        return None
+
+
 def _make_model():
     """Create a fresh, independent OpenWakeWord Model instance."""
-    from openwakeword.model import Model
-    return Model(
-        wakeword_models=[str(WAKEWORD_MODEL_PATH)],
-        inference_framework="onnx",
-    )
+    with _MODEL_INIT_LOCK:
+        _ensure_openwakeword()
+        from openwakeword.model import Model
+        return Model(
+            wakeword_models=[str(WAKEWORD_MODEL_PATH)],
+            inference_framework="onnx",
+        )
 
 
 get_shared_model = _make_model
@@ -131,16 +162,19 @@ def is_ready() -> bool:
     if not is_installed():
         return False
     try:
-        import openwakeword
-        models_dir = Path(openwakeword.__file__).resolve().parent / "resources" / "models"
-        if not models_dir.is_dir():
-            return False
-        has_wake = WAKE_MODEL_PATH.is_file()
-        has_mel  = (any(models_dir.glob("melspectrogram*.onnx"))
-                    or any(models_dir.glob("melspectrogram*.tflite")))
-        has_emb  = (any(models_dir.glob("embedding_model*.onnx"))
-                    or any(models_dir.glob("embedding_model*.tflite")))
-        return bool(has_wake and has_mel and has_emb)
+        with _MODEL_INIT_LOCK:
+            ow = _ensure_openwakeword()
+            if ow is None:
+                return False
+            models_dir = Path(ow.__file__).resolve().parent / "resources" / "models"
+            if not models_dir.is_dir():
+                return False
+            has_wake = WAKE_MODEL_PATH.is_file()
+            has_mel  = (any(models_dir.glob("melspectrogram*.onnx"))
+                        or any(models_dir.glob("melspectrogram*.tflite")))
+            has_emb  = (any(models_dir.glob("embedding_model*.onnx"))
+                        or any(models_dir.glob("embedding_model*.tflite")))
+            return bool(has_wake and has_mel and has_emb)
     except Exception:
         return False
 
