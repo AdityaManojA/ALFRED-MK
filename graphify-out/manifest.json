@@ -204,9 +204,9 @@
     "semantic_hash": "e8db5f5ff95246fc94c67379d160264e"
   },
   "core/wake_word.py": {
-    "mtime": 1790925235.6065955,
-    "seen": 1790925362.642492,
-    "ast_hash": "a47555b32367f004bf6b254db607a63e",
+    "mtime": 1790931917.3978188,
+    "seen": 1790932058.4016566,
+    "ast_hash": "89da24088dcd124c0684392c76576229",
     "semantic_hash": ""
   },
   "dashboard/__init__.py": {
@@ -426,8 +426,8 @@
     "semantic_hash": ""
   },
   "config/music_playlist.json": {
-    "mtime": 1790921212.8800743,
-    "seen": 1790925362.6419315,
+    "mtime": 1790929496.2246366,
+    "seen": 1790929606.3618581,
     "ast_hash": "7fa7e2bc71c6dc1c1d3dc72bcb692421",
     "semantic_hash": ""
   },
@@ -1092,8 +1092,8 @@
     "semantic_hash": ""
   },
   "config/users/Master_Wayne/protocols.yaml": {
-    "mtime": 1790920820.3800514,
-    "seen": 1790920880.1533608,
+    "mtime": 1790929488.328243,
+    "seen": 1790929606.3638976,
     "ast_hash": "9615a7dbeb0ff72ed036cca3442dfd42",
     "semantic_hash": ""
   },
@@ -2874,9 +2874,9 @@
     "semantic_hash": ""
   },
   "tests/test_hybrid_wake.py": {
-    "mtime": 1790863463.7118235,
-    "seen": 1790863628.0171618,
-    "ast_hash": "f004e7ea0d5f763427b9e492412581d0",
+    "mtime": 1790928266.1025026,
+    "seen": 1790928353.0452375,
+    "ast_hash": "fe10b1dd8ec4dd4ca796eacf1c1a745a",
     "semantic_hash": ""
   },
   "tests/test_voice_sleep.py": {
@@ -2928,9 +2928,9 @@
     "semantic_hash": ""
   },
   "core/audio/wakeword_tiny.py": {
-    "mtime": 1790925216.246007,
-    "seen": 1790925362.6420107,
-    "ast_hash": "17cc5ea82a9c64513f484961aa298915",
+    "mtime": 1790931935.4301138,
+    "seen": 1790932058.4011323,
+    "ast_hash": "af900697c4f31ef497df721cbd5dae93",
     "semantic_hash": ""
   },
   "core/boot/__init__.py": {
@@ -3102,9 +3102,9 @@
     "semantic_hash": ""
   },
   "tools/train_personal_verifier.py": {
-    "mtime": 1790925307.047062,
-    "seen": 1790925362.6428034,
-    "ast_hash": "d319e8bc7ddf0d693b3503e20fb7155d",
+    "mtime": 1790931978.0494063,
+    "seen": 1790932058.4026678,
+    "ast_hash": "3b5e7ab9d2bba424ed2449a2a204eee8",
     "semantic_hash": ""
   },
   "docs/GRAPHIFY_WORKFLOW.md": {
@@ -3120,9 +3120,495 @@
     "semantic_hash": ""
   },
   "tools/record_training_samples.py": {
-    "mtime": 1790926206.1024907,
-    "seen": 1790926612.3126016,
-    "ast_hash": "6e332e9c1025f1f2c39cd15bd3f82699",
+    "mtime": 1790927916.832083,
+    "seen": 1790928353.0453472,
+    "ast_hash": "e1ce46f4fb9b0cc2357d1adbe1d0e611",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1790926788_01.wav": {
+    "mtime": 1790926788.890384,
+    "seen": 1790927339.8899052,
+    "ast_hash": "1e68b8cac182e63092e54c9436ad4455",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1790926793_02.wav": {
+    "mtime": 1790926793.680971,
+    "seen": 1790927339.8899083,
+    "ast_hash": "87f5531953f0628d81e30251a1c406bc",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1790926797_03.wav": {
+    "mtime": 1790926797.4797137,
+    "seen": 1790927339.8899097,
+    "ast_hash": "46d487b1df4a520f73a38b339e2fb5a3",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1790926800_04.wav": {
+    "mtime": 1790926800.942971,
+    "seen": 1790927339.8899117,
+    "ast_hash": "48135a0a8180b7b2884ada97db5d7783",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1790926804_05.wav": {
+    "mtime": 1790926804.5669787,
+    "seen": 1790927339.889913,
+    "ast_hash": "a2b535eb9e746cb3b9aa727ab9bfdb5a",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1790926808_06.wav": {
+    "mtime": 1790926808.9389255,
+    "seen": 1790927339.8899145,
+    "ast_hash": "fb5d4ed1f2b1c0046381d276bba936ee",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1790926812_07.wav": {
+    "mtime": 1790926812.3267677,
+    "seen": 1790927339.889916,
+    "ast_hash": "0570312ff82034f2b6e7899281a8160b",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1790926815_08.wav": {
+    "mtime": 1790926815.7918408,
+    "seen": 1790927339.8899174,
+    "ast_hash": "c62471c455f2ee85e25ad10033be90ff",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1790926819_09.wav": {
+    "mtime": 1790926819.848599,
+    "seen": 1790927339.889919,
+    "ast_hash": "7101442b4f7e97c98ed5d3319b3e8b2e",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1790926823_10.wav": {
+    "mtime": 1790926823.4458277,
+    "seen": 1790927339.8899207,
+    "ast_hash": "837dbeff6a70b42493a2c310884a06ff",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1790926728_01.wav": {
+    "mtime": 1790926728.9513037,
+    "seen": 1790927339.8899221,
+    "ast_hash": "4ef51f773207bccab509963e434e303b",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1790926731_02.wav": {
+    "mtime": 1790926731.6425788,
+    "seen": 1790927339.8899236,
+    "ast_hash": "aaf046aad5f90cbdfaaa1bed09887cf5",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1790926734_03.wav": {
+    "mtime": 1790926734.566883,
+    "seen": 1790927339.8899248,
+    "ast_hash": "63c394c385afcc66ff472a360891b51c",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1790926737_04.wav": {
+    "mtime": 1790926737.0177655,
+    "seen": 1790927339.8899264,
+    "ast_hash": "0ebf44c4973a8aa161a9e213ec1cde60",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1790926739_05.wav": {
+    "mtime": 1790926739.2453616,
+    "seen": 1790927339.8899279,
+    "ast_hash": "ff4826622be7025866df179b6376abfb",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1790926741_06.wav": {
+    "mtime": 1790926741.5317073,
+    "seen": 1790927339.8899295,
+    "ast_hash": "e1a97932189a9e0c14a9c501311f8ffd",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1790926743_07.wav": {
+    "mtime": 1790926743.6974244,
+    "seen": 1790927339.8899307,
+    "ast_hash": "732cbf07700dfa265bf85479770215af",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1790926746_08.wav": {
+    "mtime": 1790926746.1568396,
+    "seen": 1790927339.8899324,
+    "ast_hash": "837da7045bd15ca45cfdaf6cdc5a74c2",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1790926748_09.wav": {
+    "mtime": 1790926748.589772,
+    "seen": 1790927339.8899336,
+    "ast_hash": "35e6156c55e4d6b2b2e0a72610b985fa",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1790926751_10.wav": {
+    "mtime": 1790926751.0298066,
+    "seen": 1790927339.8899348,
+    "ast_hash": "7c92f97bcb552f0318eaea67d849732f",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1790926753_11.wav": {
+    "mtime": 1790926753.5124931,
+    "seen": 1790927339.8899364,
+    "ast_hash": "7c81657bcedf92057a5b4acd0844090a",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1790926755_12.wav": {
+    "mtime": 1790926755.9541013,
+    "seen": 1790927339.8899376,
+    "ast_hash": "d01b49a06627b59d9614723d6b1da832",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1790926758_13.wav": {
+    "mtime": 1790926758.6170688,
+    "seen": 1790927339.8899393,
+    "ast_hash": "83ed4f59f94d20f88e1ad7510a806540",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1790926761_14.wav": {
+    "mtime": 1790926761.0935109,
+    "seen": 1790927339.8899405,
+    "ast_hash": "050b283c1e3d30d8327e8192fe8ae4fb",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1790926764_15.wav": {
+    "mtime": 1790926764.5823853,
+    "seen": 1790927339.889942,
+    "ast_hash": "60d19de944dfea2a0887918556d94f5c",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_00.wav": {
+    "mtime": 1790927781.8959997,
+    "seen": 1790928353.0459094,
+    "ast_hash": "2d4b25022f0f8c51f70b9f6e9ee39fb0",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_01.wav": {
+    "mtime": 1790927781.9013746,
+    "seen": 1790928353.0459118,
+    "ast_hash": "a23255434151b9832733f6d5076a20a7",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_02.wav": {
+    "mtime": 1790927781.90447,
+    "seen": 1790928353.0459137,
+    "ast_hash": "9d0b3e136bde4bc1697cc8e08b257e81",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_03.wav": {
+    "mtime": 1790927781.9070294,
+    "seen": 1790928353.0459151,
+    "ast_hash": "a1ddf52b3179d92a5b43851c119876b2",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_04.wav": {
+    "mtime": 1790927781.909855,
+    "seen": 1790928353.0459166,
+    "ast_hash": "84965b4d265d55cf55d1ff929864980c",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_05.wav": {
+    "mtime": 1790927781.9123921,
+    "seen": 1790928353.0459182,
+    "ast_hash": "050e3bb1d33dd729ee3e62abf07cdba1",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_06.wav": {
+    "mtime": 1790927781.914487,
+    "seen": 1790928353.0459197,
+    "ast_hash": "56dfd3945289fbf39fed85218dbdf590",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_07.wav": {
+    "mtime": 1790927781.9175656,
+    "seen": 1790928353.0459213,
+    "ast_hash": "b3535ddb2355dc9185ffde77e8a7ab79",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_08.wav": {
+    "mtime": 1790927781.919097,
+    "seen": 1790928353.0459232,
+    "ast_hash": "3fa1585552783e9608f4557e387747f8",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_09.wav": {
+    "mtime": 1790927781.9213302,
+    "seen": 1790928353.0459247,
+    "ast_hash": "9f0d78cc8fce8d366c8b1b872dfb55dc",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_10.wav": {
+    "mtime": 1790927781.9237988,
+    "seen": 1790928353.0459263,
+    "ast_hash": "1843877a8e5070d77f5eb821814fd3dc",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_11.wav": {
+    "mtime": 1790927781.9260924,
+    "seen": 1790928353.0459282,
+    "ast_hash": "d26be0830584d92e5fdac5d24af0e50d",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_12.wav": {
+    "mtime": 1790927781.9281836,
+    "seen": 1790928353.0459297,
+    "ast_hash": "04293fcf6693750775162680e7ea6684",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_13.wav": {
+    "mtime": 1790927781.931227,
+    "seen": 1790928353.0459316,
+    "ast_hash": "cf575f663021b05669b8d1e1d7fb23ec",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_14.wav": {
+    "mtime": 1790927781.9346416,
+    "seen": 1790928353.0459332,
+    "ast_hash": "95eebbcf0fefb1212fa8d4ec24d6afc0",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_15.wav": {
+    "mtime": 1790927781.9363117,
+    "seen": 1790928353.0459347,
+    "ast_hash": "98b51103a102acd9532627146761cb2b",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_16.wav": {
+    "mtime": 1790927781.940337,
+    "seen": 1790928353.0459363,
+    "ast_hash": "de39e28e532d449c2b550f67f1728fbe",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_17.wav": {
+    "mtime": 1790927781.9444344,
+    "seen": 1790928353.045938,
+    "ast_hash": "e40b356301d24c623a71b628547f998c",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_18.wav": {
+    "mtime": 1790927781.9486542,
+    "seen": 1790928353.0459397,
+    "ast_hash": "1f8188841613f8ec96507810fce68301",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_19.wav": {
+    "mtime": 1790927781.9537406,
+    "seen": 1790928353.0459416,
+    "ast_hash": "b016fc9e52251294e2cb9e59634cc298",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_20.wav": {
+    "mtime": 1790927781.9589,
+    "seen": 1790928353.0459437,
+    "ast_hash": "42d805d64f85a9a49bcffabad1ec88db",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_21.wav": {
+    "mtime": 1790927781.961965,
+    "seen": 1790928353.0459454,
+    "ast_hash": "266f960695a3cc7d8d27faa7be9e24a2",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_22.wav": {
+    "mtime": 1790927781.9650536,
+    "seen": 1790928353.045947,
+    "ast_hash": "246e55330dda2955fc0e11a37f9bdd5f",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_23.wav": {
+    "mtime": 1790927781.9675295,
+    "seen": 1790928353.0459492,
+    "ast_hash": "4caad9174c14f199be0e9b43e5e92f3e",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_24.wav": {
+    "mtime": 1790927781.970564,
+    "seen": 1790928353.0459507,
+    "ast_hash": "7c14bec4823ccf331016499ff0c275aa",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_25.wav": {
+    "mtime": 1790927781.9727373,
+    "seen": 1790928353.0459526,
+    "ast_hash": "09455442b9f393d9449ccff66e6b0f8a",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_26.wav": {
+    "mtime": 1790927781.975965,
+    "seen": 1790928353.0459542,
+    "ast_hash": "1bb8350ea4812bdbe7818c79f0d823e1",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_27.wav": {
+    "mtime": 1790927781.9796307,
+    "seen": 1790928353.0459707,
+    "ast_hash": "60022e4e0c74d95c5f57488f0fbd7172",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_28.wav": {
+    "mtime": 1790927781.982852,
+    "seen": 1790928353.0459726,
+    "ast_hash": "e592e9af2b40aa8a413beab95165e5c8",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_29.wav": {
+    "mtime": 1790927781.9854925,
+    "seen": 1790928353.0459745,
+    "ast_hash": "7a977dbc0bb8678dbb326e22d31aad99",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_30.wav": {
+    "mtime": 1790927781.9875581,
+    "seen": 1790928353.0459764,
+    "ast_hash": "bc4ad6c86de3c1062eecdc4d7d69b3cc",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_31.wav": {
+    "mtime": 1790927781.9901733,
+    "seen": 1790928353.045978,
+    "ast_hash": "b1db723e78baebc9621db766c00c43e1",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_32.wav": {
+    "mtime": 1790927781.9921918,
+    "seen": 1790928353.045994,
+    "ast_hash": "139da92fbbf9c3d0d52c98ad350a55dc",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_33.wav": {
+    "mtime": 1790927781.9962606,
+    "seen": 1790928353.0459955,
+    "ast_hash": "da891f6712eee7226b8b1f65d51e63d0",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_34.wav": {
+    "mtime": 1790927781.998882,
+    "seen": 1790928353.0459971,
+    "ast_hash": "986c7f19d5e4fceba7b49ae59b2fac3c",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_35.wav": {
+    "mtime": 1790927782.0020306,
+    "seen": 1790928353.0459986,
+    "ast_hash": "fe41ae2f617d3ee3dd053c56889abeee",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_36.wav": {
+    "mtime": 1790927782.004915,
+    "seen": 1790928353.0460002,
+    "ast_hash": "78b552f6d80933830cc2995b1157d787",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_37.wav": {
+    "mtime": 1790927782.0075088,
+    "seen": 1790928353.0460021,
+    "ast_hash": "680fb3982a09b44dfc23c1e1e8f35aba",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_38.wav": {
+    "mtime": 1790927782.0100796,
+    "seen": 1790928353.046004,
+    "ast_hash": "2c3610a603ea0f247cb69b0fa4b187ec",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/synthetic_noise_39.wav": {
+    "mtime": 1790927782.0121439,
+    "seen": 1790928353.0460055,
+    "ast_hash": "315417abcdf8ec114cc2cc4effab6747",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/friend_hey_alfred_1790927416_01.wav": {
+    "mtime": 1790927750.133438,
+    "seen": 1790928353.0460513,
+    "ast_hash": "c8aa94a8ec6958b330961d04f852e08d",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/friend_hey_alfred_1790927422_02.wav": {
+    "mtime": 1790927750.1349926,
+    "seen": 1790928353.0460532,
+    "ast_hash": "9c99bc2480741f9d3e75a446d1fe20ef",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/friend_hey_alfred_1790927426_03.wav": {
+    "mtime": 1790927750.13606,
+    "seen": 1790928353.0460544,
+    "ast_hash": "cc50e2289523f123450ba25c02565b2e",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/friend_hey_alfred_1790927429_04.wav": {
+    "mtime": 1790927750.1384833,
+    "seen": 1790928353.046056,
+    "ast_hash": "9b698be90991acaf64aa3c850796a257",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/friend_hey_alfred_1790927432_05.wav": {
+    "mtime": 1790927750.140027,
+    "seen": 1790928353.0460575,
+    "ast_hash": "5b34b24ed65da423a21bcd614f260cd0",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/friend_hey_alfred_1790927436_06.wav": {
+    "mtime": 1790927750.1416724,
+    "seen": 1790928353.046059,
+    "ast_hash": "61a22afe12174ca5e5df7f661bf90f9b",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/friend_hey_alfred_1790927439_07.wav": {
+    "mtime": 1790927750.144276,
+    "seen": 1790928353.0460608,
+    "ast_hash": "278a0638bc61130092f1895a8a5da151",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/friend_hey_alfred_1790927442_08.wav": {
+    "mtime": 1790927750.145802,
+    "seen": 1790928353.0460627,
+    "ast_hash": "a7c5c7c0b40a10e83c549ca2b68efbd3",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/friend_hey_alfred_1790927445_09.wav": {
+    "mtime": 1790927750.1474812,
+    "seen": 1790928353.0460646,
+    "ast_hash": "12cc41cdb5e9b8e98506c468a41a5c6e",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/friend_hey_alfred_1790927448_10.wav": {
+    "mtime": 1790927750.1490114,
+    "seen": 1790928353.046067,
+    "ast_hash": "8616533a9cd86e5e0eb6c55af4a60a39",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/friend_hey_alfred_1790927451_11.wav": {
+    "mtime": 1790927750.1510868,
+    "seen": 1790928353.0460684,
+    "ast_hash": "9c327b0508f4d6e2159c7ee375847ea9",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/friend_hey_alfred_1790927455_12.wav": {
+    "mtime": 1790927750.1526253,
+    "seen": 1790928353.046071,
+    "ast_hash": "e5260928716fa3a8db11c4b3d27fecf8",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/friend_hey_alfred_1790927458_13.wav": {
+    "mtime": 1790927750.153162,
+    "seen": 1790928353.0460749,
+    "ast_hash": "6459cc64b67aee6c98cfaf3297676d94",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/friend_hey_alfred_1790927462_14.wav": {
+    "mtime": 1790927750.1541717,
+    "seen": 1790928353.0460787,
+    "ast_hash": "f9753f5e4deed4304746e9cc89f29396",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/friend_hey_alfred_1790927466_15.wav": {
+    "mtime": 1790927750.1571307,
+    "seen": 1790928353.0460823,
+    "ast_hash": "54f390a1edfc3d6af8a190717a36b223",
+    "semantic_hash": ""
+  },
+  "data/focus_ledger.json": {
+    "mtime": 1790930956.1309834,
+    "seen": 1790932058.4016566,
+    "ast_hash": "464bc8bddbfcffe7501e72b3aff7851e",
     "semantic_hash": ""
   }
 }

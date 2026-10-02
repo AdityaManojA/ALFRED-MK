@@ -15,6 +15,13 @@ import pickle
 import sys
 import time
 
+for stream in (sys.stdout, sys.stderr):
+    if stream and hasattr(stream, "reconfigure"):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -92,7 +99,7 @@ def record_interactive_negative(num_clips: int = 10) -> None:
     print(f"🎉 Successfully recorded {num_clips} negative clips!")
 
 
-def extract_positive_features(wav_path: str, model: any, model_name: str, threshold: float = 0.02, N: int = 3) -> any:
+def extract_positive_features(wav_path: str, model: any, model_name: str) -> any:
     import numpy as np
     import scipy.io.wavfile as wavfile
 
@@ -101,25 +108,30 @@ def extract_positive_features(wav_path: str, model: any, model_name: str, thresh
         dat = dat[:, 0]
     features_list = []
     step_size = 1280
-    for _ in range(N):
-        start_offset = np.random.randint(0, min(1280, len(dat))) if N > 1 else 0
-        sliced = dat[start_offset:]
-        peak_score = -1.0
-        peak_feat = None
-        for i in range(0, len(sliced) - step_size, step_size):
-            chunk = sliced[i:i + step_size]
-            preds = model.predict(chunk)
-            score = max(float(v) for v in preds.values()) if preds else 0.0
+    model.reset()
+
+    for i in range(0, len(dat) - step_size, step_size):
+        chunk = dat[i:i + step_size]
+        rms = float(np.sqrt(np.mean(chunk.astype(np.float32) ** 2)))
+        model.predict(chunk)
+        if rms >= 250.0:
             feat = model.preprocessor.get_features(model.model_inputs[model_name])
-            if score >= threshold:
+            if feat.shape == (1, 16, 96):
                 features_list.append(feat)
-            if score > peak_score:
-                peak_score = score
-                peak_feat = feat
-        if not features_list and peak_feat is not None:
-            features_list.append(peak_feat)
+
     if not features_list:
-        import numpy as np
+        rms_scores = [(j, float(np.sqrt(np.mean(dat[j:j+step_size].astype(np.float32)**2))))
+                      for j in range(0, len(dat) - step_size, step_size)]
+        rms_scores.sort(key=lambda x: x[1], reverse=True)
+        model.reset()
+        for j, _ in rms_scores[:3]:
+            for k in range(0, j + step_size, step_size):
+                model.predict(dat[k:k+step_size])
+            feat = model.preprocessor.get_features(model.model_inputs[model_name])
+            if feat.shape == (1, 16, 96):
+                features_list.append(feat)
+
+    if not features_list:
         return np.empty((0, model.model_inputs[model_name], 96))
     return np.vstack(features_list)
 
@@ -133,13 +145,14 @@ def extract_negative_features(wav_path: str, model: any, model_name: str) -> any
         dat = dat[:, 0]
     features_list = []
     step_size = 1280
+    model.reset()
     for i in range(0, len(dat) - step_size, step_size):
         chunk = dat[i:i + step_size]
-        _ = model.predict(chunk)
+        model.predict(chunk)
         feat = model.preprocessor.get_features(model.model_inputs[model_name])
-        features_list.append(feat)
+        if feat.shape == (1, 16, 96):
+            features_list.append(feat)
     if not features_list:
-        import numpy as np
         return np.empty((0, model.model_inputs[model_name], 96))
     return np.vstack(features_list)
 
@@ -213,6 +226,14 @@ def train_verifier() -> bool:
             if feats.shape[0] > 0:
                 neg_feature_list.append(feats)
 
+        # Add digital silence and ambient noise to negative dataset
+        oww.reset()
+        for _ in range(50):
+            oww.predict(np.zeros(1280, dtype=np.int16))
+            feat = oww.preprocessor.get_features(16)
+            if feat.shape == (1, 16, 96):
+                neg_feature_list.append(feat)
+
         neg_features = np.vstack(neg_feature_list)
         print(f"  ✓ Extracted {neg_features.shape[0]} negative feature frames.")
 
@@ -239,7 +260,10 @@ def train_verifier() -> bool:
 
 
 def test_live() -> None:
-    """Live microphone test showing base model activation score + personal voice verification probability."""
+    """Live microphone test demonstrating hybrid wake-word verification:
+    1. Wake Word Match (Acoustic model score or Whisper speech burst)
+    2. Speaker Verification (Aditya/Friend vs Stranger/TV via alfred_verifier.pkl)
+    """
     if not VERIFIER_PATH.exists():
         print(f"❌ Verifier model not found at {VERIFIER_PATH}.")
         print("Train one first with: py tools/train_personal_verifier.py --train")
@@ -247,7 +271,13 @@ def test_live() -> None:
 
     import numpy as np
     import sounddevice as sd
-    from core.wake_word import _ensure_openwakeword, _MODEL_INIT_LOCK
+    from core.wake_word import (
+        _ensure_openwakeword,
+        _MODEL_INIT_LOCK,
+        _is_alfred_wake_phrase,
+        _get_whisper_verifier,
+        DEFAULT_THRESHOLD,
+    )
 
     with _MODEL_INIT_LOCK:
         _ensure_openwakeword()
@@ -260,11 +290,22 @@ def test_live() -> None:
     with open(VERIFIER_PATH, "rb") as f:
         verifier = pickle.load(f)
 
+    # Prewarm Whisper in background
+    whisper_model = _get_whisper_verifier()
+
     print("\n🎧 Listening live... Speak 'Hey Alfred' or 'Alfred' into your microphone.")
-    print("Press Ctrl+C to stop.\n")
+    print("Dual Gate Active: Requires Wake Phrase + Authorized Voice (Aditya/Friend).")
+    print("Microphone VU meter active. Press Ctrl+C to stop.\n")
 
     step_size = 1280  # 80ms at 16kHz
     buffer = bytearray()
+    last_ui_update = 0.0
+
+    # Speech burst accumulator for Whisper verifier
+    in_burst = False
+    burst_frames = []
+    silence_count = 0
+    noise_floor = 110.0
 
     def callback(indata, frames, _time_info, _status):
         nonlocal buffer
@@ -279,16 +320,74 @@ def test_live() -> None:
                     arr = np.frombuffer(chunk, dtype=np.int16)
                     preds = model.predict(arr)
                     score = max(float(v) for v in preds.values()) if preds else 0.0
+                    rms = float(np.sqrt(np.mean(arr.astype(np.float32) ** 2)))
 
-                    if score >= 0.038:
-                        # Extract embeddings and score via verifier
-                        model_name = list(model.models.keys())[0]
-                        features = model.preprocessor.get_features(model.model_inputs[model_name])
-                        feat_flat = features.flatten().reshape(1, -1)
-                        prob = float(verifier.predict_proba(feat_flat)[0][1])
+                    model_name = list(model.models.keys())[0]
+                    features = model.preprocessor.get_features(model.model_inputs[model_name])
+                    prob = float(verifier.predict_proba(features)[0][1])
 
-                        status = "AUTHORIZED (MATCH)" if prob >= 0.5 else "REJECTED (STRANGER / MEDIA)"
-                        print(f"🎯 Detection: Base Score={score:.3f} | Voice Match={prob * 100:.1f}% -> {status}")
+                    # Gate 1A: Acoustic Wake Match (score >= DEFAULT_THRESHOLD)
+                    if score >= DEFAULT_THRESHOLD:
+                        speaker = "Aditya/Friend" if prob >= 0.50 else "Guest/Other Voice"
+                        print(f"\n🎯 [WAKE DETECTED] Acoustic Match ({score:.3f}) | Speaker: {speaker} ({prob * 100:5.1f}%) -> AUTHORIZED\n")
+                        time.sleep(1.0)
+                        in_burst = False
+                        burst_frames.clear()
+                        silence_count = 0
+                        continue
+
+                    # Gate 1B: Speech Burst Whisper Verifier (captures real conversational phrasing)
+                    is_speech = rms >= max(160.0, noise_floor * 1.4)
+                    if is_speech:
+                        if not in_burst:
+                            in_burst = True
+                            burst_frames.clear()
+                            silence_count = 0
+                        burst_frames.append(arr)
+                        silence_count = 0
+                        if len(burst_frames) > 40:  # > 3.2s
+                            in_burst = False
+                            burst_frames.clear()
+                    else:
+                        if in_burst:
+                            silence_count += 1
+                            burst_frames.append(arr)
+                            if silence_count >= 3:  # ~240ms pause
+                                dur_s = len(burst_frames) * 0.08
+                                if 0.35 <= dur_s <= 3.0 and whisper_model is not None:
+                                    concat_audio = np.concatenate(burst_frames).astype(np.float32) / 32768.0
+                                    try:
+                                        segments, _ = whisper_model.transcribe(
+                                            concat_audio,
+                                            language="en",
+                                            beam_size=1,
+                                            temperature=0.0,
+                                            initial_prompt="Alfred",
+                                            vad_filter=True,
+                                        )
+                                        text = " ".join(s.text for s in segments).strip()
+                                        if _is_alfred_wake_phrase(text):
+                                            speaker = "Aditya/Friend" if prob >= 0.50 else "Guest/Other Voice"
+                                            print(f"\n🎯 [WAKE DETECTED] Spoke '{text}' | Speaker: {speaker} ({prob * 100:5.1f}%) -> AUTHORIZED\n")
+                                            time.sleep(1.0)
+                                    except Exception:
+                                        pass
+                                in_burst = False
+                                burst_frames.clear()
+                                silence_count = 0
+                        else:
+                            noise_floor = 0.98 * noise_floor + 0.02 * min(rms, 250.0)
+
+                    # Live VU Meter update while listening
+                    if rms >= 150:
+                        now = time.monotonic()
+                        if (now - last_ui_update) >= 0.10:
+                            bar_len = min(20, int(rms / 100))
+                            bar = "█" * bar_len
+                            speaker = "Aditya/Friend" if prob >= 0.50 else "Guest/Other"
+                            print(f"\r  🎙️ Mic [{bar:<20}] RMS={rms:4.0f} | Voice: {speaker} ({prob * 100:4.1f}%) | Wake={score:.3f}  ", end="", flush=True)
+                            last_ui_update = now
+
                 time.sleep(0.01)
         except KeyboardInterrupt:
             print("\nStopped.")

@@ -23,7 +23,18 @@ import sys
 import time
 import zipfile
 
+# Prevent cp1252 UnicodeEncodeError on Windows terminals
+for stream in (sys.stdout, sys.stderr):
+    if stream and hasattr(stream, "reconfigure"):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+
 ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 DATA_DIR = ROOT / "data" / "wakeword_samples"
 POS_DIR = DATA_DIR / "positive"
 NEG_DIR = DATA_DIR / "negative"
@@ -152,7 +163,8 @@ def train_local() -> None:
     with _MODEL_INIT_LOCK:
         _ensure_openwakeword()
         from openwakeword.model import Model
-        oww = Model(inference_framework="onnx")
+        base_onnx = str((MODELS_DIR / "alfred.onnx").resolve())
+        oww = Model(wakeword_models=[base_onnx], inference_framework="onnx")
 
     preprocessor = oww.preprocessor
     X_list, y_list = [], []
@@ -168,7 +180,7 @@ def train_local() -> None:
             frames = []
             for i in range(0, len(sliced) - step_size, step_size):
                 chunk = sliced[i:i + step_size]
-                preprocessor(chunk)
+                oww.predict(chunk)
                 feat = preprocessor.get_features(16)
                 if feat.shape == (1, 16, 96):
                     frames.append(feat)
@@ -183,7 +195,7 @@ def train_local() -> None:
             dat = dat[:, 0]
         for i in range(0, len(dat) - step_size, step_size * 2):
             chunk = dat[i:i + step_size]
-            preprocessor(chunk)
+            oww.predict(chunk)
             feat = preprocessor.get_features(16)
             if feat.shape == (1, 16, 96):
                 X_list.append(feat)
@@ -215,11 +227,29 @@ def train_local() -> None:
     dataset = TensorDataset(torch.from_numpy(X), torch.from_numpy(y))
     loader = DataLoader(dataset, batch_size=32, shuffle=True)
     model = AlfredWakeNet()
-    criterion = nn.BCELoss()
-    optimizer = optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)
 
-    print("\n⚙️ Training neural network (35 epochs)...")
-    epochs = 35
+    # Transfer Learning: Initialize from base alfred.onnx weights if present
+    base_model_path = MODELS_DIR / "alfred.onnx"
+    if base_model_path.exists():
+        try:
+            import onnx
+            from onnx import numpy_helper
+            m_onnx = onnx.load(str(base_model_path))
+            inits = {init.name: numpy_helper.to_array(init) for init in m_onnx.graph.initializer}
+            if "const_fold_opt__20" in inits and "const_fold_opt__22" in inits and "const_fold_opt__23" in inits:
+                with torch.no_grad():
+                    model.fc1.weight.copy_(torch.from_numpy(inits["const_fold_opt__20"].T))
+                    model.fc2.weight.copy_(torch.from_numpy(inits["const_fold_opt__22"].T))
+                    model.fc3.weight.copy_(torch.from_numpy(inits["const_fold_opt__23"].T))
+                print("  ✓ Preloaded base 'alfred.onnx' weights for Transfer Learning (combining general + real voices)!")
+        except Exception as wex:
+            print(f"  Notice: Training from standard initialization ({wex})")
+
+    criterion = nn.BCELoss()
+    optimizer = optim.AdamW(model.parameters(), lr=5e-4, weight_decay=1e-4)
+
+    print("\n⚙️ Fine-tuning neural network (25 epochs)...")
+    epochs = 25
     for epoch in range(1, epochs + 1):
         model.train()
         total_loss, correct, total = 0.0, 0, 0
@@ -267,7 +297,8 @@ def train_local() -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Multi-User Voice Dataset Recorder & Trainer")
-    parser.add_argument("--speaker", type=str, help="Speaker name (e.g. aditya, friend)")
+    parser.add_argument("--speaker", type=str, default="user", help="Speaker name (e.g. aditya, friend)")
+    parser.add_argument("--record-positive", action="store_true", help="Record positive wake-word utterances")
     parser.add_argument("--phrase", type=str, default="Hey Alfred", help="Phrase to record")
     parser.add_argument("--clips", type=int, default=15, help="Number of clips to record")
     parser.add_argument("--negative", action="store_true", help="Record negative ambient/chatter samples")
@@ -276,7 +307,7 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    if args.speaker:
+    if args.record_positive or (args.speaker and args.speaker != "user"):
         record_positive(speaker=args.speaker, phrase=args.phrase, num_clips=args.clips)
     elif args.negative:
         record_negative(num_clips=args.clips)

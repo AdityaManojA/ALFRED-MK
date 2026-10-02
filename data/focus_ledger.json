@@ -1,0 +1,15 @@
+{
+  "total_sessions": 1,
+  "total_planned_seconds": 1500,
+  "total_on_target_seconds": 1499,
+  "total_drift_count": 0,
+  "clean_streak": 1,
+  "best_clean_streak": 1,
+  "daily_buckets": {
+    "2026-10-02": {
+      "sessions": 1,
+      "on_target_s": 1499,
+      "drift_count": 0
+    }
+  }
+}

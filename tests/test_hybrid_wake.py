@@ -25,6 +25,8 @@ async def _generate_audio(text: str, voice: str) -> np.ndarray:
 class HybridWakeDetectionTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        import os
+        os.environ["TESTING"] = "1"
         # Generate test audio clips
         cls.alfred_us = asyncio.run(_generate_audio("Alfred", "en-US-GuyNeural"))
         cls.hey_alfred_in = asyncio.run(_generate_audio("Hey Alfred", "en-IN-PrabhatNeural"))

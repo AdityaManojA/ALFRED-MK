@@ -190,14 +190,8 @@ class DualWakeWordDetector:
                     model_name = list(self._model.models.keys())[0]
                     features = self._model.preprocessor.get_features(self._model.model_inputs[model_name])
                     prob = float(self._custom_verifier.predict_proba(features)[0][1])
-                    if prob < 0.50:
-                        _LOGGER.info(
-                            "[WAKE] Candidate '%s' rejected by voice verifier (prob=%.2f < 0.50)",
-                            triggered_phrase,
-                            prob,
-                        )
-                        return None
-                    _LOGGER.info("[WAKE] Voice verifier match (prob=%.2f >= 0.50)", prob)
+                    speaker = "Aditya/Friend" if prob >= 0.50 else "Guest/Other"
+                    _LOGGER.info("[WAKE] Speaker recognized: %s (confidence=%.2f)", speaker, prob)
                 except Exception as exc:
                     _LOGGER.debug("Custom verifier check failed: %s (fail-open)", exc)
 
