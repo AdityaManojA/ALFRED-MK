@@ -91,7 +91,7 @@ sudo apt install -y python3-pyqt6 python3-tk yt-dlp ffmpeg gstreamer1.0-plugins-
 
 # 2. Clone & launch
 git clone https://github.com/AdityaManojA/ALFRED-MK-VIII.git
-cd ALFRED-MK-VIII
+cd ALFRED-MK-V
 pip install -r requirements.txt
 python main.py
 ```
