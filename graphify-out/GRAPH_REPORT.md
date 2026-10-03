@@ -1,87 +1,87 @@
-# Graph Report - Alfred-Mark-VIII  (2026-10-02)
+# Graph Report - Alfred-Mark-VIII  (2026-10-03)
 
 ## Corpus Check
-- 492 files · ~711,052 words
+- 495 files · ~713,678 words
 - Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 19 file(s) not represented in the graph (top: .ico 8, (none) 3, .onnx 3)
+- Unclassified: 18 file(s) not represented in the graph (top: .ico 8, (none) 3, .onnx 3)
 
 ## Summary
-- 7377 nodes · 15458 edges · 345 communities (295 shown, 50 thin omitted)
-- Extraction: 89% EXTRACTED · 11% INFERRED · 0% AMBIGUOUS · INFERRED: 1707 edges (avg confidence: 0.93)
+- 7419 nodes · 15552 edges · 403 communities (335 shown, 68 thin omitted)
+- Extraction: 89% EXTRACTED · 11% INFERRED · 0% AMBIGUOUS · INFERRED: 1710 edges (avg confidence: 0.93)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `fdf1a6ad`
+- Built from commit: `8afccb48`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - MainWindow
 - _tlog
-- computer_control.py
+- test_screen_find.py
 - code_helper.py
-- web_search.py
+- daily_brief.py
 - _BrowserSession
 - FileDropZone
-- clipboard_manager.py
-- screen_processor.py
+- main.py
+- ._is_off_thread
 - WinPlatformReader
 - LinuxPlatformBackend
 - file_processor.py
-- time
+- server.py
 - memory_manager.py
 - test_system_monitor.py
-- TTSLatencyReport
+- InstrumentedTTS
 - file_controller.py
-- numpy
+- LocalSTTManager
 - computer_settings.py
 - dev_agent.py
-- hud_video/controller.py
+- TestControlsUI
 - PlayDestinationManager
 - SentryModeManager
-- plugin_loader.py
+- discover_plugins
 - BootPipeline
-- focus/engine.py
+- FocusLedger
 - SurfaceIdentity
 - SetupApiModal
 - TestPlayDestinationPrompt
-- lookup
-- TargetStatus
-- config_manager.py
+- get_image_viewer
+- MonitorTarget
+- load_api_keys
 - SentrySnapshot
 - HudVideoController
 - NullSuppressor
-- destination.py
+- get_video_play_destination
 - llm_client.py
 - SpotifyClient
-- WinBrowserDriver
+- _detect_action
 - MonitorScheduler
-- MonitorController
+- get_sentry_mode_manager
 - train_personal_verifier.py
 - send_message.py
 - 1. Unit Test Suite
 - _SingleFlightManager
-- Changes
+- hud_video
 - gmail_manager.py
-- gemini.py
+- computer_control.py
 - SharedAudioStream
 - MarketProvider
-- profile_alfred_ui.py
+- ProbeLog
 - SpeculativePrefetcher
 - PHASE 0 RECONNAISSANCE NOTES — HUD VIDEO SURFACE
 - classify_hud_intent
 - crypto-js.min.js
 - TronScoreBackgroundPlayer
 - ImageViewerWindow
-- PaletteDefinition
+- ArkhamEEGVisual
 - LazyService
-- TestLedgerPrivacy
+- monitor/parser.py
 - FocusEngine
 - ClipboardManager
 - AnswerWindow
-- raise_overlay
-- system_monitor.py
-- resolve.py
+- HudCanvas
+- _update_config
+- detect
 - ._dispatch_tool
 - MacPlatformBackend
 - TestFocusEngine
@@ -90,106 +90,106 @@
 - window_manager.py
 - ThemeChrome
 - Test Matrix & Live Verification Status
-- is_heavenly_restricted
-- ReferenceImageSession
-- detect
-- ._build_quick_drawer
-- is_transport_command
+- ActionRegistry
+- test_image_fetch.py
+- config_manager.py
+- VideoTimeline
+- browser_control.py
 - LocalPipelineCoordinator
-- get_sentry_mode_manager
+- TestSentryDropdownIntegration
 - check_jarvis_capability
 - TaskBoard
 - ._listen_audio
-- WatchtowerFluxRingVisual
-- TestMinimizedHudLinuxLifecycle
-- _HudOverlay
+- HudSignals
+- .reset_instance
+- raise_overlay
 - themes/__init__.py
 - MediaArbiter
 - _SysMetrics
 - test_thematic_hud.py
 - DashboardServer
 - fetch.py
-- ._apply_name_update
+- apply_ui_accent
 - PushToTalk
 - TestPromptSentryV2
 - TestBackgroundWorkerPool
 - TacticalAudioPlayerWidget
-- Capability
-- detector.py
+- engine_default.py
+- NetflixActions
 - TwoFaceBisectedVisual
-- QWidget
-- fit_size
+- TacticalHoverHelpManager
+- image_viewer/__init__.py
 - ImageCache
-- test_visuals.py
+- instantiate_visual
 - TestConfigCache
-- BatcaveBlueprintVisual
+- slots/__init__.py
 - MacBrowserDriver
 - JarvisUI
 - LocalTTSManager
 - VisemeStream
-- .__init__
+- _query
 - SecretStore
 - 🦇 ALFRED — MARK-VIII (Wayne Protocol Edition)
-- audio/__init__.py
+- VoiceActivityDetector
 - DataGridWorker
 - FreezeCoolantLoopVisual
-- VideoTimeline
-- TestRemoteKeyOverlay
-- HudSignals
+- CyberTransportButton
+- apply_theme
+- fast_sin
 - Ledger
 - 🎙️ 8. Master Voice Command Codex
-- ImageDeckPanel
+- get_media_arbiter
 - TestAudioDucker
-- BaneDosageRegulatorVisual
+- BarArray
 - process_manager.py
 - 1. Browser Tab Management ("Close Tab" Fix)
 - HudVideoSurface
-- ._receive_audio
-- LocalLLMManager
+- 2. Components Created & Delivered
+- test_voice_routing.py
 - WindowsPlatformBackend
 - audio_ducker.py
 - DeveloperDataGridWidget
-- .pause_core
+- spotify_control
 - fetch_image
 - classify_image_intent
 - bump_version.py
-- desktop.py
+- 🆕 5. What's New in Version 8 / Mark VIII (Stable Build · Windows)
 - RemoteKeyOverlay
-- capture_screen
+- screen_processor.py
 - TestPluginSettingsSchemaCache
 - ALFRED-MK-V — Theme Catalog (`docs/themes/CATALOG.md`)
 - CustomizeOverlay
 - protocol_engine.py
 - TestDriftEscalation
-- slots/__init__.py
+- JokerLaughWaveVisual
 - ._get_machine_fingerprint
 - ImageViewerCache
-- .reset_instance
+- TestHoverHelpInWindow
 - ._save
 - _template.py
 - tech_font
 - ThemeDefinition
-- HudCanvas
+- qcol
 - TestIdleSleepOptimizations
 - platform/__init__.py
-- labels.py
+- Sentry Mode v2 — Phase 4 Implementation Notes
 - PLATFORM MATRIX — SENTRY MODE V2: CROSS-PLATFORM SPECIFICATION
 - Sentry Mode v2 (MONITOR + FOCUS) Verification Report
 - 2. Profiling & Measurement Audit (10 Key Areas)
 - DualWakeWordDetector
-- HueWheel
+- WinBrowserDriver
 - LocalUrlBackend
 - MinimizedHudOverlay
-- .broadcast
+- ._aes_key
 - TestThreadMarshal
 - CentralizedCache
 - RiddlerCipherVisual
-- BarArray
+- PaletteDefinition
 - game_updater.py
 - NotesTerminalWidget
-- .add_clipboard_item
-- test_jarvis_voice_phase2.py
-- TestSystemMonitor
+- 2. Graphify Nodes & Edges
+- jarvis_assets.py
+- TestNetflixActions
 - 🌐 3. 100% Local & Air-Gapped Operation
 - LinuxBrowserDriver
 - ALFRED-MK-V — Media Command v1: Phase 0 Reconnaissance
@@ -197,7 +197,7 @@
 - LogWidget
 - ws_ep
 - WakeWordDetector
-- hud_video
+- typing
 - SchedulerEngine
 - TTSPhraseCache
 - .start
@@ -210,11 +210,11 @@
 - Q: the hud text is quite hard to see
 - Q: Fix Spotify playback, Audio Core now-playing display, inverted startup play button, and avoid opening the Spotify desktop app.
 - FloatingFocusCard
-- ._build_jarvis_icon
-- SubjectDossierCard
+- Path
+- 📑 Complete Master Location Registry
 - ui.py
-- 4. Fix Implementation Details
-- Image Viewer v2 Live Verification Checklist
+- ImageDeckPanel
+- .set_sentry_snapshot
 - TacticalControlsDrawer
 - Daily Brief Protocol
 - Email Handling Rules
@@ -232,120 +232,180 @@
 - _SessionRegistry
 - ._wake_state
 - build_standard_boot_pipeline
-- InstrumentedTTS
-- 1. Objectives & Summary
-- Phase 0 Reconnaissance Notes: API Backend Setup UI (Tactical Controls)
+- _patch_config
+- TestStreamingMemoryBenchmark
+- IntentMetrics
 - rules/graphify.md
 - workflows/graphify.md
 - README.md
 - TestDeferredLock
 - record_training_samples.py
-- TestVoiceSleep
+- ._receive_audio
 - 🐧 Linux Setup (Ubuntu / Debian / Arch / Fedora)
 - media_v1/PHASE_6_NOTES.md
 - media_v1/PHASE_8_NOTES.md
 - _FakeController
 - PHASE_9_NOTES.md
-- EngineDefault
+- .handle_profile_gate
 - PHASE 0 RECONNAISSANCE NOTES — SENTRY MODE V2: MONITOR + FOCUS
 - SetupOverlay
 - _ensure_network_access
 - PlayableRef
 - test_platform_stability.py
 - calendar_sync.py
-- undo.py
+- .get_active
 - focus_protocol.py
-- TestToolRunner
+- TestNetflixDetector
 - 2. Reconnaissance Findings & Graphify Nodes
 - TestSpotifyApiOnlyPlayback
 - ._build_app
 - ALFRED-MK-V — Jarvis Voice Option: Phase 2 Notes
-- youtube_video.py
+- 17. `cProfile` Analysis of `paintEvent` (300 frames)
 - ClientCache
-- install_transport_guard
-- confirm.py
-- ImagePopupOverlay
+- CrashHandlerTests
+- reminder.py
+- action
 - ._apply_ptt_shortcut
 - ⚙️ Setup & Execution
 - ALFRED-MK-V Fastboot, Wake-Gated Audio & Speculative Prefetch Verification Report
 - DailyBriefPerformanceTests
-- 1. Graphify Nodes & Code Locations
+- .__init__
 - TestMinimizedHudOverlay
 - JarvisLive
-- subprocess
-- logger.py
+- test_open_app.py
+- Status: COMPLETE
 - Phase 6 Notes: Comprehensive Test Suite, Verification, & Graphify Integration
 - 1. Objectives & Implementation
 - TestUiMismatchesAST
-- sentry_monitor_action
+- TestMonitorController
 - ScreenMonitorController
-- flight_finder.py
+- config
 - SlotVisual
 - TestAudioDuckRestoreLifecycle
 - Q: Audit reliability and performance of the current working tree
 - _FakeSuppressor
-- _ReconnectSignal
+- .run
 - Phase 0 Reconnaissance Notes: Browser Suite & Netflix Pilot
-- TestDedupeSingleFlight
-- AudioSource
-- .__init__
+- schedule_task.py
+- ImagePopupOverlay
+- parse_media_time
 - File & Folder Exploration and Notes Directives
-- _TabsProxy
-- ._launch
-- .clear_chat
-- clipboard_history.py
+- .__init__
+- LatencyReport
+- setter
+- _ensure_openwakeword
 - Cross-Platform Live Verification Matrix
 - Scheduler Verification
 - Phase 4 Notes: Modal UI (Tabbed Setup Panel)
 - Media Command v1 — Phase 4: HUD Image Deck
-- 🎶 11. Spotify AI Agent — Dual-Tier Architecture
-- main.py
-- 4. Intent & Command Router Precedence
+- 🎶 12. Spotify AI Agent — Dual-Tier Architecture
+- 10. Ordered Boot-Step Table (`runner` + `JarvisLive.__init__`)
+- ReactiveMicButton
 - PHASE 8: Network & Remote Uplink Latency Compression
 - TestJarvisVoicePhase1
-- WindowsSuppressor
-- 5. TTS / STT Backends
+- BootContext
+- .broadcast
 - wake_word.py
-- _FakeButton
-- PHASE 5: Tool Execution Compression & Bounded Execution
-- 1. Architecture & Design
-- re
-- 🎵 10. Tactical Audio Matrix & Background Score
-- PHASE 6: TTS Queuing & Audio Output Compression
-- 🕸️ 23. Knowledge Graph — Graphify
-- 🏆 4. Why ALFRED Outclasses Every Other "Jarvis"
+- 4. Verification & Test Results
+- automation.py
+- InstrumentedSTT
+- IntentRouter
+- Architecture Implemented
+- TestJarvisVoicePhase2Assets
+- 🕸️ 24. Knowledge Graph — Graphify
+- get_backend
 - ALFRED-MK-V Latency Verification Checklist
 - is_gui_thread
 - 🎭 6. Example Tactical Commands — "Wayne Protocol" in Action
-- get_base_dir
-- .__init__
+- _undo_create
+- TargetStatus
 - Status: COMPLETE
-- engine_default.py
+- Exact Files to Touch Across Phases
 - create_local_pipeline
-- oauth.py
-- Key Implementation Details
+- _OAuthRedirectHandler
+- Phase 1 Notes: Uplink Transport Hardening
 - ALFRED-MK-V — Thematic HUD Overhaul: Phase 3 Notes
 - intel_notes.py
 - .validate_format
+- quick_translate.py
 - File & Folder Exploration Workflow
 - save_app_icon
-- AudioGate
-- Phase 7 Notes: System Prompt, Tests & Documentation
+- .__init__
+- ProcessTarget
 - TestThreadSafety
-- Status: COMPLETE
-- whisper_shadow.py
+- WindowTitleTarget
+- 2. Reconnaissance Findings
+- get_plugin_config
+- Live Verification Test Cases
+- ShadowWhisperWorker
 - tools/__init__.py
+- .signal_error
 - PlatformBackend
 - TestWakeWordLatency
-- typing
-- visuals/registry.py
+- _SpinnerWidget
+- ._process_vosk_audio
+- ScreenRegionTarget
+- TTSPlayer
+- WakeWordConfigurationTests
+- test_browser_netflix_pilot.py
+- 3. Proposed Fix Order
+- Phase 0 Recon: Visual HUD v3 (THREAD + DEDUPE + NO LOOP)
+- 🎙️ 10. Custom Wake-Word Neural Network & Multi-Speaker Training (.onnx)
+- setup.py
+- CatwomanLockpickVisual
+- _gemini_grounding
+- band_energies
+- check_path_access
+- _ImageLoadTask
+- PHASE 0 RECONNAISSANCE NOTES — MARKET SENTRY
+- 1. Deepening Existing Themes
 - networkx
-- Media Command v1 — Phase 2: External Player Suppression
+- ._paint_3d_vector_globe
+- .get_frontmost_browser
+- .play
 - TestTransportCore
+- ._process_whisper_audio
 - Graphify + Antigravity Project Workflow & Setup Guide
-- .poll
+- VoskSTT
+- ._process_audio_bytes
+- install_transport_guard
+- WhisperSTT
+- 2. Existing Media Paths — Reuse Analysis
+- TestPlatformSelection
+- _ocr_grounding
 - Media Command v1 — Phase 3: Browser Player Suppression
+- ALFRED-MK-V: Cross-Platform Parity (macOS + Linux)
 - spotify_control.py
+- PHASE 7: HUD Rendering & Frame Time Compression
+- 2. HUD Component Tree & Styling
+- Phase 5 Notes: Spotify Button Fix
+- ._remember_static_layer
+- DummyUnderlying
+- Steps
+- lines.py
+- Phase 1 Implementation Notes
+- Status: COMPLETE
+- get_push_to_talk_enabled
+- instrumented_init
+- _safe_screenshot_path
+- ._persist_tokens
+- .video_widget
+- .capture_screen
+- .paintEvent
+- ._audio_callback
+- actions
+- core
+- core_browser_platform
+- core_hud_video_backends
+- core_hud_visuals
+- core_hud_visuals_slots
+- core_image_viewer
+- core_net
+- core_platform
+- core_scheduler
+- core_tts
+- core_ui_themes
+- memory
 
 ## God Nodes (most connected - your core abstractions)
 1. `MainWindow` - 193 edges
@@ -354,215 +414,215 @@
 4. `PaletteDefinition` - 83 edges
 5. `JarvisUI` - 80 edges
 6. `HudSignals` - 79 edges
-7. `HudCanvas` - 71 edges
+7. `HudCanvas` - 75 edges
 8. `TronScoreBackgroundPlayer` - 69 edges
 9. `FocusEngine` - 67 edges
 10. `SlotVisual` - 57 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `🎛️ Dual-Source Audio Deck` --references--> `audio_core()`  [INFERRED]
-  readme.md → actions/audio_core.py
 - `Libraries in Use` --references--> `_BrowserSession`  [INFERRED]
   docs/browser_netflix/PHASE_0_NOTES.md → actions/browser_control.py
 - `Root Cause: Why it opens a blank page` --references--> `_BrowserSession`  [INFERRED]
   docs/browser_netflix/PHASE_0_NOTES.md → actions/browser_control.py
 - `Intent Routing Path` --references--> `browser_control()`  [INFERRED]
   docs/browser_netflix/PHASE_0_NOTES.md → actions/browser_control.py
+- `3. Daily Brief & Market Bell Integration` --references--> `daily_brief()`  [INFERRED]
+  docs/market_sentry/PHASE_0_NOTES.md → actions/daily_brief.py
 - `1. File Opening (`open`)` --references--> `file_controller()`  [INFERRED]
   .agents/rules/file_exploration.md → actions/file_controller.py
 
 ## Import Cycles
 - None detected.
 
-## Communities (345 total, 50 thin omitted)
+## Communities (403 total, 68 thin omitted)
 
 ### Community 0 - "MainWindow"
 Cohesion: 0.03
-Nodes (29): 4. HUD component tree and styling, 1. Live Verification Checklist, 2. Automated Test Execution Output, ALFRED-MK-V — Thematic HUD Overhaul: Verification & Live Checklist, QMainWindow, MainWindow, _fl(), QHBoxLayout (+21 more)
+Nodes (31): 6. TTS and ducking, QMainWindow, MainWindow, _fl(), QHBoxLayout, Style the COGNITIVE TRACE toggle to reflect its on/off state., Show or hide the agent's internal reasoning trace in the chat log., Trim startup memory working set back to OS once initialization is complete. (+23 more)
 
 ### Community 1 - "_tlog"
 Cohesion: 0.07
-Nodes (22): Checks and results, Latent defects and performance warnings, Performance checks that passed, Problems to fix first, Recommended work order, Reliability and performance audit — 30 September 2026, Test failures and warnings: what they mean, broadcast_progress() (+14 more)
+Nodes (26): get_engine(), Factory to retrieve a configured TTSEngine instance., Checks and results, Latent defects and performance warnings, Performance checks that passed, Problems to fix first, Recommended work order, Reliability and performance audit — 30 September 2026 (+18 more)
 
-### Community 2 - "computer_control.py"
-Cohesion: 0.05
-Nodes (66): _base_dir(), _clear_field(), _click(), _clipboard_get(), _clipboard_paste(), computer_control(), _drag(), _focus_window() (+58 more)
+### Community 2 - "test_screen_find.py"
+Cohesion: 0.11
+Nodes (18): _screen_find(), _calculate_similarity(), find_element(), get_onnx_session(), is_icon_query(), _onnx_element_grounding(), Any, Return globally cached ONNX Runtime session for quantized element detector. (+10 more)
 
 ### Community 3 - "code_helper.py"
-Cohesion: 0.18
-Nodes (25): _build(), _clean_code(), code_helper(), _detect_intent(), _edit_action(), _explain_action(), _fix_code(), _get_gemini() (+17 more)
+Cohesion: 0.05
+Nodes (65): _build(), _clean_code(), code_helper(), _detect_intent(), _edit_action(), _explain_action(), _fix_code(), _get_gemini() (+57 more)
 
-### Community 4 - "web_search.py"
-Cohesion: 0.07
-Nodes (50): _get_preferred_news(), Fallback helper to search news headlines by parameter dict., Fetch top news headline regarding user's preferred topic with graceful fallback., search_news(), _cache_get(), _cache_put(), _fetch_headlines(), news_brief_action() (+42 more)
+### Community 4 - "daily_brief.py"
+Cohesion: 0.05
+Nodes (58): daily_brief(), _get_gmail_brief(), _get_greeting(), _get_preferred_news(), _get_reminders_brief(), _get_system_vitals(), Daily Brief Action for ALFRED Mark-VIII. Provides the ultimate morning and…, Fetch unread emails summary via gmail_manager. (+50 more)
+
+### Community 5 - "_BrowserSession"
+Cohesion: 0.10
+Nodes (7): _BrowserSession, _firefox_profile_dir(), A full session for one browser instance. All browsers open on the real profile…, launch_persistent_context already opens a starting tab. Instead of opening a…, Launches the browser with the real user profile. Does nothing if the context is…, _real_profile_dir(), Page
 
 ### Community 6 - "FileDropZone"
-Cohesion: 0.09
-Nodes (10): 2. HUD Component Tree & Styling, Full HUD vs Minimized HUD, How Buttons Are Drawn, State Colours (`HudCanvas._core_colours()`, lines 1746–1755), Theme Palette Constants (`class C`, lines 724–751), QDragEnterEvent, QDropEvent, CyberGraphicLineButton (+2 more)
+Cohesion: 0.08
+Nodes (8): QDragEnterEvent, QDropEvent, CyberGraphicLineButton, _DropCanvas, _file_category(), FileDropZone, _fmt_size(), Tactical button rendered strictly with vector graphic lines, sharp 2px border…
 
-### Community 7 - "clipboard_manager.py"
-Cohesion: 0.14
-Nodes (17): add_clipboard_item(), clipboard_manager_action(), get_recent_clipboards(), paste_clipboard_item(), Any, actions/clipboard_manager.py — Persistent, Semantically Indexed Clipboard…, Action handler called by ALFRED action dispatcher., search_clipboard() (+9 more)
+### Community 7 - "main.py"
+Cohesion: 0.03
+Nodes (98): add_clipboard_item(), classify_content_type(), clipboard_manager_action(), _get_active_window_info(), get_recent_clipboards(), is_sensitive_content(), paste_clipboard_item(), Any (+90 more)
 
-### Community 8 - "screen_processor.py"
-Cohesion: 0.11
-Nodes (26): _base_dir(), _capture_camera(), _capture_screen(), _cv2_backend(), _detect_camera_index(), format_window_context(), get_active_window_context(), _get_camera_index() (+18 more)
+### Community 8 - "._is_off_thread"
+Cohesion: 0.08
+Nodes (19): Wait for player to enter StoppedState before switching sources., Toggle between play and pause., Restart current video from 0.0 seconds., Seek relative to current position by delta seconds., Transition to RESOLVING; show surface with loading chrome., Called when resolve() yields a PlayableRef., Check if caller is running on a non-Qt thread., 1. Trace: Who Starts Timers & Touches Players Off-Thread? (+11 more)
 
 ### Community 9 - "WinPlatformReader"
-Cohesion: 0.10
-Nodes (16): MacPlatformReader, Inspects frontmost application on macOS via lsappinfo / osascript., Find topmost visible non-minimized browser window for card trap., Inspects frontmost window on Windows via Win32 API and UI Automation., Query foreground HWND and active tab fresh every tick. When from_card=True,…, WinPlatformReader, 3. Desktop Screen Capture & Inspection Facilities, 1. OS Gates & Imports Mapping (+8 more)
+Cohesion: 0.09
+Nodes (19): Sends a native Windows WM_APPCOMMAND message to explicitly Pause, Play, or Stop., _send_app_command(), MacPlatformReader, Inspects frontmost application on macOS via lsappinfo / osascript., Find topmost visible non-minimized browser window for card trap., Inspects frontmost window on Windows via Win32 API and UI Automation., Query foreground HWND and active tab fresh every tick. When from_card=True,…, WinPlatformReader (+11 more)
 
 ### Community 10 - "LinuxPlatformBackend"
-Cohesion: 0.09
-Nodes (8): LinuxPlatformBackend, Any, Path, QWidget, WindowType, Linux implementation using pactl, playerctl, xdotool, and standard utilities., patch, TestPlatformSelection
+Cohesion: 0.11
+Nodes (6): LinuxPlatformBackend, Any, Path, QWidget, WindowType, Linux implementation using pactl, playerctl, xdotool, and standard utilities.
 
 ### Community 11 - "file_processor.py"
-Cohesion: 0.08
-Nodes (44): _detect_type(), file_processor(), _file_size_str(), _gemini_client(), _output_path(), _process_archive(), _process_audio(), _process_code() (+36 more)
+Cohesion: 0.12
+Nodes (37): _detect_type(), file_processor(), _file_size_str(), _gemini_client(), _output_path(), _process_archive(), _process_audio(), _process_code() (+29 more)
 
-### Community 12 - "time"
-Cohesion: 0.03
-Nodes (65): actions, _get_greeting(), _get_live_weather(), Daily Brief Action for ALFRED Mark-VIII. Provides the ultimate morning and…, Generate time-contextual executive salutation., Fetch live weather conditions without opening an external browser., asyncio, concurrent_futures (+57 more)
+### Community 12 - "server.py"
+Cohesion: 0.08
+Nodes (19): Byte-only, query-free disk cache for image fetches., _make_uploads_dir(), Path, dashboard/server.py — ALFRED Local HTTP Dashboard Plain HTTP on port 8000 (no…, Return (and create) the cross-platform uploads folder., fastapi, fastapi_responses, hashlib (+11 more)
 
 ### Community 13 - "memory_manager.py"
-Cohesion: 0.07
-Nodes (35): Update Daily Briefing Preferences Action for ALFRED Mark-VIII. Permanently…, Permanently saves daily briefing preferences into long-term memory., update_daily_briefing(), _do_shutdown(), Summarise the current session in 1-2 sentences and save to long_term.json., _all_entries(), all_entries_for_ui(), _empty_memory() (+27 more)
+Cohesion: 0.05
+Nodes (50): _get_live_weather(), Fetch live weather conditions without opening an external browser., Update Daily Briefing Preferences Action for ALFRED Mark-VIII. Permanently…, Permanently saves daily briefing preferences into long-term memory., update_daily_briefing(), get_cache(), Returns the centralized cache client singleton., _describe_limits() (+42 more)
 
 ### Community 14 - "test_system_monitor.py"
-Cohesion: 0.19
-Nodes (18): is_protected_process(), Any, Check if a process belongs to core system executables, IDE compilers, or…, Inspect active outbound TCP/UDP connections for non-standard remote ports.…, Monitor active process tree for resource anomalies and suspicious sockets: 1.…, Lower process priority class (BELOW_NORMAL_PRIORITY_CLASS) or pause process…, Resume a paused process and restore normal priority., Terminate a process. NEVER terminates without explicit confirmation via… (+10 more)
+Cohesion: 0.06
+Nodes (42): _get_cpu_temp(), _get_gpu_usage(), get_system_status(), _is_private_or_loopback(), is_protected_process(), _nvml_gpu(), Any, Snapshot of current system metrics for the system_status tool. (+34 more)
 
-### Community 15 - "TTSLatencyReport"
-Cohesion: 0.22
-Nodes (5): Enqueue text for synthesis and playback., Latency metrics recorded during TTS synthesis and playback., TTSLatencyReport, 2. Changes Implemented, TestTTSLatency
+### Community 15 - "InstrumentedTTS"
+Cohesion: 0.16
+Nodes (8): InstrumentedTTS, Enqueue text for synthesis and playback., Retrieve from cache or synthesize via underlying engine., Latency metrics recorded during TTS synthesis and playback., TTS manager with queue latency tracking, audio caching, and low-latency…, TTSLatencyReport, tests/test_tts_latency.py — Unit tests for TTS phrase caching, queue metrics,…, TestTTSLatency
 
 ### Community 16 - "file_controller.py"
-Cohesion: 0.12
-Nodes (44): copy_file(), create_file(), create_folder(), delete_file(), explore_folder(), file_controller(), find_files(), _format_size() (+36 more)
+Cohesion: 0.15
+Nodes (38): copy_file(), create_file(), create_folder(), delete_file(), explore_folder(), file_controller(), find_files(), _format_size() (+30 more)
 
-### Community 17 - "numpy"
-Cohesion: 0.03
-Nodes (50): collections, core/audio/stream.py — Single shared 16kHz audio input stream and pre-roll…, LocalSTTManager, audio_callback_wrapper(), Local Speech-to-Text wrappers for MARK XL. Provides unified interface for…, Process audio bytes for transcription based on engine type., Cancel any pending debounce timer, thread-safe., Reset the FINISH_MS countdown from zero. (+42 more)
+### Community 17 - "LocalSTTManager"
+Cohesion: 0.11
+Nodes (12): LocalSTTManager, Timer callback: commit the accumulated sentence to the queue., Get latest transcription if available., Get current partial transcription (for Vosk)., Manages local speech-to-text transcription with streaming capabilities., Set callback to receive raw audio data., Start processing audio from microphone., Stop audio processing. (+4 more)
 
 ### Community 18 - "computer_settings.py"
 Cohesion: 0.04
-Nodes (25): brightness_get(), brightness_set(), close_tab(), computer_settings(), dark_mode(), _get_api_key(), _get_base_dir(), _get_macos_wifi_interface() (+17 more)
+Nodes (24): brightness_get(), brightness_set(), computer_settings(), dark_mode(), _get_api_key(), _get_base_dir(), _get_macos_wifi_interface(), _normalise() (+16 more)
 
 ### Community 19 - "dev_agent.py"
-Cohesion: 0.09
-Nodes (36): apply_heal_patch(), _build_project(), _classify_error(), dev_agent(), _diagnose_trace(), _extract_culprit_script(), _fix_files(), _get_model() (+28 more)
+Cohesion: 0.08
+Nodes (42): apply_heal_patch(), _build_project(), _classify_error(), dev_agent(), _diagnose_trace(), _extract_culprit_script(), _fix_files(), _get_model() (+34 more)
 
-### Community 20 - "hud_video/controller.py"
-Cohesion: 0.06
-Nodes (32): core/hud_video/controller.py — HUD Video session state machine and transport…, HudVideoControlsStrip, core/hud_video/controls.py — Tactical transport controls strip for the Visual…, Full transport strip laid out below the video surface. Contains: [Play/Pause ⏯]…, Update buttons and timeline on state change. Only repaints when visible., Propagate theme updates to child elements., clamp_seek(), format_timestamp() (+24 more)
+### Community 20 - "TestControlsUI"
+Cohesion: 0.12
+Nodes (7): FakeBackend, Timeline drag scrubs with live time label and commits on release only., Live or unknown duration shows LIVE and disables bar., Space toggles, Left/Right skip 10s, Home goes to start., Button toggles play/pause., Replay button is always visible and highlights on ENDED., TestControlsUI
 
 ### Community 21 - "PlayDestinationManager"
-Cohesion: 0.17
-Nodes (8): PlayDestinationManager, Any, Coordinates conversational destination prompting with single-flight guard., Retrieve or create an AnswerWindow instance., Feed text from STT or chat into the destination prompt window., Cancel active destination prompt and reset state., Initiate asynchronous destination question flow. Returns immediately with a…, Sequential conversational workflow across answer windows.
+Cohesion: 0.10
+Nodes (14): classify_dest_choice(), classify_yes_no(), PlayDestinationManager, Any, Classify user response to 'In the app, sir?' -> 'yes', 'no', or None., Classify response to 'Default player, YouTube, or another window, sir?'.…, Coordinates conversational destination prompting with single-flight guard., Retrieve or create an AnswerWindow instance. (+6 more)
 
 ### Community 22 - "SentryModeManager"
 Cohesion: 0.14
 Nodes (15): Any, QObject, Thread-safe query for whether an AnswerWindow is awaiting user reply., Register callbacks for the MONITOR engine., Register callbacks for the FOCUS engine., Start MONITOR mode with an optional goal and polling cadence., Toggle MONITOR mode on or off., Update monitor state fields from target drivers. (+7 more)
 
-### Community 23 - "plugin_loader.py"
-Cohesion: 0.09
-Nodes (23): copy, _call_run(), discover_plugins(), _load_error(), _opt_upper(), PluginRecord, PluginRegistry, Exception (+15 more)
+### Community 23 - "discover_plugins"
+Cohesion: 0.11
+Nodes (17): _call_run(), discover_plugins(), _load_error(), _opt_upper(), PluginRecord, PluginRegistry, Exception, Path (+9 more)
 
 ### Community 24 - "BootPipeline"
-Cohesion: 0.08
-Nodes (17): BootContext, BootFailureError, BootPipeline, Any, Exception, Execute all boot stages through topologically sorted batches., Raised when a critical boot stage fails to complete., Thread-safe context dictionary shared across all boot stages. (+9 more)
+Cohesion: 0.12
+Nodes (12): BootFailureError, BootPipeline, Execute all boot stages through topologically sorted batches., Raised when a critical boot stage fails to complete., Topological boot orchestrator managing stage dependencies and parallel…, Register a new BootStage in the pipeline., Compute execution batches of independent stages respecting dependencies.…, BootStage (+4 more)
 
-### Community 25 - "focus/engine.py"
-Cohesion: 0.08
-Nodes (26): Any, Action: Sentry FOCUS Mode Controller with Voice Routing for Tab Locking.…, Execute a Sentry FOCUS mode action., sentry_focus_action(), Floating Desktop Countdown Card for Sentry Focus Mode. Unobtrusive floating…, get_focus_engine(), Focus Engine Core: Independent 1-second tick session thread with settle rule…, Sentry Mode v2 Focus Engine package. (+18 more)
+### Community 25 - "FocusLedger"
+Cohesion: 0.07
+Nodes (24): FocusLedger, _num_word(), Any, Path, Cadence, Enum, str, Focus Mode State: Whitelisted dataclass and named constants. Structural Privacy… (+16 more)
 
 ### Community 26 - "SurfaceIdentity"
 Cohesion: 0.07
-Nodes (31): abc, AbstractEventLoop, LinuxPlatformReader, Linux Platform Reader: X11 and Wayland foreground inspector., Inspects frontmost window on Linux via X11 (xdotool/xprop) or Wayland IPC., macOS Platform Reader: AppleScript and CLI frontmost inspector., Windows Platform Reader: Win32 + UI Automation frontmost inspector with Card…, BasePlatformReader (+23 more)
+Nodes (36): AbstractEventLoop, Focus Engine Core: Independent 1-second tick session thread with settle rule…, Sentry Mode v2 Focus Engine package., Distraction Label Resolver for Focus Mode. Structural Privacy Law: -…, Derive a spoken distraction name from the surface identity. Returns an empty…, resolve_distraction_label(), LinuxPlatformReader, Linux Platform Reader: X11 and Wayland foreground inspector. (+28 more)
 
 ### Community 27 - "SetupApiModal"
-Cohesion: 0.11
-Nodes (9): QLabel, QWidget, Load masked credentials from SecretStore with fallback to config/api_keys.json., Tactical glassmorphic dialog for managing encrypted API keys., Alias for programmatic submission in tests., SetupApiModal, worker(), QDialog (+1 more)
+Cohesion: 0.15
+Nodes (6): Tactical glassmorphic dialog for managing encrypted API keys., Alias for programmatic submission in tests., SetupApiModal, worker(), QDialog, TestApiSetupUI
 
 ### Community 28 - "TestPlayDestinationPrompt"
-Cohesion: 0.06
-Nodes (18): Responses to 'In the app, sir?' are correctly classified., Responses to 'Default player, YouTube, or another window, sir?' are categorized., Preference commands accurately update config manager and return toasts., play Dune in the app' immediately triggers Visual HUD without prompting., play Dune on YouTube' opens browser without prompting., play Dune in Chrome' executes Chrome command without prompting., play Dune' with no destination starts destination prompt and returns terminal…, Duplicate play command while prompt is open is ignored. (+10 more)
+Cohesion: 0.11
+Nodes (10): Save or clear remembered video play destination., save_video_play_destination(), Flow: Prompt Q1 -> 'yes' -> Visual HUD plays., Flow: Prompt Q1 -> 'no' -> Prompt Q2 -> 'YouTube' -> opens YouTube., Flow: Prompt Q1 -> 'no' -> Prompt Q2 -> 'default player' -> opens default., Flow: Prompt Q1 -> 'no' -> Prompt Q2 -> 'another window' -> Prompt Q3 ->…, Flow: Unknown app in Q3 speaks 'Can't find that, sir.'., Silence / empty response re-asks once (DEST_REASK_MAX=1), then cancels with… (+2 more)
 
-### Community 29 - "lookup"
-Cohesion: 0.07
-Nodes (37): _engine(), Voice-action bridge for the process-wide local scheduler., schedule_task(), get_image_session(), _present_fetch_result(), Any, actions/show_image.py — Reference image viewer and candidate cycling action.…, Retrieve or register the process-wide reference image session. (+29 more)
+### Community 29 - "get_image_viewer"
+Cohesion: 0.08
+Nodes (20): get_image_viewer(), _handle_next(), _handle_prev(), QWidget, Retrieve or lazily construct the singleton ImageViewerWindow. Thread-safe / Qt-…, Remove *key* from the registry (teardown / test cleanup)., unregister(), Graphify Nodes Referenced (+12 more)
 
-### Community 30 - "TargetStatus"
-Cohesion: 0.06
-Nodes (44): _parse_clause(), Answer Parser: Converts natural language monitoring requests into…, Monitor Scheduler: Shared 1 Hz poll loop and alert manager., AlertSeverity, MonitorTarget, ABC, Enum, str (+36 more)
+### Community 30 - "MonitorTarget"
+Cohesion: 0.11
+Nodes (17): AlertSeverity, MonitorTarget, ABC, Enum, str, Base interfaces and data structures for MonitorTarget., Abstract base class for all Sentry monitor targets., Terse human-readable description of what is being monitored. (+9 more)
 
-### Community 31 - "config_manager.py"
-Cohesion: 0.03
-Nodes (84): Media Command v1 — Phase 7: Status and Settings, LiveConnectConfig, The optional knobs, kept apart so one bad field can be dropped wholesale. Every…, _config_signature_unlocked(), ensure_config_dir(), get_app_icon(), get_assistant_name(), get_base_dir() (+76 more)
+### Community 31 - "load_api_keys"
+Cohesion: 0.10
+Nodes (22): 1. `[VERIFY]` SDK, Model, Modalities, and Activity Detection, The optional knobs, kept apart so one bad field can be dropped wholesale. Every…, get_app_icon(), get_assistant_name(), get_gemini_key(), get_llm_provider(), get_media_resolution(), get_openrouter_key() (+14 more)
 
 ### Community 32 - "SentrySnapshot"
 Cohesion: 0.09
 Nodes (21): ALFRED Sentry Mode v2: MONITOR + FOCUS mode manager and state centralization., FocusState, MonitorState, Sentry Mode v2 Centralized Mode Manager (MONITOR + FOCUS). Owns global state…, Whitelisted state for MONITOR mode. Contains no confidential strings, no raw…, Whitelisted state for FOCUS mode. Contains only booleans, counters, and…, Consolidated immutable snapshot of Sentry Mode state., SentrySnapshot (+13 more)
 
 ### Community 33 - "HudVideoController"
-Cohesion: 0.06
-Nodes (32): assert_gui_thread(), Assert that the current code is running on the Qt GUI thread. Raises…, HudVideoController, _worker(), True when the Visual HUD surface should be visible., Return the current whitelisted VideoState snapshot., Start or resume playback. If ref is given: loads and begins playback of new…, Toggle between play and pause. (+24 more)
+Cohesion: 0.08
+Nodes (17): assert_gui_thread(), Assert that the current code is running on the Qt GUI thread. Raises…, HudVideoController, True when the Visual HUD surface should be visible., Return the current whitelisted VideoState snapshot., Seek to absolute seconds. Clamps to [0, duration - END_MARGIN_S]. Queues seek…, Stop playback and return to avatar (IDLE)., Duck video volume to DUCK_VOLUME_PCT while Alfred speaks or mic is open. (+9 more)
 
 ### Community 34 - "NullSuppressor"
-Cohesion: 0.13
-Nodes (16): NullSuppressor, ABC, Any, Private interface for platform media control., Return opaque handles; callers must never inspect or log them., Pause or, only as a fallback, mute the opaque external player., Resume only a player ALFRED previously paused., Return current playback state without exposing player metadata. (+8 more)
+Cohesion: 0.08
+Nodes (24): NullSuppressor, ABC, Any, Private interface for platform media control., Return opaque handles; callers must never inspect or log them., Pause or, only as a fallback, mute the opaque external player., Resume only a player ALFRED previously paused., Return current playback state without exposing player metadata. (+16 more)
 
-### Community 35 - "destination.py"
-Cohesion: 0.10
-Nodes (26): _log(), weather_action(), format_crash_report(), _handle_exception(), install_crash_handler(), log_crash(), open_email_client(), _print() (+18 more)
+### Community 35 - "get_video_play_destination"
+Cohesion: 0.18
+Nodes (10): _config_signature_unlocked(), get_plugin_settings_revision(), get_video_play_destination(), _plugin_settings_state(), Return remembered video play destination ('app', 'youtube', 'default', etc.) or…, Return the generation used by plugin settings schema caches., _read_config_unlocked(), _write_config_unlocked() (+2 more)
 
 ### Community 36 - "llm_client.py"
-Cohesion: 0.17
-Nodes (25): call_llm(), call_llm_stream(), call_llm_text(), _chat_endpoint(), check_model_available(), ensure_ollama_running(), _get_headers(), get_llm_provider() (+17 more)
+Cohesion: 0.09
+Nodes (36): call_llm(), call_llm_stream(), call_llm_text(), _chat_endpoint(), check_model_available(), ensure_ollama_running(), get_base_dir(), _get_headers() (+28 more)
 
 ### Community 37 - "SpotifyClient"
-Cohesion: 0.09
-Nodes (22): _is_placeholder(), Any, High-performance Spotify client with connection pooling, token caching, device…, Loads Spotify credentials from SecretStore, config/api_keys.json, or…, Persist fresh access and refresh tokens to config and encrypted store., Returns a valid access token, refreshing if needed., Playback endpoints require a user OAuth token, not client credentials., Search Spotify for tracks, albums, artists, or playlists. (+14 more)
+Cohesion: 0.12
+Nodes (16): get_devices(), Any, High-performance Spotify client with connection pooling, token caching, device…, Loads Spotify credentials from SecretStore, config/api_keys.json, or…, Returns a valid access token, refreshing if needed., Playback endpoints require a user OAuth token, not client credentials., Search Spotify for tracks, albums, artists, or playlists., Start playback through Spotify Connect without opening a local app. (+8 more)
 
-### Community 38 - "WinBrowserDriver"
-Cohesion: 0.09
-Nodes (16): _detect_action(), Resolve a free-text description to an action name, locally. Returns {"action":…, Send Ctrl+Tab (next) or Ctrl+Shift+Tab (prev)., Windows browser driver using targeted Win32 virtual keys and process inspection., Send Ctrl+W to frontmost browser., Send Ctrl+T to frontmost browser, or launch URL natively., WinBrowserDriver, 1. Summary of Changes (+8 more)
+### Community 38 - "_detect_action"
+Cohesion: 0.11
+Nodes (16): _detect_action(), next_tab(), prev_tab(), Resolve a free-text description to an action name, locally. Returns {"action":…, Module-level shortcut to switch tabs., switch_tab(), 1. Summary of Changes, 2. Root Cause & Solution Architecture (+8 more)
 
 ### Community 39 - "MonitorScheduler"
-Cohesion: 0.11
-Nodes (4): MONITOR mode: Multi-target scheduler, answer parser, and target drivers., MonitorScheduler, Coordinates polling across multiple MonitorTargets on one 1 Hz thread., TestPhase2Flow
+Cohesion: 0.12
+Nodes (3): MonitorScheduler, Coordinates polling across multiple MonitorTargets on one 1 Hz thread., TestPhase2Flow
 
-### Community 40 - "MonitorController"
-Cohesion: 0.08
-Nodes (18): MonitorController, AbstractEventLoop, Any, Monitor Controller: Orchestrates AnswerWindow, MonitorScheduler, and…, Feed captured transcript/text into the waiting answer window., Start monitoring. If goal is empty, prompt user via AnswerWindow., Stop monitoring and cancel any active answer window., Return current monitoring status snapshot. (+10 more)
+### Community 40 - "get_sentry_mode_manager"
+Cohesion: 0.12
+Nodes (11): get_sentry_mode_manager(), Convenience accessor for the global singleton., MonitorController, AbstractEventLoop, Any, Feed captured transcript/text into the waiting answer window., Start monitoring. If goal is empty, prompt user via AnswerWindow., Stop monitoring and cancel any active answer window. (+3 more)
 
 ### Community 41 - "train_personal_verifier.py"
-Cohesion: 0.11
-Nodes (25): _ensure_openwakeword(), _get_whisper_verifier(), _is_alfred_wake_phrase(), _make_model(), Ensure openwakeword is completely initialized and attribute-populated., Create a fresh, independent OpenWakeWord Model instance., Return a shared WhisperModel instance for speech verification., Check if transcribed speech contains Alfred or recognized phonetic variants. (+17 more)
+Cohesion: 0.22
+Nodes (14): pickle, extract_negative_features(), extract_positive_features(), main(), any, tools/train_personal_verifier.py — Record voice samples and train multi-user…, Train voice-specific verifier on recorded positive and negative clips., Record mono 16 kHz int16 audio from default microphone. (+6 more)
 
 ### Community 42 - "send_message.py"
-Cohesion: 0.27
-Nodes (18): _base_dir(), _clear_and_paste(), _desktop_send(), _get_os(), _open_app(), _open_browser_url(), _paste_text(), Path (+10 more)
-
-### Community 43 - "1. Unit Test Suite"
-Cohesion: 0.16
-Nodes (3): 1. Unit Test Suite, TestApiRegistry, TestSecretStore
+Cohesion: 0.17
+Nodes (24): clipboard_history_action(), _push(), Maintains a session-scoped ring buffer of clipboard entries. Every time Alfred…, Add an entry, deduplicating consecutive identical values., _snapshot(), _base_dir(), _clear_and_paste(), _desktop_send() (+16 more)
 
 ### Community 44 - "_SingleFlightManager"
-Cohesion: 0.12
-Nodes (11): Check if generation token is still current (not superseded by newer request)., Mark resolution as finished., Mark resolution as failed / cleared., Reset state for testing., Thread-safe deduplication, debounce, and cancellation for HUD video resolution., Strip punctuation and normalize whitespace for consistent target matching., Check if target can proceed or if it is duplicate/in-flight. Returns:…, _SingleFlightManager (+3 more)
+Cohesion: 0.08
+Nodes (15): Check if generation token is still current (not superseded by newer request)., Mark resolution as finished., Mark resolution as failed / cleared., Reset state for testing., Thread-safe deduplication, debounce, and cancellation for HUD video resolution., Strip punctuation and normalize whitespace for consistent target matching., Check if target can proceed or if it is duplicate/in-flight. Returns:…, _SingleFlightManager (+7 more)
 
-### Community 45 - "Changes"
-Cohesion: 0.33
-Nodes (5): Changes, Graphify nodes used, Media Command v1 — Phase 1: MediaArbiter, Open questions, Verification
+### Community 45 - "hud_video"
+Cohesion: 0.08
+Nodes (23): _handle_transport(), hud_video(), Any, Handle all transport controls with deterministic returns., netflix_pilot(), Any, Execute Netflix Pilot commands., _clean_play_verbs() (+15 more)
 
 ### Community 46 - "gmail_manager.py"
-Cohesion: 0.07
-Nodes (40): _get_gmail_brief(), Fetch unread emails summary via gmail_manager., _clean_header_str(), _extract_body_snippet(), fetch_unread_emails(), gmail_manager(), _load_gmail_creds(), Any (+32 more)
+Cohesion: 0.10
+Nodes (24): _clean_header_str(), _extract_body_snippet(), fetch_unread_emails(), gmail_manager(), _load_gmail_creds(), Any, Gmail Manager Action for ALFRED Mark-VIII. Provides full Gmail connectivity: -…, Connect to Gmail IMAP and fetch unread email summaries. (+16 more)
 
-### Community 47 - "gemini.py"
-Cohesion: 0.12
-Nodes (23): api_key(), as_json(), call(), client(), _cool(), _cooling(), _live_call(), runner() (+15 more)
+### Community 47 - "computer_control.py"
+Cohesion: 0.21
+Nodes (23): _clear_field(), _click(), _clipboard_get(), _clipboard_paste(), computer_control(), _drag(), _focus_window(), _get_api_key() (+15 more)
 
 ### Community 48 - "SharedAudioStream"
 Cohesion: 0.07
@@ -570,71 +630,71 @@ Nodes (18): ndarray, Clear the current pre-roll history., Manually feed an audio
 
 ### Community 49 - "MarketProvider"
 Cohesion: 0.05
-Nodes (47): market_sentry(), actions/market_sentry.py — Action handler for financial market queries,…, Executes market action (quote, watch, unwatch, list, summary)., core/market — Financial market tracking, quotes, alert rules, and watchlist…, MarketProvider, Exception, Quote, core/market/provider.py — Provider-agnostic market quote fetcher and cache.… (+39 more)
+Nodes (50): _get_market_brief(), market_sentry(), actions/market_sentry.py — Action handler for financial market queries,…, Executes market action (quote, watch, unwatch, list, summary)., core/market — Financial market tracking, quotes, alert rules, and watchlist…, MarketProvider, Exception, Quote (+42 more)
 
-### Community 50 - "profile_alfred_ui.py"
-Cohesion: 0.13
-Nodes (17): cprofile, 9. Existing Profiling Infrastructure, faulthandler, Profile, pstats, _install_probes(), instrumented_init(), pulse() (+9 more)
+### Community 50 - "ProbeLog"
+Cohesion: 0.18
+Nodes (9): 9. Existing Profiling Infrastructure, Profile, _install_probes(), main(), ProbeLog, Path, _stop_probes(), _timed_slot() (+1 more)
 
 ### Community 51 - "SpeculativePrefetcher"
-Cohesion: 0.08
-Nodes (18): Any, Read-only DNS resolution and socket pre-warming., Read-only CPU, Memory, and Battery telemetry snapshot., Inspect a speculative partial text token and trigger safe warmup jobs., Store a precomputed speculative result., Retrieve a fresh prefetched result if valid and unexpired., Shutdown background worker pool., Off-thread speculative intent warm-up engine with strict read-only purity. (+10 more)
+Cohesion: 0.07
+Nodes (22): Any, Read-only DNS resolution and socket pre-warming., Read-only CPU, Memory, and Battery telemetry snapshot., Inspect a speculative partial text token and trigger safe warmup jobs., Store a precomputed speculative result., Retrieve a fresh prefetched result if valid and unexpired., Shutdown background worker pool., Off-thread speculative intent warm-up engine with strict read-only purity. (+14 more)
 
 ### Community 52 - "PHASE 0 RECONNAISSANCE NOTES — HUD VIDEO SURFACE"
-Cohesion: 0.09
-Nodes (22): 10. Open Questions / Stop Points, 11. System Prompt Addition (Phase 4), 12. Phase Readiness Checklist, 2. Existing Media Paths — Reuse Analysis, 4. Reusable Helpers for Resolve, 5. TTS Entry Point — Early Ack Pattern, 6. HUD Software Renderer Constraints & Backend Decision, 7. Proposed Module Layout (+14 more)
+Cohesion: 0.12
+Nodes (16): 10. Open Questions / Stop Points, 11. System Prompt Addition (Phase 4), 12. Phase Readiness Checklist, 4. Reusable Helpers for Resolve, 5. TTS Entry Point — Early Ack Pattern, 6. HUD Software Renderer Constraints & Backend Decision, 7. Proposed Module Layout, 8. Stack Slot Assignment (+8 more)
 
 ### Community 53 - "classify_hud_intent"
-Cohesion: 0.08
-Nodes (16): classify_hud_intent(), HudIntentClassification, IntentResult, NamedTuple, core/hud_video/intent.py — Locus-phrase detection, intent precedence, and…, Master intent router with strict precedence. Rules: - Transport route sits…, parse_media_time(), ParsedTime (+8 more)
+Cohesion: 0.15
+Nodes (3): classify_hud_intent(), Master intent router with strict precedence. Rules: - Transport route sits…, TestVoicePrecedence
 
 ### Community 55 - "TronScoreBackgroundPlayer"
-Cohesion: 0.07
-Nodes (13): control_playback(), 13. The Background MP3 at `+00:02.5`, 1. Existing in-app player, _base_dir(), Path, Queue a Spotify track update onto the Qt UI thread., Background music audio engine. Plays background score continuously on loop…, Set base normal volume (0.0 to 1.0). Speech ducking scales to 50% of base. (+5 more)
+Cohesion: 0.08
+Nodes (8): 13. The Background MP3 at `+00:02.5`, 1. Existing in-app player, Background music audio engine. Plays background score continuously on loop…, Attach the application-owned arbiter at the playback state chokepoint., Called when Spotify plays a track. Pauses Tron background music, sets Spotify…, Restores Tron legacy score as the default active audio., Specifically resume/play the local TRON audio core player., TronScoreBackgroundPlayer
 
 ### Community 56 - "ImageViewerWindow"
-Cohesion: 0.07
-Nodes (21): _ImageCanvas, ImageViewerWindow, QImage, QKeyEvent, QWidget, Top-level, frameless, aspect-ratio-fitted reference image viewer., Load, fit, position, and display an image., Hide window and free pixmap resources immediately. (+13 more)
+Cohesion: 0.09
+Nodes (16): _ImageCanvas, ImageViewerWindow, QImage, QWidget, Top-level, frameless, aspect-ratio-fitted reference image viewer., Load, fit, position, and display an image., Alias for freeing memory., Return screen hosting parent or cursor. (+8 more)
 
-### Community 57 - "PaletteDefinition"
-Cohesion: 0.16
-Nodes (8): ArkhamEEGVisual, ArkhamFloorplanVisual, ArkhamVitalsVisual, QPainter, QRectF, PaletteDefinition, 1:1 mapping with ALFRED's CRT palette tokens on class C. No unused tokens, no…, Convert to class C uppercase attribute mapping.
+### Community 57 - "ArkhamEEGVisual"
+Cohesion: 0.17
+Nodes (5): ArkhamEEGVisual, ArkhamFloorplanVisual, ArkhamVitalsVisual, QPainter, QRectF
 
 ### Community 58 - "LazyService"
 Cohesion: 0.09
 Nodes (25): core/boot/__init__.py — Boot stage decomposition package. Provides declarative…, create_lazy_hud_video_controller(), create_lazy_monitor_controller(), _factory(), create_lazy_scheduler(), _factory(), create_lazy_sentry_mgr(), _factory() (+17 more)
 
-### Community 59 - "TestLedgerPrivacy"
+### Community 59 - "monitor/parser.py"
 Cohesion: 0.14
-Nodes (8): 3. Verification & Test Suite, MockSensitiveReader, Test speech text generation across normal, gentle, and drill_sergeant., Produces surfaces with highly sensitive app names, raw titles, and labels., CRITICAL PRIVACY TEST: Ensure that during an entire Focus session with…, Verify schema and numerical aggregation in ledger file., Clean streaks increment on 0 drift, reset on drift, and flag broken if prev >=…, TestLedgerPrivacy
+Nodes (11): MONITOR mode: Multi-target scheduler, answer parser, and target drivers., _parse_clause(), parse_monitoring_request(), Answer Parser: Converts natural language monitoring requests into…, Parse a user prompt into one or more MonitorTarget instances., Monitor Scheduler: Shared 1 Hz poll loop and alert manager., Terminal Target: Monitors terminal builds, processes, or CLI outputs., Monitors a terminal window or build session for completion/error signals. (+3 more)
 
 ### Community 60 - "FocusEngine"
-Cohesion: 0.08
-Nodes (11): FocusEngine, Any, Voice route handler: 'lock on this tab', 'keep me in this tab', 'this is the…, Manages a FOCUS mode session independent of UI lifecycles., Execute a single session tick with settle rule and grace window., 2.1. `core/sentry/focus/state.py` (`FocusState`), 2.2. `core/sentry/focus/reader.py` & Cross-Platform Backends, 2.3. `core/sentry/focus/engine.py` (`FocusEngine`) (+3 more)
+Cohesion: 0.09
+Nodes (10): FocusEngine, Any, Voice route handler: 'lock on this tab', 'keep me in this tab', 'this is the…, Manages a FOCUS mode session independent of UI lifecycles., Execute a single session tick with settle rule and grace window., 2.1. `core/sentry/focus/state.py` (`FocusState`), 2.2. `core/sentry/focus/reader.py` & Cross-Platform Backends, 2.3. `core/sentry/focus/engine.py` (`FocusEngine`) (+2 more)
 
 ### Community 61 - "ClipboardManager"
-Cohesion: 0.10
-Nodes (13): ClipboardManager, cosine_similarity(), Compute cosine similarity between two float vectors., Thread-safe persistent clipboard manager with semantic indexing., Lazily initialize local fastembed model., Compute 384-dimensional vector embedding for text., Load history from disk., Return the most recent count items in chronological order (oldest to newest… (+5 more)
+Cohesion: 0.09
+Nodes (14): ClipboardManager, cosine_similarity(), Compute cosine similarity between two float vectors., Thread-safe persistent clipboard manager with semantic indexing., Lazily initialize local fastembed model., Compute 384-dimensional vector embedding for text., Load history from disk., Save history to disk atomically. (+6 more)
 
 ### Community 62 - "AnswerWindow"
-Cohesion: 0.08
-Nodes (20): NetflixActions, Any, Automates Netflix UI interactions: profile selection, search, and playback., Activate profile via coordinate click or targeted keyboard Tab navigation., Interactive conversational profile selection flow. ALFRED speaks: 'Which…, Open Netflix, check state on launch, and navigate profile gate if present., Search Netflix for query by focusing search hotkey or navigating directly.…, Execute search, settle on results grid, target first card, and trigger playback. (+12 more)
+Cohesion: 0.12
+Nodes (10): AnswerWindow, Synchronously speak prompt and wait for answer via threading.Event., Submit captured speech/text into the waiting window. Thread-safe; can be called…, Cancel an active answer window immediately., Coordinates one-shot spoken user responses without wake-word requirements., Register host application callbacks., Speak prompt and await one user reply without requiring a wake word., 1. Summary of Changes (+2 more)
 
-### Community 63 - "raise_overlay"
+### Community 63 - "HudCanvas"
 Cohesion: 0.13
-Nodes (15): centre_overlay_globally(), make_frameless_overlay(), QWidget, raise_overlay(), core/hud_video/layering.py — Visual HUD Layering, Z-order, and overlay…, Configure a widget as a frameless top-level window owned by parent. A native…, Raise an overlay widget above the Visual HUD and sibling elements. Safe for…, Centre a top-level overlay over an anchor widget using global coordinates. (+7 more)
+Nodes (12): 1. Avatar / Globe Host — Layout & Lifecycle, Graphify nodes referenced, `_hud_cam_stack` (ui.py:8017), `HudCanvas` (ui.py:1205), Minimize / theme / reconfigure behaviour, 3. UI Lag (HUD Frame Time & Paint Cadence), TestHudFrameLatency, HudCanvas (+4 more)
 
-### Community 64 - "system_monitor.py"
-Cohesion: 0.16
-Nodes (13): _get_cpu_temp(), _get_gpu_usage(), get_system_status(), _is_private_or_loopback(), _nvml_gpu(), actions/system_monitor.py — System Metric Checks, Process Tree Watchdog &…, Snapshot of current system metrics for the system_status tool., Check if remote IP address is private, loopback, or multicast. (+5 more)
+### Community 64 - "_update_config"
+Cohesion: 0.13
+Nodes (14): 4. Plugins Settings UI Removal & Automatic Activation, ensure_config_dir(), migrate_legacy_plugin_settings(), Persist the selected voice engine ('default' or 'jarvis')., Safely retire legacy disabled-plugin flags without deleting unrelated user…, Merge `values` into a namespace's stored config (read-modify-write, like every…, Legacy helper maintained for backward compatibility; eligible plugins are…, save_api_keys() (+6 more)
 
-### Community 65 - "resolve.py"
-Cohesion: 0.11
-Nodes (23): core/hud_video/__init__.py — Public exports for the HUD video subsystem., _base_dir(), _extract_yt_id(), _is_http_url(), _is_yt_url(), _looks_like_media_url(), _probe_content_type(), Exception (+15 more)
+### Community 65 - "detect"
+Cohesion: 0.05
+Nodes (28): detect(), HudIntentClassification, IntentResult, is_transport_command(), NamedTuple, Backward-compatible helper for basic transport command detection., Parse a raw utterance for HUD video intent and optional start timestamp.…, _extract_yt_id() (+20 more)
 
 ### Community 66 - "._dispatch_tool"
-Cohesion: 0.09
-Nodes (24): add_monitor(), check_all(), _fetch(), _is_blocked(), list_monitors(), _load(), BackgroundMonitor — user-configured topic watching. Checks DDG news once per…, Run all pending topic checks (once per day per topic). Returns a list of… (+16 more)
+Cohesion: 0.10
+Nodes (25): add_monitor(), check_all(), _fetch(), _is_blocked(), list_monitors(), _load(), BackgroundMonitor — user-configured topic watching. Checks DDG news once per…, Run all pending topic checks (once per day per topic). Returns a list of… (+17 more)
 
 ### Community 67 - "MacPlatformBackend"
 Cohesion: 0.11
@@ -645,16 +705,12 @@ Cohesion: 0.10
 Nodes (10): 3.1. Privacy Assertion Gate (`tests/focus/test_state_privacy.py`), 3.2. Engine Lifecycle & Fresh Query Gate (`tests/focus/test_focus_engine.py`), 3.3. Platform Reader Gate (`tests/focus/test_platform_readers.py`), 3. Verification & Acceptance Testing, 4. Next Phase Readiness, Sentry Mode v2 — Phase 3 Implementation Notes, MockReader, Verify countdown survives HUD minimize/close/recreation. (+2 more)
 
 ### Community 69 - "EchoGuard"
-Cohesion: 0.08
-Nodes (14): band_energies(), EchoGuard, ndarray, Classifies microphone blocks while the assistant is speaking. Usage:…, True once the estimate rests on enough real echo to be trusted., Residual left by this room's own echo. Higher = harder to separate., False when the acoustics are too poor to judge on content alone. Speakers…, The residual a block must clear right now to count as a voice. (+6 more)
-
-### Community 70 - "TestHudReactivity"
 Cohesion: 0.11
-Nodes (6): TestHudReactivity, PluginManagerOverlay, QPushButton, Floating overlay — lists discovered plugins with per-plugin ON/OFF toggles., Acoustic control with a cheap listening-level outline., ReactiveMicButton
+Nodes (9): EchoGuard, Classifies microphone blocks while the assistant is speaking. Usage:…, True once the estimate rests on enough real echo to be trusted., Residual left by this room's own echo. Higher = harder to separate., False when the acoustics are too poor to judge on content alone. Speakers…, The residual a block must clear right now to count as a voice., Consecutive positive blocks before an interruption is believed., 1.0 = fully explained by our own output, 0.0 = nothing to do with it. (+1 more)
 
 ### Community 71 - "window_manager.py"
-Cohesion: 0.24
-Nodes (15): _find_hwnd_by_title(), _cb(), _focused_hwnd(), _get_screen(), _get_title(), _get_user32(), _list_windows(), _move_resize() (+7 more)
+Cohesion: 0.13
+Nodes (24): _find_hwnd_by_title(), _cb(), _focused_hwnd(), _get_screen(), _get_title(), _get_user32(), _list_windows(), _move_resize() (+16 more)
 
 ### Community 72 - "ThemeChrome"
 Cohesion: 0.20
@@ -664,85 +720,85 @@ Nodes (12): Centralized, thread-safe access point for the active theme's context
 Cohesion: 0.10
 Nodes (14): ALFRED-MK-V: Stability & Media Controls Verification Checklist, Test Matrix & Live Verification Status, Unit Test Execution Result, Verify shutdown_jarvis tool requires confirmation boolean to prevent false…, Unconfirmed shutdown_jarvis calls are ignored without terminating the process., Verify reconnection parameters have named constants and sensible bounds., assert_gui_thread must succeed without exception on Qt GUI thread., assert_gui_thread must raise RuntimeError when called from a background thread. (+6 more)
 
-### Community 74 - "is_heavenly_restricted"
-Cohesion: 0.10
-Nodes (23): ActionRecord, ActionRegistry, _call_handler(), _is_heavenly_restricted_params(), _opt_upper(), Action discovery, validation, and dispatch — the built-in twin of…, Invoke the handler passing only the context kwargs it actually declares (or all…, Returns an ActionRecord; .valid=False + .error set on any problem. Never raises. (+15 more)
+### Community 74 - "ActionRegistry"
+Cohesion: 0.17
+Nodes (5): ActionRegistry, _call_handler(), Invoke the handler passing only the context kwargs it actually declares (or all…, How this action's result should re-enter the conversation, if it said., Scheduler Recon
 
-### Community 75 - "ReferenceImageSession"
-Cohesion: 0.11
-Nodes (18): FetchResult, Manages search resolution and candidate cycling for reference images., Resolve query into candidate results and fetch the first match., Cycle to next candidate image ('another one / next')., Cycle to previous candidate image., Fetch the candidate at current_idx., Outcome of an image fetch operation., ReferenceImageSession (+10 more)
+### Community 75 - "test_image_fetch.py"
+Cohesion: 0.09
+Nodes (24): _present_fetch_result(), Any, Safely marshal image display to Qt viewer window and show toast., Main tool handler for reference image display, cycling, and dismissal., show_image(), FetchResult, Manages search resolution and candidate cycling for reference images., Resolve query into candidate results and fetch the first match. (+16 more)
 
-### Community 76 - "detect"
-Cohesion: 0.21
-Nodes (3): detect(), Parse a raw utterance for HUD video intent and optional start timestamp.…, TestLocusDetection
+### Community 76 - "config_manager.py"
+Cohesion: 0.14
+Nodes (17): copy, get_base_dir(), get_hud_style(), invalidate_config_cache(), Path, Persist CPU inference toggle for Jarvis voice., The speech-reactive globe is the only supported HUD., Preserve the compatibility API while coercing every value to Reactive. (+9 more)
 
-### Community 77 - "._build_quick_drawer"
-Cohesion: 0.12
-Nodes (9): 1. Tactical Controls Button & Settings Area, Graphify Citations, Implementation Summary, Phase 5 Notes: Tactical Controls Integration, Floating overlay panel shown when the ⚙ header button is toggled., Update Tactical Controls button text with active neural model backend., Update the Tactical Controls and Reconfigure Batcomputer button texts with…, Lazy-instantiate and display the SetupApiModal dialog with guaranteed… (+1 more)
+### Community 77 - "VideoTimeline"
+Cohesion: 0.16
+Nodes (7): QKeyEvent, QMouseEvent, Called when video_state_changed is emitted. Only repaints if visible., Custom-painted timeline scrubber. Zero per-frame allocations in paintEvent.…, Cache brushes and pens in _update_palette()., VideoTimeline, 🎬 Visual HUD v2: Embedded Multimedia & Tactical Layering
 
-### Community 78 - "is_transport_command"
-Cohesion: 0.23
-Nodes (3): is_transport_command(), Backward-compatible helper for basic transport command detection., TestTransportCommands
+### Community 78 - "browser_control.py"
+Cohesion: 0.20
+Nodes (14): browser_control(), _detect_default_browser(), _find_exe_windows(), _find_opera_windows(), _log(), _normalize_url(), _open_native(), Bare words like "instagram" → "https://instagram.com" Domains like… (+6 more)
 
 ### Community 79 - "LocalPipelineCoordinator"
-Cohesion: 0.09
-Nodes (18): LocalPipelineCoordinator, stream_callback(), Coordinates STT → LLM → TTS flow., Set callbacks for UI updates., Log message via callback or print., Set UI state via callback., Start the local pipeline., Stop the local pipeline. (+10 more)
+Cohesion: 0.12
+Nodes (13): LocalPipelineCoordinator, Coordinates STT → LLM → TTS flow., Set callbacks for UI updates., Log message via callback or print., Set UI state via callback., Start the local pipeline., Stop the local pipeline., Handle wake word detection. (+5 more)
 
-### Community 80 - "get_sentry_mode_manager"
-Cohesion: 0.08
-Nodes (14): get_sentry_mode_manager(), Convenience accessor for the global singleton., Issue 1: Main-app MONITOR button vs Topic/News Monitoring, 2. Graphify Nodes & Symbols Used, 3. Acceptance Verification, 4. Open Questions, PHASE 1 NOTES — SENTRY DUAL-MODE SYSTEM WITH DROPDOWN, Fast callback used by the Sentry button on the Qt thread. (+6 more)
+### Community 80 - "TestSentryDropdownIntegration"
+Cohesion: 0.06
+Nodes (14): _run(), Issue 1: Main-app MONITOR button vs Topic/News Monitoring, 2. Graphify Nodes & Symbols Used, 3. Acceptance Verification, 4. Open Questions, PHASE 1 NOTES — SENTRY DUAL-MODE SYSTEM WITH DROPDOWN, Fast callback used by the Sentry button on the Qt thread., QMenu (+6 more)
 
 ### Community 81 - "check_jarvis_capability"
-Cohesion: 0.09
+Cohesion: 0.10
 Nodes (24): check_cuda_and_vram(), check_dependencies(), check_jarvis_capability(), check_python_version(), invalidate_capability_cache(), prewarm_jarvis_capability_async(), _worker(), Capability inspector for Jarvis VoxCPM2 TTS engine. Validates: - Python runtime… (+16 more)
 
 ### Community 82 - "TaskBoard"
-Cohesion: 0.19
-Nodes (5): QFrame, QWidget, Compact HUD board for pending work, reminder acknowledgement, and macro abort., TaskBoard, Attach the local task scheduler after application startup (thread-safe).
+Cohesion: 0.26
+Nodes (4): QFrame, QWidget, Compact HUD board for pending work, reminder acknowledgement, and macro abort., TaskBoard
 
 ### Community 83 - "._listen_audio"
+Cohesion: 0.06
+Nodes (32): 0.1 Transport and Turn Model, 0.2 The Feedback Loop, 0.5 Audio Plumbing, 18. Process-Wide Audio Input Streams, 19. Consumers of Mic Audio, 2. Upstream Audio Pump, 3. Source of `[halt] Server-side interruption signal received`, 4. Discarded Audio Chunks in `[halt] Interrupted — N audio chunks discarded` (+24 more)
+
+### Community 84 - "HudSignals"
+Cohesion: 0.16
+Nodes (7): HudSignals, Read-only signals struct refreshed <= 2 Hz and shared by all slots. Visuals are…, QPainter, QRectF, WatchtowerFluxRingVisual, WatchtowerHoloManVisual, WatchtowerPowerOutputVisual
+
+### Community 85 - ".reset_instance"
 Cohesion: 0.07
-Nodes (26): 0.1 Transport and Turn Model, 0.2 The Feedback Loop, 0.3 Boot Chain Decomposition, 0.5 Audio Plumbing, 0.7 Environment & Hardware Accelerators, 12. Deferrable Non-Critical Features (Lazy Candidates), 18. Process-Wide Audio Input Streams, 19. Consumers of Mic Audio (+18 more)
+Nodes (13): Testing hook to clear singleton., TestSentryModeManager, _LogSource, QObject, Overlay loads position cleanly within available screen bounds., Overlay is created as an independent top-level window without being prematurely…, When minimized, overlay shows and immediately syncs active Sentry state., Restoring full window dismisses/hides the overlay. (+5 more)
 
-### Community 84 - "WatchtowerFluxRingVisual"
-Cohesion: 0.17
-Nodes (5): QPainter, QRectF, WatchtowerFluxRingVisual, WatchtowerHoloManVisual, WatchtowerPowerOutputVisual
-
-### Community 85 - "TestMinimizedHudLinuxLifecycle"
-Cohesion: 0.11
-Nodes (9): _LogSource, QObject, Overlay loads position cleanly within available screen bounds., Overlay is created as an independent top-level window without being prematurely…, When minimized, overlay shows and immediately syncs active Sentry state., Restoring full window dismisses/hides the overlay., Repeated transitions maintain clean state without duplicating objects or…, Simulated window state change event triggers overlay show/hide. (+1 more)
-
-### Community 86 - "_HudOverlay"
-Cohesion: 0.12
-Nodes (13): 4. Z-Order & Layering, Single Source of Truth (`core/hud_video/layering.py`):, 1. Multimedia Decode & Compatibility Matrix, 2. Window Layering & Compositor Independence, ALFRED-MK-V: Cross-Platform Parity (macOS + Linux), ConfirmBanner, _HudOverlay, MemoryOverlay (+5 more)
+### Community 86 - "raise_overlay"
+Cohesion: 0.05
+Nodes (41): chord_label(), Human-readable name of the chord, for the UI and the logs., centre_overlay_globally(), QWidget, raise_overlay(), Raise an overlay widget above the Visual HUD and sibling elements. Safe for…, Centre a top-level overlay over an anchor widget using global coordinates., 1. Tactical Controls Button & Settings Area (+33 more)
 
 ### Community 87 - "themes/__init__.py"
 Cohesion: 0.17
 Nodes (12): Unified apply path and runtime ThemeChrome provider for ALFRED-MK-VIII. Manages…, Theme catalog for ALFRED-MK-VIII. Houses structured ThemeDefinitions for…, ALFRED-MK-VIII Thematic UI Skins. Provides structured theme schema, in-memory…, Registry for ALFRED-MK-VIII themes. Provides lookup, validation, and listing of…, Enum, str, Optional speech persona flavour (OFF by default)., How the subject name/codename is presented in the top-right dossier. (+4 more)
 
 ### Community 88 - "MediaArbiter"
-Cohesion: 0.18
-Nodes (6): MediaArbiter, MediaState, QObject, The complete client-visible media state; deliberately identity-free., Coordinate local audio ownership without exposing external identities., TestMediaArbiter
+Cohesion: 0.14
+Nodes (10): AudioSource, MediaArbiter, MediaState, Enum, QObject, Private, application-owned arbitration of ALFRED audio sources., The complete client-visible media state; deliberately identity-free., Coordinate local audio ownership without exposing external identities. (+2 more)
 
 ### Community 89 - "_SysMetrics"
-Cohesion: 0.19
-Nodes (5): Thread-safe speech channel for plugins: lets a plugin ask JARVIS to say…, ⚡ Performance & 30-Second Frame Drop Elimination, _nvml_gpu_windows(), Return NVIDIA GPU utilisation % using nvml.dll directly — zero subprocess., _SysMetrics
+Cohesion: 0.28
+Nodes (4): ⚡ Performance & 30-Second Frame Drop Elimination, _nvml_gpu_windows(), Return NVIDIA GPU utilisation % using nvml.dll directly — zero subprocess., _SysMetrics
 
 ### Community 90 - "test_thematic_hud.py"
-Cohesion: 0.10
-Nodes (17): colorsys, apply_theme(), Apply a theme by id or primary accent hex code. Updates: 1. Class C palette…, get_theme(), list_themes(), Convenience getter for ThemeRegistry.instance().get(id_or_hex)., Convenience getter for ThemeRegistry.instance().list_themes()., _contrast_ratio() (+9 more)
+Cohesion: 0.16
+Nodes (10): colorsys, get_theme(), list_themes(), Convenience getter for ThemeRegistry.instance().get(id_or_hex)., Convenience getter for ThemeRegistry.instance().list_themes()., _contrast_ratio(), _luminance(), Comprehensive unit tests for ALFRED-MK-VIII Thematic HUD Overhaul. Verifies: 1.… (+2 more)
 
 ### Community 91 - "DashboardServer"
-Cohesion: 0.11
-Nodes (10): DashboardServer, index(), _ensure_certs(), _local_ip(), Second HTTPS server on PORT+1 sharing the same app and in-memory state. Chrome…, Return the best LAN-facing IPv4 address, no internet required., Make sure config/certs holds a TLS key pair, generating a self-signed one the…, URL for manual browser entry. When HTTPS active, points to alias port (also… (+2 more)
+Cohesion: 0.16
+Nodes (4): DashboardServer, index(), URL for manual browser entry. When HTTPS active, points to alias port (also…, _read()
 
 ### Community 92 - "fetch.py"
 Cohesion: 0.25
 Nodes (8): core/image_viewer/fetch.py — Off-thread image fetching, validation, and…, ImageResult, ImageSource, ABC, LocalSource, WebSource, Media Command v1 — Phase 5: Image Sources, requests
 
-### Community 93 - "._apply_name_update"
-Cohesion: 0.12
-Nodes (15): 1. Theme Definition, Selection Persistence, and Apply Path, 2. Current Theme IDs & Current Behavior, 4. Other Chrome Candidates for Thematic Binding, 5. Theme Preview & Apply Lifecycle, 6. Existing Assets in the Repository, ALFRED-MK-V — Thematic HUD Overhaul: Phase 0 Reconnaissance Notes, Retinting palette updates tactical colors while keeping QR high-contrast., apply_ui_accent() (+7 more)
+### Community 93 - "apply_ui_accent"
+Cohesion: 0.09
+Nodes (18): 1. Theme Definition, Selection Persistence, and Apply Path, 2. Current Theme IDs & Current Behavior, 3. Top-Right Identity & Status Block, 4. Other Chrome Candidates for Thematic Binding, 5. Theme Preview & Apply Lifecycle, 6. Existing Assets in the Repository, ALFRED-MK-V — Thematic HUD Overhaul: Phase 0 Reconnaissance Notes, Retinting palette updates tactical colors while keeping QR high-contrast. (+10 more)
 
 ### Community 94 - "PushToTalk"
 Cohesion: 0.17
@@ -753,48 +809,48 @@ Cohesion: 0.15
 Nodes (10): 1. Objectives & Summary, 2. Graphify References & Hot Paths, 3. Verification & Test Suite, Phase 8 Implementation Notes: System Prompt Updates, Prompt must contain dedicated SENTRY MODE: MONITOR + FOCUS section., Prompt must document both MONITOR MODE and FOCUS MODE., Prompt must teach the model the exact tool names: sentry_monitor and…, Prompt must map representative voice phrases to appropriate modes. (+2 more)
 
 ### Community 96 - "TestBackgroundWorkerPool"
-Cohesion: 0.14
-Nodes (6): Verify that calling interrupt() sets halt event, immediately stops active…, Verify that _safe_background_announce waits until ALFRED finishes speaking…, Verify queue_background_task is registered in TOOL_DECLARATIONS., Verify that queue_background_task returns immediately (sub-millisecond), and…, Dispatch a mock task and verify voice PTT interaction continues with sub-second…, TestBackgroundWorkerPool
+Cohesion: 0.12
+Nodes (7): Verify that calling interrupt() sets halt event, immediately stops active…, Verify that _safe_background_announce waits until ALFRED finishes speaking…, Verify DashboardServer tracks background tasks and exposes them via endpoint., Verify queue_background_task is registered in TOOL_DECLARATIONS., Verify that queue_background_task returns immediately (sub-millisecond), and…, Dispatch a mock task and verify voice PTT interaction continues with sub-second…, TestBackgroundWorkerPool
 
 ### Community 97 - "TacticalAudioPlayerWidget"
+Cohesion: 0.15
+Nodes (3): TestAudioCoreState, Bottom-Left Cyber Tactical Audio Player Widget. Styled matching the HUD /…, TacticalAudioPlayerWidget
+
+### Community 98 - "engine_default.py"
+Cohesion: 0.07
+Nodes (27): Capability, ABC, Enum, ndarray, Abstract base class and capability contracts for ALFRED TTS engines., Capability states for TTS engines., Return True if this capability state permits voice synthesis., Human-readable status description for UI display. (+19 more)
+
+### Community 99 - "NetflixActions"
 Cohesion: 0.09
-Nodes (8): TestAudioCoreState, _EqualizerBarsWidget, QFrame, Mini animated cyber audio wave visualizer., Sleek tactical cyber popup for adjusting master background music volume.…, Bottom-Left Cyber Tactical Audio Player Widget. Styled matching the HUD /…, TacticalAudioPlayerWidget, _VolumeSliderPopup
-
-### Community 98 - "Capability"
-Cohesion: 0.08
-Nodes (20): Capability, ABC, Enum, ndarray, Abstract base class and capability contracts for ALFRED TTS engines., Capability states for TTS engines., Return True if this capability state permits voice synthesis., Human-readable status description for UI display. (+12 more)
-
-### Community 99 - "detector.py"
-Cohesion: 0.06
-Nodes (35): actions/netflix_pilot.py — Netflix Pilot Action Tool for ALFRED. Auto-…, get_rapid_ocr(), Return globally cached RapidOCR instance with UI-optimized parameters., match_profile_selection(), core/pilots/netflix/actions.py — Netflix Pilot Actions and Conversational…, Match spoken user input to one of the detected profile slots. Accepts…, NetflixDetector, NetflixState (+27 more)
+Nodes (29): actions/netflix_pilot.py — Netflix Pilot Action Tool for ALFRED. Auto-…, get_rapid_ocr(), Return globally cached RapidOCR instance with UI-optimized parameters., get_netflix_actions(), NetflixActions, core/pilots/netflix/actions.py — Netflix Pilot Actions and Conversational…, Automates Netflix UI interactions: profile selection, search, and playback., Activate profile via coordinate click or targeted keyboard Tab navigation. (+21 more)
 
 ### Community 100 - "TwoFaceBisectedVisual"
 Cohesion: 0.17
 Nodes (5): QPainter, QRectF, TwoFaceBisectedVisual, TwoFaceSilverDollarVisual, TwoFaceSplitMirrorVisual
 
-### Community 101 - "QWidget"
-Cohesion: 0.05
-Nodes (22): 1. Keep Directive Archives on Main Screen, 2. Descriptive Long-Hover Help across Settings, 3. Single Theme Selector in Reconfigure Batcomputer, Graphify Node & Edge IDs Referenced, Summary of Changes, UI Cleanup Implementation Notes, Verification & Test Results, QEvent (+14 more)
+### Community 101 - "TacticalHoverHelpManager"
+Cohesion: 0.07
+Nodes (15): 1. Keep Directive Archives on Main Screen, 2. Descriptive Long-Hover Help across Settings, 3. Single Theme Selector in Reconfigure Batcomputer, Graphify Node & Edge IDs Referenced, Summary of Changes, UI Cleanup Implementation Notes, Verification & Test Results, QEvent (+7 more)
 
-### Community 102 - "fit_size"
-Cohesion: 0.13
-Nodes (12): fit_size(), core/image_viewer/fit.py — Pure geometric sizing calculations for Image Viewer…, Calculate the fitted (width, height) for an image window. Parameters ----------…, tests/test_image_viewer_fit.py — Unit tests for Image Viewer v2 geometric…, Image smaller than screen max bounds stays at native size., Square image smaller than screen stays at native size., Large landscape image is downscaled to fit screen bounds without cropping., Tall portrait image is constrained by max screen height. (+4 more)
+### Community 102 - "image_viewer/__init__.py"
+Cohesion: 0.12
+Nodes (13): fit_size(), core/image_viewer/fit.py — Pure geometric sizing calculations for Image Viewer…, Calculate the fitted (width, height) for an image window. Parameters ----------…, core/image_viewer — Image Viewer v2 (LAZY + FIT + FETCH). Re-exports core…, tests/test_image_viewer_fit.py — Unit tests for Image Viewer v2 geometric…, Image smaller than screen max bounds stays at native size., Square image smaller than screen stays at native size., Large landscape image is downscaled to fit screen bounds without cropping. (+5 more)
 
 ### Community 103 - "ImageCache"
 Cohesion: 0.27
 Nodes (4): ImageCache, Path, Image retrieval and cache primitives for the HUD deck., test_cache_uses_hashed_key_and_evicts_oldest()
 
-### Community 104 - "test_visuals.py"
-Cohesion: 0.09
-Nodes (22): core_hud_visuals, CentralSkin, get_central_skin(), Themed geometry and color styling parameters for the reactor globe., Retrieve CentralSkin for active theme ID., get_visual_class(), instantiate_visual(), Resolve SlotVisual class for given theme and slot index, falling back to… (+14 more)
-
-### Community 106 - "BatcaveBlueprintVisual"
+### Community 104 - "instantiate_visual"
 Cohesion: 0.10
-Nodes (11): QPainter, QPen, RadarSweep, Zero-allocation 3D wireframe projection. Precomputes vertices and edge indices;…, Tactical rotating radar reticle with blips and persistence fading., Wireframe3D, BatcaveBlueprintVisual, BatcaveRadarVisual (+3 more)
+Nodes (16): get_visual_class(), instantiate_visual(), Resolve SlotVisual class for given theme and slot index, falling back to…, Instantiate a new visual for the given theme and slot., 1. Scope & Implementation Overview, 2. Automated Test Results, 3. Visual & Functional Matrix, HUD Visuals v1 — Verification & Acceptance Report (+8 more)
+
+### Community 106 - "slots/__init__.py"
+Cohesion: 0.12
+Nodes (12): QPainter, QPen, RadarSweep, Zero-allocation 3D wireframe projection. Precomputes vertices and edge indices;…, Tactical rotating radar reticle with blips and persistence fading., Wireframe3D, core/hud/visuals/registry.py — Maps (theme_id, slot_index) -> SlotVisual class.…, BatcaveBlueprintVisual (+4 more)
 
 ### Community 108 - "JarvisUI"
 Cohesion: 0.03
-Nodes (34): 2. Other `self.ui.<attr>` Mismatches in `main.py`, Changes Made, Full HUD Dropdown (`ui.py`), setter, JarvisUI, _plugin_settings_signature(), Update application and window icon in realtime., Toggle audio mute state. (+26 more)
+Nodes (31): Graphify Nodes Referenced, JarvisUI, Update application and window icon in realtime., Toggle audio mute state., Attach the local scheduler and marshal events through the Qt UI., Thread-safe Sentry Mode snapshot update., Thread-safe: raise the irreversible-action gate. Called from action handlers…, Thread-safe: take the gate down. (+23 more)
 
 ### Community 109 - "LocalTTSManager"
 Cohesion: 0.09
@@ -804,61 +860,57 @@ Nodes (17): LocalTTSManager, Flush any remaining text in buffer., Main loop for 
 Cohesion: 0.13
 Nodes (12): coverage(), Text → mouth shape, fused with the audio the avatar is actually speaking. Why…, Reduce any character to a bare Latin letter, or "" if it has none. This is what…, Fraction of the letters in `text` we can reduce to a Latin sound., Split a line of speech into (viseme, duration-weight) pairs. Returns [] for…, Fuses the transcript's shape sequence onto the audio's timing. Thread note:…, Blend audio frames [(level, openness, width)] with the text queue., text_to_visemes() (+4 more)
 
-### Community 111 - ".__init__"
+### Community 111 - "_query"
 Cohesion: 0.12
-Nodes (6): QApplication, _DropCanvas, _file_category(), _fmt_size(), MetricBar, _RootShim
+Nodes (15): _display_name(), _is_pseudo(), _work(), _query(), _collect(), Does this host API actually move audio, or only pretend to? Probed once per API…, MME truncates device names to 31 characters, so the API that actually carries…, Can this device actually be opened at the rate we need? Deliberately opens a… (+7 more)
 
 ### Community 112 - "SecretStore"
-Cohesion: 0.06
-Nodes (40): GoogleOAuthFlow, Executes an interactive loopback OAuth authorization flow., APIBackend, get_api_registry(), get_backend(), get_configured_backends_count(), core/apis/registry.py — API Backend Registry & Format Validators. Registers and…, Return dict of all registered APIBackends. (+32 more)
+Cohesion: 0.05
+Nodes (48): GoogleOAuthFlow, OAuthError, Enum, core/apis/oauth.py — Google Workspace & Gmail Local Loopback OAuth Helper.…, Runs the full browser-based loopback OAuth exchange. Returns (success: bool,…, Executes an interactive loopback OAuth authorization flow., APIBackend, get_api_registry() (+40 more)
 
 ### Community 113 - "🦇 ALFRED — MARK-VIII (Wayne Protocol Edition)"
-Cohesion: 0.13
-Nodes (15): 📱 13. Quantum Mobile Remote & iPhone 16 Dashboard, 🧠 15. Memory & Briefing Customizer, 🎨 16. Insignia & Chassis Hot-Swapper, ⚡ 17. Protocol Engine & Macro Playbooks, 👁️ 18. Local Hybrid Visual Grounding, 🔊 19. Audio Ducking & Background Concurrency, 🏗️ 21. System Architecture & File Structure, ⚙️ 22. Configuration Reference & Hotkeys (+7 more)
+Cohesion: 0.08
+Nodes (25): Action handler called by ALFRED action dispatcher., screen_find(), 🎬 13. Visual HUD v2: Embedded Multimedia & Tactical Layering, 📱 14. Quantum Mobile Remote & iPhone 16 Dashboard, 🖥️ 15. Full Desktop Control & OS Automation, 🧠 16. Memory & Briefing Customizer, 🎨 17. Insignia & Chassis Hot-Swapper, ⚡ 18. Protocol Engine & Macro Playbooks (+17 more)
 
-### Community 114 - "audio/__init__.py"
-Cohesion: 0.11
-Nodes (10): core/audio/__init__.py — Audio subsystem package. Exports AudioGate,…, ndarray, core/audio/vad.py — Voice Activity Detection (VAD) module. Guarantees &…, Process an audio chunk and update speech state. Returns dict with: - is_speech:…, Thread-safe Voice Activity Detector with neural Silero VAD and energy fallback., Reset internal speech tracking and model states., Compute the probability of speech (0.0 to 1.0) in the audio chunk., VoiceActivityDetector (+2 more)
-
-### Community 115 - "DataGridWorker"
-Cohesion: 0.09
-Nodes (15): daily_brief(), _get_market_brief(), _get_reminders_brief(), _get_system_vitals(), Check scheduled reminders in ~/.alfred/reminders or ~/.jarvis/reminders., Inspect core CPU, RAM, and Battery vitals., Executes the daily briefing and delivers spoken synthesis., DataGridWorker (+7 more)
+### Community 114 - "VoiceActivityDetector"
+Cohesion: 0.10
+Nodes (11): ndarray, Process an audio chunk and update speech state. Returns dict with: - is_speech:…, Thread-safe Voice Activity Detector with neural Silero VAD and energy fallback., Reset internal speech tracking and model states., Compute the probability of speech (0.0 to 1.0) in the audio chunk., VoiceActivityDetector, 1. Architecture & Design, 2. Verification (+3 more)
 
 ### Community 116 - "FreezeCoolantLoopVisual"
 Cohesion: 0.18
 Nodes (5): FreezeCoolantLoopVisual, FreezeCoreLatticeVisual, FreezeThermalColumnVisual, QPainter, QRectF
 
-### Community 117 - "VideoTimeline"
-Cohesion: 0.05
-Nodes (26): CyberTransportButton, QKeyEvent, QMouseEvent, QPushButton, QWidget, Prebuild GDI pens and brushes when theme palette changes., Called when video_state_changed is emitted. Only repaints if visible., Square tactical button with hover glow and vector icon. (+18 more)
+### Community 117 - "CyberTransportButton"
+Cohesion: 0.13
+Nodes (7): CyberTransportButton, QPushButton, QWidget, Prebuild GDI pens and brushes when theme palette changes., Square tactical button with hover glow and vector icon., Cache brushes and pens in _update_palette()., Apply theme palette and rebuild cached pens and brushes.
 
-### Community 118 - "TestRemoteKeyOverlay"
-Cohesion: 0.12
-Nodes (8): patch, Verify connection handshake changes status indicators to green paired state., Verify QR, LAN URL, Localhost URL, manual host:port, and access key are…, Verify link labels have LinksAccessibleByMouse and openExternalLinks=True., Verify copy buttons copy values to clipboard and show flash indicator., Verify primary action triggers browser open with desktop/auto-login link., Verify NEW KEY updates access key, urls, and QR code., TestRemoteKeyOverlay
+### Community 118 - "apply_theme"
+Cohesion: 0.14
+Nodes (10): apply_theme(), Apply a theme by id or primary accent hex code. Updates: 1. Class C palette…, 1. Live Verification Checklist, 2. Automated Test Execution Output, ALFRED-MK-V — Thematic HUD Overhaul: Verification & Live Checklist, Registry lookups must handle theme IDs, hexes, legacy hexes, and fallback…, Check text on background contrast across all registered themes., Switching themes rapidly 20 times must not crash or leak invalid state. (+2 more)
 
-### Community 119 - "HudSignals"
+### Community 119 - "fast_sin"
 Cohesion: 0.09
-Nodes (26): fast_cos(), fast_sin(), HudSignals, core/hud/visuals/base.py — Base abstractions, signals struct, guard watchdog,…, Precomputed sin lookup with zero allocation., Precomputed cos lookup with zero allocation., Read-only signals struct refreshed <= 2 Hz and shared by all slots. Visuals are…, core/hud/visuals/central.py — Theme-aware Central Visualizer Reskinning.… (+18 more)
+Nodes (25): fast_cos(), fast_sin(), core/hud/visuals/base.py — Base abstractions, signals struct, guard watchdog,…, Precomputed sin lookup with zero allocation., Precomputed cos lookup with zero allocation., CentralSkin, get_central_skin(), core/hud/visuals/central.py — Theme-aware Central Visualizer Reskinning.… (+17 more)
 
 ### Community 120 - "Ledger"
-Cohesion: 0.11
-Nodes (11): Ledger, Any, Path, Owns the schedule file and keeps malformed or partial writes harmless., _message(), parse_schedule(), Any, datetime (+3 more)
+Cohesion: 0.18
+Nodes (5): Ledger, Any, Path, Owns the schedule file and keeps malformed or partial writes harmless., SchedulerTests
 
 ### Community 121 - "🎙️ 8. Master Voice Command Codex"
 Cohesion: 0.17
 Nodes (12): 🛡️ 8.0 Sentry Mode v2 — Surveillance & Focus Enforcement, 🎬 8.10 Visual HUD v2 Multimedia Commands, 👁️ 8.1 Desktop Automation & Vision, ⚙️ 8.2 OS, Hardware & Applications, ⚡ 8.3 Compound Protocols, 🧠 8.4 Memory & Reversibility, 📰 8.5 Intelligence & Briefings, 📱 8.6 Mobile Remote (+4 more)
 
-### Community 122 - "ImageDeckPanel"
-Cohesion: 0.06
-Nodes (22): _candidates(), ImageDeckPanel, _ImageLoadTask, _LoadSignals, QFrame, QImage, QObject, QWidget (+14 more)
+### Community 122 - "get_media_arbiter"
+Cohesion: 0.13
+Nodes (11): get_media_arbiter(), Return the sole arbiter owned by the running application., 1. The Crash Analysis, 4. Reference-Image Route Analysis, 7. Proposed File Layout (Image Viewer v2), Graphify Nodes Referenced, Image Viewer v2 — Phase 0: Reconnaissance Notes, Graphify Nodes Referenced (+3 more)
 
 ### Community 123 - "TestAudioDucker"
 Cohesion: 0.19
 Nodes (7): patch, A session whose .Process throws an exception does not abort ducking/unducking…, Calling duck_media_apps twice must not overwrite original volume with already-…, If unduck_media_apps is not called, watchdog auto-restores volume., Verify that duck_media_apps lowers target media processes by 70% (0.3 factor),…, Verify Linux pulsectl ducking fallback logic., TestAudioDucker
 
-### Community 124 - "BaneDosageRegulatorVisual"
-Cohesion: 0.18
-Nodes (5): BaneDosageRegulatorVisual, BaneMaskSchematicVisual, BanePressureChamberVisual, QPainter, QRectF
+### Community 124 - "BarArray"
+Cohesion: 0.13
+Nodes (7): BarArray, Spectrum analyzer / segmented gauge with peak hold and decay., BaneDosageRegulatorVisual, BaneMaskSchematicVisual, BanePressureChamberVisual, QPainter, QRectF
 
 ### Community 125 - "process_manager.py"
 Cohesion: 0.52
@@ -869,64 +921,64 @@ Cohesion: 0.13
 Nodes (14): 1. Browser Tab Management ("Close Tab" Fix), 2. Netflix State Detection & Profile Gate, 3. Netflix Search & Playback Automation, 4. Collision Guards Verification, Live Verification Checklist: Browser Suite & Netflix Pilot, Test 1.1: Chrome Active Tab Close, Test 1.2: Microsoft Edge Active Tab Close, Test 1.3: Brave Browser Active Tab Close (+6 more)
 
 ### Community 127 - "HudVideoSurface"
-Cohesion: 0.09
-Nodes (14): HudVideoSurface, QColor, QFont, QHBoxLayout, QVideoWidget, QWidget, Replaces (via QStackedWidget) the HudCanvas during video playback. Layout:…, Return the QVideoWidget for the backend to attach to. (+6 more)
+Cohesion: 0.15
+Nodes (9): HudVideoSurface, QFont, QHBoxLayout, QWidget, Replaces (via QStackedWidget) the HudCanvas during video playback. Layout:…, Refresh theme colours. Call when theme changes mid-playback., Return a monospaced tech font matching HUD style., 2. Visual HUD Backend & Multimedia (+1 more)
 
-### Community 128 - "._receive_audio"
-Cohesion: 0.13
-Nodes (10): 1. Graphify Context & Symbols Relied On, 3.1. Unit & Integration Tests, 3.2. CPU Sampling Verification, 3. Performance & Verification Gate, 4. Next Phase Readiness, Sentry Mode v2 — Phase 2 Implementation Notes, _clean_transcript(), _is_repeat_chunk() (+2 more)
+### Community 128 - "2. Components Created & Delivered"
+Cohesion: 0.18
+Nodes (10): 2.1. `core/sentry/answer_window.py` (`AnswerWindow`), 2.3. `core/sentry/monitor/parser.py` (`parse_monitoring_request`), 2.4. `core/sentry/monitor/scheduler.py` (`MonitorScheduler`), 2.6. `actions/sentry_monitor.py` & `main.py` Wiring, 2. Components Created & Delivered, 3.1. Unit & Integration Tests, 3.2. CPU Sampling Verification, 3. Performance & Verification Gate (+2 more)
 
-### Community 129 - "LocalLLMManager"
-Cohesion: 0.20
-Nodes (7): LocalLLMManager, Handle tool calls by executing them and getting final response., Manages local LLM interactions., Set system prompt and available tools., Add message to conversation history., Clear conversation history., Generate response from local LLM.
+### Community 129 - "test_voice_routing.py"
+Cohesion: 0.22
+Nodes (8): Any, Action: Sentry FOCUS Mode Controller with Voice Routing for Tab Locking.…, Execute a Sentry FOCUS mode action., sentry_focus_action(), get_focus_engine(), MockTrapReader, Unit tests for voice routing ('lock on this tab') and card trap., TestVoiceRoutingAndCardTrap
 
 ### Community 130 - "WindowsPlatformBackend"
-Cohesion: 0.09
-Nodes (9): Any, Path, QWidget, WindowType, Windows implementation delegating to existing Win32, pycaw, and UI Automation…, WindowsPlatformBackend, 2. Unit Testing & Verification, ALFRED-MK-V: Cross-Platform Parity (macOS + Linux) (+1 more)
+Cohesion: 0.11
+Nodes (6): Any, Path, QWidget, WindowType, Windows implementation delegating to existing Win32, pycaw, and UI Automation…, WindowsPlatformBackend
 
 ### Community 131 - "audio_ducker.py"
-Cohesion: 0.09
-Nodes (27): _cancel_auto_unduck_watchdog(), _duck_linux(), duck_media_apps(), _worker(), _duck_windows(), is_ducked(), _on_watchdog_timeout(), Process-level Audio Ducking for ALFRED. Automatically ducks background media… (+19 more)
+Cohesion: 0.12
+Nodes (21): _cancel_auto_unduck_watchdog(), _duck_linux(), duck_media_apps(), _worker(), _duck_windows(), is_ducked(), _on_watchdog_timeout(), Process-level Audio Ducking for ALFRED. Automatically ducks background media… (+13 more)
 
 ### Community 132 - "DeveloperDataGridWidget"
-Cohesion: 0.14
-Nodes (9): DeveloperDataGridWidget, QWidget, core/hud/datagrid/grid.py — 2x2 Developer / Power-User Telemetry Data Grid…, Pre-allocate static QFont, QColor, and QPen instances., 2x2 Developer Telemetry Grid: ┌───────────────────────┬───────────────────────┐…, Stop background worker if needed., add_session_tokens(), GridDataSnapshot (+1 more)
-
-### Community 133 - ".pause_core"
 Cohesion: 0.15
-Nodes (8): Graphify Citations, Key Implementation Details, Phase 6 Notes: Sys Audio Pause Fix, Summary, Pause the Audio Core (TRON background music engine)., Resume or play the Audio Core (TRON background music engine)., Specifically pause the local TRON audio core player regardless of mode., Specifically resume/play the local TRON audio core player.
+Nodes (8): DeveloperDataGridWidget, QWidget, Pre-allocate static QFont, QColor, and QPen instances., 2x2 Developer Telemetry Grid: ┌───────────────────────┬───────────────────────┐…, Stop background worker if needed., add_session_tokens(), GridDataSnapshot, Thread-safe counter increment for LLM API token consumption.
+
+### Community 133 - "spotify_control"
+Cohesion: 0.19
+Nodes (4): Main handler for the spotify_control action., spotify_control(), patch, TestMasterBrowserSuiteAndNetflixPilot
 
 ### Community 134 - "fetch_image"
-Cohesion: 0.09
-Nodes (19): fetch_image(), Fetch an image from local filesystem or web, validate, and cache it., Validate image bytes with QImageReader without full bitmap allocation., validate_image_bytes(), 2. Graphify Nodes & Edges, 3. Final Test Metrics, Phase 5 Notes: Tests, Documentation & Graphify (P5), _create_test_image_bytes() (+11 more)
+Cohesion: 0.11
+Nodes (16): extract_host(), fetch_image(), Fetch an image from local filesystem or web, validate, and cache it., Extract domain host only for privacy-safe logs and state., _create_test_image_bytes(), patch, Non-image content type (e.g. text/html) is rejected cleanly., Content length exceeding FETCH_MAX_MB is rejected before or during stream. (+8 more)
 
 ### Community 135 - "classify_image_intent"
-Cohesion: 0.16
-Nodes (11): classify_image_intent(), detect(), ImageIntentResult, Structured representation of an image intent., Classify user utterance into image intent with strict clash avoidance., Legacy compatibility wrapper returning (action, query_or_path)., Assert standard voice commands match search action., Assert cycling commands match next/prev actions. (+3 more)
+Cohesion: 0.15
+Nodes (12): classify_image_intent(), detect(), ImageIntentResult, core/imagery/intent.py — Deterministic voice intent classification for image…, Structured representation of an image intent., Classify user utterance into image intent with strict clash avoidance., Legacy compatibility wrapper returning (action, query_or_path)., Assert standard voice commands match search action. (+4 more)
 
 ### Community 136 - "bump_version.py"
 Cohesion: 0.25
 Nodes (14): apply_version_bump(), build_replacement_pairs(), detect_current_version(), int_to_roman(), main(), parse_version_string(), NamedTuple, Path (+6 more)
 
-### Community 137 - "desktop.py"
-Cohesion: 0.23
-Nodes (17): _ask_gemini_for_desktop_action(), _build_sandbox(), clean_desktop(), desktop_control(), _execute_generated_code(), _get_api_key(), _get_base_dir(), get_current_wallpaper() (+9 more)
+### Community 137 - "🆕 5. What's New in Version 8 / Mark VIII (Stable Build · Windows)"
+Cohesion: 0.13
+Nodes (14): Called from Qt main thread when user presses Remote Control., 🆕 5. What's New in Version 8 / Mark VIII (Stable Build · Windows), 🎧 Audio & Microphone Stability Overhaul, 🌐 Cross-Platform Parity (macOS + Linux Architecture), 🎙️ Custom Wake-Word Neural Network & Multi-Speaker Training Pipeline, 🛡️ Hardened Safety Interlocks & Anti-Hallucination Guard, 📱 Mobile Remote Uplink & Dashboard Repair, 🎩 Persona, Speech Debounce & Cognitive Trace (+6 more)
 
 ### Community 138 - "RemoteKeyOverlay"
-Cohesion: 0.10
-Nodes (12): 1. Graphify Nodes & Code Locations, 2. Investigation Checklist & Preserved Capabilities, 3. Design & Architecture Details, 4. Verification Matrix, Remote Uplink Popup: Batcomputer-Grade UI Overhaul Notes, Called from Qt main thread when user presses Remote Control., 📱 Mobile Remote Uplink & Dashboard Repair, QLabel (+4 more)
+Cohesion: 0.06
+Nodes (19): 1. Graphify Nodes & Code Locations, 2. Investigation Checklist & Preserved Capabilities, 3. Design & Architecture Details, 4. Verification Matrix, Remote Uplink Popup: Batcomputer-Grade UI Overhaul Notes, patch, Verify connection handshake changes status indicators to green paired state., Verify QR, LAN URL, Localhost URL, manual host:port, and access key are… (+11 more)
 
-### Community 139 - "capture_screen"
-Cohesion: 0.05
-Nodes (24): capture_screen(), _compress(), format_visual_payload(), get_active_window_info(), Queries active OS window handle, application name, and window/tab title.…, Prepares the visual frame payload dictionary for the Gemini Live API…, Hybrid return payload for screen captures. - Behaves as a 3-tuple `(img_bytes,…, Captures primary or specified monitor, queries active OS window context,… (+16 more)
+### Community 139 - "screen_processor.py"
+Cohesion: 0.04
+Nodes (55): Return a tiny grayscale frame representation without writing image data., _visual_fingerprint(), _base_dir(), _capture_camera(), capture_screen(), _capture_screen(), _compress(), _cv2_backend() (+47 more)
 
 ### Community 141 - "ALFRED-MK-V — Theme Catalog (`docs/themes/CATALOG.md`)"
 Cohesion: 0.15
 Nodes (12): 10. WATCHTOWER OMNI (Justice League Satellite), 1. DEFAULT BATCAVE (Wayne Classic), 2. BANE MODE (Venom Protocol), 3. BATMAN BEYOND (Neo-Gotham), 4. JOKER (Clown Prince of Crime), 5. RIDDLER (Enigma Routine), 6. MR. FREEZE (Cryogenic Hold), 7. HARVEY TWO-FACE (Duality Matrix) (+4 more)
 
 ### Community 142 - "CustomizeOverlay"
-Cohesion: 0.12
-Nodes (13): 1. Settings Preview Architecture (`CustomizeOverlay`), 2. Contrast & Accessibility Analysis, ALFRED-MK-V — Thematic HUD Overhaul: Phase 5 Notes, get_jarvis_allow_cpu(), Whether Jarvis inference is permitted on CPU when CUDA is absent., CustomizeOverlay, _lbl(), _worker() (+5 more)
+Cohesion: 0.05
+Nodes (32): get_configured_backends_count(), Return (configured_count, total_backends_count)., 1. Settings Preview Architecture (`CustomizeOverlay`), 2. Contrast & Accessibility Analysis, ALFRED-MK-V — Thematic HUD Overhaul: Phase 5 Notes, get_jarvis_allow_cpu(), get_voice_engine(), Return the selected voice engine ('default' or 'jarvis'). (+24 more)
 
 ### Community 143 - "protocol_engine.py"
 Cohesion: 0.06
@@ -936,8 +988,8 @@ Nodes (49): create_protocol(), _do_save(), _ensure_user_protocols_dir(), execute
 Cohesion: 0.17
 Nodes (3): MockEscalationReader, Verify DRIFT_GRACE_MS = 800: switching away and returning within 800ms triggers…, TestDriftEscalation
 
-### Community 145 - "slots/__init__.py"
-Cohesion: 0.18
+### Community 145 - "JokerLaughWaveVisual"
+Cohesion: 0.20
 Nodes (5): JokerCardScatterVisual, JokerGrinningMaskVisual, JokerLaughWaveVisual, QPainter, QRectF
 
 ### Community 146 - "._get_machine_fingerprint"
@@ -948,9 +1000,9 @@ Nodes (9): get_secrets_file_path(), Path, Derive a url-safe base64 32-byte Ferne
 Cohesion: 0.15
 Nodes (10): ImageViewerCache, Path, Wipe all cached images., Thread-safe disk cache for downloaded reference images., Derive deterministic short SHA-256 hash for cache key., Extract host domain only for privacy-safe logging., Retrieve cached bytes if present., Store bytes in cache and enforce LRU eviction. (+2 more)
 
-### Community 148 - ".reset_instance"
-Cohesion: 0.14
-Nodes (4): Testing hook to clear singleton., TestSentryModeManager, Phase 1: is_waiting_for_answer is available on SentryModeManager and reflects…, TestSentrySnapshotStability
+### Community 148 - "TestHoverHelpInWindow"
+Cohesion: 0.13
+Nodes (7): Verify tooltip dismisses immediately on mouse leave or mouse click., Verify attach_hover_help clears native Qt tooltip to prevent OS desktop popups., Verify TacticalInWindowTooltip is a child of the top-level window, not a top-…, Verify tooltip geometry stays completely within the window boundaries even for…, Verify widgets near bottom edge place tooltip above target rather than…, Verify QEvent.Type.ToolTip is intercepted and consumed (returns True) so Qt…, TestHoverHelpInWindow
 
 ### Community 149 - "._save"
 Cohesion: 0.15
@@ -961,24 +1013,24 @@ Cohesion: 0.50
 Nodes (3): Drop-in ALFRED plugin template. Copy this file, rename it (no leading…, parameters: dict of the args Gemini extracted, matching PLUGIN['parameters'].…, run()
 
 ### Community 151 - "tech_font"
-Cohesion: 0.09
-Nodes (17): 6. Modal Base & Visual Styling, 1. Root Cause Analysis & Implementations, 2. Empirical Verification, Phase 2 Notes — Frame-Time Triage, Status: COMPLETE, QVBoxLayout, ClipboardPanel, mono_font() (+9 more)
+Cohesion: 0.08
+Nodes (23): Action to show an image popup overlay., list_devices(), Device names for 'input' or 'output'. Falls back to a synchronous query if the…, get_input_device(), Microphone device name, or '' for the system default., QVBoxLayout, TestMinimizedHudOverlayIndicators, _row() (+15 more)
 
 ### Community 152 - "ThemeDefinition"
 Cohesion: 0.18
 Nodes (9): Singleton registry holding all active ThemeDefinitions., Register a ThemeDefinition and enforce naming/structure validation., Look up theme by stable id (e.g. 'dossier', 'vector', 'beyond', 'joker')., Look up theme by exact primary accent hex (e.g. '#8e9bff', '#a8ff3e')., Universal lookup: attempts id match, then hex match, falling back to…, Return all registered themes in display order., ThemeRegistry, Complete structured definition of a selectable ALFRED skin. (+1 more)
 
-### Community 153 - "HudCanvas"
-Cohesion: 0.03
-Nodes (58): 0.4 The Frame-Rate Question, 14. HUD Timer & Counter Details, 15. Window State Behavior (Minimization vs Unfocused), 16. Measured Frame-Time Benchmark Table (over 600 frames), 17. `cProfile` Analysis of `paintEvent` (300 frames), Crucial Finding on Session B Frame-Drop:, 1. Avatar / Globe Host — Layout & Lifecycle, Graphify nodes referenced (+50 more)
+### Community 153 - "qcol"
+Cohesion: 0.14
+Nodes (14): 1. Root Cause Analysis & Implementations, PenStyle, QBrush, QColor, QPainter, QPen, qcol(), Draw the Avengers: Endgame Stark Arc Reactor at (cx, cy) with outer radius r. (+6 more)
 
 ### Community 154 - "TestIdleSleepOptimizations"
-Cohesion: 0.13
-Nodes (8): Verify trim_process_memory runs cleanly without raising errors., Verify get_process_memory_mb returns valid memory metrics dictionary., Verify OpenMP passive waiting and zero blocktime are configured., Verify that when state is SLEEPING, HudCanvas throttles repaints to ~4 FPS…, Verify that when canvas window is minimized, _step does not update., Verify SlotHostWidget throttles tick rate when window state is SLEEPING., Verify that when sleeping for >15s (deep sleep), HudCanvas throttles repaints…, TestIdleSleepOptimizations
+Cohesion: 0.10
+Nodes (12): get_process_memory_mb(), core/memory_trimmer.py — Windows working set trimming and Python garbage…, Return dictionary with current process RSS, VMS, and Private working set in MB., gc, Verify trim_process_memory runs cleanly without raising errors., Verify get_process_memory_mb returns valid memory metrics dictionary., Verify OpenMP passive waiting and zero blocktime are configured., Verify that when state is SLEEPING, HudCanvas throttles repaints to ~4 FPS… (+4 more)
 
-### Community 156 - "labels.py"
-Cohesion: 0.13
-Nodes (14): Distraction Label Resolver for Focus Mode. Structural Privacy Law: -…, Derive a spoken distraction name from the surface identity. Returns an empty…, resolve_distraction_label(), 1. Graphify Context & Symbols Relied On, 2.1. `core/sentry/focus/labels.py` (`resolve_distraction_label`), 2.2. `core/sentry/focus/lines.py` (Dialogue Pools), 2.3. Grace Window & Escalation Engine (`core/sentry/focus/engine.py`), 2. Components Created & Delivered (+6 more)
+### Community 156 - "Sentry Mode v2 — Phase 4 Implementation Notes"
+Cohesion: 0.17
+Nodes (11): 1. Graphify Context & Symbols Relied On, 2.1. `core/sentry/focus/labels.py` (`resolve_distraction_label`), 2.2. `core/sentry/focus/lines.py` (Dialogue Pools), 2.3. Grace Window & Escalation Engine (`core/sentry/focus/engine.py`), 2. Components Created & Delivered, 3.1. Strict Label Privacy Gate (`tests/focus/test_label_privacy.py`), 3.2. Acceptance Scenario Verification, 3.3. Test Suite Status (+3 more)
 
 ### Community 157 - "PLATFORM MATRIX — SENTRY MODE V2: CROSS-PLATFORM SPECIFICATION"
 Cohesion: 0.18
@@ -989,28 +1041,28 @@ Cohesion: 0.18
 Nodes (10): 1. Executive Summary, 2.1 Focus Mode Test Suite (`tests/focus/`), 2.2 Sentry Sentry & Mode Manager Test Suite (`tests/sentry/`), 2.3 Non-Sentry Feature Regression Suite, 2. Test Execution & Pass Matrix, 3. Platform Matrix Verification, 4.1 Performance Budget, 4. Performance & Structural Privacy Compliance (+2 more)
 
 ### Community 159 - "2. Profiling & Measurement Audit (10 Key Areas)"
-Cohesion: 0.18
-Nodes (10): 1. Graphify Architecture Citation, 2. Command Execution Latency (Voice → Result), 2. Profiling & Measurement Audit (10 Key Areas), 3. Latency Budget Table, 4. Memory & CPU Baseline, 4. Ranked List of Culprits, 5. Thread Count, 7. Network / API Call Latency (+2 more)
+Cohesion: 0.12
+Nodes (14): stream_callback(), Main processing loop: STT → LLM → TTS., Process a complete utterance: transcribe → generate response → synthesize., 10. Known Slow Spots & Thread Violations, 1. Graphify Architecture Citation, 2. Command Execution Latency (Voice → Result), 2. Profiling & Measurement Audit (10 Key Areas), 3. Latency Budget Table (+6 more)
 
 ### Community 160 - "DualWakeWordDetector"
 Cohesion: 0.10
 Nodes (10): DualWakeWordDetector, ndarray, Reset internal detector state and rolling buffers., Feed PCM audio samples. Returns WakeDetectionResult if a phrase triggers., Thread-safe dual-phrase wake word detector with acoustic gating and refractory…, 1. Architecture & Design, 2. Verification, Phase 5 Notes — Tiny Wake Word: "hey alfred" OR "alfred" (+2 more)
 
-### Community 161 - "HueWheel"
-Cohesion: 0.22
-Nodes (5): QPointF, HueWheel, QRectF, QWidget, Circular colour picker. The user drags the handle (small white circle) around…
+### Community 161 - "WinBrowserDriver"
+Cohesion: 0.26
+Nodes (5): Send Ctrl+Tab (next) or Ctrl+Shift+Tab (prev)., Windows browser driver using targeted Win32 virtual keys and process inspection., Send Ctrl+W to frontmost browser., Send Ctrl+T to frontmost browser, or launch URL natively., WinBrowserDriver
 
 ### Community 162 - "LocalUrlBackend"
-Cohesion: 0.04
-Nodes (38): LocalUrlBackend, QObject, QVideoWidget, Qt Multimedia backend for local files and direct HTTP media URLs. Signals…, Wait for player to enter StoppedState before switching sources., 1. Trace: Who Starts Timers & Touches Players Off-Thread?, 2. Root Cause Analysis of the Loop, 3. Server-side Interruption & Cancellation (+30 more)
+Cohesion: 0.07
+Nodes (16): LocalUrlBackend, QObject, QVideoWidget, Qt Multimedia backend for local files and direct HTTP media URLs. Signals…, 1. Overview, 2. Graphify Knowledge Graph Citations, 3. Implementation Details, 4. Test Results (+8 more)
 
 ### Community 163 - "MinimizedHudOverlay"
-Cohesion: 0.08
-Nodes (24): 3. Minimised HUD, Implementation Details:, 1. Window Flags & Always-On-Top Parity, 2. Geometry Clamping & Multi-Monitor Support, ALFRED-MK-V: Cross-Platform Parity (macOS + Linux), Phase 3 Implementation Notes: Minimised HUD Parity, 1. Graphify Nodes & Code Locations, 1. Overlay Ownership and Creation Path (+16 more)
+Cohesion: 0.10
+Nodes (19): 3. Minimised HUD, Implementation Details:, 1. Graphify Nodes & Code Locations, 1. Overlay Ownership and Creation Path, 2. Minimize Triggers: Main App vs Linux Window Manager, 2. Phase 0 Diagnostic Findings, 3. Proposed Fix Strategy, 3. Qt Events & Signals Ordering on Linux (X11 & Wayland) (+11 more)
 
-### Community 164 - ".broadcast"
-Cohesion: 0.22
-Nodes (9): auto_login(), device_login_ep(), download_file(), login(), phone_audio_ws(), _resolve_ws_auth(), _derive_key(), SHA-256(sessionKey‖salt) → 32-byte AES-256 key (microseconds, no PBKDF2 needed). (+1 more)
+### Community 164 - "._aes_key"
+Cohesion: 0.33
+Nodes (5): auto_login(), device_login_ep(), login(), _derive_key(), SHA-256(sessionKey‖salt) → 32-byte AES-256 key (microseconds, no PBKDF2 needed).
 
 ### Community 165 - "TestThreadMarshal"
 Cohesion: 0.16
@@ -1024,25 +1076,25 @@ Nodes (22): CentralizedCache, _canonicalize(), decorator(), wrapper(), Any, Stor
 Cohesion: 0.18
 Nodes (5): QPainter, QRectF, RiddlerCipherVisual, RiddlerLogicGatesVisual, RiddlerMazeVisual
 
-### Community 168 - "BarArray"
-Cohesion: 0.14
-Nodes (7): BarArray, Spectrum analyzer / segmented gauge with peak hold and decay., BeyondAvatarVisual, BeyondICELadderVisual, BeyondRetinalVisual, QPainter, QRectF
+### Community 168 - "PaletteDefinition"
+Cohesion: 0.11
+Nodes (10): QPainter, QRectF, BeyondAvatarVisual, BeyondICELadderVisual, BeyondRetinalVisual, QPainter, QRectF, PaletteDefinition (+2 more)
 
 ### Community 169 - "game_updater.py"
-Cohesion: 0.15
-Nodes (42): _cancel_scheduled_update(), _click_button(), _click_first_profile_by_screenshot(), _ensure_steam_running(), _epic_manifests_path(), _find_best_drive(), _find_epic_exe(), _find_epic_exe_linux() (+34 more)
+Cohesion: 0.07
+Nodes (76): _build_google_flights_url(), flight_finder(), _format_spoken(), _format_text_report(), _get_base_dir(), _parse_date(), _parse_flights_with_gemini(), Path (+68 more)
 
-### Community 171 - ".add_clipboard_item"
+### Community 171 - "2. Graphify Nodes & Edges"
 Cohesion: 0.14
-Nodes (10): classify_content_type(), _get_active_window_info(), is_sensitive_content(), Determine category: url, email, json, code, or text., Save history to disk atomically., Append item to history stack with deduplication and sensitive data filtering., Return (process_name, window_title) of the foreground window., Detect if content originates from a password manager or contains high-entropy… (+2 more)
+Nodes (10): Validate image bytes with QImageReader without full bitmap allocation., validate_image_bytes(), QKeyEvent, Hide window and free pixmap resources immediately., Changes Made, Image Viewer v2 — Phase 2: Lazy Viewer Implementation Notes, 1. Summary of Completed Work, 2. Graphify Nodes & Edges (+2 more)
 
-### Community 172 - "test_jarvis_voice_phase2.py"
-Cohesion: 0.14
-Nodes (19): are_assets_downloaded(), download_jarvis_assets(), find_reference_audio(), get_adapter_path(), get_base_model_path(), get_jarvis_asset_dir(), Path, Asset manager and downloader for Jarvis (VoxCPM2 LoRA) voice option. Pins:… (+11 more)
+### Community 172 - "jarvis_assets.py"
+Cohesion: 0.26
+Nodes (14): are_assets_downloaded(), download_jarvis_assets(), find_reference_audio(), get_adapter_path(), get_base_model_path(), get_jarvis_asset_dir(), Path, Asset manager and downloader for Jarvis (VoxCPM2 LoRA) voice option. Pins:… (+6 more)
 
-### Community 173 - "TestSystemMonitor"
-Cohesion: 0.14
-Nodes (7): Verify throttle_process sets BELOW_NORMAL priority class on standard target., Verify pause (suspend) and resume functionality., Verify that a process is NEVER terminated automatically without explicit…, Verify tracking outbound connections for non-standard remote ports., Verify system_monitor TOOL action handler., Verification Requirement: Run a synthetic high-CPU test script. Confirm…, TestSystemMonitor
+### Community 173 - "TestNetflixActions"
+Cohesion: 0.27
+Nodes (6): match_profile_selection(), Match spoken user input to one of the detected profile slots. Accepts…, 3. Verification & Test Results, 3. Verification & Test Results, patch, TestNetflixActions
 
 ### Community 174 - "🌐 3. 100% Local & Air-Gapped Operation"
 Cohesion: 0.22
@@ -1053,40 +1105,40 @@ Cohesion: 0.35
 Nodes (3): LinuxBrowserDriver, Linux driver using xdotool / wmctrl / xdg-open., Return (window_id, process_or_class_name).
 
 ### Community 176 - "ALFRED-MK-V — Media Command v1: Phase 0 Reconnaissance"
-Cohesion: 0.17
-Nodes (9): 2. External-player awareness, 3. Voice and tool routing, 5. Fetching and persistence, 6. TTS and ducking, 7. Platform target, ALFRED-MK-V — Media Command v1: Phase 0 Reconnaissance, Graphify evidence, Phase 0 verification (+1 more)
+Cohesion: 0.18
+Nodes (9): 2. External-player awareness, 3. Voice and tool routing, 4. HUD component tree and styling, 5. Fetching and persistence, 7. Platform target, ALFRED-MK-V — Media Command v1: Phase 0 Reconnaissance, Graphify evidence, Phase 0 verification (+1 more)
 
 ### Community 177 - "._on_dashboard_action"
-Cohesion: 0.14
-Nodes (13): audio_core(), Any, Main handler for the Audio Core control action., audio_ws(), 3. Chat History on Uplink Connect, 4. TTS Silent Root Cause, 5. Spotify Button Binding, 6. Sys Audio Pause / Resume Symmetry (+5 more)
+Cohesion: 0.07
+Nodes (26): audio_core(), Any, Main handler for the Audio Core control action., 3. Chat History on Uplink Connect, 5. Spotify Button Binding, 6. Sys Audio Pause / Resume Symmetry, 7. Screenshot Capture & Uplink Delivery, ALFRED-MK-V: Uplink Stability + Media Controls Fix — Phase 0 Recon Notes (+18 more)
 
 ### Community 178 - "LogWidget"
-Cohesion: 0.27
-Nodes (4): 2. Off-Thread Timer (QObject::startTimer), QTextEdit, LogWidget, Cancel any in-flight typing animation, drain the queue, and clear the display.
+Cohesion: 0.21
+Nodes (5): 2. Off-Thread Timer (QObject::startTimer), QTextEdit, LogWidget, Set base normal volume (0.0 to 1.0). Speech ducking scales to 50% of base., Cancel any in-flight typing animation, drain the queue, and clear the display.
 
 ### Community 179 - "ws_ep"
 Cohesion: 0.25
 Nodes (7): ws_ep(), _decrypt_cbc(), Decrypt base64(IV[16] ‖ ciphertext) with AES-256-CBC + PKCS7., Graphify Citations, Key Implementation Details, Phase 3 Notes: Chat History on Uplink Connect, Summary
 
 ### Community 180 - "WakeWordDetector"
-Cohesion: 0.08
-Nodes (13): _prediction_score(), Return the Alfred score while tolerating backend-specific key suffixes., Dedicated wake-word inference thread. CRITICAL: Each instance creates its OWN…, Reset trigger latch, cooldown, and burst buffer so detector is immediately…, Queue a raw mic frame for inference. Non-blocking; drops if backed up., Consume and return the trigger flag (used by InterruptDetector poll)., WakeWordDetector, _generate_audio() (+5 more)
+Cohesion: 0.11
+Nodes (10): Dedicated wake-word inference thread. CRITICAL: Each instance creates its OWN…, Reset trigger latch, cooldown, and burst buffer so detector is immediately…, Queue a raw mic frame for inference. Non-blocking; drops if backed up., Consume and return the trigger flag (used by InterruptDetector poll)., WakeWordDetector, _generate_audio(), HybridWakeDetectionTests, ndarray (+2 more)
 
-### Community 181 - "hud_video"
-Cohesion: 0.05
-Nodes (45): _get_controller(), _handle_transport(), hud_video(), Any, actions/hud_video.py — Visual HUD player and transport action handler for…, Retrieve the HudVideoController from the process-wide service registry., Run in a thread pool: resolve then hand off to controller., Handle all transport controls with deterministic returns. (+37 more)
+### Community 181 - "typing"
+Cohesion: 0.03
+Nodes (93): Tactical Audio Core Control Action for ALFRED. Controls the tactical HUD's…, actions/hud_video.py — Visual HUD player and transport action handler for…, Run in a thread pool: resolve then hand off to controller., _resolve_and_play(), Any, Action: Sentry MONITOR Mode Controller. Provides tool invocation for Sentry…, Execute a Sentry MONITOR mode action., sentry_monitor_action() (+85 more)
 
 ### Community 183 - "SchedulerEngine"
-Cohesion: 0.11
-Nodes (13): AutomationResult, _focus_linux(), _focus_macos(), focus_target(), _focus_windows(), Local clipboard-and-keystroke automation with an explicit focus gate., Focus a window by the user-supplied app or tab-title keyword., Focus first, then paste local clipboard text, wait 200 ms, and Enter. (+5 more)
+Cohesion: 0.17
+Nodes (3): Any, datetime, SchedulerEngine
 
 ### Community 188 - "TTSPhraseCache"
-Cohesion: 0.29
-Nodes (3): ndarray, Thread-safe LRU cache for synthesized audio waveforms., TTSPhraseCache
+Cohesion: 0.18
+Nodes (7): ndarray, Thread-safe LRU cache for synthesized audio waveforms., TTSPhraseCache, 1. Graphify Nodes Affected, 2. Changes Implemented, 3. Verification & Delta, PHASE 6: TTS Queuing & Audio Output Compression
 
 ### Community 189 - ".start"
-Cohesion: 0.20
-Nodes (8): _prewarm_whisper_background(), Load a fresh Model and spawn the inference thread. Idempotent., Prewarm Whisper in background so first verification doesn't stall., 1. Wake-Word Latency (STT Gate), 1. Graphify Nodes Affected, 2. Changes Implemented, 3. Verification & Delta, PHASE 2: Wake-Word Gate Compression
+Cohesion: 0.25
+Nodes (6): Load a fresh Model and spawn the inference thread. Idempotent., 1. Wake-Word Latency (STT Gate), 1. Graphify Nodes Affected, 2. Changes Implemented, 3. Verification & Delta, PHASE 2: Wake-Word Gate Compression
 
 ### Community 190 - ".test_error_isolation_in_concurrent_tasks"
 Cohesion: 0.29
@@ -1097,8 +1149,8 @@ Cohesion: 0.40
 Nodes (4): 1. Objectives & Summary, 2. Graphify References & Hot Paths, 3. Verification & Test Suite, Phase 5 Implementation Notes: Deferred Lock, Settle Rule, Voice Routing & Card Trap
 
 ### Community 192 - "execute_bounded_tool"
-Cohesion: 0.29
-Nodes (6): execute_bounded_tool(), Latency metrics recorded during tool execution., Execute a tool with strict timeout and fast fallback placeholder., ToolExecutionMetrics, 2. Changes Implemented, run_benchmark()
+Cohesion: 0.12
+Nodes (10): execute_bounded_tool(), Latency metrics recorded during tool execution., Execute a tool with strict timeout and fast fallback placeholder., ToolExecutionMetrics, 1. Graphify Nodes Affected, 2. Changes Implemented, 3. Verification & Delta, PHASE 5: Tool Execution Compression & Bounded Execution (+2 more)
 
 ### Community 193 - "Q: Read uiperformance.md and continousmonitoring.md and perform the tasks in the most efficient manner"
 Cohesion: 0.40
@@ -1122,27 +1174,27 @@ Nodes (4): Answer, Outcome, Q: Fix Spotify playback, Audio Core now-playing disp
 
 ### Community 198 - "FloatingFocusCard"
 Cohesion: 0.07
-Nodes (19): FloatingFocusCard, QMouseEvent, QPaintEvent, QWidget, Ensure card stays completely within desktop screen boundaries., Semi-transparent, always-on-top draggable countdown card for Focus Mode., Update display values from FocusState., 1. Objectives & Summary (+11 more)
+Nodes (21): FloatingFocusCard, QMouseEvent, QPaintEvent, QWidget, Ensure card stays completely within desktop screen boundaries., Semi-transparent, always-on-top draggable countdown card for Focus Mode., Update display values from FocusState., FocusState (+13 more)
 
-### Community 199 - "._build_jarvis_icon"
-Cohesion: 0.22
-Nodes (4): Render an ALFRED tactical icon at 4× resolution and downsample for crisp…, Create a Windows .lnk shortcut WITHOUT launching PowerShell or cmd. Tries…, Resolve the user's REAL desktop directory instead of assuming ~/Desktop, which…, Create a desktop shortcut on Windows / macOS / Linux. Never opens a terminal,…
+### Community 199 - "Path"
+Cohesion: 0.15
+Nodes (6): _base_dir(), Path, Render an ALFRED tactical icon at 4× resolution and downsample for crisp…, Create a Windows .lnk shortcut WITHOUT launching PowerShell or cmd. Tries…, Resolve the user's REAL desktop directory instead of assuming ~/Desktop, which…, Create a desktop shortcut on Windows / macOS / Linux. Never opens a terminal,…
 
-### Community 200 - "SubjectDossierCard"
-Cohesion: 0.08
-Nodes (20): 3. Top-Right Identity & Status Block, 1.1 Default Batcave (`dossier`), 1.2 Bane Mode (`vector`), 1.3 Batman Beyond (`beyond`), 1. Deepening Existing Themes, 2. Layout & Geometry Invariants, ALFRED-MK-V — Thematic HUD Overhaul: Phase 2 Notes, 1. Main Project Documentation & Repository Branding (+12 more)
+### Community 200 - "📑 Complete Master Location Registry"
+Cohesion: 0.17
+Nodes (11): 1. Main Project Documentation & Repository Branding, 2. Core Desktop Application & GUI Runtime, 3. Quantum Mobile & Web Remote Dashboard, 4. Installation, Dependency & Environment Setup, 5. Core Platform, APIs, Themes, & Mesh Visuals, 6. Actions & Plugins, 7. Unit Tests & Benchmark Diagnostics, 🦇 ALFRED Tactical Assistant — Version Registry & Mutation Codex (+3 more)
 
 ### Community 201 - "ui.py"
-Cohesion: 0.05
-Nodes (57): Action to show an image popup overlay., ast, core, core_hud_video_backends, core/hud_video/backends/local_url.py — QMediaPlayer backend. Handles: -…, core_platform, core/platform/base.py — Abstract base class for Cross-Platform OS Backends., core/platform/__init__.py — Cross-platform backend factory and dispatcher. (+49 more)
+Cohesion: 0.03
+Nodes (75): core/hud/datagrid/grid.py — 2x2 Developer / Power-User Telemetry Data Grid…, core/hud_video/backends/__init__.py — Backend interface. Intentionally a plain…, core/hud_video/backends/local_url.py — QMediaPlayer backend. Handles: -…, core/hud_video/controller.py — HUD Video session state machine and transport…, HudVideoControlsStrip, core/hud_video/controls.py — Tactical transport controls strip for the Visual…, Full transport strip laid out below the video surface. Contains: [Play/Pause ⏯]…, Update buttons and timeline on state change. Only repaints when visible. (+67 more)
 
-### Community 202 - "4. Fix Implementation Details"
-Cohesion: 0.20
-Nodes (9): 1. Environment & Dependency Status, 3. Proposed Fix Order, 4. Fix Implementation Details, 5. Cross-Platform Verification & Test Matrix, Phase 2: Linux Action Discovery Resolution, Phase 3: Unicode Mojibake Resolution, Phase 4: Gemini Live 1008 Handling & Tool Protocol Ordering, Phase 5: Media Foundation & Codec Warnings Classification (+1 more)
+### Community 202 - "ImageDeckPanel"
+Cohesion: 0.15
+Nodes (7): ImageDeckPanel, QFrame, QImage, QWidget, Draggable themed panel whose image decode and scale occur off the UI thread., 3. Existing Image Viewer Analysis, Proposed layout
 
-### Community 203 - "Image Viewer v2 Live Verification Checklist"
-Cohesion: 0.18
-Nodes (9): 1. Clean Boot with No Viewer, 2. Fetch and Fit for Multiple Aspect Ratios, 3. Candidate Cycling and Dismissal, 4. Layering & Airspace Separation, 5. Visual HUD Coexistence, 6. Failure & Privacy Enforcement, 7. Performance & Resource Footprint, Image Viewer v2 Live Verification Checklist (+1 more)
+### Community 203 - ".set_sentry_snapshot"
+Cohesion: 0.16
+Nodes (7): Graphify Citations, Key Implementation Details, Phase 2 Notes: Kill the Remaining Off-Thread Timers, Summary, Guarantee the HUD animation step timer is started unconditionally., Update Sentry Mode (FOCUS / MONITOR) state on the HUD canvas., Duck to the media-arbiter level while TTS is active.
 
 ### Community 204 - "TacticalControlsDrawer"
 Cohesion: 0.06
@@ -1189,60 +1241,64 @@ Cohesion: 0.50
 Nodes (3): Answer, Q: Remove Classic HUD mode from ALFRED MK-IV, Source Nodes
 
 ### Community 215 - "KokoroTTSEngine"
-Cohesion: 0.10
-Nodes (14): EdgeTTSEngine, ElevenLabsTTSEngine, _import_kokoro_pipeline(), KokoroTTSEngine, Microsoft EdgeTTS – free, requires internet., Import KPipeline, auto-upgrading kokoro if a version mismatch is found., Fully offline Kokoro neural TTS., ElevenLabs cloud TTS – API key required. (+6 more)
+Cohesion: 0.09
+Nodes (17): EdgeTTSEngine, ElevenLabsTTSEngine, _import_kokoro_pipeline(), KokoroTTSEngine, _play_audio_bytes(), Decode MP3/WAV/OGG bytes and play via sounddevice (uses miniaudio)., Microsoft EdgeTTS – free, requires internet., Import KPipeline, auto-upgrading kokoro if a version mismatch is found. (+9 more)
 
 ### Community 216 - "PHASE 1 — Surface + Controller Skeleton: Implementation Notes"
-Cohesion: 0.09
-Nodes (18): Acceptance Checklist (Phase 1), Architecture Implemented, Backend Wire-up (_init_hud_video, ui.py), Controller exposure for action bridge, Early Ack TTS Pattern (hud_video.py), Files Created / Modified, Graphify Nodes Referenced, Minimise / Restore Policy (Implemented) (+10 more)
+Cohesion: 0.22
+Nodes (8): Acceptance Checklist (Phase 1), Early Ack TTS Pattern (hud_video.py), Files Created / Modified, Minimise / Restore Policy (Implemented), PHASE 1 — Surface + Controller Skeleton: Implementation Notes, Phase 3 Stop Point: yt-dlp, Remaining Phases, Test Results
 
 ### Community 218 - "_SessionRegistry"
 Cohesion: 0.16
 Nodes (4): Manages all active browser sessions., Is there an active automation session for this browser (or any)?, Returns the last natively-opened URL once (consumed to avoid repeats)., _SessionRegistry
 
 ### Community 220 - "build_standard_boot_pipeline"
-Cohesion: 0.11
-Nodes (8): get_shared_audio_stream(), Retrieve or create the process singleton SharedAudioStream., build_standard_boot_pipeline(), _init_audio(), _init_tools(), _init_wakeword(), Construct standard ALFRED decomposed boot pipeline., TestSharedAudioStream
+Cohesion: 0.10
+Nodes (9): get_shared_audio_stream(), Retrieve or create the process singleton SharedAudioStream., build_standard_boot_pipeline(), _init_audio(), _init_tools(), _init_wakeword(), Construct standard ALFRED decomposed boot pipeline., tests/test_audio_stream.py — Unit tests for SharedAudioStream, pre-roll… (+1 more)
 
-### Community 221 - "InstrumentedTTS"
-Cohesion: 0.33
-Nodes (3): InstrumentedTTS, Retrieve from cache or synthesize via underlying engine., TTS manager with queue latency tracking, audio caching, and low-latency…
+### Community 221 - "_patch_config"
+Cohesion: 0.15
+Nodes (11): get_brief_enabled(), _patch_config(), Persist assistant name and user name to config., Persist the chosen Live voice. Unknown names collapse to the default so a bad…, Read-modify-write one or more keys in api_keys.json. Every setter in this file…, save_assistant_config(), save_brief_enabled(), save_input_device() (+3 more)
 
-### Community 222 - "1. Objectives & Summary"
-Cohesion: 0.25
-Nodes (7): 1. Objectives & Summary, Phase 6 Implementation Notes: Spoken Report Card & Aggregates Ledger, 4.2 Structural Privacy Laws, 🛡️ 7. Security, Privacy & Defensive Architecture, 🛡️ Multi-Layer Hard Enforcement, 🔒 Structural Privacy Law (Sentry Mode), ⚔️ System Integrity Enforcement
+### Community 222 - "TestStreamingMemoryBenchmark"
+Cohesion: 0.15
+Nodes (7): patch, Verifies streaming CSV to JSON array export in chunks with backpressure.…, Verifies stream_text_metrics processes large text files in 64KB chunks without…, Verifies that actions.file_controller.read_file only buffers up to max_chars…, Returns current process Resident Set Size (RSS) in bytes., Generates a large dataset (150,000 records, ~20MB-30MB on disk) and verifies…, TestStreamingMemoryBenchmark
 
-### Community 223 - "Phase 0 Reconnaissance Notes: API Backend Setup UI (Tactical Controls)"
-Cohesion: 0.22
-Nodes (8): 2. Current API Key Storage & Boot Path, 3. Existing OAuth Flows, 4. Encryption & Master Key Management, 5. Secrets Location, Files to Create:, Files to Create & Touch, Files to Touch:, Phase 0 Reconnaissance Notes: API Backend Setup UI (Tactical Controls)
+### Community 223 - "IntentMetrics"
+Cohesion: 0.17
+Nodes (10): IntentMetrics, Latency metrics recorded during intent resolution., Route an utterance with sub-millisecond fast-path and full latency breakdown., 1. Graphify Nodes Affected, 2. Changes Implemented, 3. Verification & Delta, PHASE 4: Intent Parse & Tool Dispatch Compression, 1. Top 5 Hottest Functions by Cumulative Time (cProfile) (+2 more)
 
 ### Community 228 - "record_training_samples.py"
-Cohesion: 0.10
-Nodes (23): argparse, glob, main(), package_zip(), any, tools/record_training_samples.py — Record and package multi-user voice samples…, Create alfred_training_data.zip containing positive and negative recordings., Train ONNX neural network directly on this machine without Google Colab. (+15 more)
+Cohesion: 0.15
+Nodes (16): glob, main(), package_zip(), any, tools/record_training_samples.py — Record and package multi-user voice samples…, Create alfred_training_data.zip containing positive and negative recordings., Train ONNX neural network directly on this machine without Google Colab., Record mono 16 kHz int16 audio from microphone. (+8 more)
 
-### Community 229 - "TestVoiceSleep"
-Cohesion: 0.14
-Nodes (8): Verify sleep() sets _awake to False, sets UI state to SLEEPING, and resets…, Verify shutdown_jarvis requires confirmation and explicitly warns against sleep…, Verify diverse voice phrases correctly identify sleep directives., Test suite for voice-activated sleep mode (standby without shutdown)., Verify non-sleep or negated phrases are rejected., Verify _dispatch_tool('go_to_sleep') schedules sleep without terminating., Verify go_to_sleep is declared in TOOL_DECLARATIONS with proper schema., TestVoiceSleep
+### Community 229 - "._receive_audio"
+Cohesion: 0.08
+Nodes (15): 1. Graphify Context & Symbols Relied On, _clean_transcript(), _is_repeat_chunk(), is_sleep_command(), Returns True if the user text is an unambiguous verbal directive to put ALFRED…, Send a captured frame immediately after its tool response. The frame is already…, True if this transcript chunk has already been seen this turn. Guards against…, Verify sleep() sets _awake to False, sets UI state to SLEEPING, and resets… (+7 more)
 
 ### Community 230 - "🐧 Linux Setup (Ubuntu / Debian / Arch / Fedora)"
 Cohesion: 0.18
 Nodes (9): 1. Prerequisites, 1. Prerequisites (via Homebrew), 2. Permissions (macOS TCC), 2. Tiling Window Managers (i3 / sway / bspwm), 3. Execution, 3. Execution, Cross-Platform Installation & Setup Guide (macOS & Linux), 🐧 Linux Setup (Ubuntu / Debian / Arch / Fedora) (+1 more)
 
-### Community 235 - "EngineDefault"
-Cohesion: 0.13
-Nodes (11): EngineDefault, Wraps existing default TTS engines (EdgeTTS, Kokoro, ElevenLabs) behind…, Play speech through existing concrete engine directly., get_engine(), Factory to retrieve a configured TTSEngine instance., 11. True Dependency Graph, Graphify Citations, Key Implementation Details (+3 more)
+### Community 235 - ".handle_profile_gate"
+Cohesion: 0.21
+Nodes (6): Any, Interactive conversational profile selection flow. ALFRED speaks: 'Which…, Open Netflix, check state on launch, and navigate profile gate if present., Search Netflix for query by focusing search hotkey or navigating directly.…, Execute search, settle on results grid, target first card, and trigger playback., Browse specific genre on Netflix.
 
 ### Community 236 - "PHASE 0 RECONNAISSANCE NOTES — SENTRY MODE V2: MONITOR + FOCUS"
-Cohesion: 0.14
-Nodes (16): _get_linux_window_info(), _get_macos_window_info(), _get_windows_window_info(), Query foreground window handle, title, and process name on Windows., Query active frontmost window on macOS via Quartz or AppleScript fallback., Query active window on Linux via xdotool or wmctrl., 1. Where Sentry Mode Lives Today, 5. System Prompt & Privacy Directive (+8 more)
+Cohesion: 0.20
+Nodes (9): lock_screen(), 4. Intent & Command Router Precedence, 5. System Prompt & Privacy Directive, 7. Persistence Architecture, 8. Proposed File Layout (`core/sentry/`), 9. Graphify Node & Edge Reference Table, Command Mapping, PHASE 0 RECONNAISSANCE NOTES — SENTRY MODE V2: MONITOR + FOCUS (+1 more)
 
 ### Community 237 - "SetupOverlay"
-Cohesion: 0.09
-Nodes (13): QWidget, Update probe widgets on the Qt thread via a queued signal., Reload configuration from disk into input fields., SetupOverlay, _lbl(), _check(), _worker(), _check() (+5 more)
+Cohesion: 0.16
+Nodes (9): QWidget, Update probe widgets on the Qt thread via a queued signal., Reload configuration from disk into input fields., SetupOverlay, _lbl(), _check(), _worker(), _check() (+1 more)
+
+### Community 238 - "_ensure_network_access"
+Cohesion: 0.17
+Nodes (7): _ensure_certs(), _ensure_network_access(), _local_ip(), Cross-platform, best-effort: open port in the OS firewall for LAN access. Runs…, Second HTTPS server on PORT+1 sharing the same app and in-memory state. Chrome…, Return the best LAN-facing IPv4 address, no internet required., Make sure config/certs holds a TLS key pair, generating a self-signed one the…
 
 ### Community 239 - "PlayableRef"
 Cohesion: 0.07
-Nodes (12): BackendBase, core/hud_video/backends/__init__.py — Backend interface. Intentionally a plain…, Plain interface class for media playback engines. Subclasses must override…, QObject, Inject surface + backend callbacks. Called once from MainWindow., PlayableRef, Verify tool outputs for initial play, in-flight duplicate, and different target…, Verify stream resolution logs host only and strips sensitive signed tokens. (+4 more)
+Nodes (11): BackendBase, Plain interface class for media playback engines. Subclasses must override…, QObject, Inject surface + backend callbacks. Called once from MainWindow., core/hud_video/__init__.py — Public exports for the HUD video subsystem., PlayableRef, Verify strict ordering: Z_VISUAL_HUD < Z_HUD_BUTTONS < Z_DROPDOWN_CARD_TOAST <…, Minimise should pause playing video and restore it; paused video stays paused. (+3 more)
 
 ### Community 240 - "test_platform_stability.py"
 Cohesion: 0.10
@@ -1252,13 +1308,13 @@ Nodes (13): ActionLoader, Path, Convenience class wrapper for action discovery.,
 Cohesion: 0.47
 Nodes (5): _load_events(), Calendar Sync Plugin for ALFRED Mark-VIII. Tracks agenda, meetings,…, Execute calendar action., run(), _save_events()
 
-### Community 242 - "undo.py"
-Cohesion: 0.17
-Nodes (10): clear(), _Entry, history(), peek(), core/undo.py — one shared undo stack for every action that changes state. WHY…, Forget the stack. Called when the app shuts down so closures holding old file…, Label of the operation that `undo_last()` would reverse, or ''., Most recent first — used by the UI panel and the `undo` tool's list mode. (+2 more)
-
 ### Community 243 - "focus_protocol.py"
 Cohesion: 0.47
 Nodes (5): Focus Protocol Plugin for ALFRED Mark-VIII. Manages deep work intervals,…, Execute focus protocol actions., _read_state(), run(), _write_state()
+
+### Community 244 - "TestNetflixDetector"
+Cohesion: 0.22
+Nodes (5): 1. Summary of Changes, 3. Verification & Test Results, Graphify Entities Referenced:, Phase 2 Notes: Netflix State Detection Engine, TestNetflixDetector
 
 ### Community 245 - "2. Reconnaissance Findings & Graphify Nodes"
 Cohesion: 0.25
@@ -1272,29 +1328,25 @@ Nodes (10): action_ep(), _auth(), clear_chat_ep(), command(), list_files(), revo
 Cohesion: 0.25
 Nodes (7): 1. Capability Gate (`core/tts/capability.py`), 2. Asset Manager & Verifier (`core/tts/jarvis_assets.py`), ALFRED-MK-V — Jarvis Voice Option: Phase 2 Notes, Deliverables & Architecture Implemented, Ground Rule Compliance:, Key Observation:, Remote Release Audit & Reference Audio Finding
 
-### Community 249 - "youtube_video.py"
-Cohesion: 0.13
-Nodes (23): _launch_steam_url(), _extract_video_id(), _get_base_dir(), _get_transcript(), _handle_get_info(), _handle_play(), _handle_summarize(), _handle_trending() (+15 more)
+### Community 249 - "17. `cProfile` Analysis of `paintEvent` (300 frames)"
+Cohesion: 0.17
+Nodes (9): 0.4 The Frame-Rate Question, 14. HUD Timer & Counter Details, 15. Window State Behavior (Minimization vs Unfocused), 16. Measured Frame-Time Benchmark Table (over 600 frames), 17. `cProfile` Analysis of `paintEvent` (300 frames), Crucial Finding on Session B Frame-Drop:, True only when the parent window is explicitly minimized to the taskbar., True only when this canvas can actually be seen by the user. (+1 more)
 
 ### Community 250 - "ClientCache"
 Cohesion: 0.36
 Nodes (3): ClientCache, Any, Thread-safe client instance cache with TTL.
 
-### Community 251 - "install_transport_guard"
-Cohesion: 0.19
-Nodes (7): core/net — Network transport guards and connection lifecycle utilities., install_transport_guard(), handler(), Any, Install an exception handler on the asyncio event loop that swallows…, Logger, CrashHandlerTests
+### Community 252 - "reminder.py"
+Cohesion: 0.41
+Nodes (11): _base_dir(), _get_os(), datetime, Path, reminder(), _sanitise(), _schedule_linux(), _schedule_mac() (+3 more)
 
-### Community 252 - "confirm.py"
-Cohesion: 0.21
-Nodes (12): bind(), _log(), _Pending, pending_title(), core/confirm.py — a confirmation the model cannot forge. THE PROBLEM WITH THE…, Called by the UI when the user presses CONFIRM or CANCEL. Runs the stored…, when nothing is waiting. Lets an action avoid stacking two banners., Wire this module to the HUD. Called once from main.py at startup. (+4 more)
-
-### Community 253 - "ImagePopupOverlay"
-Cohesion: 0.07
-Nodes (22): action(), ImagePopupOverlay, QWidget, Handle mouse move for window dragging., Handle mouse release for window dragging., Show the popup centered over the parent widget., Show an image popup overlay., Popup overlay to display an image with a dismiss button. (+14 more)
+### Community 253 - "action"
+Cohesion: 0.12
+Nodes (15): action(), Show an image popup overlay., youtube_video(), 1. Summary of Changes, 1. Voice Search: *"search Netflix for [query]"*, 2. Actions Architecture, 2. Instant Play: *"play [movie/show] on Netflix"*, 3. Category & Genre Browse: *"browse [genre] on Netflix"* (+7 more)
 
 ### Community 254 - "._apply_ptt_shortcut"
-Cohesion: 0.40
-Nodes (3): _press(), Bind the chord inside the window when no global hook is available. On macOS and…, Report a windowed press/release to whoever owns the microphone.
+Cohesion: 0.29
+Nodes (5): qt_sequence(), The same chord as a QKeySequence string., _press(), Bind the chord inside the window when no global hook is available. On macOS and…, Report a windowed press/release to whoever owns the microphone.
 
 ### Community 255 - "⚙️ Setup & Execution"
 Cohesion: 0.33
@@ -1304,25 +1356,25 @@ Nodes (6): 🚀 1. Quick Start & Installation, Linux (Ubuntu / Debian / Fedora /
 Cohesion: 0.17
 Nodes (11): 1. Summary of Completed Phases, 2.1 Boot Decomposition (DAG), 2.2 Additive Acoustic Shielding (`AudioGate`), 2.3 Dual Wake-Word Confidence Gate, 2. Architectural Architecture & Data Flow, 3.1 HUD Frame Timing Benchmark, 3.2 Automated Test Suite Results, 3. Empirical Verification & Performance Metrics (+3 more)
 
-### Community 258 - "1. Graphify Nodes & Code Locations"
-Cohesion: 0.09
-Nodes (20): 1. Graphify Nodes & Code Locations, 1. Slots Structure & Current Layout, 2. Reconnaissance Findings, 2. Themes & Palette Constants, 3. HUD Tick & Timing Architecture, 3. Proposed Module Layout, 4. Central Visualizer Reskinning, 5. Developer Data Grid (2×2) (+12 more)
+### Community 258 - ".__init__"
+Cohesion: 0.05
+Nodes (27): 1. Graphify Nodes & Code Locations, 1. Slots Structure & Current Layout, 1. Chrome Consumer Integration, 2.1 Threat Assessment Mapping, 2.2 Sentry Focus & Monitor Timers, 2. Data vs. Presentation Rules (Ground Rule Compliance), ALFRED-MK-V — Thematic HUD Overhaul: Phase 4 Notes, QApplication (+19 more)
 
 ### Community 259 - "TestMinimizedHudOverlay"
 Cohesion: 0.17
 Nodes (3): _LogSource, QObject, TestMinimizedHudOverlay
 
 ### Community 260 - "JarvisLive"
-Cohesion: 0.04
-Nodes (34): BaseException, 3. Voice Pipeline & Answer Window, One-Shot Answer Window ("Listen Once"), STT Return Path into Dispatcher, Wake-Word Gate, _get_api_key(), _is_reconnect_signal(), JarvisLive (+26 more)
-
-### Community 261 - "subprocess"
 Cohesion: 0.06
-Nodes (35): _find_windows_app_path(), _launch_windows(), _normalize(), open_app(), Resolve full executable path or Start Menu shortcut on Windows., chord_label(), qt_sequence(), Push-to-talk — hold a key, speak, release. Why this exists ---------------… (+27 more)
+Nodes (24): Event delivered to meaningful-state and completion callbacks., ScreenMonitorEvent, 3. Voice Pipeline & Answer Window, One-Shot Answer Window ("Listen Once"), STT Return Path into Dispatcher, Wake-Word Gate, JarvisLive, _do_voice_sleep() (+16 more)
 
-### Community 262 - "logger.py"
-Cohesion: 0.12
-Nodes (18): builtins, format_timestamp(), install_timestamped_logging(), _is_debug_timestamps_enabled(), _is_ffmpeg_banner(), core/logger.py — Centralized, thread-safe monotonic and wall-clock timestamped…, Install the timestamped print hook into builtins once., Read 'debug_timestamps' toggle from config/api_keys.json. (+10 more)
+### Community 261 - "test_open_app.py"
+Cohesion: 0.13
+Nodes (15): _find_windows_app_path(), _launch_windows(), _normalize(), open_app(), Resolve full executable path or Start Menu shortcut on Windows., /deep-work Workflow, Objective, Steps (+7 more)
+
+### Community 262 - "Status: COMPLETE"
+Cohesion: 0.50
+Nodes (3): 2. Verification, Phase 1 Notes — Stop the Bleeding, Status: COMPLETE
 
 ### Community 263 - "Phase 6 Notes: Comprehensive Test Suite, Verification, & Graphify Integration"
 Cohesion: 0.40
@@ -1336,21 +1388,17 @@ Nodes (6): 1.1 Architecture Created: `core/ui/themes/`, 1.3 Registry & Validatio
 Cohesion: 0.22
 Nodes (5): Scan main.py AST for all ui attribute accesses and assert they exist on…, Assert that set_media_arbiter exists on JarvisUI with signature (self, arbiter)., Assert that no class in the repository redefines/shadows an existing method., Specifically verify MainWindow in ui.py and JarvisLive in main.py have no…, TestUiMismatchesAST
 
-### Community 266 - "sentry_monitor_action"
-Cohesion: 0.20
-Nodes (6): Any, Execute a Sentry MONITOR mode action., sentry_monitor_action(), Verify flow: start() with no target asks question, receives answer via…, Test sentry_monitor_action dispatching., TestMonitorController
+### Community 266 - "TestMonitorController"
+Cohesion: 0.29
+Nodes (3): Verify flow: start() with no target asks question, receives answer via…, Test sentry_monitor_action dispatching., TestMonitorController
 
 ### Community 267 - "ScreenMonitorController"
 Cohesion: 0.06
-Nodes (34): AnalysisResult, _default_analyzer(), _fingerprint_key(), Exception, Reusable, in-memory continuous screen monitoring. The controller owns only the…, Return normalized mean absolute difference in the range 0.0 to 1.0., Detect context, visual-frame, and explicit completion changes., Poll screen capture in a daemon thread and retain only the latest frame. (+26 more)
-
-### Community 268 - "flight_finder.py"
-Cohesion: 0.24
-Nodes (11): _build_google_flights_url(), flight_finder(), _format_spoken(), _format_text_report(), _get_base_dir(), _parse_date(), _parse_flights_with_gemini(), Path (+3 more)
+Nodes (26): AnalysisResult, _default_analyzer(), _fingerprint_key(), Exception, Return normalized mean absolute difference in the range 0.0 to 1.0., Detect context, visual-frame, and explicit completion changes., Poll screen capture in a daemon thread and retain only the latest frame., Start monitoring immediately; return false if a run is already active. (+18 more)
 
 ### Community 269 - "SlotVisual"
 Cohesion: 0.12
-Nodes (11): ABC, QPainter, QRectF, Clean up references and cached native objects when unmounting., One-line description for telemetry/debug panel., Watchdog to degrade LOD if mean frame time exceeds budget., Abstract Base Class for theme slot animations. Rule: Zero allocations in…, Build pens, brushes, paths, static geometry, and fonts once. Called on… (+3 more)
+Nodes (11): ABC, QPainter, QRectF, Clean up references and cached native objects when unmounting., One-line description for telemetry/debug panel., Watchdog to degrade LOD if mean frame time exceeds budget, with recovery., Abstract Base Class for theme slot animations. Rule: Zero allocations in…, Build pens, brushes, paths, static geometry, and fonts once. Called on… (+3 more)
 
 ### Community 270 - "TestAudioDuckRestoreLifecycle"
 Cohesion: 0.21
@@ -1360,41 +1408,45 @@ Nodes (6): patch, Targeting '*' or 'all' ducks any active non-Alfred application
 Cohesion: 0.40
 Nodes (4): Answer, Outcome, Q: Audit reliability and performance of the current working tree, Source Nodes
 
-### Community 273 - "_ReconnectSignal"
-Cohesion: 0.33
-Nodes (4): Exception, Session-scoped task: when a voluntary reconnect is requested, raise a signal…, Raised inside the session TaskGroup to force a clean, voluntary reconnect (e.g.…, _ReconnectSignal
+### Community 273 - ".run"
+Cohesion: 0.06
+Nodes (24): BaseException, _get_api_key(), _is_reconnect_signal(), _stream_worker(), _warmup_worker(), _keep_context_of(), Exception, Session-scoped task: when a voluntary reconnect is requested, raise a signal… (+16 more)
 
 ### Community 274 - "Phase 0 Reconnaissance Notes: Browser Suite & Netflix Pilot"
 Cohesion: 0.20
 Nodes (9): 1. The "Close Tab" Bug Analysis, 2. Current Browser Automation Architecture, 4. Single-Utterance Conversational Answer Window, 5. Proposed Architecture & Package Layout, Currently Detected Browsers, Intent Routing Path, Libraries in Use, Phase 0 Reconnaissance Notes: Browser Suite & Netflix Pilot (+1 more)
 
-### Community 278 - "TestDedupeSingleFlight"
-Cohesion: 0.29
-Nodes (4): 3. Test Verification, Firing the same play 20 times in 100ms triggers exactly 1 resolve and returns…, A new different target cancels the in-flight generation token., TestDedupeSingleFlight
+### Community 278 - "schedule_task.py"
+Cohesion: 0.26
+Nodes (8): _engine(), Voice-action bridge for the process-wide local scheduler., schedule_task(), _message(), parse_schedule(), Any, datetime, Deterministic scheduling phrases accepted by the local task engine.
 
-### Community 281 - "AudioSource"
-Cohesion: 0.12
-Nodes (11): AudioSource, Enum, Private, application-owned arbitration of ALFRED audio sources., Application-owned media coordination primitives., tests/test_hud_audio_echo_suppression.py — Tests for Visual HUD video echo…, Test that HUD video is ducked when state is SPEAKING or LISTENING., Test mic gate drops streaming to out_queue during HUD video playback unless…, Test silence threshold calculation for playback smoothness. (+3 more)
+### Community 281 - "ImagePopupOverlay"
+Cohesion: 0.18
+Nodes (7): ImagePopupOverlay, QWidget, Handle mouse move for window dragging., Handle mouse release for window dragging., Show the popup centered over the parent widget., Popup overlay to display an image with a dismiss button., Handle mouse press for window dragging.
 
-### Community 282 - ".__init__"
-Cohesion: 0.40
-Nodes (4): create_local_stt_engine(), Factory function to create a local STT manager., create_local_tts_engine(), Factory function to create a local TTS manager.
+### Community 282 - "parse_media_time"
+Cohesion: 0.24
+Nodes (6): parse_media_time(), Convert spoken number phrases like 'thirty five' or 'two' to an integer., Parse an utterance for absolute timestamps or relative skips. Returns…, _words_to_number(), tests/hud_video/test_mediatime.py — Unit tests for natural language time…, TestMediaTimeParser
 
 ### Community 284 - "File & Folder Exploration and Notes Directives"
 Cohesion: 0.40
 Nodes (4): 1. File Opening (`open`), 2. Folder Exploration (`explore`), 3. Dedicated Intel & Notes Terminal (`intel_notes`), File & Folder Exploration and Notes Directives
 
-### Community 286 - "_TabsProxy"
-Cohesion: 0.29
-Nodes (3): Compatibility proxy for tab inspection in automated test suites., _TabsProxy, ui/setup_api_modal.py — Re-export from core.ui.setup_api_modal
+### Community 286 - ".__init__"
+Cohesion: 0.22
+Nodes (3): Compatibility proxy for tab inspection in automated test suites., Load masked credentials from SecretStore with fallback to config/api_keys.json., _TabsProxy
 
-### Community 287 - "._launch"
-Cohesion: 0.29
-Nodes (5): _firefox_profile_dir(), launch_persistent_context already opens a starting tab. Instead of opening a…, Launches the browser with the real user profile. Does nothing if the context is…, _real_profile_dir(), Page
+### Community 287 - "LatencyReport"
+Cohesion: 0.17
+Nodes (6): LatencyReport, Detailed latency measurement breakdown for STT., 1. Graphify Nodes Affected, 2. Changes Implemented, 3. Verification & Delta, PHASE 3: STT Latency Compression
 
-### Community 289 - "clipboard_history.py"
-Cohesion: 0.38
-Nodes (6): clipboard_history_action(), _push(), Maintains a session-scoped ring buffer of clipboard entries. Every time Alfred…, Add an entry, deduplicating consecutive identical values., _snapshot(), pyperclip
+### Community 288 - "setter"
+Cohesion: 0.08
+Nodes (8): 2. Other `self.ui.<attr>` Mismatches in `main.py`, Changes Made, Full HUD Dropdown (`ui.py`), setter, _plugin_settings_signature(), Thread-safe UI slot: wipe chat display., Wipe chat log and trigger any registered callback (e.g. backend/mobile sync)., Stable identity for deciding whether a settings form can be reused.
+
+### Community 289 - "_ensure_openwakeword"
+Cohesion: 0.17
+Nodes (9): _ensure_openwakeword(), _is_alfred_wake_phrase(), _make_model(), Ensure openwakeword is completely initialized and attribute-populated., Create a fresh, independent OpenWakeWord Model instance., Check if transcribed speech contains Alfred or recognized phonetic variants., 20. Wake-Word Mechanism & Spoken "Alfred" Inventory, Live microphone test demonstrating hybrid wake-word verification: 1. Wake Word… (+1 more)
 
 ### Community 291 - "Scheduler Verification"
 Cohesion: 0.50
@@ -1404,17 +1456,17 @@ Nodes (3): Completed implementation, Scheduler Verification, Validation
 Cohesion: 0.40
 Nodes (4): Changes, Graphify nodes used, Media Command v1 — Phase 4: HUD Image Deck, Verification
 
-### Community 294 - "🎶 11. Spotify AI Agent — Dual-Tier Architecture"
+### Community 294 - "🎶 12. Spotify AI Agent — Dual-Tier Architecture"
 Cohesion: 0.33
-Nodes (6): 🎶 11. Spotify AI Agent — Dual-Tier Architecture, 🎯 Default Music Routing, 🏗️ Dual-Tier Control Architecture, 🚀 High-Performance Client, 🔑 OAuth 2.0 Setup, 🔥 Toggle Inversion Bug Elimination
+Nodes (6): 🎶 12. Spotify AI Agent — Dual-Tier Architecture, 🎯 Default Music Routing, 🏗️ Dual-Tier Control Architecture, 🚀 High-Performance Client, 🔑 OAuth 2.0 Setup, 🔥 Toggle Inversion Bug Elimination
 
-### Community 295 - "main.py"
-Cohesion: 0.05
-Nodes (40): ProactiveEngine, ProactiveEngine 2.0 — context-aware, time-aware, non-repetitive background…, Decides when ALFRED should speak unprompted and builds a context-rich prompt.…, Build a context snapshot for Gemini. Rotates through three focus areas so…, discover_actions(), Scans actions_dir for *.py files (skips files starting with '_'). A file is…, get_media_arbiter(), Return the sole arbiter owned by the running application. (+32 more)
+### Community 295 - "10. Ordered Boot-Step Table (`runner` + `JarvisLive.__init__`)"
+Cohesion: 0.13
+Nodes (10): ProactiveEngine, Decides when ALFRED should speak unprompted and builds a context-rich prompt.…, Build a context snapshot for Gemini. Rotates through three focus areas so…, prefetch(), Warm the cache on a background thread. Called once at startup so the settings…, 0.3 Boot Chain Decomposition, 10. Ordered Boot-Step Table (`runner` + `JarvisLive.__init__`), 11. True Dependency Graph (+2 more)
 
-### Community 296 - "4. Intent & Command Router Precedence"
-Cohesion: 0.50
-Nodes (4): lock_screen(), 4. Intent & Command Router Precedence, Command Mapping, Screen Lock Conflict & Precedence
+### Community 296 - "ReactiveMicButton"
+Cohesion: 0.24
+Nodes (5): PluginManagerOverlay, QPushButton, Floating overlay — lists discovered plugins with per-plugin ON/OFF toggles., Acoustic control with a cheap listening-level outline., ReactiveMicButton
 
 ### Community 297 - "PHASE 8: Network & Remote Uplink Latency Compression"
 Cohesion: 0.40
@@ -1424,73 +1476,81 @@ Nodes (4): 1. Graphify Nodes Affected, 2. Changes Implemented, 3. Verification &
 Cohesion: 0.16
 Nodes (8): ALFRED-MK-V — Jarvis Voice Option: Phase 1 Notes, Verification & Test Results, When capability is OK, selecting jarvis succeeds and saves., Verify EngineDefault implements TTSEngine ABC., Verify voice.engine round-trips correctly and invalid values collapse to…, Verify capability inspector safely returns MISSING_DEPS or NO_CUDA without…, Selecting jarvis when unavailable must keep default active and show why., TestJarvisVoicePhase1
 
-### Community 299 - "WindowsSuppressor"
-Cohesion: 0.33
-Nodes (5): Any, Keep all external identities inside this module., _WindowsHandle, WindowsSuppressor, collect()
+### Community 299 - "BootContext"
+Cohesion: 0.22
+Nodes (4): BootContext, Any, Exception, Thread-safe context dictionary shared across all boot stages.
 
-### Community 300 - "5. TTS / STT Backends"
-Cohesion: 0.50
-Nodes (4): 5. TTS / STT Backends, Audio Ducking:, Speech-to-Text (STT):, Text-to-Speech (TTS):
+### Community 300 - ".broadcast"
+Cohesion: 0.24
+Nodes (7): audio_ws(), download_file(), phone_audio_ws(), _resolve_ws_auth(), 1. Transport Reset (ConnectionResetError WinError 10054), Key Implementation Details, _proactor_exc_handler()
 
 ### Community 301 - "wake_word.py"
+Cohesion: 0.08
+Nodes (31): _active_connections(), _local_ip(), network_tools_action(), _ping(), _public_ip(), Network diagnostics available by voice: - speed_test : download / upload / ping…, Try speedtest-cli library first, then subprocess., _speedtest_cli() (+23 more)
+
+### Community 302 - "4. Verification & Test Results"
+Cohesion: 0.38
+Nodes (3): 4. Verification & Test Results, patch, TestCollisionGuardsAndRouting
+
+### Community 303 - "automation.py"
+Cohesion: 0.31
+Nodes (9): AutomationResult, _focus_linux(), _focus_macos(), focus_target(), _focus_windows(), Local clipboard-and-keystroke automation with an explicit focus gate., Focus a window by the user-supplied app or tab-title keyword., Focus first, then paste local clipboard text, wait 200 ms, and Enter. (+1 more)
+
+### Community 304 - "InstrumentedSTT"
+Cohesion: 0.24
+Nodes (5): InstrumentedSTT, ndarray, Wraps STT engines with high-precision latency profiling and bounded retries., Transcribe audio array and record precise pipeline metrics., TestSTTLatency
+
+### Community 305 - "IntentRouter"
+Cohesion: 0.16
+Nodes (5): IntentRouter, Fast-path deterministic router with LRU caching and regex matching., Register a callback for signal emission., tests/test_intent_router.py — Unit tests for fast-path intent routing and…, TestIntentRouter
+
+### Community 306 - "Architecture Implemented"
 Cohesion: 0.20
-Nodes (13): core/audio/wakeword.py — Wake-word gate adapter and latency-instrumented…, get_detector(), install_and_download(), is_installed(), is_ready(), core/wake_word.py — Wake-word detection for ALFRED. Design: - Each…, True if the openwakeword package is importable (no model check)., True if openwakeword is installed AND all model files are on disk. Deliberately… (+5 more)
+Nodes (8): Architecture Implemented, Backend Wire-up (_init_hud_video, ui.py), Controller exposure for action bridge, Stack Slot Assignment (ui.py:8017), State Machine (controller.py), Surface Panels (surface.py), Switch stack to video surface slot (Qt thread)., Return stack to HudCanvas slot (Qt thread).
 
-### Community 303 - "PHASE 5: Tool Execution Compression & Bounded Execution"
-Cohesion: 0.50
-Nodes (3): 1. Graphify Nodes Affected, 3. Verification & Delta, PHASE 5: Tool Execution Compression & Bounded Execution
+### Community 307 - "TestJarvisVoicePhase2Assets"
+Cohesion: 0.20
+Nodes (5): Empty directory must report assets not downloaded., Valid directory structure with reference audio must report downloaded., Test asset management, base model resolution, and file validation., Verify repository and revision constants match ground rules., TestJarvisVoicePhase2Assets
 
-### Community 304 - "1. Architecture & Design"
+### Community 308 - "🕸️ 24. Knowledge Graph — Graphify"
 Cohesion: 0.40
-Nodes (4): 1. Architecture & Design, 2. Verification, Phase 7 Notes — Shadow Whisper & Decoupled ASR, Status: COMPLETE
+Nodes (5): 🕸️ 24. Knowledge Graph — Graphify, 🎬 In-HUD Video Surface, 🔩 Infrastructure Fixes, 🎁 Mark VIII New Actions (Auto-Discovered), 🔧 Network Resilience & UI Performance
 
-### Community 305 - "re"
-Cohesion: 0.05
-Nodes (33): quick_translate_action(), Translate text to a target language using the Gemini model already powering…, Return the full language name from a code or common alias., Use the project's LLM client (Gemini) to perform the translation., Fallback: use deep-translator if installed., _resolve_language(), _translate_via_googletrans(), _translate_via_llm() (+25 more)
-
-### Community 306 - "🎵 10. Tactical Audio Matrix & Background Score"
-Cohesion: 0.40
-Nodes (5): 🎵 10. Tactical Audio Matrix & Background Score, 🎬 About The Score, 🔊 Additional Features, 🎛️ Dual-Source Audio Deck, 🔄 Sovereign Ambient Fallback
-
-### Community 307 - "PHASE 6: TTS Queuing & Audio Output Compression"
-Cohesion: 0.50
-Nodes (3): 1. Graphify Nodes Affected, 3. Verification & Delta, PHASE 6: TTS Queuing & Audio Output Compression
-
-### Community 308 - "🕸️ 23. Knowledge Graph — Graphify"
-Cohesion: 0.40
-Nodes (5): 🕸️ 23. Knowledge Graph — Graphify, 🎬 In-HUD Video Surface, 🔩 Infrastructure Fixes, 🎁 Mark VIII New Actions (Auto-Discovered), 🔧 Network Resilience & UI Performance
-
-### Community 309 - "🏆 4. Why ALFRED Outclasses Every Other "Jarvis""
-Cohesion: 0.40
-Nodes (5): 🏆 4. Why ALFRED Outclasses Every Other "Jarvis", 🤖 Compared to Consumer Assistants (Copilot, Alexa, Siri), 🧪 Compared to Other Open "Agent" Repos, 🎬 Compared to the Cinematic Jarvis, 🎯 What "Best-in-Class Optimisation" Actually Means Here
+### Community 309 - "get_backend"
+Cohesion: 0.36
+Nodes (8): volume_down(), volume_get(), volume_up(), get_backend(), Return the active PlatformBackend instance for the host operating system., 1. System Control & Media Dispatch, ALFRED-MK-V: Cross-Platform Parity (macOS + Linux), Phase 5 Implementation Notes: System API Parity
 
 ### Community 310 - "ALFRED-MK-V Latency Verification Checklist"
 Cohesion: 0.40
 Nodes (4): 1. Live Verification Checklist, 2. End-to-End Latency Calculation (Fast-Path Voice Command), 3. Automated Latency Test Suite Summary, ALFRED-MK-V Latency Verification Checklist
 
 ### Community 311 - "is_gui_thread"
-Cohesion: 0.13
-Nodes (20): core/gui_thread.py — Qt GUI thread assertions and marshalling helpers. Now…, core/hud_video/surface.py — HudVideoSurface widget. A QWidget that hosts…, Display a tactical toast overlay over the video., assert_gui_thread(), gui_thread_only(), wrapper(), is_gui_thread(), Any (+12 more)
+Cohesion: 0.11
+Nodes (23): core/gui_thread.py — Qt GUI thread assertions and marshalling helpers. Now…, Display a tactical toast overlay over the video., assert_gui_thread(), gui_thread_only(), wrapper(), is_gui_thread(), Any, core/thread_safety.py — Qt GUI thread safety assertions and marshalling… (+15 more)
 
 ### Community 312 - "🎭 6. Example Tactical Commands — "Wayne Protocol" in Action"
 Cohesion: 0.40
 Nodes (5): 🎭 6. Example Tactical Commands — "Wayne Protocol" in Action, 🎵 Ambience & Entertainment, 🎩 Distinguished Butler & Persona Banter, 🎨 Insignia & Batcave Customization, 👁️ Tactical Vision & Screen Grounding
 
+### Community 313 - "_undo_create"
+Cohesion: 0.22
+Nodes (7): Reverse of a move: put it back where it came from., Reverse of a create: remove what we made — and only if we still made it.…, Reverse of a write: restore the old contents, or remove a file that did not…, _undo_create(), _undo_move(), _fn(), _undo_write()
+
+### Community 314 - "TargetStatus"
+Cohesion: 0.14
+Nodes (11): TargetStatus, CommandTarget, Command Target: Runs a shell command periodically and alerts on status/output…, Executes a command every N seconds and alerts on exit code or output change., FileLogTarget, Path, File Log Target: Tails a file and alerts on regex or silence timeout., Tails a file for regex matches or alerts on silence > N minutes. (+3 more)
+
 ### Community 315 - "Status: COMPLETE"
 Cohesion: 0.50
 Nodes (3): 2. Verification, Phase 4 Notes — Boot Decomposition into Declared Stages, Status: COMPLETE
 
-### Community 316 - "engine_default.py"
-Cohesion: 0.11
-Nodes (20): _compress_silence(), create_tts_player(), _get_output_device_idx(), _synth(), _play_audio_bytes(), _play_np(), ndarray, Default Text-to-Speech engines for ALFRED. EdgeTTS – free Microsoft TTS… (+12 more)
+### Community 316 - "Exact Files to Touch Across Phases"
+Cohesion: 0.19
+Nodes (12): _compress_silence(), _get_output_device_idx(), _synth(), _play_np(), ndarray, Convert samples to float32 numpy array. Handles both numpy arrays and PyTorch…, Synthesize to PCM numpy array and sample rate., Shorten Kokoro's very long punctuation pauses (1-2 s → ≤500 ms). (+4 more)
 
-### Community 318 - "oauth.py"
-Cohesion: 0.12
-Nodes (16): _active_connections(), _local_ip(), network_tools_action(), _ping(), _public_ip(), Network diagnostics available by voice: - speed_test : download / upload / ping…, Try speedtest-cli library first, then subprocess., _speedtest_cli() (+8 more)
-
-### Community 319 - "Key Implementation Details"
-Cohesion: 0.33
-Nodes (5): Graphify Citations, Key Implementation Details, Phase 1 Notes: Uplink Transport Hardening, Summary, _proactor_exc_handler()
+### Community 319 - "Phase 1 Notes: Uplink Transport Hardening"
+Cohesion: 0.50
+Nodes (3): Graphify Citations, Phase 1 Notes: Uplink Transport Hardening, Summary
 
 ### Community 320 - "ALFRED-MK-V — Thematic HUD Overhaul: Phase 3 Notes"
 Cohesion: 0.50
@@ -1504,62 +1564,222 @@ Nodes (8): _auto_detect_type(), _config_dir(), intel_notes(), _load_notes(), Pat
 Cohesion: 0.29
 Nodes (4): Return list of all configured secret keys (never values)., Check if a secret value matches a given regex pattern., Changes Implemented, Phase 1 Notes: Secret Store & Machine Encryption
 
+### Community 323 - "quick_translate.py"
+Cohesion: 0.31
+Nodes (8): quick_translate_action(), Translate text to a target language using the Gemini model already powering…, Return the full language name from a code or common alias., Use the project's LLM client (Gemini) to perform the translation., Fallback: use deep-translator if installed., _resolve_language(), _translate_via_googletrans(), _translate_via_llm()
+
 ### Community 324 - "File & Folder Exploration Workflow"
 Cohesion: 0.40
 Nodes (4): File & Folder Exploration Workflow, Step 1: Target Identification, Step 2: Open File vs Explore Folder, Step 3: Record Intel or Links
 
 ### Community 325 - "save_app_icon"
-Cohesion: 0.18
-Nodes (10): Update App Icon Action for ALFRED Mark-VIII. Switches the application window,…, Updates the main application icon and taskbar badge in realtime., update_app_icon(), Save the chosen app icon setting to config., save_app_icon(), format_icon_display_name(), Load and scale an icon once per file version and target size., Format an icon file name into an authentic, sleek tactical insignia title. (+2 more)
+Cohesion: 0.40
+Nodes (5): Update App Icon Action for ALFRED Mark-VIII. Switches the application window,…, Updates the main application icon and taskbar badge in realtime., update_app_icon(), Save the chosen app icon setting to config., save_app_icon()
 
-### Community 326 - "AudioGate"
-Cohesion: 0.07
-Nodes (14): AudioGate, Additive acoustic gate controlling upstream mic flow and wake-word gating., Add a gate reason. Blocks upstream mic audio immediately., Remove a gate reason. Starts release tail delay when reasons become empty., Context manager holding a reason for a scoped block., Return True if no reasons are held and the release tail has elapsed., Check if a specific reason is currently held (e.g. GATE_TTS for wake word)., Return a snapshot of active gate reasons. (+6 more)
+### Community 326 - ".__init__"
+Cohesion: 0.04
+Nodes (38): _get_controller(), Retrieve the HudVideoController from the process-wide service registry., get_image_session(), actions/show_image.py — Reference image viewer and candidate cycling action.…, Retrieve or register the process-wide reference image session., contextlib, AudioGate, get_audio_gate() (+30 more)
+
+### Community 327 - "ProcessTarget"
+Cohesion: 0.25
+Nodes (4): ProcessTarget, Process Target: Monitors a system process by PID or name., Monitors a process for exit, or alerts when CPU/memory exceed thresholds., Process
 
 ### Community 328 - "TestThreadSafety"
 Cohesion: 0.20
 Nodes (6): 5. Intent Routing & Conflict Prevention, TestThreadSafety, worker(), worker(), target(), worker()
 
-### Community 330 - "Status: COMPLETE"
-Cohesion: 0.50
-Nodes (3): 2. Verification, Phase 6 Notes — Lazy Everything Else, Status: COMPLETE
+### Community 329 - "WindowTitleTarget"
+Cohesion: 0.25
+Nodes (3): Alerts when a specific window or application title matches a regex pattern., Query open window titles matching app_name across operating systems., WindowTitleTarget
 
-### Community 333 - "whisper_shadow.py"
-Cohesion: 0.12
-Nodes (12): core/speech/__init__.py — Speech subsystem package. Exports…, ndarray, core/speech/whisper_shadow.py — Decoupled off-thread shadow Whisper ASR worker.…, Feed an audio chunk into the internal processing queue., Start the shadow worker thread., Stop the shadow worker thread., A speculative or finalized partial transcript emitted by Shadow Whisper., Off-thread speculative ASR observer processing background audio frames. (+4 more)
+### Community 330 - "2. Reconnaissance Findings"
+Cohesion: 0.22
+Nodes (8): 2. Reconnaissance Findings, 2. Themes & Palette Constants, 3. HUD Tick & Timing Architecture, 3. Proposed Module Layout, 4. Central Visualizer Reskinning, 5. Developer Data Grid (2×2), 6. Mono Fonts & Text Helpers, ALFRED-MK-V: HUD Visuals v1 — Phase 0 Reconnaissance Notes
+
+### Community 331 - "get_plugin_config"
+Cohesion: 0.22
+Nodes (8): Media Command v1 — Phase 7: Status and Settings, get_media_settings(), get_plugin_config(), get_plugin_setting(), All stored values for a namespace (empty dict if none set yet)., A single value from a namespace, or `default` if unset., Privacy-safe Media Command settings stored with existing config data., save_media_settings()
+
+### Community 332 - "Live Verification Test Cases"
+Cohesion: 0.22
+Nodes (8): 1. Single Voice Playback (No Loop, No Timer Warnings), 2. Duplicate Command Deduplication (Single-Flight Debounce), 3. Source Replacement ("Play something else"), 5. CPU Performance Sample, Live Verification Test Cases, Pre-Requisites, Sign-Off Summary, Visual HUD v3 — Live Verification Checklist
+
+### Community 333 - "ShadowWhisperWorker"
+Cohesion: 0.13
+Nodes (10): core/speech/__init__.py — Speech subsystem package. Exports…, ndarray, Feed an audio chunk into the internal processing queue., Start the shadow worker thread., Stop the shadow worker thread., A speculative or finalized partial transcript emitted by Shadow Whisper., Off-thread speculative ASR observer processing background audio frames., ShadowWhisperWorker (+2 more)
+
+### Community 335 - ".signal_error"
+Cohesion: 0.29
+Nodes (4): _worker(), Called when backend encounters a playback error., Transition to ERROR state; auto-clear after VIDEO_ERROR_DISPLAY_S., Trigger re-resolve in a background thread.
 
 ### Community 336 - "PlatformBackend"
+Cohesion: 0.07
+Nodes (17): PlatformBackend, Any, QWidget, WindowType, Abstract interface for all OS-specific integrations., Return standardized platform name: 'windows' | 'mac' | 'linux'., Return standard top-level / overlay window flags for this OS., Configure widget as a frameless floating top-level on this OS. (+9 more)
+
+### Community 338 - "_SpinnerWidget"
+Cohesion: 0.25
+Nodes (3): QColor, Minimal ALFRED-style spinner: rotating arc in theme primary colour., _SpinnerWidget
+
+### Community 339 - "._process_vosk_audio"
+Cohesion: 0.25
+Nodes (4): Cancel any pending debounce timer, thread-safe., Reset the FINISH_MS countdown from zero., Immediately commit whatever is in the buffer (+ optional extra word)., Process audio using Vosk streaming STT. Final results are held for FINISH_MS…
+
+### Community 340 - "ScreenRegionTarget"
+Cohesion: 0.25
+Nodes (4): Returns (True, message) if an alert condition is met, then resets it., Reuses actions.screen_processor.capture_screen to monitor display changes., ScreenRegionTarget, 2.2. `core/sentry/monitor/targets/` (7 Target Types)
+
+### Community 341 - "TTSPlayer"
+Cohesion: 0.25
+Nodes (3): Wraps any *Engine. Exposes a blocking speak() method meant to be called from a…, Synthesise and play text. BLOCKING – call from a dedicated thread., TTSPlayer
+
+### Community 342 - "WakeWordConfigurationTests"
+Cohesion: 0.29
+Nodes (3): _prediction_score(), Return the Alfred score while tolerating backend-specific key suffixes., WakeWordConfigurationTests
+
+### Community 343 - "test_browser_netflix_pilot.py"
 Cohesion: 0.06
-Nodes (27): volume_down(), volume_get(), volume_up(), PlatformBackend, Any, Path, QWidget, WindowType (+19 more)
+Nodes (37): abc, close_tab(), reopen_closed_tab(), BrowserController, close_active_tab(), close_window(), get_browser_controller(), core/browser/controller.py — Cross-platform browser tab and window controller. (+29 more)
 
-### Community 343 - "typing"
-Cohesion: 0.04
-Nodes (63): Tactical Audio Core Control Action for ALFRED. Controls the tactical HUD's…, browser_control(), _detect_default_browser(), _find_exe_windows(), _find_opera_windows(), _log(), _normalize_url(), _open_native() (+55 more)
+### Community 344 - "3. Proposed Fix Order"
+Cohesion: 0.25
+Nodes (7): 1. Graphify Nodes & Code Locations, 2. Reconnaissance & Trace Findings, 3. Proposed Fix Order, 4. Implementation & Verification Checklist, Issue 2: FOCUS state in Minimized HUD vs Full HUD, Issue 3: Screen Capture Facility & Availability, Sentry Main-App Routing & Full-HUD Focus Display Notes
 
-### Community 348 - "visuals/registry.py"
-Cohesion: 0.17
-Nodes (7): core/hud/visuals/registry.py — Maps (theme_id, slot_index) -> SlotVisual class.…, core_hud_visuals_slots, CatwomanAcrobatVisual, CatwomanLockpickVisual, CatwomanSonarVisual, QPainter, QRectF
+### Community 345 - "Phase 0 Recon: Visual HUD v3 (THREAD + DEDUPE + NO LOOP)"
+Cohesion: 0.25
+Nodes (7): 2. Root Cause Analysis of the Loop, 3. Server-side Interruption & Cancellation, 4. In-Flight Policy & Concurrency, 5. Player Ownership & FFmpeg Demuxer Clashes, 6. URL Logging & Privacy Leak, 7. Files to Modify in Subsequent Phases, Phase 0 Recon: Visual HUD v3 (THREAD + DEDUPE + NO LOOP)
 
-### Community 358 - "Media Command v1 — Phase 2: External Player Suppression"
-Cohesion: 0.40
-Nodes (4): Changes, Graphify nodes used, Media Command v1 — Phase 2: External Player Suppression, Verification
+### Community 346 - "🎙️ 10. Custom Wake-Word Neural Network & Multi-Speaker Training (.onnx)"
+Cohesion: 0.25
+Nodes (8): 🎙️ 10. Custom Wake-Word Neural Network & Multi-Speaker Training (.onnx), 🛡️ Dual-Phrase Gating & Acoustic Shielding, 🔍 Model Integrity & Baseline Weight Management, ☁️ Option A: Train via Google Colab (`train_alfred_colab.ipynb`), 💻 Option B: Direct 100% Local Machine Training, 🎙️ Step 1: Record Voice & Negative Noise Samples, 🛡️ Step 2 (Optional): Train Personal Biometric Voice Verifier, 🎧 Step 3: Live Microphone Acoustic Verification & VU Meter
+
+### Community 347 - "setup.py"
+Cohesion: 0.36
+Nodes (7): _check_assets(), _check_python(), main(), MARK-VIII — one-time setup. Installs the Python dependencies for THIS operating…, Fail immediately and clearly rather than deep inside a pip resolver. A wrong…, The avatar's face is a shipped file; a truncated clone should say so., _run()
+
+### Community 348 - "CatwomanLockpickVisual"
+Cohesion: 0.18
+Nodes (5): CatwomanAcrobatVisual, CatwomanLockpickVisual, CatwomanSonarVisual, QPainter, QRectF
+
+### Community 349 - "_gemini_grounding"
+Cohesion: 0.29
+Nodes (7): _capture_screen_image(), _gemini_grounding(), _get_api_key(), Capture current screen into a PIL Image., Fallback visual grounding via Gemini Live / Flash API., Retrieve Gemini API key from api_keys.json or environment., Image
+
+### Community 350 - "band_energies"
+Cohesion: 0.29
+Nodes (5): band_energies(), ndarray, Record a slice of what is being played, for later comparison., True if this microphone block is a different voice, not our echo., Raw energy per speech band — the fingerprint we compare. Left unnormalised on…
+
+### Community 351 - "check_path_access"
+Cohesion: 0.38
+Nodes (7): check_path_access(), get_allowed_c_roots(), is_safe_path(), Path, Validate whether a given path is allowed to be accessed. Returns: (True, "") if…, Convenience boolean helper for path safety., Return list of permitted roots on C: drive (Desktop and Documents).
+
+### Community 352 - "_ImageLoadTask"
+Cohesion: 0.29
+Nodes (5): _ImageLoadTask, _LoadSignals, QObject, pyqtSlot, QRunnable
+
+### Community 353 - "PHASE 0 RECONNAISSANCE NOTES — MARKET SENTRY"
+Cohesion: 0.29
+Nodes (6): 2. Persistence Layer, 3. Daily Brief & Market Bell Integration, 4. HUD Integration (Data Grid & Status Line), 6. HTTP Provider Dependencies, PHASE 0 RECONNAISSANCE NOTES — MARKET SENTRY, Proposed Package Layout
+
+### Community 354 - "1. Deepening Existing Themes"
+Cohesion: 0.29
+Nodes (6): 1.1 Default Batcave (`dossier`), 1.2 Bane Mode (`vector`), 1.3 Batman Beyond (`beyond`), 1. Deepening Existing Themes, 2. Layout & Geometry Invariants, ALFRED-MK-V — Thematic HUD Overhaul: Phase 2 Notes
+
+### Community 357 - ".get_frontmost_browser"
+Cohesion: 0.33
+Nodes (3): Detect and return the active browser name (e.g. 'Chrome', 'Edge', 'Brave')., Return True if a known browser process is currently in the foreground., Close the active browser tab without opening blank pages or windows.
+
+### Community 358 - ".play"
+Cohesion: 0.33
+Nodes (3): Start or resume playback. If ref is given: loads and begins playback of new…, Called when main window is restored., Alias for resuming paused video.
 
 ### Community 359 - "TestTransportCore"
 Cohesion: 0.10
 Nodes (9): A seek during LOADING is queued and applied on load., Seek clamps to [0, duration - END_MARGIN_S]., play() while ENDED acts as replay., Non-seekable media refuses the seek with a reason enum., On stream error, re-resolve once and resume at last position., Client-visible state must be strictly enums, bools, and seconds only., HUD video must start unmuted (muted=False) so audio is audible by default., LocalUrlBackend handles separate audio_uri for adaptive streams. (+1 more)
 
+### Community 360 - "._process_whisper_audio"
+Cohesion: 0.33
+Nodes (3): Process audio using Whisper with batch accumulation and VAD., Process accumulated Whisper audio buffer., Flush any remaining audio buffer (for Whisper).
+
+### Community 362 - "VoskSTT"
+Cohesion: 0.33
+Nodes (3): Streaming transcription using Vosk., Feed raw int16 LE PCM bytes. Returns (text, is_final)., VoskSTT
+
+### Community 363 - "._process_audio_bytes"
+Cohesion: 0.33
+Nodes (4): audio_callback_wrapper(), Process audio bytes for transcription based on engine type., Continuously process audio chunks from microphone., 6. Lock Contention & Hot Locks
+
+### Community 364 - "install_transport_guard"
+Cohesion: 0.33
+Nodes (5): core/net — Network transport guards and connection lifecycle utilities., install_transport_guard(), Any, Install an exception handler on the asyncio event loop that swallows…, Logger
+
+### Community 365 - "WhisperSTT"
+Cohesion: 0.33
+Nodes (4): ndarray, Offline transcription using faster-whisper., Transcribe a float32 mono 16 kHz numpy array. Returns transcript string., WhisperSTT
+
+### Community 366 - "2. Existing Media Paths — Reuse Analysis"
+Cohesion: 0.33
+Nodes (6): 2. Existing Media Paths — Reuse Analysis, Audio Core (`TronScoreBackgroundPlayer`), Existing `youtube_video.py` (actions/youtube_video.py), No VLC, mpv, or other heavy media runtimes present., `PyQt6.QtWebEngineWidgets` — NOT INSTALLED, `QMediaPlayer` / `QAudioOutput` — ALREADY IN USE
+
+### Community 368 - "_ocr_grounding"
+Cohesion: 0.50
+Nodes (5): _get_frame_key(), _ocr_grounding(), ndarray, Generate a lightweight key for the image frame., Run RapidOCR on image array to locate target text with early termination and…
+
 ### Community 369 - "Media Command v1 — Phase 3: Browser Player Suppression"
 Cohesion: 0.50
 Nodes (3): Changes, Media Command v1 — Phase 3: Browser Player Suppression, Verification
 
+### Community 370 - "ALFRED-MK-V: Cross-Platform Parity (macOS + Linux)"
+Cohesion: 0.40
+Nodes (4): 1. Window Flags & Always-On-Top Parity, 2. Geometry Clamping & Multi-Monitor Support, ALFRED-MK-V: Cross-Platform Parity (macOS + Linux), Phase 3 Implementation Notes: Minimised HUD Parity
+
 ### Community 371 - "spotify_control.py"
-Cohesion: 0.10
-Nodes (21): authorize_user(), _get_base_dir(), get_devices(), get_spotify_client(), manage_queue(), _OAuthCallbackHandler, Path, Launches browser for Spotify User Authorization (OAuth 2.0 PKCE / Authorization… (+13 more)
+Cohesion: 0.07
+Nodes (37): authorize_user(), control_playback(), _get_base_dir(), get_spotify_client(), _is_placeholder(), manage_queue(), _OAuthCallbackHandler, Path (+29 more)
+
+### Community 372 - "PHASE 7: HUD Rendering & Frame Time Compression"
+Cohesion: 0.40
+Nodes (4): 1. Graphify Nodes Affected, 2. Changes Implemented, 3. Verification & Delta, PHASE 7: HUD Rendering & Frame Time Compression
+
+### Community 373 - "2. HUD Component Tree & Styling"
+Cohesion: 0.40
+Nodes (5): 2. HUD Component Tree & Styling, Full HUD vs Minimized HUD, How Buttons Are Drawn, State Colours (`HudCanvas._core_colours()`, lines 1746–1755), Theme Palette Constants (`class C`, lines 724–751)
+
+### Community 374 - "Phase 5 Notes: Spotify Button Fix"
+Cohesion: 0.40
+Nodes (4): Graphify Citations, Key Implementation Details, Phase 5 Notes: Spotify Button Fix, Summary
+
+### Community 375 - "._remember_static_layer"
+Cohesion: 0.40
+Nodes (3): QPixmap, Pre-render the static grid-dot background into a transparent pixmap so…, Keep a small LRU-like set of full-canvas layers.
+
+### Community 377 - "Steps"
+Cohesion: 0.50
+Nodes (3): /daily-brief Workflow, Objective, Steps
+
+### Community 378 - "lines.py"
+Cohesion: 0.50
+Nodes (3): get_drift_line(), Dialogue Pools for Focus Mode Drift Callouts. Ground Rules: - ALFRED persona…, Select and format a drift callout line.
+
+### Community 379 - "Phase 1 Implementation Notes"
+Cohesion: 0.50
+Nodes (3): 2. Unit Testing & Verification, ALFRED-MK-V: Cross-Platform Parity (macOS + Linux), Phase 1 Implementation Notes
+
+### Community 380 - "Status: COMPLETE"
+Cohesion: 0.50
+Nodes (3): 2. Empirical Verification, Phase 2 Notes — Frame-Time Triage, Status: COMPLETE
+
+### Community 382 - "instrumented_init"
+Cohesion: 0.67
+Nodes (4): instrumented_init(), pulse(), watchdog(), _runtime_snapshot()
+
+### Community 383 - "_safe_screenshot_path"
+Cohesion: 0.67
+Nodes (3): _base_dir(), Path, _safe_screenshot_path()
 
 ## Knowledge Gaps
-- **367 isolated node(s):** `Purpose`, `Rules`, `Purpose`, `Rules`, `Persona & Demeanor` (+362 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 3013 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **50 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **375 isolated node(s):** `Purpose`, `Rules`, `Purpose`, `Rules`, `Persona & Demeanor` (+370 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 3035 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **68 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Work-memory lessons
 
@@ -1569,17 +1789,17 @@ Nodes (21): authorize_user(), _get_base_dir(), get_devices(), get_spotify_client
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `MainWindow` connect `MainWindow` to `1. Graphify Nodes & Code Locations`, `.pause_core`, `RemoteKeyOverlay`, `ScreenMonitorController`, `CustomizeOverlay`, `hud_video/controller.py`, `.reset_instance`, `tech_font`, `HudCanvas`, `AudioSource`, `SetupApiModal`, `lookup`, `config_manager.py`, `SentrySnapshot`, `HudVideoController`, `LocalUrlBackend`, `MinimizedHudOverlay`, `.clear_chat`, `Media Command v1 — Phase 4: HUD Image Deck`, `main.py`, `Changes`, `ALFRED-MK-V — Media Command v1: Phase 0 Reconnaissance`, `._on_dashboard_action`, `LogWidget`, `raise_overlay`, `._dispatch_tool`, `save_app_icon`, `FloatingFocusCard`, `._build_jarvis_icon`, `ui.py`, `TacticalControlsDrawer`, `._build_quick_drawer`, `get_sentry_mode_manager`, `TaskBoard`, `_HudOverlay`, `PHASE 1 — Surface + Controller Skeleton: Implementation Notes`, `._wake_state`, `._apply_name_update`, `QWidget`, `JarvisUI`, `SetupOverlay`, `.__init__`, `test_platform_stability.py`, `ImageDeckPanel`, `._apply_ptt_shortcut`, `HudVideoSurface`?**
-  _High betweenness centrality (0.102) - this node is a cross-community bridge._
-- **Why does `HudVideoController` connect `HudVideoController` to `MainWindow`, `time`, `hud_video/controller.py`, `TestDedupeSingleFlight`, `TestPlayDestinationPrompt`, `lookup`, `LocalUrlBackend`, `destination.py`, `TestThreadMarshal`, `ALFRED-MK-V — Media Command v1: Phase 0 Reconnaissance`, `hud_video`, `TronScoreBackgroundPlayer`, `is_gui_thread`, `raise_overlay`, `resolve.py`, `ui.py`, `._listen_audio`, `PHASE 1 — Surface + Controller Skeleton: Implementation Notes`, `TestTransportCore`, `PlayableRef`, `VideoTimeline`, `HudVideoSurface`?**
-  _High betweenness centrality (0.043) - this node is a cross-community bridge._
-- **Why does `HudSignals` connect `HudSignals` to `1. Graphify Nodes & Code Locations`, `TwoFaceBisectedVisual`, `RiddlerCipherVisual`, `BarArray`, `test_visuals.py`, `BatcaveBlueprintVisual`, `ui.py`, `SlotVisual`, `slots/__init__.py`, `FreezeCoolantLoopVisual`, `WatchtowerFluxRingVisual`, `visuals/registry.py`, `PaletteDefinition`, `BaneDosageRegulatorVisual`?**
-  _High betweenness centrality (0.023) - this node is a cross-community bridge._
+- **Why does `MainWindow` connect `MainWindow` to `.__init__`, `FileDropZone`, `main.py`, `ScreenMonitorController`, `CustomizeOverlay`, `tech_font`, `SetupApiModal`, `get_image_viewer`, `setter`, `SentrySnapshot`, `LocalUrlBackend`, `MinimizedHudOverlay`, `HudVideoController`, `Media Command v1 — Phase 4: HUD Image Deck`, `ALFRED-MK-V — Media Command v1: Phase 0 Reconnaissance`, `._on_dashboard_action`, `LogWidget`, `Architecture Implemented`, `Exact Files to Touch Across Phases`, `HudCanvas`, `FloatingFocusCard`, `Path`, `ui.py`, `ImageDeckPanel`, `ActionRegistry`, `TacticalControlsDrawer`, `TestSentryDropdownIntegration`, `TaskBoard`, `._listen_audio`, `.reset_instance`, `raise_overlay`, `3. Proposed Fix Order`, `MediaArbiter`, `PHASE 1 — Surface + Controller Skeleton: Implementation Notes`, `._wake_state`, `apply_ui_accent`, `_patch_config`, `TacticalHoverHelpManager`, `JarvisUI`, `SetupOverlay`, `test_platform_stability.py`, `apply_theme`, `get_media_arbiter`, `get_push_to_talk_enabled`, `._apply_ptt_shortcut`, `HudVideoSurface`?**
+  _High betweenness centrality (0.080) - this node is a cross-community bridge._
+- **Why does `HudVideoController` connect `HudVideoController` to `MainWindow`, `TestThreadMarshal`, `.play`, `10. Ordered Boot-Step Table (`runner` + `JarvisLive.__init__`)`, `._is_off_thread`, `ui.py`, `TestTransportCore`, `JarvisUI`, `VideoTimeline`, `_SingleFlightManager`, `PlayableRef`, `.signal_error`, `ALFRED-MK-V — Media Command v1: Phase 0 Reconnaissance`, `TestControlsUI`, `CyberTransportButton`, `TronScoreBackgroundPlayer`, `TestPlayDestinationPrompt`, `HudVideoSurface`?**
+  _High betweenness centrality (0.041) - this node is a cross-community bridge._
+- **Why does `HudCanvas` connect `HudCanvas` to `MainWindow`, `.__init__`, `qcol`, `TestIdleSleepOptimizations`, `2. Profiling & Measurement Audit (10 Key Areas)`, `SentrySnapshot`, `ALFRED-MK-V — Media Command v1: Phase 0 Reconnaissance`, `LogWidget`, `PHASE 0 RECONNAISSANCE NOTES — HUD VIDEO SURFACE`, `typing`, `Exact Files to Touch Across Phases`, `execute_bounded_tool`, `TestHudReactivity`, `Test Matrix & Live Verification Status`, `2. Reconnaissance Findings`, `.set_sentry_snapshot`, `ui.py`, `3. Proposed Fix Order`, `PHASE 1 — Surface + Controller Skeleton: Implementation Notes`, `._paint_3d_vector_globe`, `JarvisUI`, `._remember_static_layer`, `17. `cProfile` Analysis of `paintEvent` (300 frames)`?**
+  _High betweenness centrality (0.038) - this node is a cross-community bridge._
 - **Are the 43 inferred relationships involving `MainWindow` (e.g. with `Graphify nodes referenced` and ``_hud_cam_stack` (ui.py:8017)`) actually correct?**
   _`MainWindow` has 43 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 22 inferred relationships involving `HudVideoController` (e.g. with `PlayableRef` and `SeekRejectReason`) actually correct?**
   _`HudVideoController` has 22 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `Purpose`, `Rules`, `Purpose` to the rest of the system?**
-  _367 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _375 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `MainWindow` be split into smaller, more focused modules?**
-  _Cohesion score 0.028350515463917526 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.025206431986093004 - nodes in this community are weakly interconnected._

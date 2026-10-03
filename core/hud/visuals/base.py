@@ -39,7 +39,7 @@ def fast_cos(rad: float) -> float:
 
 # ── Watchdog & Performance Constants ─────────────────────────────────────────
 VISUAL_MAX_ERRORS: int = 3
-SLOT_PAINT_BUDGET_MS: float = 2.0
+SLOT_PAINT_BUDGET_MS: float = 3.5
 BUDGET_WINDOW_FRAMES: int = 60
 THEME_FADE_MS: int = 400
 ALLOC_TOLERANCE_BYTES: int = 2048
@@ -110,7 +110,7 @@ class SlotVisual(ABC):
         return self.__class__.__name__
 
     def record_paint_time(self, duration_ms: float) -> None:
-        """Watchdog to degrade LOD if mean frame time exceeds budget."""
+        """Watchdog to degrade LOD if mean frame time exceeds budget, with recovery."""
         self._paint_times.append(duration_ms)
         if len(self._paint_times) > BUDGET_WINDOW_FRAMES:
             self._paint_times.pop(0)
@@ -118,3 +118,5 @@ class SlotVisual(ABC):
             if avg > SLOT_PAINT_BUDGET_MS and not self.lod_low:
                 self.lod_low = True
                 print(f"[HUD Watchdog] Visual '{self.describe()}' paint time ({avg:.2f}ms) exceeded budget ({SLOT_PAINT_BUDGET_MS}ms). Degrading to LOD_LOW.")
+            elif avg < (SLOT_PAINT_BUDGET_MS * 0.65) and self.lod_low:
+                self.lod_low = False

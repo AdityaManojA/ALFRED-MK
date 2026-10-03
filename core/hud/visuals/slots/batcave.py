@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import math
 from PyQt6.QtCore import QLineF, QPointF, QRectF, Qt
-from PyQt6.QtGui import QBrush, QColor, QFont, QPainter, QPen
+from PyQt6.QtGui import QBrush, QColor, QFont, QPainter, QPen, QStaticText
 
 from core.hud.visuals.base import HudSignals, SlotVisual, fast_cos, fast_sin
 from core.hud.visuals.primitives import BarArray, RadarSweep, Wireframe3D
@@ -41,6 +41,9 @@ class BatcaveRadarVisual(SlotVisual):
         self.blip_points: list[QPointF] = [QPointF() for _ in range(self.radar.max_blips)]
         self.align_hdr: int = int(Qt.AlignmentFlag.AlignLeft)
         self.title_text: str = "● ● ●  ORBITAL RECON // RADAR"
+        self.static_title: QStaticText = QStaticText(self.title_text)
+        self.static_title.setTextFormat(Qt.TextFormat.PlainText)
+        self.pt_hdr: QPointF = QPointF()
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
         c_pri = QColor(palette.pri)
@@ -61,6 +64,7 @@ class BatcaveRadarVisual(SlotVisual):
         self.radius = min(bw, bh) * 0.42
 
         self.rect_hdr = QRectF(rect.x() + 8.0, rect.y() + 4.0, rect.width() - 16.0, 14.0)
+        self.pt_hdr = self.rect_hdr.topLeft()
         self.center_pt = QPointF(self.cx, self.cy)
         self.crosshair_h = QLineF(self.cx - self.radius, self.cy, self.cx + self.radius, self.cy)
         self.crosshair_v = QLineF(self.cx, self.cy - self.radius, self.cx, self.cy + self.radius)
@@ -104,7 +108,7 @@ class BatcaveRadarVisual(SlotVisual):
         painter.drawRect(self.rect_inner)
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_sweep)
-        painter.drawText(self.rect_hdr, self.align_hdr, self.title_text)
+        painter.drawStaticText(self.pt_hdr, self.static_title)
 
         # Range rings
         painter.setPen(self.pen_grid)
@@ -147,6 +151,9 @@ class BatcaveSpectrumVisual(SlotVisual):
         self.rect_hdr = QRectF()
         self.align_hdr: int = int(Qt.AlignmentFlag.AlignCenter)
         self.title_text: str = "16-BAND ACOUSTIC SPECTRUM // COWL"
+        self.static_title: QStaticText = QStaticText(self.title_text)
+        self.static_title.setTextFormat(Qt.TextFormat.PlainText)
+        self.pt_hdr: QPointF = QPointF()
         self.sim_values = [0.0] * 16
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
@@ -162,6 +169,8 @@ class BatcaveSpectrumVisual(SlotVisual):
         bx, by, bw, bh = rect.x() + 8.0, rect.y() + 20.0, rect.width() - 16.0, rect.height() - 28.0
         self.rect_inner = QRectF(bx, by, bw, bh)
         self.rect_hdr = QRectF(rect.x() + 8.0, rect.y() + 4.0, rect.width() - 16.0, 12.0)
+        hx = self.rect_hdr.x() + max(0.0, (self.rect_hdr.width() - self.static_title.size().width()) / 2.0)
+        self.pt_hdr = QPointF(hx, self.rect_hdr.y())
         self.bars.layout(bx + 4.0, by + 4.0, bw - 8.0, bh - 8.0, gap=3.0)
 
     def tick(self, dt: float, signals: HudSignals) -> None:
@@ -177,7 +186,7 @@ class BatcaveSpectrumVisual(SlotVisual):
         painter.drawRect(self.rect_inner)
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_bar)
-        painter.drawText(self.rect_hdr, self.align_hdr, self.title_text)
+        painter.drawStaticText(self.pt_hdr, self.static_title)
 
         painter.setBrush(self.brush_bar)
         for i in range(self.bars.count):
@@ -238,6 +247,15 @@ class BatcaveBlueprintVisual(SlotVisual):
         self.title_text: str = "BATWING MK-VIII BLUEPRINT // 3D"
         self.aero_text: str = "AERO: 99.4%"
         self.vector_text: str = "VECTOR: LOCK"
+        self.static_title: QStaticText = QStaticText(self.title_text)
+        self.static_title.setTextFormat(Qt.TextFormat.PlainText)
+        self.static_aero: QStaticText = QStaticText(self.aero_text)
+        self.static_aero.setTextFormat(Qt.TextFormat.PlainText)
+        self.static_vector: QStaticText = QStaticText(self.vector_text)
+        self.static_vector.setTextFormat(Qt.TextFormat.PlainText)
+        self.pt_hdr: QPointF = QPointF()
+        self.pt_aero: QPointF = QPointF()
+        self.pt_vector: QPointF = QPointF()
         self.cx: float = 0.0
         self.cy: float = 0.0
 
@@ -251,8 +269,13 @@ class BatcaveBlueprintVisual(SlotVisual):
         bx, by, bw, bh = rect.x() + 8.0, rect.y() + 18.0, rect.width() - 16.0, rect.height() - 24.0
         self.rect_inner = QRectF(bx, by, bw, bh)
         self.rect_hdr = QRectF(rect.x() + 8.0, rect.y() + 3.0, rect.width() - 16.0, 12.0)
+        hx = self.rect_hdr.x() + max(0.0, (self.rect_hdr.width() - self.static_title.size().width()) / 2.0)
+        self.pt_hdr = QPointF(hx, self.rect_hdr.y())
         self.rect_aero = QRectF(self.rect_inner.x() + 4.0, self.rect_inner.bottom() - 12.0, 100.0, 10.0)
+        self.pt_aero = self.rect_aero.topLeft()
         self.rect_vector = QRectF(self.rect_inner.right() - 84.0, self.rect_inner.bottom() - 12.0, 80.0, 10.0)
+        vx = self.rect_vector.right() - self.static_vector.size().width()
+        self.pt_vector = QPointF(vx, self.rect_vector.y())
         self.cx = bx + bw / 2.0
         self.cy = by + bh / 2.0
 
@@ -266,12 +289,12 @@ class BatcaveBlueprintVisual(SlotVisual):
         painter.drawRect(self.rect_inner)
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_wire)
-        painter.drawText(self.rect_hdr, self.align_center, self.title_text)
+        painter.drawStaticText(self.pt_hdr, self.static_title)
 
         # 3D Mesh
         self.model.draw(painter, self.pen_wire)
 
         # Micro telemetry
         painter.setFont(self.font_tele)
-        painter.drawText(self.rect_aero, self.align_left, self.aero_text)
-        painter.drawText(self.rect_vector, self.align_right, self.vector_text)
+        painter.drawStaticText(self.pt_aero, self.static_aero)
+        painter.drawStaticText(self.pt_vector, self.static_vector)

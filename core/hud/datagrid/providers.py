@@ -18,7 +18,7 @@ import psutil
 GIT_TIMEOUT_S: float = 2.0
 GIT_INTERVAL_S: float = 15.0
 PORTS_INTERVAL_S: float = 20.0
-PROC_INTERVAL_S: float = 5.0
+PROC_INTERVAL_S: float = 12.0
 SESSION_INTERVAL_S: float = 1.0
 PORTS_MAX_SHOWN: int = 4
 
@@ -119,8 +119,8 @@ class DataGridWorker:
                     self.snapshot.git_state = state
                     changed = True
 
-            # 4. Listening Ports / Market Ticker (every 8s)
-            if now - self._last_ports_t >= 8.0:
+            # 4. Listening Ports / Market Ticker
+            if now - self._last_ports_t >= PORTS_INTERVAL_S:
                 self._last_ports_t = now
                 mkt_str, state = self._sample_market_or_ports()
                 if mkt_str != self.snapshot.ports_text:
@@ -222,7 +222,7 @@ class DataGridWorker:
         try:
             top_proc = None
             max_mem = 0
-            for p in psutil.process_iter(["pid", "name", "memory_info", "cpu_percent"]):
+            for p in psutil.process_iter(["pid", "name", "memory_info"]):
                 try:
                     name = p.info.get("name") or "proc"
                     if name.lower() in ("system", "idle", "registry"):

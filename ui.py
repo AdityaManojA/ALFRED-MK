@@ -32,7 +32,7 @@ from PyQt6.QtCore import (
     QPropertyAnimation, QRect, QRectF, QSize, Qt, QTimer, QUrl, pyqtSignal,
 )
 from PyQt6.QtGui import (
-    QBrush, QColor, QConicalGradient, QDragEnterEvent, QDropEvent, QFont,
+    QBrush, QColor, QConicalGradient, QCursor, QDragEnterEvent, QDropEvent, QFont,
     QFontDatabase, QIcon, QKeyEvent, QKeySequence, QLinearGradient, QMouseEvent,
     QPainter, QPainterPath, QPen, QPixmap, QRadialGradient, QShortcut,
 )
@@ -938,11 +938,96 @@ def mono_font(size: int | float, weight: QFont.Weight = QFont.Weight.Normal, let
 HOVER_HELP_DELAY_MS: int = 600
 
 
+class TacticalInWindowTooltip(QFrame):
+    """
+    An in-window tooltip overlay strictly parented to the application window.
+    Never spawns an OS top-level desktop window, cannot escape to the desktop or homescreen,
+    and is transparent to mouse events so it never blocks clicks or hover transitions.
+    """
+    def __init__(self, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+        self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, True)
+        self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.setObjectName("tacticalInWindowTooltip")
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(10, 6, 10, 6)
+        layout.setSpacing(0)
+
+        self._label = QLabel("", self)
+        self._label.setWordWrap(True)
+        self._label.setFont(mono_font(8.5, QFont.Weight.Medium, letter_spacing=0.2))
+        layout.addWidget(self._label)
+
+        self.hide()
+        self._apply_style()
+
+    def _apply_style(self) -> None:
+        self.setStyleSheet(f"""
+            QFrame#tacticalInWindowTooltip {{
+                background-color: {C.PANEL_BG};
+                border: 1px solid {C.BORDER_A};
+                border-radius: 4px;
+            }}
+            QLabel {{
+                color: {C.PRI};
+                background: transparent;
+            }}
+        """)
+
+    def show_for_widget(self, target: QWidget, text: str) -> None:
+        if not target or not text:
+            self.hide()
+            return
+
+        win = target.window()
+        if not win or not win.isVisible() or win.isMinimized():
+            self.hide()
+            return
+
+        # Ensure tooltip is parented to the target's top-level window
+        if self.parent() is not win:
+            self.setParent(win)
+            self._apply_style()
+
+        self._label.setText(text.strip())
+        self.adjustSize()
+
+        # Calculate bounded geometry strictly within the application window
+        hint = self.sizeHint()
+        max_w = min(480, max(200, win.width() - 32))
+        w = min(hint.width(), max_w)
+        h = hint.height()
+
+        # Map target widget coordinates to window coordinate space
+        pt = target.mapTo(win, QPoint(0, 0))
+        target_rect = QRect(pt, target.size())
+
+        # Horizontal positioning: align with target left, clamp inside window margins
+        x = target_rect.left()
+        if x + w > win.width() - 16:
+            x = win.width() - w - 16
+        if x < 16:
+            x = 16
+
+        # Vertical positioning: prefer directly below target; if overflowing bottom, place above
+        y = target_rect.bottom() + 6
+        if y + h > win.height() - 16:
+            y = target_rect.top() - h - 6
+            if y < 16:
+                y = max(16, min(win.height() - h - 16, target_rect.bottom() + 6))
+
+        self.setGeometry(x, y, w, h)
+        self.raise_()
+        self.show()
+
+
 class TacticalHoverHelpManager(QObject):
     """
-    Centralized, single-timer hover help manager for ALFRED settings and controls.
-    Avoids per-control timers, manages delayed tooltips on sustained hover and keyboard focus,
-    and cleanly dismisses help on leave, tab change, panel close, or rapid pointer sweeps.
+    Centralized hover help manager for ALFRED settings and controls.
+    Prevents tooltips from escaping to the desktop / homescreen by rendering
+    all help as in-window child overlays clamped inside the app window boundaries.
     """
     _instance: TacticalHoverHelpManager | None = None
 
@@ -959,23 +1044,54 @@ class TacticalHoverHelpManager(QObject):
         self._timer.timeout.connect(self._on_timeout)
         self._help_map: dict[QWidget, str] = {}
         self._target_widget: QWidget | None = None
+        self._active_tooltip: TacticalInWindowTooltip | None = None
+        self._app_filtered: bool = False
+
+    def init_app_filter(self) -> None:
+        """Install global application event filter to intercept and suppress native OS desktop tooltips."""
+        if self._app_filtered:
+            return
+        app = QApplication.instance()
+        if app is not None:
+            app.installEventFilter(self)
+            self._app_filtered = True
 
     def register(self, widget: QWidget, text: str, label_widget: QWidget | None = None) -> None:
         if not widget or not text:
             return
         clean_text = text.strip()
-        widget.setToolTip(clean_text)
+        # Suppress native Qt QToolTip desktop window
+        widget.setToolTip("")
         widget.setAccessibleDescription(clean_text)
         self._help_map[widget] = clean_text
         widget.installEventFilter(self)
 
         if label_widget is not None:
-            label_widget.setToolTip(clean_text)
+            label_widget.setToolTip("")
             self._help_map[label_widget] = clean_text
             label_widget.installEventFilter(self)
 
+        self.init_app_filter()
+
+    def update_theme(self) -> None:
+        if self._active_tooltip is not None:
+            try:
+                self._active_tooltip._apply_style()
+            except RuntimeError:
+                self._active_tooltip = None
+
     def eventFilter(self, obj: QObject, event: QEvent) -> bool:
         etype = event.type()
+
+        # 1. Suppress native Qt OS desktop tooltips everywhere in the application
+        if etype == QEvent.Type.ToolTip:
+            if isinstance(obj, QWidget):
+                tip_text = self._help_map.get(obj) or obj.toolTip()
+                if tip_text:
+                    self._show_for_widget(obj, tip_text)
+            return True  # Consume event to completely block native desktop QToolTip!
+
+        # 2. Track hover / focus enter
         if etype in (QEvent.Type.Enter, QEvent.Type.FocusIn):
             if isinstance(obj, QWidget) and obj in self._help_map:
                 if self._target_widget is not obj:
@@ -983,9 +1099,31 @@ class TacticalHoverHelpManager(QObject):
                 self._target_widget = obj
                 self._timer.stop()
                 self._timer.start(HOVER_HELP_DELAY_MS)
-        elif etype in (QEvent.Type.Leave, QEvent.Type.FocusOut, QEvent.Type.Hide, QEvent.Type.MouseButtonPress):
-            if self._target_widget is obj or etype == QEvent.Type.MouseButtonPress:
+
+        # 3. Dismiss on leave, focus out, hide, click, keypress, or window state changes
+        elif etype in (
+            QEvent.Type.Leave,
+            QEvent.Type.FocusOut,
+            QEvent.Type.Hide,
+            QEvent.Type.MouseButtonPress,
+            QEvent.Type.MouseButtonRelease,
+            QEvent.Type.KeyPress,
+            QEvent.Type.WindowDeactivate,
+            QEvent.Type.ApplicationDeactivate,
+            QEvent.Type.WindowStateChange,
+            QEvent.Type.Move,
+            QEvent.Type.Resize,
+        ):
+            if self._target_widget is obj or etype in (
+                QEvent.Type.MouseButtonPress,
+                QEvent.Type.WindowDeactivate,
+                QEvent.Type.ApplicationDeactivate,
+                QEvent.Type.WindowStateChange,
+                QEvent.Type.Move,
+                QEvent.Type.Resize,
+            ):
                 self.dismiss()
+
         return False
 
     def _on_timeout(self) -> None:
@@ -995,14 +1133,57 @@ class TacticalHoverHelpManager(QObject):
             if not self._target_widget.isVisible() or self._target_widget not in self._help_map:
                 self.dismiss()
                 return
+
+            # Verify cursor is still over target widget or widget has focus
+            cursor_global = QCursor.pos()
+            target_global_rect = QRect(self._target_widget.mapToGlobal(QPoint(0, 0)), self._target_widget.size())
+            if not target_global_rect.contains(cursor_global) and not self._target_widget.hasFocus():
+                self.dismiss()
+                return
+
             text = self._help_map[self._target_widget]
-            pos = self._target_widget.mapToGlobal(QPoint(0, self._target_widget.height() + 4))
-            QToolTip.showText(pos, text, self._target_widget)
+            self._show_for_widget(self._target_widget, text)
+        except Exception:
+            self.dismiss()
+
+    def _show_for_widget(self, target: QWidget, text: str) -> None:
+        try:
+            win = target.window()
+            if not win or not win.isVisible() or win.isMinimized():
+                self.dismiss()
+                return
+
+            self._target_widget = target
+            needs_new = False
+            if self._active_tooltip is None:
+                needs_new = True
+            else:
+                try:
+                    if self._active_tooltip.parent() is not win:
+                        needs_new = True
+                except RuntimeError:
+                    self._active_tooltip = None
+                    needs_new = True
+
+            if needs_new:
+                if self._active_tooltip is not None:
+                    try:
+                        self._active_tooltip.deleteLater()
+                    except RuntimeError:
+                        pass
+                self._active_tooltip = TacticalInWindowTooltip(win)
+
+            self._active_tooltip.show_for_widget(target, text)
         except Exception:
             self.dismiss()
 
     def dismiss(self) -> None:
         self._timer.stop()
+        if self._active_tooltip is not None:
+            try:
+                self._active_tooltip.hide()
+            except RuntimeError:
+                self._active_tooltip = None
         QToolTip.hideText()
         self._target_widget = None
 
@@ -1052,6 +1233,10 @@ def apply_ui_accent(accent_hex: str) -> bool:
             if hasattr(C, k):
                 setattr(C, k, v)
         ThemeChrome.set_active(matched_theme)
+        try:
+            TacticalHoverHelpManager.instance().update_theme()
+        except Exception:
+            pass
         return True
 
     # Fallback hue shift for custom user-picked hexes from color wheel
@@ -1077,6 +1262,10 @@ def apply_ui_accent(accent_hex: str) -> bool:
         r, g, b = colorsys.hsv_to_rgb((h + dh) % 1.0, s, v)
         setattr(C, key, "#{:02x}{:02x}{:02x}".format(
             int(r * 255 + 0.5), int(g * 255 + 0.5), int(b * 255 + 0.5)))
+    try:
+        TacticalHoverHelpManager.instance().update_theme()
+    except Exception:
+        pass
     return True
 
 
@@ -1360,6 +1549,7 @@ class HudCanvas(QWidget):
     def __init__(self, face_path: str, assistant_name: str = "J.A.R.V.I.S", parent=None):
         super().__init__(parent)
         self.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent)
+        self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground)
         self.setMinimumSize(300, 300)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
@@ -1451,9 +1641,16 @@ class HudCanvas(QWidget):
         self._blend_cache: dict[tuple, QColor] = {}
         self._pen_cache: dict[tuple, QPen] = {}
         self._brush_cache: dict[int, QBrush] = {}
+        self._globe_lat_unit_cache: dict[tuple[int, int], list] = {}
+        self._globe_mer_unit_cache: dict[tuple[int, int], list] = {}
+        self._globe_orb_unit_cache: dict[int, list] = {}
+        self._emblem_alpha_cache: dict[tuple, QPixmap] = {}
         self._tmr = QTimer(self)
         self._tmr.timeout.connect(self._step)
         self._tmr.start(int(FRAME_TIME_BUDGET_MS))
+
+    def mouseMoveEvent(self, event):
+        event.ignore()
 
     def _blend(self, col: QColor, a: float, bg: QColor | None = None) -> QColor:
         k = max(0.0, min(1.0, a))
@@ -1819,7 +2016,7 @@ class HudCanvas(QWidget):
         _sleep_dur = (now - getattr(self, "_state_transition_at", now)) if _is_sleeping else 0.0
         _is_deep_sleep = (_is_sleeping and _sleep_dur > 15.0 and not active)
 
-        should_paint = (_blinked and not _is_sleeping) or (
+        should_paint = (
             (self._paint_tick % 2 == 0) if active
             else ((self._paint_tick == 0) if _is_deep_sleep
                   else ((self._paint_tick % 15 == 0) if _is_sleeping
@@ -2151,94 +2348,127 @@ class HudCanvas(QWidget):
         self._remember_static_layer(key, layer)
         p.drawPixmap(0, 0, layer)
 
+    def _get_globe_lat_units(self, n_rings: int, n_samples: int):
+        if not hasattr(self, "_globe_lat_unit_cache"):
+            self._globe_lat_unit_cache = {}
+        key = (n_rings, n_samples)
+        cached = self._globe_lat_unit_cache.get(key)
+        if cached is not None:
+            return cached
+        lat_step = 140.0 / max(1, n_rings - 1)
+        lat_angles = [-70.0 + i * lat_step for i in range(n_rings)]
+        rings_data = []
+        for deg in lat_angles:
+            is_equator = (abs(deg) < (lat_step * 0.45))
+            lat_r = math.radians(deg)
+            clat = math.cos(lat_r)
+            slat = math.sin(lat_r)
+            pts = []
+            for k in range(n_samples + 1):
+                lon_r = math.radians(k * (360.0 / n_samples))
+                clon = math.cos(lon_r)
+                slon = math.sin(lon_r)
+                pts.append((clat * slon, -slat, clat * clon))
+            rings_data.append((is_equator, pts))
+        self._globe_lat_unit_cache[key] = rings_data
+        return rings_data
+
+    def _get_globe_mer_units(self, n_meridians: int, n_samples: int):
+        if not hasattr(self, "_globe_mer_unit_cache"):
+            self._globe_mer_unit_cache = {}
+        key = (n_meridians, n_samples)
+        cached = self._globe_mer_unit_cache.get(key)
+        if cached is not None:
+            return cached
+        meridians_data = []
+        for m in range(n_meridians):
+            base_lon = math.radians(m * (360.0 / n_meridians))
+            clon = math.cos(base_lon)
+            slon = math.sin(base_lon)
+            pts = []
+            for k in range(n_samples + 1):
+                lat = math.radians(-85.0 + k * (170.0 / n_samples))
+                clat = math.cos(lat)
+                slat = math.sin(lat)
+                pts.append((clat * slon, -slat, clat * clon))
+            meridians_data.append(pts)
+        self._globe_mer_unit_cache[key] = meridians_data
+        return meridians_data
+
+    def _get_globe_orb_units(self, n_orb_pts: int):
+        if not hasattr(self, "_globe_orb_unit_cache"):
+            self._globe_orb_unit_cache = {}
+        cached = self._globe_orb_unit_cache.get(n_orb_pts)
+        if cached is not None:
+            return cached
+        pts = []
+        for k in range(n_orb_pts + 1):
+            ang = math.radians(k * (360.0 / n_orb_pts))
+            pts.append((math.cos(ang), math.sin(ang)))
+        self._globe_orb_unit_cache[n_orb_pts] = pts
+        return pts
+
     def _paint_3d_vector_globe(self, p: QPainter, cx: float, cy: float, r: float, W: float, H: float):
         """
         3D Rotating Vector Wireframe Globe (Matching Screenshot 2: WAKU CRT Globe).
-        Features:
-          - Real-time 3D coordinate projection with continuous yaw rotation and pitch tilt.
-          - 7 Latitude parallel rings (Equator dashed DashLine as in Screenshot 2).
-          - 12 Longitude meridians rotating smoothly around the sphere.
-          - Depth-based illumination (bright front side with glow, attenuated back side).
-          - Tilted Orbital Satellite Ring (35 deg tilt) with 4 numbered satellite nodes
-            ('24', '25', '34', '09') and radial connection tethers.
-          - 8 Polar radiating coordinate rays with calibration tick marks.
-          - Outer horizon boundary circle with glowing specular rim.
+        Zero-trig projection loop with precomputed unit sphere vectors and cached pens.
         """
         amp = self._amp_disp
         live = (self.speaking or amp > 0.03) and not self.muted
         main, acc = self._core_colours()
         bg = qcol(C.BG)
 
-        def blend(col: QColor, a: float) -> QColor:
-            k = max(0.0, min(1.0, a))
-            return QColor(int(bg.red()   + (col.red()   - bg.red())   * k),
-                          int(bg.green() + (col.green() - bg.green()) * k),
-                          int(bg.blue()  + (col.blue()  - bg.blue())  * k))
-
         from core.hud.visuals.central import get_central_skin
         from core.ui.themes import ThemeChrome
         skin = get_central_skin(ThemeChrome.get_active().id)
 
         t = self._core_phase
-        # _core_phase already carries state/audio acceleration from _step().
         yaw = (t * 0.30) % (math.pi * 2)
-        # Orbital tilt gently oscillates ±4° in sync with core phase for alive idle motion
-        pitch = math.radians(22.0 + 4.0 * math.sin(t * 0.18))  # Axial tilt with breathing
+        pitch = math.radians(22.0 + 4.0 * math.sin(t * 0.18))
 
         cos_p, sin_p = math.cos(pitch), math.sin(pitch)
         cos_y, sin_y = math.cos(yaw), math.sin(yaw)
 
-        def project(lat_rad: float, lon_rad: float) -> tuple[float, float, float]:
-            clat = math.cos(lat_rad)
-            slat = math.sin(lat_rad)
-            clon = math.cos(lon_rad)
-            slon = math.sin(lon_rad)
-
-            x0 = r * clat * slon
-            y0 = -r * slat
-            z0 = r * clat * clon
+        def project_unit(ux: float, uy: float, uz: float) -> tuple[float, float, float]:
+            x0 = r * ux
+            z0 = r * uz
 
             # Rotate yaw around Y
             x1 = x0 * cos_y + z0 * sin_y
-            y1 = y0
             z1 = -x0 * sin_y + z0 * cos_y
 
             # Rotate pitch around X
-            x2 = x1
-            y2 = y1 * cos_p - z1 * sin_p
-            z2 = y1 * sin_p + z1 * cos_p
+            y0 = r * uy
+            y2 = y0 * cos_p - z1 * sin_p
+            z2 = y0 * sin_p + z1 * cos_p
 
-            return (cx + x2, cy + y2, z2)
+            return (cx + x1, cy + y2, z2)
 
         p.setBrush(Qt.BrushStyle.NoBrush)
 
         # ── 1. Outer Horizon Circle ──────────────────────────────────────────
-        # Phase A: Plosive flash brightens the outer ring for one moment
         _pf = getattr(self, '_plosive_flash', 0.0)
         _halo_boost = 0.28 * amp + _pf * 0.45
-        p.setPen(QPen(blend(main, 0.38 + _halo_boost), 2.2 + _pf * 1.8))
+        p.setPen(self._get_pen(self._blend(main, 0.38 + _halo_boost), 2.2 + _pf * 1.8))
         p.drawEllipse(QRectF(cx - r, cy - r, r * 2, r * 2))
-        p.setPen(QPen(blend(main, min(1.0, 0.88 + _pf * 0.12)), 1.2))
+        p.setPen(self._get_pen(self._blend(main, min(1.0, 0.88 + _pf * 0.12)), 1.2))
         p.drawEllipse(QRectF(cx - r, cy - r, r * 2, r * 2))
 
         # ── 2. Latitude Parallel Rings ───────────────────────────────────────
         _is_sleeping = (self.state == "SLEEPING")
         n_rings = 3 if _is_sleeping else max(3, min(6, skin.ring_count))
-        lat_step = 140.0 / max(1, n_rings - 1)
-        lat_angles = [-70.0 + i * lat_step for i in range(n_rings)]
+        n_samples = 16 if _is_sleeping else 24
+        rings_data = self._get_globe_lat_units(n_rings, n_samples)
         lat_front: list[QLineF] = []
         lat_back: list[QLineF] = []
         equator_front: list[QLineF] = []
         equator_back: list[QLineF] = []
-        n_samples = 16 if _is_sleeping else 32
-        for deg in lat_angles:
-            is_equator = (abs(deg) < (lat_step * 0.45))
-            lat_r = math.radians(deg)
-            pts = [project(lat_r, math.radians(k * (360.0 / n_samples))) for k in range(n_samples + 1)]
 
+        for is_equator, unit_pts in rings_data:
+            pts = [project_unit(ux, uy, uz) for ux, uy, uz in unit_pts]
             for k in range(n_samples):
                 p1, p2 = pts[k], pts[k + 1]
-                mid_z = (p1[2] + p2[2]) / 2.0
+                mid_z = (p1[2] + p2[2]) * 0.5
                 line = QLineF(p1[0], p1[1], p2[0], p2[1])
                 if is_equator:
                     (equator_front if mid_z >= 0 else equator_back).append(line)
@@ -2246,112 +2476,114 @@ class HudCanvas(QWidget):
                     (lat_front if mid_z >= 0 else lat_back).append(line)
 
         _wire_a = 0.70 + 0.30 * amp + _pf * 0.40
-        p.setPen(QPen(blend(main, min(1.0, _wire_a)), 1.3 + _pf * 0.8))
+        p.setPen(self._get_pen(self._blend(main, min(1.0, _wire_a)), 1.3 + _pf * 0.8))
         p.drawLines(lat_front)
-        p.setPen(QPen(blend(main, 0.15), 0.9))
+        p.setPen(self._get_pen(self._blend(main, 0.15), 0.9))
         p.drawLines(lat_back)
-        p.setPen(QPen(blend(main, min(1.0, _wire_a)), 1.6 + _pf * 0.8, Qt.PenStyle.DashLine))
+        p.setPen(self._get_pen(self._blend(main, min(1.0, _wire_a)), 1.6 + _pf * 0.8, Qt.PenStyle.DashLine))
         p.drawLines(equator_front)
-        p.setPen(QPen(blend(main, 0.15), 0.9, Qt.PenStyle.DotLine))
+        p.setPen(self._get_pen(self._blend(main, 0.15), 0.9, Qt.PenStyle.DotLine))
         p.drawLines(equator_back)
 
         # ── 3. Longitude Meridians (Rotating smoothly) ───────────────────────
         n_meridians = 4 if _is_sleeping else max(4, min(8, skin.meridian_count))
+        n_mer_samples = 12 if _is_sleeping else 18
+        meridians_data = self._get_globe_mer_units(n_meridians, n_mer_samples)
         meridian_front: list[QLineF] = []
         meridian_back: list[QLineF] = []
-        n_mer_samples = 16 if _is_sleeping else 24
-        for m in range(n_meridians):
-            base_lon = math.radians(m * (360.0 / n_meridians))
-            pts = []
-            for k in range(n_mer_samples + 1):
-                lat = math.radians(-85.0 + k * (170.0 / n_mer_samples))
-                pts.append(project(lat, base_lon))
 
+        for unit_pts in meridians_data:
+            pts = [project_unit(ux, uy, uz) for ux, uy, uz in unit_pts]
             for k in range(n_mer_samples):
                 p1, p2 = pts[k], pts[k + 1]
-                mid_z = (p1[2] + p2[2]) / 2.0
+                mid_z = (p1[2] + p2[2]) * 0.5
                 line = QLineF(p1[0], p1[1], p2[0], p2[1])
                 (meridian_front if mid_z >= 0 else meridian_back).append(line)
 
-        p.setPen(QPen(blend(main, min(1.0, 0.65 + 0.30 * amp + _pf * 0.35)), 1.2 + _pf * 0.6))
+        p.setPen(self._get_pen(self._blend(main, min(1.0, 0.65 + 0.30 * amp + _pf * 0.35)), 1.2 + _pf * 0.6))
         p.drawLines(meridian_front)
-        p.setPen(QPen(blend(main, 0.12), 0.8))
+        p.setPen(self._get_pen(self._blend(main, 0.12), 0.8))
         p.drawLines(meridian_back)
 
-        # ── 4. Tilted Orbital Satellite Node Ring (Screenshot 2 Feature!) ────
+        # ── 4. Tilted Orbital Satellite Node Ring ─────────────────────────────
         orb_r = r * 1.15
         orb_tilt = math.radians(skin.orbit_tilt_deg + 5.0 * math.sin(t * 0.22))
         cos_ot, sin_ot = math.cos(orb_tilt), math.sin(orb_tilt)
 
-        def project_orbit(ang: float) -> tuple[float, float, float]:
-            ox0 = orb_r * math.cos(ang)
-            oy0 = 0.0
-            oz0 = orb_r * math.sin(ang)
+        def project_orbit_unit(c_ang: float, s_ang: float) -> tuple[float, float, float]:
+            ox0 = orb_r * c_ang
+            oz0 = orb_r * s_ang
 
             # Tilted orbit around X
             ox1 = ox0
-            oy1 = oy0 * cos_ot - oz0 * sin_ot
-            oz1 = oy0 * sin_ot + oz0 * cos_ot
+            oy1 = -oz0 * sin_ot
+            oz1 = oz0 * cos_ot
 
             # Apply sphere pitch
             ox2 = ox1
-            oy2 = oy1 * cos_p - oz1 * sin_p
-            oz2 = oy1 * sin_p + oz1 * cos_p
+            y2 = oy1 * cos_p - oz1 * sin_p
+            z2 = oy1 * sin_p + oz1 * cos_p
 
-            return (cx + ox2, cy + oy2, oz2)
+            return (cx + ox2, cy + y2, z2)
 
         # Draw orbital ring track
-        n_orb_pts = 16 if _is_sleeping else 32
-        orb_pts = [project_orbit(math.radians(k * (360.0 / n_orb_pts))) for k in range(n_orb_pts + 1)]
+        n_orb_pts = 16 if _is_sleeping else 24
+        orb_unit_pts = self._get_globe_orb_units(n_orb_pts)
+        orb_pts = [project_orbit_unit(ca, sa) for ca, sa in orb_unit_pts]
         orbit_front: list[QLineF] = []
         orbit_back: list[QLineF] = []
         for k in range(n_orb_pts):
             p1, p2 = orb_pts[k], orb_pts[k + 1]
-            mid_z = (p1[2] + p2[2]) / 2.0
+            mid_z = (p1[2] + p2[2]) * 0.5
             line = QLineF(p1[0], p1[1], p2[0], p2[1])
             (orbit_front if mid_z >= 0 else orbit_back).append(line)
-        p.setPen(QPen(blend(main, 0.45), 1.0, Qt.PenStyle.DashLine))
+        p.setPen(self._get_pen(self._blend(main, 0.45), 1.0, Qt.PenStyle.DashLine))
         p.drawLines(orbit_front)
-        p.setPen(QPen(blend(main, 0.14), 1.0, Qt.PenStyle.DashLine))
+        p.setPen(self._get_pen(self._blend(main, 0.14), 1.0, Qt.PenStyle.DashLine))
         p.drawLines(orbit_back)
 
         # Satellite numbered node markers with skin-defined tags
         sat_tags = skin.orbit_nodes or ("01", "02", "03", "04")
         sat_count = len(sat_tags)
-        sat_data = [
-            (sat_tags[i], (i / max(1, sat_count)) * (math.pi * 2.0))
-            for i in range(sat_count)
-        ]
         sat_font = mono_font(6, QFont.Weight.Bold)
         p.setFont(sat_font)
 
-        for sat_id, sat_offset in sat_data:
+        node_r = 7.5
+        node_bg_brush = self._get_brush(self._blend(bg, 0.92))
+        node_pen = self._get_pen(self._blend(acc if live else main, 0.95), 1.4)
+        node_txt_pen = self._get_pen(self._blend(qcol(C.WHITE), 0.95), 1.0)
+        tether_pen = self._get_pen(self._blend(main, 0.28), 1.0, Qt.PenStyle.DotLine)
+
+        for i in range(sat_count):
+            sat_id = sat_tags[i]
+            sat_offset = (i / max(1, sat_count)) * (math.pi * 2.0)
             node_ang = (t * 0.65 + sat_offset) % (math.pi * 2)
-            nx, ny, nz = project_orbit(node_ang)
+            nx, ny, nz = project_orbit_unit(math.cos(node_ang), math.sin(node_ang))
             if nz >= -r * 0.4:
-                p.setPen(QPen(blend(main, 0.28), 1, Qt.PenStyle.DotLine))
+                p.setPen(tether_pen)
                 p.drawLine(QLineF(nx, ny, cx, cy))
 
-                node_r = 7.5
-                p.setBrush(QBrush(blend(bg, 0.92)))
-                p.setPen(QPen(blend(acc if live else main, 0.95), 1.4))
+                p.setBrush(node_bg_brush)
+                p.setPen(node_pen)
                 p.drawEllipse(QRectF(nx - node_r, ny - node_r, node_r * 2, node_r * 2))
 
-                p.setPen(QPen(blend(qcol(C.WHITE), 0.95), 1))
+                p.setPen(node_txt_pen)
                 p.drawText(QRectF(nx - node_r, ny - node_r, node_r * 2, node_r * 2),
                            Qt.AlignmentFlag.AlignCenter, sat_id)
                 p.setBrush(Qt.BrushStyle.NoBrush)
 
-        # ── 5. Polar Radiating Coordinate Rays (Screenshot 2 Feature!) ───────
-        px_north, py_north, _ = project(math.radians(90.0), 0.0)
-        p.setPen(QPen(blend(main, 0.45), 1.0, Qt.PenStyle.DashLine))
+        # ── 5. Polar Radiating Coordinate Rays ──────────────────────────────
+        px_north, py_north, _ = project_unit(0.0, -1.0, 0.0)
+        p.setPen(self._get_pen(self._blend(main, 0.45), 1.0, Qt.PenStyle.DashLine))
         n_rays = 4 if _is_sleeping else 8
         step_deg = 360.0 / n_rays
+        ray_lines: list[QLineF] = []
         for i in range(n_rays):
             ray_ang = math.radians(i * step_deg + t * 4.0)
             rx = px_north + math.cos(ray_ang) * 26.0
             ry = py_north + math.sin(ray_ang) * 18.0
-            p.drawLine(QLineF(px_north, py_north, rx, ry))
+            ray_lines.append(QLineF(px_north, py_north, rx, ry))
+        p.drawLines(ray_lines)
 
     def _paint_globe_waveforms(self, p: QPainter, cx: float, cy: float, W: float, H: float):
         """Futuristic Oscilloscope Waveforms spanning across the globe (Screenshot 1 & 2 synthesis)."""
@@ -2363,41 +2595,27 @@ class HudCanvas(QWidget):
             acc = qcol(C.ACC)
         bg = qcol(C.BG)
 
-        def blend(col: QColor, a: float) -> QColor:
-            k = max(0.0, min(1.0, a))
-            return QColor(int(bg.red()   + (col.red()   - bg.red())   * k),
-                          int(bg.green() + (col.green() - bg.green()) * k),
-                          int(bg.blue()  + (col.blue()  - bg.blue())  * k))
-
         vw = min(W - 40, 560.0)
         vx0 = cx - vw / 2.0
         vx1 = cx + vw / 2.0
         t = self._tick * 0.08
 
         # Guideline with calibration tick marks
-        p.setPen(QPen(blend(main, 0.22), 1))
+        p.setPen(self._get_pen(self._blend(main, 0.22), 1.0))
         p.drawLine(QLineF(vx0, cy, vx1, cy))
-        ticks = []
-        for step in range(0, int(vw), 20):
-            tx = vx0 + step
-            ticks.append(QLineF(tx, cy - 3, tx, cy + 3))
-        p.setPen(QPen(blend(main, 0.35), 1))
+        ticks = [QLineF(vx0 + step, cy - 3, vx0 + step, cy + 3) for step in range(0, int(vw), 20)]
+        p.setPen(self._get_pen(self._blend(main, 0.35), 1.0))
         p.drawLines(ticks)
 
         # Telemetry Labels above the baseline
         f_tele = mono_font(7, QFont.Weight.Bold)
         p.setFont(f_tele)
-        p.setPen(QPen(blend(main, 0.70), 1))
+        p.setPen(self._get_pen(self._blend(main, 0.70), 1.0))
         p.drawText(QRectF(vx0, cy - 18, 160, 14), Qt.AlignmentFlag.AlignLeft,
                    f"FREQ // {142.8 + amp * 12.4:.1f} MHz")
         p.drawText(QRectF(vx1 - 160, cy - 18, 160, 14), Qt.AlignmentFlag.AlignRight,
                    f"LEVEL // {-28.0 + amp * 26.5:.1f} dB")
 
-        # Phase B: Viseme-driven waveform lip-sync
-        # v_open (0–1) scales waveform height — closed during plosives, fully
-        # open on wide vowels (AA=0.92). v_wide (-1..+1) modulates frequency:
-        # wide smiles (E, I, w>0) give a tighter, higher-frequency ripple;
-        # rounded vowels (O, U, w<0) give a broad, slower wave.
         _v_open  = getattr(self, '_vis_open',  0.0)
         _v_wide  = getattr(self, '_vis_wide',  0.0)
         _v_close = getattr(self, '_vis_close', 0.0)
@@ -2406,20 +2624,15 @@ class HudCanvas(QWidget):
         # Blend viseme-driven level with smoothed amp for a natural feel
         _eff_amp = 0.65 * amp + 0.35 * _v_live if _v_live > 0.0 else amp
 
-        # Height: scaled by openness, clamped to zero on plosive closure
-        _open_scale = _v_open * (1.0 - _v_close)  # 0 when lips shut, full when open
-        # Frequency: wide smile (E/I) → higher frequency; round (O/U) → lower
-        _freq_scale = 1.0 + _v_wide * 0.55  # range 0.45 – 1.55
+        _open_scale = _v_open * (1.0 - _v_close)
+        _freq_scale = 1.0 + _v_wide * 0.55
 
-        # Multi-harmonic spline points. Longer replies gradually acquire one
-        # extra harmonic without increasing point count or paint complexity.
-        n_pts = 64
+        n_pts = 40
         _speech_age = (
             max(0.0, time.time() - self._speech_started_at)
             if self.speaking and self._speech_started_at > 0.0 else 0.0
         )
         _complexity = min(1.0, _speech_age / 8.0)
-        # Idle waveform stays subtle; speech waveform reacts to openness
         _vis_active = _v_open > 0.04 or _v_close > 0.1
         if self.muted or self.state == "SLEEPING":
             h_max = 0.0
@@ -2430,30 +2643,28 @@ class HudCanvas(QWidget):
         pts_wave1 = []
         pts_wave2 = []
 
+        _f1 = 14.0 * _freq_scale
+        _f2 = 7.0  * _freq_scale
+        _f3 = 16.0 * _freq_scale
+        _f4 = 9.0  * _freq_scale
+
         for i in range(n_pts + 1):
             norm = i / float(n_pts)
             x = vx0 + norm * vw
             bell = math.sin(norm * math.pi) ** 1.35
-            # Modulate sine frequency by _freq_scale (viseme width)
-            _f1 = 14.0 * _freq_scale
-            _f2 = 7.0  * _freq_scale
             w1 = (
                 math.sin(norm * _f1 - t * 2.4) * 0.65
                 + math.cos(norm * _f2 + t * 1.5) * 0.35
                 + math.sin(norm * 27.0 + t * 3.2) * 0.16 * _complexity
             )
-            y1 = cy - bell * w1 * h_max
-            pts_wave1.append(QPointF(x, y1))
+            pts_wave1.append(QPointF(x, cy - bell * w1 * h_max))
 
-            _f3 = 16.0 * _freq_scale
-            _f4 = 9.0  * _freq_scale
             w2 = (
                 math.cos(norm * _f3 + t * 2.7) * 0.55
                 + math.sin(norm * _f4 - t * 1.8) * 0.45
                 + math.cos(norm * 24.0 - t * 2.9) * 0.13 * _complexity
             )
-            y2 = cy + bell * w2 * (h_max * 0.75)
-            pts_wave2.append(QPointF(x, y2))
+            pts_wave2.append(QPointF(x, cy + bell * w2 * (h_max * 0.75)))
 
         # Audio ribbon glow fill
         poly = QPainterPath()
@@ -2465,9 +2676,9 @@ class HudCanvas(QWidget):
         poly.closeSubpath()
 
         fill_grad = QLinearGradient(0, cy - h_max, 0, cy + h_max)
-        fill_grad.setColorAt(0.0, blend(main, min(0.38, 0.08 + amp * 0.45)))
-        fill_grad.setColorAt(0.5, blend(main, min(0.18, 0.03 + amp * 0.22)))
-        fill_grad.setColorAt(1.0, blend(acc,  min(0.32, 0.05 + amp * 0.38)))
+        fill_grad.setColorAt(0.0, self._blend(main, min(0.38, 0.08 + amp * 0.45)))
+        fill_grad.setColorAt(0.5, self._blend(main, min(0.18, 0.03 + amp * 0.22)))
+        fill_grad.setColorAt(1.0, self._blend(acc,  min(0.32, 0.05 + amp * 0.38)))
         p.setPen(Qt.PenStyle.NoPen)
         p.setBrush(QBrush(fill_grad))
         p.drawPath(poly)
@@ -2478,7 +2689,7 @@ class HudCanvas(QWidget):
         path2.moveTo(pts_wave2[0])
         for pt in pts_wave2[1:]:
             path2.lineTo(pt)
-        p.setPen(QPen(blend(acc, 0.60 + amp * 0.40), 1.3))
+        p.setPen(self._get_pen(self._blend(acc, 0.60 + amp * 0.40), 1.3))
         p.drawPath(path2)
 
         # Primary wave spline
@@ -2486,19 +2697,22 @@ class HudCanvas(QWidget):
         path1.moveTo(pts_wave1[0])
         for pt in pts_wave1[1:]:
             path1.lineTo(pt)
-        p.setPen(QPen(blend(main, 0.45), 3.4))  # bloom
-        p.drawPath(path1)
-        p.setPen(QPen(blend(qcol(C.WHITE) if live else main, 0.95), 1.6))
+        if live or amp > 0.04:
+            p.setPen(self._get_pen(self._blend(main, 0.40), 2.8))  # bloom
+            p.drawPath(path1)
+        p.setPen(self._get_pen(self._blend(qcol(C.WHITE) if live else main, 0.95), 1.5))
         p.drawPath(path1)
 
         # Photon nodes on peaks
         p.setPen(Qt.PenStyle.NoPen)
-        for k in (10, 21, 32, 43, 54):
+        node_outer_brush = self._get_brush(self._blend(main, 0.40 + 0.50 * amp))
+        node_inner_brush = self._get_brush(self._blend(qcol(C.WHITE), 0.95))
+        for k in (6, 14, 20, 26, 34):
             if k < len(pts_wave1):
                 pt = pts_wave1[k]
-                p.setBrush(QBrush(blend(qcol(C.WHITE), 0.95)))
+                p.setBrush(node_inner_brush)
                 p.drawEllipse(pt, 2.2, 2.2)
-                p.setBrush(QBrush(blend(main, 0.40 + 0.50 * amp)))
+                p.setBrush(node_outer_brush)
                 p.drawEllipse(pt, 5.0, 5.0)
         p.setBrush(Qt.BrushStyle.NoBrush)
 
@@ -2507,16 +2721,10 @@ class HudCanvas(QWidget):
         main, _ = self._core_colours()
         bg = qcol(C.BG)
 
-        def blend(col: QColor, a: float) -> QColor:
-            k = max(0.0, min(1.0, a))
-            return QColor(int(bg.red()   + (col.red()   - bg.red())   * k),
-                          int(bg.green() + (col.green() - bg.green()) * k),
-                          int(bg.blue()  + (col.blue()  - bg.blue())  * k))
-
         vw = min(W - 40, 540.0)
         vx0 = cx - vw / 2.0
         p.setFont(mono_font(6, QFont.Weight.Medium))
-        p.setPen(QPen(blend(main, 0.48), 1))
+        p.setPen(self._get_pen(self._blend(main, 0.48), 1.0))
 
         shift = (self._tick // 18) % 10
         r1 = f"49 08 89044 78 03877 00  23414 43 46291 {0x2A + shift:02X}  33418 90 10244"
@@ -2699,10 +2907,21 @@ class HudCanvas(QWidget):
                         nw = pm.width()
                         nh = pm.height()
                         if nw > 0 and nh > 0:
-                            p.save()
-                            p.setOpacity(0.35 + 0.10 * math.sin(self._tick * 0.05))
-                            p.drawPixmap(int(cx - nw / 2), int(cy - nh / 2), pm)
-                            p.restore()
+                            op = round(0.35 + 0.10 * math.sin(self._tick * 0.05), 2)
+                            if not hasattr(self, "_emblem_alpha_cache"):
+                                self._emblem_alpha_cache = {}
+                            cached_pm = self._emblem_alpha_cache.get((key, op))
+                            if cached_pm is None:
+                                cached_pm = QPixmap(nw, nh)
+                                cached_pm.fill(Qt.GlobalColor.transparent)
+                                op_p = QPainter(cached_pm)
+                                op_p.setOpacity(op)
+                                op_p.drawPixmap(0, 0, pm)
+                                op_p.end()
+                                if len(self._emblem_alpha_cache) > 24:
+                                    self._emblem_alpha_cache.clear()
+                                self._emblem_alpha_cache[(key, op)] = cached_pm
+                            p.drawPixmap(int(cx - nw / 2), int(cy - nh / 2), cached_pm)
                             return True
                 except Exception:
                     pass
@@ -2775,18 +2994,19 @@ class HudCanvas(QWidget):
                     sz = pt['size'] * _sz_boost
                     p.drawEllipse(QPointF(px, py), sz, sz)
 
-                # Micro links (skipped in SLEEPING state to conserve CPU)
+                # Micro links (batched drawLines, skipped in SLEEPING state)
                 if not _is_sleeping:
                     p.setBrush(Qt.BrushStyle.NoBrush)
+                    link_lines = []
                     for i in range(len(pts_coords)):
                         px1, py1 = pts_coords[i]
                         for j in range(i + 1, min(i + 4, len(pts_coords))):
                             px2, py2 = pts_coords[j]
-                            d2 = (px1 - px2)**2 + (py1 - py2)**2
-                            if d2 < 3600:
-                                dist = math.sqrt(d2)
-                                p.setPen(QPen(blend(main, (1.0 - dist / 60.0) * 0.15), 1))
-                                p.drawLine(QLineF(px1, py1, px2, py2))
+                            if (px1 - px2)**2 + (py1 - py2)**2 < 3600:
+                                link_lines.append(QLineF(px1, py1, px2, py2))
+                    if link_lines:
+                        p.setPen(self._get_pen(self._blend(main, 0.08), 1.0))
+                        p.drawLines(link_lines)
 
                 # 3. Always Wayne Crest background watermark emblem
                 self._draw_custom_emblem(p, cx, cy * 0.65, fw * 0.42, fw * 0.42)
@@ -3074,8 +3294,8 @@ class MetricBar(QWidget):
         self.setMinimumWidth(80)
 
     def set_value(self, pct: float, text: str):
-        v = max(0.0, min(100.0, pct))
-        if v == self._value and text == self._text:
+        v = round(max(0.0, min(100.0, pct)), 1)
+        if abs(v - self._value) < 0.2 and text == self._text:
             return          # unchanged — skip the repaint
         self._value = v
         self._text  = text
@@ -3853,13 +4073,17 @@ class LogWidget(QTextEdit):
         elif tl.startswith("file:"):                             self._tag = "file"
         elif "err" in tl:                                        self._tag = "err"
         else:                                                    self._tag = "sys"
-        self._tmr.start(6)
+        self._tmr.start(25)
 
     def _step(self):
         if self._pos < len(self._text):
-            # Dynamic chunking: drain quickly when backlog exists or line is long,
-            # reducing QTextEdit layout recalculations and paint events by 50-80%
-            chunk_size = 8 if len(self._queue) > 1 else (4 if (len(self._text) - self._pos) > 60 else 2)
+            # Dynamic chunking: batch text insertion to eliminate event-loop starvation
+            if len(self._queue) > 1:
+                chunk_size = 24
+            elif (len(self._text) - self._pos) > 80:
+                chunk_size = 12
+            else:
+                chunk_size = 6
             chunk = self._text[self._pos : self._pos + chunk_size]
             cur = self.textCursor()
             fmt = cur.charFormat()
@@ -3872,22 +4096,30 @@ class LogWidget(QTextEdit):
                 "sys":   qcol(C.TEXT_MED),
             }.get(self._tag, qcol(C.TEXT))
             fmt.setForeground(QBrush(col))
-            if self._tag == "think":
-                fmt.setFontItalic(True)
-            else:
-                fmt.setFontItalic(False)
+            fmt.setFontItalic(self._tag == "think")
+
+            cur.beginEditBlock()
             cur.movePosition(cur.MoveOperation.End)
             cur.insertText(chunk, fmt)
+            cur.endEditBlock()
             self.setTextCursor(cur)
-            self.ensureCursorVisible()
+
+            # High-performance scroll pinning: directly set scrollbar without forcing document layout rescan
+            sb = self.verticalScrollBar()
+            if sb is not None:
+                sb.setValue(sb.maximum())
             self._pos += len(chunk)
         else:
             self._tmr.stop()
             cur = self.textCursor()
+            cur.beginEditBlock()
             cur.movePosition(cur.MoveOperation.End)
             cur.insertText("\n")
+            cur.endEditBlock()
             self.setTextCursor(cur)
-            self.ensureCursorVisible()
+            sb = self.verticalScrollBar()
+            if sb is not None:
+                sb.setValue(sb.maximum())
             QTimer.singleShot(20, self._next)
 
     def clear_log(self):
@@ -7461,10 +7693,14 @@ class MainWindow(QMainWindow):
             self._bar_tmp.set_value(0, "N/A")
 
         if hasattr(self, "_uptime_lbl"):
-            self._uptime_lbl.setText(f"UP  {snap.get('uptime', '--:--')}")
+            new_uptime = f"UP  {snap.get('uptime', '--:--')}"
+            if self._uptime_lbl.text() != new_uptime:
+                self._uptime_lbl.setText(new_uptime)
 
         if hasattr(self, "_proc_lbl"):
-            self._proc_lbl.setText(f"PROC  {snap.get('proc', '--')}")
+            new_proc = f"PROC  {snap.get('proc', '--')}"
+            if self._proc_lbl.text() != new_proc:
+                self._proc_lbl.setText(new_proc)
 
 
     def _build_header(self) -> QWidget:
