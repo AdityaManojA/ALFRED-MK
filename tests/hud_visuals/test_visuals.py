@@ -90,6 +90,29 @@ class TestHudVisualsCore(unittest.TestCase):
                     self.assertFalse(visual.disabled, f"Visual {visual.describe()} tripped error boundary")
                 visual.dispose()
 
+    def test_tick_and_paint_before_prepare_safe(self):
+        """All visuals must safely tick and paint even before prepare() is called."""
+        all_themes = [
+            "dossier", "catwoman", "vector", "beyond",
+            "mr_freeze", "joker", "harvey_two_face", "arkham", "watchtower", "riddler",
+        ]
+        img = QImage(240, 140, QImage.Format.Format_ARGB32_Premultiplied)
+        p = QPainter(img)
+        rect = QRectF(0.0, 0.0, 240.0, 140.0)
+        signals = HudSignals()
+
+        try:
+            for theme_id in all_themes:
+                for slot_idx in range(3):
+                    visual = instantiate_visual(theme_id, slot_idx)
+                    # Tick and paint directly on fresh instance without prepare()
+                    visual.tick(0.016, signals)
+                    visual.paint(p, rect)
+                    self.assertFalse(visual.disabled)
+                    visual.dispose()
+        finally:
+            p.end()
+
     def test_zero_allocations_in_paint(self):
         """Verify that paint() performs zero/minimal allocations in steady state."""
         visual = instantiate_visual("dossier", 0)

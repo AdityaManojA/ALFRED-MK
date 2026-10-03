@@ -23,6 +23,7 @@ class ArkhamFloorplanVisual(SlotVisual):
         self.pen_light = QPen()
         self.font_hdr = QFont("Consolas", 7, QFont.Weight.Bold)
         self.rect_inner = QRectF()
+        self.sweep_line = QLineF()
         self.cells = [QRectF() for _ in range(6)]
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
@@ -33,7 +34,6 @@ class ArkhamFloorplanVisual(SlotVisual):
 
         bx, by, bw, bh = rect.x() + 8.0, rect.y() + 22.0, rect.width() - 16.0, rect.height() - 30.0
         self.rect_inner = QRectF(bx, by, bw, bh)
-        self.sweep_line = QLineF()
         cw, ch = bw / 3.0 - 4.0, bh / 2.0 - 4.0
         for row in range(2):
             for col in range(3):

@@ -3124,7 +3124,19 @@ class SlotHostWidget(QWidget):
             # Build signals snapshot from system metrics & audio
             from core.hud.visuals import HudSignals
             signals = HudSignals()
-            self._visual.tick(dt, signals)
+            if not self._prepared and self.width() > 1 and self.height() > 1:
+                rect = QRectF(0.0, 0.0, float(self.width()), float(self.height()))
+                from core.ui.themes import ThemeChrome
+                pal = ThemeChrome.get_active().palette
+                self._visual.prepare(pal, rect)
+                self._prepared = True
+            try:
+                self._visual.tick(dt, signals)
+            except Exception as exc:
+                self._visual.error_count += 1
+                if self._visual.error_count >= 3:
+                    self._visual.disabled = True
+                    print(f"[HUD Watchdog] Visual '{self._visual.__class__.__name__}' disabled after repeated tick errors: {exc}")
             self.update()
 
     def resizeEvent(self, event) -> None:

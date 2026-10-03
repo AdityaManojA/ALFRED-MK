@@ -3783,6 +3783,21 @@ class JarvisLive:
                     continue
 
                 err_str = str(e)
+
+                # WebSocket Close Code 1011 (Internal Error), 1008 (Policy/Concurrency Limit), or 1006 (Abnormal Closure):
+                # Occurs when:
+                # 1. Google Gemini Live's ~10-minute session duration ceiling is reached.
+                # 2. Concurrency collision: Multiple clients connecting simultaneously with the same API key.
+                # 3. Server-side transient reset on Google's live audio servers.
+                # In these cases, the previous session is terminated on Google's side, so we must
+                # discard the stale resumption handle, log a clean diagnostic, and reconnect with a fresh session.
+                if "1011" in err_str or "Internal error encountered" in err_str or "1008" in err_str or "1006" in err_str:
+                    _tlog("ALFRED", "warn", "Gemini Live session reset by Google (Code 1011 / session timeout / concurrency limit) — starting fresh session.", self._dashboard)
+                    self.ui.write_log("SYS: Gemini Live session refreshed (Code 1011) — reconnecting clean...")
+                    self._resume_handle = None
+                    self._conn_backoff = 2.0
+                    continue
+
                 _tlog("ALFRED", "error", f"Error ({type(e).__name__}): {e}", self._dashboard)
                 traceback.print_exc()
 
