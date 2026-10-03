@@ -62,7 +62,7 @@
 #### Windows
 ```powershell
 # 1. Clone repository & install dependencies
-git clone https://github.com/AdityaManojA/ALFRED-MK-VIII.git
+git clone https://github.com/AdityaManojA/ALFRED-MK-V.git
 cd ALFRED-MK-VIII
 python setup.py
 
