@@ -95,14 +95,30 @@ def main() -> None:
     if OS == "Windows":
         try:
             import win32com.client  # noqa: F401
-        except ImportError:
+        except Exception:
             postinstall = Path(sys.executable).parent / "Scripts" / "pywin32_postinstall.py"
-            print(
-                "\n⚠️  pywin32 did not register correctly — desktop-shortcut "
-                "creation will use a slower fallback. To fix it, run:\n"
-                f'    "{sys.executable}" -m pip install --force-reinstall pywin32\n'
-                f'    "{sys.executable}" "{postinstall}" -install'
-            )
+            repaired = False
+            if postinstall.exists():
+                try:
+                    subprocess.run(
+                        [sys.executable, str(postinstall), "-install"],
+                        capture_output=True,
+                        check=True,
+                    )
+                    import win32com.client  # noqa: F401
+                    repaired = True
+                    print("\n✅ Registered pywin32 COM extensions successfully.")
+                except Exception:
+                    pass
+            if not repaired:
+                print(
+                    "\nℹ️  pywin32 COM extensions not registered — ALFRED will "
+                    "use its built-in Windows PowerShell fallback for desktop-shortcut "
+                    "creation automatically (no extra setup required).\n"
+                    "    Optional: to register native COM DLLs, run in an elevated terminal:\n"
+                    f'    "{sys.executable}" -m pip install --force-reinstall pywin32\n'
+                    f'    "{sys.executable}" "{postinstall}" -install'
+                )
     elif OS == "Linux":
         print(
             "\nℹ️  Linux note — a few voice-controlled OS actions shell out to "

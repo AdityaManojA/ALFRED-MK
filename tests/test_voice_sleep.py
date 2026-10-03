@@ -125,6 +125,62 @@ class TestVoiceSleep(unittest.TestCase):
             app.ui.set_state.assert_called_with("SLEEPING")
             app._wake_detector.reset.assert_called_once()
 
+    def test_sleep_and_wake_log_deduplication(self):
+        """Verify chat notices show once on auto-silence/wake-word while processes run continuously."""
+        from main import JarvisLive
+
+        with patch.object(JarvisLive, "__init__", return_value=None):
+            app = JarvisLive(None)
+            app.set_speaking = MagicMock()
+            app.ui = MagicMock()
+            app._wake_detector = MagicMock()
+            app._dashboard = None
+            app._has_logged_sleep = False
+            app._has_logged_wake = False
+
+            # First auto-sleep logs to chat
+            app._awake = True
+            app.sleep(reason="silence for 15s")
+            self.assertFalse(app._awake)
+            app.ui.set_state.assert_called_with("SLEEPING")
+            app.ui.write_log.assert_called_once()
+            self.assertIn("Sleeping — silence for 15s", app.ui.write_log.call_args[0][0])
+
+            # Second auto-sleep: UI state and background tasks execute, but chat is NOT spammed
+            app.ui.write_log.reset_mock()
+            app.ui.set_state.reset_mock()
+            app._awake = True
+            app.sleep(reason="silence for 15s")
+            self.assertFalse(app._awake)
+            app.ui.set_state.assert_called_with("SLEEPING")
+            app.ui.write_log.assert_not_called()
+
+            # First wake word logs to chat
+            app.wake(reason="wake word")
+            self.assertTrue(app._awake)
+            app.ui.set_state.assert_called_with("LISTENING")
+            app.ui.write_log.assert_called_once()
+            self.assertIn("Awake — wake word", app.ui.write_log.call_args[0][0])
+
+            # Second wake word: sets state and un-gates mic, but chat is NOT spammed
+            app.ui.write_log.reset_mock()
+            app.ui.set_state.reset_mock()
+            app._awake = False
+            app.wake(reason="wake word")
+            self.assertTrue(app._awake)
+            app.ui.set_state.assert_called_with("LISTENING")
+            app.ui.write_log.assert_not_called()
+
+            # Manual explicit tap: logs to chat confirming user interaction
+            app.ui.write_log.reset_mock()
+            app.ui.set_state.reset_mock()
+            app._awake = True
+            app.sleep(reason="you tapped sleep")
+            self.assertFalse(app._awake)
+            app.ui.set_state.assert_called_with("SLEEPING")
+            app.ui.write_log.assert_called_once()
+            self.assertIn("you tapped sleep", app.ui.write_log.call_args[0][0])
+
 
 if __name__ == "__main__":
     unittest.main()

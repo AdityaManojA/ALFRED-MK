@@ -7363,9 +7363,12 @@ class MainWindow(QMainWindow):
     def _create_lnk_windows(lnk: str, target: str, args: str,
                              work_dir: str, icon_loc: str) -> None:
         """
-        Create a Windows .lnk shortcut WITHOUT launching PowerShell or cmd.
-        Tries win32com (pywin32) first; falls back to wscript.exe + VBScript.
-        wscript.exe is a GUI-mode host — it never opens a console window.
+        Create a Windows .lnk shortcut with zero console windows.
+        Tries 3 complementary methods in sequence:
+          1) win32com (pywin32) — in-process COM, zero subprocess
+          2) wscript.exe + VBScript — GUI host, no console window
+          3) powershell.exe COM script — built into 100% of Windows 10/11 machines,
+             zero external Python packages needed
         """
         # ── Option 1: pywin32 (pure Python COM, zero subprocess) ──────────
         try:
@@ -7375,40 +7378,76 @@ class MainWindow(QMainWindow):
             sc.TargetPath       = target
             sc.Arguments        = f'"{args}"'
             sc.WorkingDirectory = work_dir
-            sc.Description      = "J.A.R.V.I.S AI Assistant"
+            sc.Description      = "ALFRED AI Assistant"
             sc.IconLocation     = icon_loc
             sc.save()
-            return
-        except ImportError:
+            if Path(lnk).exists():
+                return
+        except Exception:
             pass
 
-        # ── Option 2: wscript.exe + VBScript (always available on Windows,
-        #    GUI-mode executable — never opens a console window) ────────────
-        vbs = "\n".join([
-            'Set ws = CreateObject("WScript.Shell")',
-            f'Set sc = ws.CreateShortcut("{lnk}")',
-            f'sc.TargetPath = "{target}"',
-            f'sc.Arguments = Chr(34) & "{args}" & Chr(34)',
-            f'sc.WorkingDirectory = "{work_dir}"',
-            'sc.Description = "J.A.R.V.I.S AI Assistant"',
-            f'sc.IconLocation = "{icon_loc}"',
-            'sc.Save',
-        ])
-        import tempfile
-        fd, tmp = tempfile.mkstemp(suffix=".vbs")
+        # ── Option 2: wscript.exe + VBScript (GUI-mode executable) ────────
         try:
-            with os.fdopen(fd, "w", encoding="utf-8") as f:
-                f.write(vbs)
-            proc = subprocess.Popen(
-                ["wscript.exe", "/nologo", tmp],
-                creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NO_WINDOW,
-            )
-            proc.wait(timeout=10)
-        finally:
+            vbs = "\n".join([
+                'Set ws = CreateObject("WScript.Shell")',
+                f'Set sc = ws.CreateShortcut("{lnk}")',
+                f'sc.TargetPath = "{target}"',
+                f'sc.Arguments = Chr(34) & "{args}" & Chr(34)',
+                f'sc.WorkingDirectory = "{work_dir}"',
+                'sc.Description = "ALFRED AI Assistant"',
+                f'sc.IconLocation = "{icon_loc}"',
+                'sc.Save',
+            ])
+            import tempfile
+            fd, tmp = tempfile.mkstemp(suffix=".vbs")
             try:
-                os.unlink(tmp)
-            except Exception:
-                pass
+                with os.fdopen(fd, "w", encoding="utf-8") as f:
+                    f.write(vbs)
+                proc = subprocess.Popen(
+                    ["wscript.exe", "/nologo", tmp],
+                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000),
+                )
+                proc.wait(timeout=5)
+            finally:
+                try:
+                    os.unlink(tmp)
+                except Exception:
+                    pass
+            if Path(lnk).exists():
+                return
+        except Exception:
+            pass
+
+        # ── Option 3: PowerShell COM (built-in Windows 10/11 native fallback) ──
+        try:
+            p_lnk = lnk.replace("'", "''")
+            p_target = target.replace("'", "''")
+            p_args = args.replace("'", "''")
+            p_work = work_dir.replace("'", "''")
+            p_icon = icon_loc.replace("'", "''")
+
+            ps_cmd = (
+                f"$ws = New-Object -ComObject WScript.Shell; "
+                f"$s = $ws.CreateShortcut('{p_lnk}'); "
+                f"$s.TargetPath = '{p_target}'; "
+                f"$s.Arguments = '\"{p_args}\"'; "
+                f"$s.WorkingDirectory = '{p_work}'; "
+                f"$s.Description = 'ALFRED AI Assistant'; "
+                f"$s.IconLocation = '{p_icon}'; "
+                f"$s.Save()"
+            )
+            subprocess.run(
+                ["powershell.exe", "-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", ps_cmd],
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000),
+                capture_output=True,
+                timeout=10,
+                check=False,
+            )
+        except Exception:
+            pass
+
+        if not Path(lnk).exists():
+            raise RuntimeError(f"Could not create Windows desktop shortcut at '{lnk}'.")
 
     @staticmethod
     def _get_desktop_dir() -> Path:
@@ -7501,8 +7540,10 @@ class MainWindow(QMainWindow):
         python  = Path(sys.executable)
         desktop = self._get_desktop_dir()
 
-        # Arc-reactor icon (.ico — also exported as .png for Linux/macOS)
-        ico_path = Path(__file__).resolve().parent / "config" / "jarvis.ico"
+        # Application icon (.ico — also exported as .png for Linux/macOS)
+        ico_path = Path(__file__).resolve().parent / "config" / "alfred.ico"
+        if not ico_path.exists():
+            ico_path = Path(__file__).resolve().parent / "config" / "jarvis.ico"
         if not ico_path.exists():
             self._build_jarvis_icon(ico_path)
 
