@@ -29,21 +29,22 @@
 7. [🛡️ Security, Privacy & Defensive Architecture](#security-privacy)
 8. [🎙️ Master Voice Command Codex](#voice-codex)
 9. [🎧 Real-Time Multimodal Intelligence](#multimodal-intelligence)
-10. [🎵 Tactical Audio Matrix & Background Score](#tactical-audio)
-11. [🎶 Spotify AI Agent](#spotify-agent)
-12. [🎬 Visual HUD v2: Embedded Multimedia & Tactical Layering](#visual-hud)
-13. [📱 Quantum Mobile Remote & Dashboard](#mobile-remote)
-14. [🖥️ Full Desktop Control & OS Automation](#desktop-automation)
-15. [🧠 Memory & Briefing Customizer](#memory-briefing)
-16. [🎨 Insignia & Chassis Hot-Swapper](#chassis-themes)
-17. [⚡ Protocol Engine & Macro Playbooks](#protocol-engine)
-18. [👁️ Local Hybrid Visual Grounding](#visual-grounding)
-19. [🔊 Audio Ducking & Background Concurrency](#audio-ducking)
-20. [🚨 Process Watchdog & Anomaly Detection](#process-watchdog)
-21. [🏗️ System Architecture](#system-architecture)
-22. [⚙️ Configuration Reference & Hotkeys](#configuration-reference)
-23. [🕸️ Knowledge Graph](#knowledge-graph)
-24. [👤 Author & Licensing](#author-licensing)
+10. [🎙️ Custom Wake-Word Neural Network & Multi-Speaker Training](#wake-training)
+11. [🎵 Tactical Audio Matrix & Background Score](#tactical-audio)
+12. [🎶 Spotify AI Agent](#spotify-agent)
+13. [🎬 Visual HUD v2: Embedded Multimedia & Tactical Layering](#visual-hud)
+14. [📱 Quantum Mobile Remote & Dashboard](#mobile-remote)
+15. [🖥️ Full Desktop Control & OS Automation](#desktop-automation)
+16. [🧠 Memory & Briefing Customizer](#memory-briefing)
+17. [🎨 Insignia & Chassis Hot-Swapper](#chassis-themes)
+18. [⚡ Protocol Engine & Macro Playbooks](#protocol-engine)
+19. [👁️ Local Hybrid Visual Grounding](#visual-grounding)
+20. [🔊 Audio Ducking & Background Concurrency](#audio-ducking)
+21. [🚨 Process Watchdog & Anomaly Detection](#process-watchdog)
+22. [🏗️ System Architecture](#system-architecture)
+23. [⚙️ Configuration Reference & Hotkeys](#configuration-reference)
+24. [🕸️ Knowledge Graph](#knowledge-graph)
+25. [👤 Author & Licensing](#author-licensing)
 
 ---
 
@@ -313,6 +314,13 @@ Many maximise model hype and under-ship the glue. MARK-VIII invests in the glue 
 * **Floating Desktop Countdown Card**: High-tech 170×48 px translucent draggable widget (`core/sentry/focus/card.py`) with cyan progress arc ring, digital `mm:ss` timer, pulsing red excursion warning border, screen-boundary clamping, and right-click tactical context menu.
 * **Spoken Report Card & Structural Privacy Ledger**: Delivers spoken completion summaries with clean streak tracking, atomically persisting strictly numeric totals to `data/focus_ledger.json`. Zero URLs, window titles, or private strings are ever stored or logged.
 
+### 🎙️ Custom Wake-Word Neural Network & Multi-Speaker Training Pipeline
+* **OpenWakeWord ONNX Fine-Tuning**: Complete offline acoustic model training pipeline allowing operators to train custom `alfred.onnx` models specialized to their voice, secondary operators (e.g., friend/family), and ambient room noise.
+* **Hybrid Google Colab & Local IDE Notebook**: Shipped [`train_alfred_colab.ipynb`](train_alfred_colab.ipynb) for cloud GPU/CPU training with automated active-kernel package management, audio augmentation, and transfer learning from baseline weights.
+* **Multi-Speaker Dataset Recorder & Packager (`tools/record_training_samples.py`)**: Interactive CLI tool for recording positive utterances per speaker, negative room noise/speech, auto-zipping datasets (`--zip`), and direct local PyTorch-to-ONNX compilation (`--train-local`).
+* **Personal Biometric Voice Verifier (`tools/train_personal_verifier.py`)**: Lightweight voice classifier generating `models/alfred_verifier.pkl` to gate wake activations strictly to authorized voices.
+* **Dual-Phrase Gating & Real-Time Acoustic HUD (`tools/test_wake_model.py`)**: Dual-phrase architecture ("Hey Alfred" >= 0.70, "Alfred" >= 0.85) with `GATE_TTS` acoustic shielding, 1500 ms refractory suppression, and live console VU meter testing.
+
 ### 🎵 Tactical Audio Core Voice Control
 Introduced dedicated `actions/audio_core.py` action tool and UI methods (`pause_audio_core`, `resume_audio_core`), allowing users to control the ambient TRON Legacy score directly (*"pause audio core"*, *"resume audio core"*, *"audio core volume to 25%"*) without conflicting with Spotify routing.
 
@@ -567,8 +575,143 @@ ALFRED treats human privacy as an **absolute structural invariant** rather than 
 
 ---
 
+<a id="wake-training"></a>
+## 🎙️ 10. Custom Wake-Word Neural Network & Multi-Speaker Training (.onnx)
+
+ALFRED MARK-VIII features an autonomous, multi-speaker **OpenWakeWord acoustic neural network pipeline** engineered for zero-latency, 100% offline keyword detection. Rather than relying on generic synthetic models or cloud speech APIs, ALFRED allows you to train and fine-tune your own production `.onnx` acoustic model directly on real-world voice samples from you, your family, or your team — fortified with negative ambient room calibration to eliminate false activations permanently.
+
+### 🛡️ Dual-Phrase Gating & Acoustic Shielding
+The detection engine (`core/audio/wakeword_tiny.py` & `core/wake_word.py`) operates with hardened real-time guarantees:
+* **Compound Phrase (`"Hey Alfred"`)**: Calibrated threshold **`>= 0.70`** for natural conversational triggers.
+* **Bare Phrase (`"Alfred"`)**: Elevated threshold **`>= 0.85`** creating a strict barrier against ambient speech and Hollywood Batman media.
+* **Acoustic Gate (`GATE_TTS`)**: Active hardware suppression during ALFRED's speech synthesis — ALFRED will **never** self-trigger on his own voice.
+* **Refractory Cooldown (`1500 ms`)**: Atomic lockout window preventing re-trigger bouncing on long syllables.
+* **Biometric Voice Verifier (`alfred_verifier.pkl`)**: Optional secondary acoustic classifier ensuring only authorized individuals (e.g., Master Wayne & verified allies) can awaken the system.
+
+```
+                                ┌──────────────────────────────────────────────┐
+                                │  Record Real Voice Audio Samples             │
+                                │  tools/record_training_samples.py            │
+                                └──────────────────────┬───────────────────────┘
+                                                       │
+                                ┌──────────────────────▼───────────────────────┐
+                                │  Package Dataset (alfred_training_data.zip)  │
+                                └──────┬────────────────────────────────┬──────┘
+                                       │                                │
+                       [Option A: Cloud / Colab]           [Option B: Local Machine]
+                                       │                                │
+               ┌───────────────────────▼──────┐         ┌───────────────▼──────────────┐
+               │ Google Colab GPU / CPU       │         │ Local PyTorch Transfer Train │
+               │ train_alfred_colab.ipynb     │         │ --train-local                │
+               └───────────────┬──────────────┘         └───────────────┬──────────────┘
+                               │                                        │
+                               └───────────────────────┬────────────────┘
+                                                       │
+                                        ┌──────────────▼─────────────┐
+                                        │ Export & Deploy            │
+                                        │ models/alfred.onnx         │
+                                        └──────────────┬─────────────┘
+                                                       │
+                                ┌──────────────────────▼───────────────────────┐
+                                │ Live VU Meter & Microphone Acoustic Test     │
+                                │ tools/test_wake_model.py                     │
+                                └──────────────────────────────────────────────┘
+```
+
+### 🎙️ Step 1: Record Voice & Negative Noise Samples
+
+Use `tools/record_training_samples.py` to record 16 kHz mono WAV samples directly from your microphone:
+
+```powershell
+# 1. Record Primary Operator voice (15-20 clips saying "Hey Alfred" or "Alfred")
+py tools/record_training_samples.py --speaker aditya --clips 15 --phrase "Hey Alfred"
+
+# 2. Record Secondary Operator / Friend voice (Multi-user authorization)
+py tools/record_training_samples.py --speaker friend --clips 15 --phrase "Hey Alfred"
+
+# 3. Record Negative Background Noise & Ambient Chatter (Typing, room silence, background TV)
+py tools/record_training_samples.py --negative --clips 15
+
+# 4. Package into alfred_training_data.zip for Colab or archival
+py tools/record_training_samples.py --zip
+```
+
+> [!TIP]
+> When recording positive clips, vary your tone slightly across attempts: normal conversational voice, quiet/whispered, enthusiastic, and from varying distances (1–3 meters from the microphone).
+
+### ☁️ Option A: Train via Google Colab (`train_alfred_colab.ipynb`)
+
+For users who prefer cloud GPU/CPU execution with zero local environment setup:
+
+1. **Launch Notebook**: Open [`train_alfred_colab.ipynb`](train_alfred_colab.ipynb) in [Google Colab](https://colab.research.google.com/).
+2. **Execute Step 1 (Environment Setup)**: Automatically configures dependencies (`openwakeword`, `onnx`, `onnxruntime`, `torch`, `torchaudio`, `audiomentations`) into Colab's active runtime.
+3. **Upload Dataset**: Run Step 2 and upload `alfred_training_data.zip`.
+4. **Augmentation & Feature Extraction**: Extracts 96-dimensional acoustic embeddings (16 frames = 1536 features) across your positive and negative clips.
+5. **Transfer Learning Training**: Initializes `AlfredWakeNet` (`1536 → 32 → 32 → 1`) from baseline `alfred.onnx` weights and trains for 25 epochs.
+6. **Download Model**: Automatically triggers the download of the newly compiled `alfred.onnx` directly to your computer.
+7. **Deploy**: Drop `alfred.onnx` into `models/alfred.onnx` (the original model is backed up automatically).
+
+### 💻 Option B: Direct 100% Local Machine Training
+
+Train the PyTorch neural network directly in your local terminal without Google Colab:
+
+```powershell
+py tools/record_training_samples.py --train-local
+```
+
+**Local Training Pipeline Highlights:**
+* **Automatic Baseline Backup**: Safely copies existing `models/alfred.onnx` to `models/alfred.onnx.original` before writing new weights.
+* **Transfer Learning Initialization**: Automatically harvests base weights from `models/alfred.onnx` for instant convergence and broad generalization.
+* **Synthetic Calibration**: Automatically synthesizes Gaussian white noise and ambient calibration clips if the negative training pool is under 30 clips.
+* **Direct ONNX Export**: Compiles PyTorch weights into ONNX Opset 14 with dynamic batching matching OpenWakeWord's exact runtime signature (`PartitionedCall:0`).
+
+### 🛡️ Step 2 (Optional): Train Personal Biometric Voice Verifier
+
+To enforce that **only your voice** (or your friend's voice) can activate ALFRED while rejecting unauthorized third parties, train the personal verifier (`models/alfred_verifier.pkl`):
+
+```powershell
+# 1. Record authorized speaker samples
+py tools/train_personal_verifier.py --record-positive --speaker aditya --clips 10
+py tools/train_personal_verifier.py --record-positive --speaker friend --clips 10
+
+# 2. Record unauthorized / ambient negative speech
+py tools/train_personal_verifier.py --record-negative --clips 10
+
+# 3. Train biometric classifier (creates models/alfred_verifier.pkl)
+py tools/train_personal_verifier.py --train
+
+# 4. Live interactive test against the verifier
+py tools/train_personal_verifier.py --test
+```
+
+### 🎧 Step 3: Live Microphone Acoustic Verification & VU Meter
+
+Validate model sensitivity and acoustic response in real time before launching ALFRED:
+
+```powershell
+py tools/test_wake_model.py
+```
+
+* **Live Dynamic VU Meter**: Visualizes live microphone RMS input levels and noise floor in the console.
+* **Dual Acoustic Score**: Displays raw OpenWakeWord confidence score in real time.
+* **Whisper Semantic Confirmation**: Integrates with Faster-Whisper to verify phonetic articulation across varied accents.
+
+### 🔍 Model Integrity & Baseline Weight Management
+
+To verify local model SHA-256 integrity or download official pre-trained weights:
+
+```powershell
+# Check model presence, SHA-256 hash, and ONNX Runtime tensor bindings
+py tools/train_wakeword.py --verify
+
+# Re-download official baseline OpenWakeWord weights
+py tools/train_wakeword.py --download --force
+```
+
+---
+
 <a id="tactical-audio"></a>
-## 🎵 10. Tactical Audio Matrix & Background Score
+## 🎵 11. Tactical Audio Matrix & Background Score
 
 ALFRED features an integrated cybernetic background audio engine coordinated between ambient tactical soundtracks and live external streaming:
 
@@ -591,7 +734,7 @@ When Spotify is paused, stopped, or closed, the tactical engine automatically re
 ---
 
 <a id="spotify-agent"></a>
-## 🎶 11. Spotify AI Agent — Dual-Tier Architecture
+## 🎶 12. Spotify AI Agent — Dual-Tier Architecture
 
 ALFRED includes an autonomous full-featured **Spotify AI Agent** (`actions/spotify_control.py`) engineered for zero-latency playback control, catalog discovery, and HUD synchronization:
 
@@ -646,7 +789,7 @@ ALFRED launches a local callback server, opens Spotify authorization, captures t
 ---
 
 <a id="visual-hud"></a>
-## 🎬 12. Visual HUD v2: Embedded Multimedia & Tactical Layering
+## 🎬 13. Visual HUD v2: Embedded Multimedia & Tactical Layering
 
 ALFRED's central HUD canvas seamlessly transforms into a hardware-accelerated multimedia surface on demand, enabling native in-app video streaming without opening third-party browser tabs or floating window clutter:
 
@@ -663,7 +806,7 @@ ALFRED's central HUD canvas seamlessly transforms into a hardware-accelerated mu
 ---
 
 <a id="mobile-remote"></a>
-## 📱 13. Quantum Mobile Remote & iPhone 16 Dashboard
+## 📱 14. Quantum Mobile Remote & iPhone 16 Dashboard
 
 <p align="center">
   <img src="Screenies/Remote_Uplink.png" alt="Quantum Mobile Remote Uplink & Pairing Modal" width="75%">
@@ -679,7 +822,7 @@ ALFRED's central HUD canvas seamlessly transforms into a hardware-accelerated mu
 ---
 
 <a id="desktop-automation"></a>
-## 🖥️ 14. Full Desktop Control & OS Automation
+## 🖥️ 15. Full Desktop Control & OS Automation
 
 * **⌨️ Deep OS Automation**: Keystrokes, mouse positioning, clicks, drags, window focus, clipboard R/W, AI-driven element location (`screen_find`).
 * **⏰ OS-Native Scheduling**: Reminders via Windows Task Scheduler (`schtasks`), macOS `launchd`, or Linux `systemd`/`at`.
@@ -689,7 +832,7 @@ ALFRED's central HUD canvas seamlessly transforms into a hardware-accelerated mu
 ---
 
 <a id="memory-briefing"></a>
-## 🧠 15. Memory & Briefing Customizer
+## 🧠 16. Memory & Briefing Customizer
 
 <p align="center">
   <img src="Screenies/Daily_breifing.png" alt="ALFRED Morning Briefing Card" width="75%">
@@ -702,7 +845,7 @@ ALFRED's central HUD canvas seamlessly transforms into a hardware-accelerated mu
 ---
 
 <a id="chassis-themes"></a>
-## 🎨 16. Insignia & Chassis Hot-Swapper
+## 🎨 17. Insignia & Chassis Hot-Swapper
 
 <p align="center">
   <img src="Screenies/Reconfigure_settings.png" alt="Tactical Reconfigure Settings Panel" width="80%">
@@ -733,7 +876,7 @@ ALFRED's central HUD canvas seamlessly transforms into a hardware-accelerated mu
 ---
 
 <a id="protocol-engine"></a>
-## ⚡ 17. Protocol Engine & Macro Playbooks
+## ⚡ 18. Protocol Engine & Macro Playbooks
 
 ALFRED features an autonomous **Protocol Engine** (`actions/protocol_engine.py`) for executing complex sequential compound workflows via custom voice triggers:
 
@@ -751,7 +894,7 @@ ALFRED features an autonomous **Protocol Engine** (`actions/protocol_engine.py`)
 ---
 
 <a id="visual-grounding"></a>
-## 👁️ 18. Local Hybrid Visual Grounding
+## 👁️ 19. Local Hybrid Visual Grounding
 
 Streaming full screenshots to cloud APIs for coordinate lookup wastes tokens and latency. ALFRED resolves this via multi-tiered local grounding (`actions/screen_find.py`):
 
@@ -767,7 +910,7 @@ Streaming full screenshots to cloud APIs for coordinate lookup wastes tokens and
 ---
 
 <a id="audio-ducking"></a>
-## 🔊 19. Audio Ducking & Background Concurrency
+## 🔊 20. Audio Ducking & Background Concurrency
 
 * **🎚️ Process-Level Ducking** (`core/audio_ducker.py`): Directly interfaces with OS audio session managers (`pycaw` on Windows, `pulsectl` on Linux). Automatically reduces Spotify, Chrome, YouTube, VLC, Edge by **70%** (factor `0.3`) when ALFRED speaks, restoring exact pre-duck volumes when speech ends or is interrupted.
 * **⚙️ Non-Blocking Worker Pool** (`main.py`): Asynchronous `background_task_queue` executing long tasks (web scraping, video processing) concurrently without blocking voice turns. Live `[control] [background XX%]` telemetry.
@@ -777,7 +920,7 @@ Streaming full screenshots to cloud APIs for coordinate lookup wastes tokens and
 ---
 
 <a id="process-watchdog"></a>
-## 🚨 20. Process Watchdog & Anomaly Detection
+## 🚨 21. Process Watchdog & Anomaly Detection
 
 ALFRED incorporates an OS security & performance watchdog daemon actively monitoring processes, flagging anomalies, inspecting sockets, and auto-throttling (`actions/system_monitor.py`):
 
@@ -802,7 +945,7 @@ ALFRED incorporates an OS security & performance watchdog daemon actively monito
 ---
 
 <a id="system-architecture"></a>
-## 🏗️ 21. System Architecture & File Structure
+## 🏗️ 22. System Architecture & File Structure
 
 ```
 ALFRED-MK-VIII/
@@ -840,6 +983,9 @@ ALFRED-MK-VIII/
 │   ├── path_guard.py           # Path validation + Heavenly Restriction
 │   ├── registry.py             # Process-wide service registry (cross-module singletons)
 │   ├── wake_word.py            # Offline openwakeword thread
+│   ├── audio/                  # Core audio & acoustic gating
+│   │   ├── gate.py             # Acoustic gating (GATE_TTS suppression)
+│   │   └── wakeword_tiny.py    # Dual-phrase detector with refractory suppression
 │   └── hud_video/              # In-HUD video surface package
 │       ├── __init__.py
 │       ├── controller.py       # State machine: IDLE→RESOLVING→LOADING→PLAYING→PAUSED
@@ -888,8 +1034,19 @@ ALFRED-MK-VIII/
 │   ├── protocols.yaml          # Compound playbooks
 │   ├── api_keys.json           # Credentials + settings
 │   └── certs/                  # Self-signed SSL
-├── models/                     # Quantized ONNX vision models
+├── models/                     # Acoustic wake word & quantized vision models
+│   ├── alfred.onnx             # Custom fine-tuned OpenWakeWord acoustic model
+│   ├── alfred.onnx.original    # Factory baseline model backup
+│   ├── alfred_verifier.pkl     # Biometric personal voice verifier (optional)
 │   └── omniparser_v2_quant.onnx
+├── tools/                      # Training, testing & diagnostic toolset
+│   ├── record_training_samples.py # Multi-speaker voice dataset recorder & packager
+│   ├── train_personal_verifier.py # Biometric personal voice verifier trainer
+│   ├── test_wake_model.py      # Real-time microphone test & acoustic VU meter
+│   ├── train_wakeword.py       # Baseline ONNX integrity verifier & downloader
+│   ├── benchmark_latency_pipeline.py # End-to-end pipeline benchmark
+│   └── profile_alfred_ui.py    # UI frame timing & rendering profiler
+├── train_alfred_colab.ipynb    # Google Colab / Local IDE neural network training notebook
 ├── plugins/
 │   ├── _template.py
 │   ├── calendar_sync.py
@@ -913,7 +1070,7 @@ ALFRED-MK-VIII/
 ---
 
 <a id="configuration-reference"></a>
-## ⚙️ 22. Configuration Reference & Hotkeys
+## ⚙️ 23. Configuration Reference & Hotkeys
 
 **`config/api_keys.json`:**
 ```json
@@ -951,7 +1108,7 @@ ALFRED-MK-VIII/
 ---
 
 <a id="knowledge-graph"></a>
-## 🕸️ 23. Knowledge Graph — Graphify
+## 🕸️ 24. Knowledge Graph — Graphify
 
 <p align="center">
   <img src="Screenies/Graphify.png" alt="Graphify Visual Knowledge Graph" width="85%">
@@ -1030,7 +1187,7 @@ yt-dlp format selector explicitly excludes AV1 (`av01`) and prefers VP9+Opus, fa
 ---
 
 <a id="author-licensing"></a>
-## 👤 24. Author & Licensing
+## 👤 25. Author & Licensing
 
 * **🎩 Lead Architect & Creator:** **ADITYA MANOJ**
 * **🦇 Project:** ALFRED-MK-VIII — Version 8 (Stable Build · Windows, Wayne Protocol Edition)

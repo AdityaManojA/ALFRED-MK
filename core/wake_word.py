@@ -13,6 +13,7 @@ Design:
 """
 from __future__ import annotations
 
+import collections
 import concurrent.futures
 import hashlib
 import queue
@@ -70,11 +71,18 @@ def _is_alfred_wake_phrase(text: str) -> bool:
         return False
     clean = re.sub(r"[^a-z0-9\s]", " ", text.lower()).strip()
     words = set(clean.split())
-    target_words = {"alfred", "alferd", "elfred"}
+    target_words = {
+        "alfred", "alferd", "elfred", "aspery", "asbury", "alford",
+        "albert", "alfredo", "allfred", "alfreds",
+    }
     if words.intersection(target_words):
         return True
     # Bigram & phonetic variants for natural connected speech
-    for phrase in ("al fred", "all fred", "el fred", "he alfred", "hey alfred", "he and fred", "hey and fred"):
+    for phrase in (
+        "al fred", "all fred", "el fred", "he alfred", "hey alfred",
+        "he and fred", "hey and fred", "all friend", "al free", "half red",
+        "ah fred", "uh fred", "as perry",
+    ):
         if phrase in clean:
             return True
     return False
@@ -366,8 +374,7 @@ class WakeWordDetector:
         if not self._running:
             return
         try:
-            import time as _t
-            ts = timestamp if timestamp is not None else _t.perf_counter()
+            ts = timestamp if timestamp is not None else time.monotonic()
             # Flatten mono array (sounddevice yields shape [N,1])
             data = (frame_int16[:, 0].copy()
                     if getattr(frame_int16, "ndim", 1) > 1
@@ -416,11 +423,11 @@ class WakeWordDetector:
             import numpy as np
             audio_float = audio_data.astype(np.float32) / 32768.0
 
-            # 1. Pre-verifier validation: reject bursts that are too short or too quiet (silence/pops)
+            # 1. Pre-verifier validation: reject bursts that are too short or true silence
             if len(audio_float) < int(16000 * 0.35):
                 return
             burst_rms = float(np.sqrt(np.mean(audio_float ** 2)) * 32768.0)
-            if burst_rms < 120.0:
+            if burst_rms < 50.0:
                 return
 
             vm = _get_whisper_verifier()
@@ -428,25 +435,22 @@ class WakeWordDetector:
                 return
             t0 = time.perf_counter()
 
-            # 2. Transcribe with Silero VAD enabled and focused prompt="Alfred"
-            # vad_filter=True and pre-verifier RMS checks completely prevent decoding silence/noise.
+            # 2. Transcribe with focused prompt, avoiding redundant nested vad_filter
             segments, _ = vm.transcribe(
                 audio_float,
                 language="en",
                 beam_size=1,
                 temperature=0.0,
-                initial_prompt="Alfred",
-                condition_on_previous_text=False,
-                vad_filter=True,
-                vad_parameters=dict(min_silence_duration_ms=200),
+                initial_prompt="Alfred. Hey Alfred.",
+                vad_filter=False,
             )
 
             # 3. Filter hallucinated or non-speech segments
             valid_texts = []
             for s in segments:
-                if getattr(s, "no_speech_prob", 0.0) > 0.6:
+                if getattr(s, "no_speech_prob", 0.0) > 0.8:
                     continue
-                if getattr(s, "compression_ratio", 1.0) > 2.2:
+                if getattr(s, "compression_ratio", 1.0) > 2.4:
                     continue
                 valid_texts.append(s.text)
             text = " ".join(valid_texts).strip()
@@ -459,7 +463,7 @@ class WakeWordDetector:
 
             verif_ms = (time.perf_counter() - t0) * 1000.0
             if _is_alfred_wake_phrase(text):
-                total_latency_ms = (time.perf_counter() - burst_start_ts) * 1000.0
+                total_latency_ms = (time.monotonic() - burst_start_ts) * 1000.0
                 self._logger(
                     f"[WakeWord] Match detected via speech verifier ('{text}') "
                     f"verify_latency={verif_ms:.1f}ms total={total_latency_ms:.1f}ms"
@@ -487,14 +491,15 @@ class WakeWordDetector:
         burst_frames: list[np.ndarray] = []
         silence_count = 0
         burst_start_ts = 0.0
-        pre_roll: list[np.ndarray] = []
+        pre_roll: collections.deque[np.ndarray] = collections.deque(maxlen=5)  # 5 frames * 80ms = 400ms pre-roll
+        accum_buf = bytearray()
 
         while self._running:
             try:
                 item = self._queue.get()
                 if item is None or not self._running:
                     break
-                frame, feed_ts = item if isinstance(item, tuple) else (item, time.perf_counter())
+                frame, feed_ts = item if isinstance(item, tuple) else (item, time.monotonic())
 
                 if self._reset_requested:
                     with self._lock:
@@ -503,84 +508,98 @@ class WakeWordDetector:
                     burst_frames.clear()
                     silence_count = 0
                     pre_roll.clear()
+                    accum_buf.clear()
+                    noise_floor = 110.0
+                    if self._model is not None and hasattr(self._model, "reset"):
+                        try:
+                            self._model.reset()
+                        except Exception:
+                            pass
 
-                arr = np.asarray(frame, dtype=np.int16)
-                if arr.size == 0:
+                raw_arr = np.asarray(frame, dtype=np.int16)
+                if raw_arr.size == 0:
                     continue
 
-                scores = self._model.predict(arr)
-                score  = _prediction_score(scores)
+                accum_buf.extend(raw_arr.tobytes())
+                frame_bytes = AUDIO_BUFFER_SIZE * 2
 
-                now = time.monotonic()
-                # Fast RMS for real-time mic health telemetry
-                rms = float(np.sqrt(np.mean(arr.astype(np.float32) ** 2)))
-                rms_window.append(rms)
-                if score > peak_score_window:
-                    peak_score_window = score
+                while len(accum_buf) >= frame_bytes:
+                    chunk = bytes(accum_buf[:frame_bytes])
+                    del accum_buf[:frame_bytes]
+                    arr = np.frombuffer(chunk, dtype=np.int16)
 
-                if (now - last_heartbeat) >= 4.0:
-                    avg_rms = sum(rms_window) / len(rms_window) if rms_window else 0.0
-                    self._logger(
-                        f"[WakeWord] listening for '{WAKE_PHRASE}' | mic_rms={avg_rms:.0f} "
-                        f"| peak_score_4s={peak_score_window:.3f} | threshold={self._threshold:.3f}"
-                    )
-                    last_heartbeat = now
-                    peak_score_window = 0.0
-                    rms_window.clear()
+                    scores = self._model.predict(arr)
+                    score  = _prediction_score(scores)
 
-                if score >= 0.02:
-                    self._logger(
-                        f"[WakeWord] candidate score={score:.3f} "
-                        f"(threshold={self._threshold:.3f})"
-                    )
+                    now = time.monotonic()
+                    # Fast RMS for real-time mic health telemetry
+                    rms = float(np.sqrt(np.mean(arr.astype(np.float32) ** 2)))
+                    rms_window.append(rms)
+                    if score > peak_score_window:
+                        peak_score_window = score
 
-                # High acoustic match -> immediate fast trigger
-                if score >= self._threshold:
-                    gate_latency_ms = (time.perf_counter() - feed_ts) * 1000.0
-                    self._logger(
-                        f"[WakeWord] Match detected (score={score:.2f}) "
-                        f"gate_latency={gate_latency_ms:.1f}ms"
-                    )
-                    self._trigger_match(source="acoustic", latency_ms=gate_latency_ms)
-                    in_burst = False
-                    burst_frames.clear()
-                    silence_count = 0
-                    continue
+                    if (now - last_heartbeat) >= 4.0:
+                        avg_rms = sum(rms_window) / len(rms_window) if rms_window else 0.0
+                        self._logger(
+                            f"[WakeWord] listening for '{WAKE_PHRASE}' | mic_rms={avg_rms:.0f} "
+                            f"| peak_score_4s={peak_score_window:.3f} | threshold={self._threshold:.3f}"
+                        )
+                        last_heartbeat = now
+                        peak_score_window = 0.0
+                        rms_window.clear()
 
-                # Hybrid Speech Verifier: buffer speech bursts
-                if not in_burst:
-                    noise_floor = 0.98 * noise_floor + 0.02 * min(rms, 250.0)
+                    if score >= 0.02:
+                        self._logger(
+                            f"[WakeWord] candidate score={score:.3f} "
+                            f"(threshold={self._threshold:.3f})"
+                        )
 
-                speech_thresh = (
-                    self._energy_threshold
-                    if self._energy_threshold > 0.0
-                    else max(160.0, noise_floor * 1.45)
-                )
-                is_speech = rms >= speech_thresh
-
-                if is_speech:
-                    if not in_burst:
-                        in_burst = True
-                        burst_start_ts = feed_ts
-                        burst_frames = list(pre_roll)
-                        silence_count = 0
-                    burst_frames.append(arr)
-                    silence_count = 0
-
-                    if len(burst_frames) > 40:  # > 3.2s
+                    # High acoustic match -> immediate fast trigger
+                    if score >= self._threshold:
+                        gate_latency_ms = (time.monotonic() - feed_ts) * 1000.0
+                        self._logger(
+                            f"[WakeWord] Match detected (score={score:.2f}) "
+                            f"gate_latency={gate_latency_ms:.1f}ms"
+                        )
+                        self._trigger_match(source="acoustic", latency_ms=gate_latency_ms)
                         in_burst = False
                         burst_frames.clear()
                         silence_count = 0
-                else:
-                    if in_burst:
-                        silence_count += 1
+                        accum_buf.clear()
+                        continue
+
+                    # Hybrid Speech Verifier: buffer speech bursts
+                    if not in_burst:
+                        noise_floor = 0.98 * noise_floor + 0.02 * min(rms, 250.0)
+
+                    speech_thresh = (
+                        self._energy_threshold
+                        if self._energy_threshold > 0.0
+                        else max(85.0, noise_floor * 1.35)
+                    )
+                    is_speech = rms >= speech_thresh
+
+                    if is_speech:
+                        if not in_burst:
+                            in_burst = True
+                            burst_start_ts = feed_ts
+                            burst_frames = list(pre_roll)
+                            silence_count = 0
                         burst_frames.append(arr)
-                        if silence_count >= 3:  # ~240ms silence pause
-                            dur_s = len(burst_frames) * 0.08
-                            if 0.35 <= dur_s <= 3.0:
-                                concat_audio = np.concatenate(burst_frames)
-                                max_frame_rms = max(float(np.sqrt(np.mean(f.astype(np.float32) ** 2))) for f in burst_frames)
-                                if max_frame_rms >= max(140.0, noise_floor * 1.3):
+                        silence_count = 0
+
+                        if len(burst_frames) > 45:  # > 3.6s
+                            in_burst = False
+                            burst_frames.clear()
+                            silence_count = 0
+                    else:
+                        if in_burst:
+                            silence_count += 1
+                            burst_frames.append(arr)
+                            if silence_count >= 5:  # ~400ms silence pause (5 * 80ms)
+                                dur_s = len(burst_frames) * 0.08
+                                if 0.35 <= dur_s <= 3.5:
+                                    concat_audio = np.concatenate(burst_frames)
                                     ex = self._verifier_executor
                                     with self._lock:
                                         in_cooldown = (time.monotonic() - self._last_trigger_time) < 1.2
@@ -588,13 +607,11 @@ class WakeWordDetector:
                                         ex.submit(
                                             self._verify_burst_async, concat_audio, burst_start_ts
                                         )
-                            in_burst = False
-                            burst_frames.clear()
-                            silence_count = 0
+                                in_burst = False
+                                burst_frames.clear()
+                                silence_count = 0
 
-                pre_roll.append(arr)
-                if len(pre_roll) > 2:
-                    pre_roll.pop(0)
+                    pre_roll.append(arr)
 
             except Exception as e:
                 self._logger(f"Wake word: inference error — {e}")

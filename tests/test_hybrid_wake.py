@@ -182,12 +182,22 @@ class HybridWakeDetectionTests(unittest.TestCase):
 
             # 3. Direct verification of silent burst must not trigger
             silence_burst = np.zeros(16000, dtype=np.int16)
-            detector._verify_burst_async(silence_burst, time.perf_counter())
+            detector._verify_burst_async(silence_burst, time.monotonic())
             time.sleep(0.2)
             self.assertEqual(len(detected), 0, "Direct silence burst triggered verifier")
 
         finally:
             detector.stop()
+
+    def test_phonetic_variants_recognized(self):
+        from core.wake_word import _is_alfred_wake_phrase
+        self.assertTrue(_is_alfred_wake_phrase("Alfred"))
+        self.assertTrue(_is_alfred_wake_phrase("Aspery"))
+        self.assertTrue(_is_alfred_wake_phrase("Alford"))
+        self.assertTrue(_is_alfred_wake_phrase("All friend"))
+        self.assertTrue(_is_alfred_wake_phrase("Hey Alfred"))
+        self.assertFalse(_is_alfred_wake_phrase("Good morning guys"))
+        self.assertFalse(_is_alfred_wake_phrase("Think about it"))
 
 
 if __name__ == "__main__":

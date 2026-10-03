@@ -1097,10 +1097,14 @@ class JarvisLive:
                 self._wake_detector.reset()
             except Exception:
                 pass
-        # Trim resident memory working set and collect garbage during sleep
+        # Trim resident memory working set and collect garbage during sleep in background
         try:
             from core.memory_trimmer import trim_process_memory
-            trim_process_memory()
+            lp = getattr(self, "_loop", None)
+            if lp is not None and lp.is_running():
+                lp.run_in_executor(None, trim_process_memory)
+            else:
+                trim_process_memory()
         except Exception:
             pass
 
@@ -2131,14 +2135,21 @@ class JarvisLive:
             elif name in ("go_to_sleep", "sleep", "sleep_mode"):
                 self.ui.write_log("SYS: Sleep requested via voice directive.")
                 async def _do_voice_sleep():
-                    await asyncio.sleep(0.4)
-                    for _ in range(50):
+                    # Phase 1: Wait up to 1.5s for TTS speech to begin playing if incoming
+                    for _ in range(15):
+                        if getattr(self, "_is_speaking", False) or (
+                            hasattr(self, "audio_in_queue") and not self.audio_in_queue.empty()
+                        ):
+                            break
+                        await asyncio.sleep(0.05)
+                    # Phase 2: If speaking, wait for playback to finish
+                    for _ in range(60):
                         if not getattr(self, "_is_speaking", False) and (
                             not hasattr(self, "audio_in_queue") or self.audio_in_queue.empty()
                         ):
                             break
-                        await asyncio.sleep(0.2)
-                    await asyncio.sleep(0.3)
+                        await asyncio.sleep(0.1)
+                    await asyncio.sleep(0.4)
                     self.sleep(reason="voice command")
                 asyncio.create_task(_do_voice_sleep())
                 result = "Going to sleep now, sir. Call me when you need me."
@@ -2547,14 +2558,21 @@ class JarvisLive:
                                 if self._awake and is_sleep_command(full_in):
                                     self.ui.write_log("SYS: Sleep directive recognized in voice input.")
                                     async def _do_stt_sleep():
-                                        await asyncio.sleep(0.4)
-                                        for _ in range(50):
+                                        # Phase 1: Wait up to 1.5s for TTS speech to begin playing if incoming
+                                        for _ in range(15):
+                                            if getattr(self, "_is_speaking", False) or (
+                                                hasattr(self, "audio_in_queue") and not self.audio_in_queue.empty()
+                                            ):
+                                                break
+                                            await asyncio.sleep(0.05)
+                                        # Phase 2: If speaking, wait for playback to finish
+                                        for _ in range(60):
                                             if not getattr(self, "_is_speaking", False) and (
                                                 not hasattr(self, "audio_in_queue") or self.audio_in_queue.empty()
                                             ):
                                                 break
-                                            await asyncio.sleep(0.2)
-                                        await asyncio.sleep(0.3)
+                                            await asyncio.sleep(0.1)
+                                        await asyncio.sleep(0.4)
                                         self.sleep(reason="voice command")
                                     asyncio.create_task(_do_stt_sleep())
                             in_buf = []
