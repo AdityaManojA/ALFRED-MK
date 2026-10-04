@@ -6820,6 +6820,7 @@ class MainWindow(QMainWindow):
     _req_set_scheduler = pyqtSignal(object)    # thread-safe marshalling of scheduler attachment
     _req_show_task_board = pyqtSignal()        # thread-safe marshalling of task board presentation
     _toast_sig      = pyqtSignal(str)          # notification / barge-in toast message
+    _set_app_icon_sig = pyqtSignal(str, bool)  # thread-safe marshalling of app icon update (resolved_path, notify)
 
     def __init__(self, face_path: str):
         super().__init__()
@@ -7049,6 +7050,7 @@ class MainWindow(QMainWindow):
         self._req_set_scheduler.connect(self._do_set_scheduler)
         self._req_show_task_board.connect(self._do_show_task_board)
         self._toast_sig.connect(self._show_toast)
+        self._set_app_icon_sig.connect(self._apply_app_icon_ui)
         self._cam_stop = threading.Event()
 
         # Camera preview overlay (child of central widget, positioned in resizeEvent)
@@ -9636,29 +9638,53 @@ class MainWindow(QMainWindow):
                 except Exception:
                     pass
 
+    def _resolve_icon_path(self, icon_path_or_name: str) -> str | None:
+        """Resolve an icon path or name/keyword into an existing filesystem path."""
+        if not icon_path_or_name:
+            return None
+        p = Path(icon_path_or_name)
+        if p.is_file() and p.exists():
+            return str(p.resolve())
+
+        avail = get_available_app_icons()
+        target_q = icon_path_or_name.lower().strip()
+        for ic in avail:
+            if (target_q in ic["name"].lower() or 
+                target_q in ic["filename"].lower() or 
+                target_q == Path(ic["path"]).stem.lower() or
+                ic["name"].lower() in target_q):
+                return ic["path"]
+        return None
+
     def set_app_icon(self, icon_path_or_name: str, notify: bool = True) -> bool:
         """
         Updates the main application window, taskbar icon, and chassis insignia in realtime.
         Accepts a full path, a filename in Icons/, or a keyword (e.g. 'beyond', 'white', 'asylum').
+        Thread-safe: can be called from worker/executor threads or GUI thread.
         """
-        resolved_path = None
-        if icon_path_or_name:
-            p = Path(icon_path_or_name)
-            if p.is_file() and p.exists():
-                resolved_path = str(p.resolve())
-            else:
-                avail = get_available_app_icons()
-                target_q = icon_path_or_name.lower().strip()
-                for ic in avail:
-                    if (target_q in ic["name"].lower() or 
-                        target_q in ic["filename"].lower() or 
-                        target_q == Path(ic["path"]).stem.lower()):
-                        resolved_path = ic["path"]
-                        break
-
+        resolved_path = self._resolve_icon_path(icon_path_or_name)
         if not resolved_path:
             return False
 
+        try:
+            from memory.config_manager import save_app_icon
+            save_app_icon(resolved_path)
+        except Exception:
+            pass
+
+        from core.thread_safety import is_gui_thread
+        if not is_gui_thread():
+            if hasattr(self, "_set_app_icon_sig"):
+                self._set_app_icon_sig.emit(resolved_path, notify)
+            else:
+                from core.thread_safety import run_on_gui_thread
+                run_on_gui_thread(self._apply_app_icon_ui, resolved_path, notify)
+            return True
+
+        return self._apply_app_icon_ui(resolved_path, notify)
+
+    def _apply_app_icon_ui(self, resolved_path: str, notify: bool = True) -> bool:
+        """Apply icon to window, taskbar, header, and system log. MUST run on GUI thread."""
         try:
             p_res = Path(resolved_path)
             ico_file = p_res.with_suffix(".ico")
@@ -9685,33 +9711,44 @@ class MainWindow(QMainWindow):
                 if app:
                     app.setWindowIcon(ico)
 
-                # Native Win32 Taskbar icon injection
+                # Native Win32 Taskbar icon injection with explicit 64-bit ctypes prototypes
                 if sys.platform == "win32":
                     try:
                         import ctypes
+                        from ctypes import wintypes
+                        user32 = ctypes.windll.user32
+                        user32.LoadImageW.argtypes = [
+                            wintypes.HINSTANCE, wintypes.LPCWSTR, wintypes.UINT,
+                            ctypes.c_int, ctypes.c_int, wintypes.UINT
+                        ]
+                        user32.LoadImageW.restype = wintypes.HANDLE
+                        user32.SendMessageW.argtypes = [
+                            wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM
+                        ]
+                        user32.SendMessageW.restype = wintypes.LPARAM
+
                         WM_SETICON = 0x0080
                         ICON_SMALL = 0
                         ICON_BIG = 1
                         LR_LOADFROMFILE = 0x0010
                         IMAGE_ICON = 1
-                        target_ico_str = str(ico_file if ico_file.exists() else resolved_path)
-                        hicon_big = ctypes.windll.user32.LoadImageW(
-                            0, target_ico_str, IMAGE_ICON, 32, 32, LR_LOADFROMFILE
-                        )
-                        hicon_small = ctypes.windll.user32.LoadImageW(
-                            0, target_ico_str, IMAGE_ICON, 16, 16, LR_LOADFROMFILE
-                        )
-                        hwnd = int(self.winId())
-                        if hicon_big:
-                            ctypes.windll.user32.SendMessageW(hwnd, WM_SETICON, ICON_BIG, hicon_big)
-                        if hicon_small:
-                            ctypes.windll.user32.SendMessageW(hwnd, WM_SETICON, ICON_SMALL, hicon_small)
+                        if ico_file.exists():
+                            target_ico_str = str(ico_file)
+                            hicon_big = user32.LoadImageW(
+                                None, target_ico_str, IMAGE_ICON, 32, 32, LR_LOADFROMFILE
+                            )
+                            hicon_small = user32.LoadImageW(
+                                None, target_ico_str, IMAGE_ICON, 16, 16, LR_LOADFROMFILE
+                            )
+                            hwnd = int(self.winId())
+                            if hicon_big:
+                                user32.SendMessageW(hwnd, WM_SETICON, ICON_BIG, hicon_big)
+                            if hicon_small:
+                                user32.SendMessageW(hwnd, WM_SETICON, ICON_SMALL, hicon_small)
                     except Exception:
                         pass
 
                 self._current_icon_path = resolved_path
-                from memory.config_manager import save_app_icon
-                save_app_icon(resolved_path)
                 display_name = format_icon_display_name(Path(resolved_path).name)
                 # Update top header app icon next to MARK-VIII
                 if hasattr(self, "_header_icon_lbl") and self._header_icon_lbl:
