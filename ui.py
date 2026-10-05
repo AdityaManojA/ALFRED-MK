@@ -2984,24 +2984,37 @@ class HudCanvas(QWidget):
                     return c
 
                 if getattr(self, "is_orb_mode", False):
-                    # ── Orb Mode: Translucent Circular Cyber Bat Globe ─────────
+                    # ── Orb Mode: Translucent Liquid Glass Cyber Bat Globe ─────
                     orb_r = min(W, H) * 0.46
-                    # 1. Translucent Cyber Radial Core Background
+                    # 1. Translucent Liquid Glass Core (Blends smoothly into background)
                     grad = QRadialGradient(cx, cy, orb_r)
-                    grad.setColorAt(0.0, QColor(4, 16, 28, 235))
-                    grad.setColorAt(0.68, QColor(2, 10, 20, 215))
-                    grad.setColorAt(0.92, QColor(0, 20, 36, 160))
+                    grad.setColorAt(0.0, QColor(8, 20, 36, 130))
+                    grad.setColorAt(0.65, QColor(4, 12, 24, 95))
+                    grad.setColorAt(0.88, QColor(2, 8, 16, 45))
                     grad.setColorAt(1.0, QColor(0, 0, 0, 0))
                     p.setBrush(QBrush(grad))
                     p.setPen(Qt.PenStyle.NoPen)
                     p.drawEllipse(QPointF(cx, cy), orb_r, orb_r)
 
-                    # 2. Glowing perimeter halo ring with Plosive boost
+                    # 1b. Siri AI Specular Liquid Glass Curved Lens Reflection
+                    spec_grad = QRadialGradient(cx - orb_r * 0.32, cy - orb_r * 0.32, orb_r * 0.58)
+                    spec_grad.setColorAt(0.0, QColor(255, 255, 255, 50))
+                    spec_grad.setColorAt(0.45, QColor(255, 255, 255, 12))
+                    spec_grad.setColorAt(1.0, QColor(255, 255, 255, 0))
+                    p.setBrush(QBrush(spec_grad))
+                    p.setPen(Qt.PenStyle.NoPen)
+                    p.drawEllipse(QPointF(cx, cy), orb_r, orb_r)
+
+                    # 2. Glowing Liquid Caustic Perimeter Halo Ring with Plosive boost
                     _pf = getattr(self, '_plosive_flash', 0.0)
                     _halo_boost = 0.35 * amp + _pf * 0.50
-                    outer_pen = self._get_pen(self._blend(main, min(1.0, 0.45 + _halo_boost)), 1.5 + _pf * 1.5)
-                    p.setPen(outer_pen)
+                    # Outer diffuse caustic glow
+                    p.setPen(self._get_pen(self._blend(main, min(1.0, 0.25 + _halo_boost * 0.5)), 3.0 + _pf * 2.0))
                     p.setBrush(Qt.BrushStyle.NoBrush)
+                    p.drawEllipse(QPointF(cx, cy), orb_r - 2, orb_r - 2)
+                    # Inner crisp liquid rim
+                    outer_pen = self._get_pen(self._blend(main, min(1.0, 0.60 + _halo_boost)), 1.2)
+                    p.setPen(outer_pen)
                     p.drawEllipse(QPointF(cx, cy), orb_r - 2, orb_r - 2)
 
                     # 3. Rotating cyber reticle tick marks around perimeter

@@ -159,13 +159,23 @@ final class OrbStateModel: ObservableObject {
 
 // MARK: - Tactical Colors
 
+// MARK: - Tactical & Apple Intelligence Spectral Colors
+
 struct BatTheme {
-    static let darkVoid     = Color(red: 0.03, green: 0.05, blue: 0.08)
-    static let stealthBezel = Color(red: 0.08, green: 0.12, blue: 0.16)
-    static let wayneCyan    = Color(red: 0.0, green: 0.88, blue: 1.0)
-    static let emeraldGlow  = Color(red: 0.0, green: 1.0, blue: 0.65)
-    static let amberAlert  = Color(red: 1.0, green: 0.72, blue: 0.1)
-    static let crimsonKill = Color(red: 1.0, green: 0.22, blue: 0.3)
+    // Batman x Wayne Tech tones
+    static let darkVoid       = Color(red: 0.03, green: 0.05, blue: 0.08)
+    static let stealthBezel   = Color(red: 0.08, green: 0.12, blue: 0.16)
+    static let wayneCyan      = Color(red: 0.0, green: 0.88, blue: 1.0)
+    static let emeraldGlow    = Color(red: 0.0, green: 1.0, blue: 0.65)
+    static let amberAlert    = Color(red: 1.0, green: 0.72, blue: 0.1)
+    static let crimsonKill   = Color(red: 1.0, green: 0.22, blue: 0.3)
+
+    // Siri AI / Apple Intelligence Liquid Glass Spectral Accents
+    static let siriViolet    = Color(red: 0.68, green: 0.32, blue: 1.0)
+    static let siriMagenta   = Color(red: 0.96, green: 0.26, blue: 0.68)
+    static let siriTeal      = Color(red: 0.08, green: 0.92, blue: 0.84)
+    static let siriCobalt    = Color(red: 0.16, green: 0.42, blue: 0.96)
+    static let liquidIce     = Color(red: 0.90, green: 0.97, blue: 1.0)
 }
 
 // MARK: - Authentic Wayne Bat Insignia
@@ -235,28 +245,28 @@ struct BatcomputerGyroView: View {
             let bezelRect = CGRect(x: center.x - maxRadius, y: center.y - maxRadius, width: maxRadius * 2, height: maxRadius * 2)
             context.stroke(
                 Circle().path(in: bezelRect),
-                with: .color(stateColor.opacity(0.35)),
-                lineWidth: 1.5
+                with: .color(stateColor.opacity(0.30)),
+                lineWidth: 1.2
             )
 
             // Compass Cardinal Ticks (0°, 90°, 180°, 270°)
             for i in 0..<4 {
                 let ang = Double(i) * Double.pi / 2.0
-                let pOuter = CGPoint(x: center.x + (maxRadius + 6) * cos(ang), y: center.y + (maxRadius + 6) * sin(ang))
-                let pInner = CGPoint(x: center.x + (maxRadius - 6) * cos(ang), y: center.y + (maxRadius - 6) * sin(ang))
+                let pOuter = CGPoint(x: center.x + (maxRadius + 5) * cos(ang), y: center.y + (maxRadius + 5) * sin(ang))
+                let pInner = CGPoint(x: center.x + (maxRadius - 5) * cos(ang), y: center.y + (maxRadius - 5) * sin(ang))
                 var mark = Path()
                 mark.move(to: pOuter)
                 mark.addLine(to: pInner)
-                context.stroke(mark, with: .color(stateColor.opacity(0.85)), lineWidth: 2.0)
+                context.stroke(mark, with: .color(stateColor.opacity(0.75)), lineWidth: 1.8)
             }
 
             // Radar Scan Line Sweep
-            let sweepAngle = rotationAngle * 1.5
+            let sweepAngle = rotationAngle * 1.4
             let sweepEnd = CGPoint(x: center.x + maxRadius * cos(sweepAngle), y: center.y + maxRadius * sin(sweepAngle))
             var sweepPath = Path()
             sweepPath.move(to: center)
             sweepPath.addLine(to: sweepEnd)
-            context.stroke(sweepPath, with: .color(stateColor.opacity(0.28)), lineWidth: 1.0)
+            context.stroke(sweepPath, with: .color(stateColor.opacity(0.24)), lineWidth: 1.0)
 
             // ── 2. Concentric Equalizer Arc Pins (Dynamic to voice) ──────
             let pinCount = 36
@@ -266,13 +276,13 @@ struct BatcomputerGyroView: View {
             for i in 0..<pinCount {
                 let a = (Double(i) / Double(pinCount)) * 2 * Double.pi
                 let waveMod = abs(sin(a * 4 + rotationAngle * 3)) * energy
-                let pinLength = 3.0 + waveMod * 16.0
+                let pinLength = 2.5 + waveMod * 15.0
                 let p1 = CGPoint(x: center.x + (eqRadius - pinLength) * cos(a), y: center.y + (eqRadius - pinLength) * sin(a))
                 let p2 = CGPoint(x: center.x + eqRadius * cos(a), y: center.y + eqRadius * sin(a))
                 var pin = Path()
                 pin.move(to: p1)
                 pin.addLine(to: p2)
-                context.stroke(pin, with: .color(stateColor.opacity(0.35 + waveMod * 0.55)), lineWidth: 1.4)
+                context.stroke(pin, with: .color(stateColor.opacity(0.30 + waveMod * 0.55)), lineWidth: 1.3)
             }
 
             // ── 3. 3D Wireframe Spherical Globe ──────────────────────────
@@ -286,8 +296,8 @@ struct BatcomputerGyroView: View {
                 let isEquator = lat == 0
                 context.stroke(
                     Ellipse().path(in: ringRect),
-                    with: .color(stateColor.opacity(isEquator ? 0.70 : 0.22)),
-                    lineWidth: isEquator ? 1.4 : 0.8
+                    with: .color(stateColor.opacity(isEquator ? 0.65 : 0.18)),
+                    lineWidth: isEquator ? 1.3 : 0.75
                 )
             }
 
@@ -299,18 +309,18 @@ struct BatcomputerGyroView: View {
                 let xFactor = cos(curAngle)
                 let width = abs(globeRadius * 2 * xFactor)
                 let mRect = CGRect(x: center.x - (width / 2), y: center.y - globeRadius, width: width, height: globeRadius * 2)
-                let alpha = 0.15 + 0.35 * abs(sin(curAngle))
+                let alpha = 0.12 + 0.32 * abs(sin(curAngle))
                 context.stroke(
                     Ellipse().path(in: mRect),
                     with: .color(stateColor.opacity(alpha)),
-                    lineWidth: 0.9
+                    lineWidth: 0.85
                 )
             }
         }
     }
 }
 
-// MARK: - Main Batcomputer Orb View
+// MARK: - Main Batcomputer Orb View (Siri AI / Apple Intelligence Liquid Glass)
 
 struct BatGlobeOrbView: View {
     @ObservedObject var model: OrbStateModel
@@ -323,99 +333,237 @@ struct BatGlobeOrbView: View {
         case "LISTENING": return BatTheme.emeraldGlow
         case "THINKING":  return BatTheme.amberAlert
         case "SPEAKING":  return BatTheme.wayneCyan
-        case "SLEEPING":  return Color.gray.opacity(0.6)
+        case "SLEEPING":  return Color.gray.opacity(0.5)
         default:          return BatTheme.wayneCyan
+        }
+    }
+
+    /// Apple Intelligence / Siri AI flowing chromatic spectrum
+    var liquidColors: [Color] {
+        if model.isMuted {
+            return [
+                BatTheme.crimsonKill,
+                Color.orange,
+                BatTheme.crimsonKill.opacity(0.85),
+                BatTheme.liquidIce,
+                BatTheme.crimsonKill
+            ]
+        }
+        switch model.agentState {
+        case "LISTENING":
+            return [
+                BatTheme.emeraldGlow,
+                BatTheme.siriTeal,
+                BatTheme.liquidIce,
+                BatTheme.emeraldGlow,
+                BatTheme.siriTeal
+            ]
+        case "THINKING":
+            return [
+                BatTheme.amberAlert,
+                BatTheme.siriMagenta,
+                BatTheme.siriViolet,
+                BatTheme.amberAlert,
+                BatTheme.liquidIce
+            ]
+        case "SPEAKING":
+            return [
+                BatTheme.siriTeal,
+                BatTheme.wayneCyan,
+                BatTheme.siriCobalt,
+                BatTheme.liquidIce,
+                BatTheme.siriTeal
+            ]
+        case "SLEEPING":
+            return [
+                Color.gray.opacity(0.4),
+                Color.blue.opacity(0.3),
+                Color.white.opacity(0.25),
+                Color.gray.opacity(0.4)
+            ]
+        default: // READY / STANDBY
+            return [
+                BatTheme.siriTeal,
+                BatTheme.wayneCyan,
+                BatTheme.siriCobalt,
+                BatTheme.siriViolet,
+                BatTheme.siriTeal
+            ]
         }
     }
 
     var body: some View {
         TimelineView(.animation) { timeline in
             let time = timeline.date.timeIntervalSinceReferenceDate
-            let angle = time * 0.55
+            let angle = time * 0.65
             let pulseEnergy = 1.0 + CGFloat(model.smoothedRMS * 0.45)
+            let orbSize: CGFloat = 202
 
             ZStack {
-                // 1. Tactical Stealth Armor Bezel (Matte Glassmorphism)
+                // ── LAYER 1: Siri AI Atmospheric Liquid Caustic Outer Bloom ─
+                // Dissolves smoothly into macOS desktop wallpaper
                 Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [
-                                BatTheme.stealthBezel.opacity(0.88),
-                                BatTheme.darkVoid.opacity(0.96),
-                                Color.black.opacity(0.98)
-                            ],
+                    .strokeBorder(
+                        AngularGradient(
+                            colors: liquidColors,
                             center: .center,
-                            startRadius: 20,
-                            endRadius: 110
-                        )
+                            angle: .radians(angle)
+                        ),
+                        lineWidth: 9.0 + CGFloat(model.smoothedRMS * 14.0)
                     )
+                    .frame(width: orbSize, height: orbSize)
+                    .blur(radius: 12.0 + CGFloat(model.smoothedRMS * 8.0))
+                    .opacity(0.55 + Double(model.smoothedRMS * 0.35))
+
+                // ── LAYER 2: UltraThin Frosted Liquid Glass Core ─────────────
+                // Live macOS backdrop blur ensures true background blending
+                Circle()
+                    .fill(.ultraThinMaterial)
+                    .frame(width: orbSize, height: orbSize)
                     .overlay(
+                        // Subtle refractive tint to preserve contrast without blocking background
                         Circle()
-                            .strokeBorder(
-                                LinearGradient(
+                            .fill(
+                                RadialGradient(
                                     colors: [
-                                        activeColor.opacity(0.85),
-                                        activeColor.opacity(0.20),
-                                        activeColor.opacity(0.70)
+                                        Color.white.opacity(0.04),
+                                        Color.black.opacity(0.16),
+                                        Color.black.opacity(0.40)
                                     ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 2.0
+                                    center: .center,
+                                    startRadius: 15,
+                                    endRadius: orbSize / 2
+                                )
                             )
                     )
-                    .shadow(color: activeColor.opacity(0.40 + Double(model.smoothedRMS) * 0.35), radius: 16, x: 0, y: 0)
 
-                // 2. Click Shockwave Ripple
+                // ── LAYER 3: 3D Spherical Specular Glass Refraction ─────────
+                // Gives the illusion of a volumetric convex liquid lens
+                Circle()
+                    .fill(
+                        EllipticalGradient(
+                            colors: [
+                                Color.white.opacity(0.24),
+                                Color.white.opacity(0.06),
+                                Color.clear
+                            ],
+                            center: .init(x: 0.32, y: 0.22),
+                            startRadiusFraction: 0.0,
+                            endRadiusFraction: 0.44
+                        )
+                    )
+                    .frame(width: orbSize, height: orbSize)
+
+                // ── LAYER 4: Chromatic Liquid Rim Ribbons ───────────────────
+                // Mid flowing caustic ribbon
+                Circle()
+                    .strokeBorder(
+                        AngularGradient(
+                            colors: liquidColors,
+                            center: .center,
+                            angle: .radians(-angle * 1.25)
+                        ),
+                        lineWidth: 2.4 + CGFloat(model.smoothedRMS * 2.5)
+                    )
+                    .frame(width: orbSize, height: orbSize)
+                    .blur(radius: 2.2)
+                    .opacity(0.85)
+
+                // Crisp iridescent hairline rim
+                Circle()
+                    .strokeBorder(
+                        AngularGradient(
+                            colors: liquidColors,
+                            center: .center,
+                            angle: .radians(angle)
+                        ),
+                        lineWidth: 1.2
+                    )
+                    .frame(width: orbSize, height: orbSize)
+                    .opacity(0.95)
+
+                // Specular Bevel Arc Highlight (top-left glass rim)
+                Circle()
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.65),
+                                Color.white.opacity(0.12),
+                                Color.clear,
+                                Color.white.opacity(0.18)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1.1
+                    )
+                    .frame(width: orbSize, height: orbSize)
+
+                // ── LAYER 5: Click Shockwave Ripple ────────────────────────
                 if model.clickPulse > 0 {
                     Circle()
-                        .stroke(activeColor.opacity(Double(1.0 - model.clickPulse)), lineWidth: 3.0)
-                        .scaleEffect(0.6 + model.clickPulse * 0.7)
+                        .stroke(activeColor.opacity(Double(1.0 - model.clickPulse)), lineWidth: 2.8)
+                        .scaleEffect(0.55 + model.clickPulse * 0.75)
+                        .frame(width: orbSize, height: orbSize)
                 }
 
-                // 3. Batcomputer 3D Multi-Ring Gyroscope & Waveforms
+                // ── LAYER 6: Batcomputer 3D Gyroscope Suspended in Glass ────
                 BatcomputerGyroView(rotationAngle: angle, rms: model.smoothedRMS, stateColor: activeColor)
-                    .frame(width: 215, height: 215)
+                    .frame(width: orbSize * 0.94, height: orbSize * 0.94)
 
-                // 4. Centerpiece Wayne Bat Insignia (Responds dynamically to voice!)
+                // ── LAYER 7: Centerpiece Wayne Bat Insignia Hologram ────────
                 ZStack {
                     // Ambient Neon Back-Glow
                     BatInsigniaShape()
-                        .fill(activeColor.opacity(0.25 + Double(model.smoothedRMS) * 0.45))
-                        .blur(radius: 8 + CGFloat(model.smoothedRMS * 12))
+                        .fill(activeColor.opacity(0.30 + Double(model.smoothedRMS) * 0.50))
+                        .blur(radius: 7 + CGFloat(model.smoothedRMS * 10))
 
-                    // Razor Inner Silhouette
+                    // Translucent Frosted Glass Bat Core with Sharp Edge
                     BatInsigniaShape()
-                        .stroke(activeColor, lineWidth: 1.6)
-                        .background(BatInsigniaShape().fill(BatTheme.darkVoid.opacity(0.85)))
+                        .stroke(activeColor.opacity(0.95), lineWidth: 1.5)
+                        .background(
+                            BatInsigniaShape()
+                                .fill(Color.black.opacity(0.32))
+                        )
                 }
-                .frame(width: 82, height: 48)
+                .frame(width: 76, height: 44)
                 .scaleEffect(pulseEnergy)
                 .animation(.spring(response: 0.25, dampingFraction: 0.65), value: pulseEnergy)
 
-                // 5. Tactical Status HUD Pill
+                // ── LAYER 8: Frosted Status HUD Pill (Siri AI Capsule) ─────
                 VStack {
                     Spacer()
                     HStack(spacing: 5) {
                         Circle()
                             .fill(activeColor)
-                            .frame(width: 5.5, height: 5.5)
+                            .frame(width: 5.0, height: 5.0)
                             .shadow(color: activeColor, radius: 4)
                         Text(model.stateText)
-                            .font(.system(size: 8.8, weight: .bold, design: .monospaced))
+                            .font(.system(size: 8.4, weight: .bold, design: .monospaced))
                             .foregroundColor(activeColor)
                     }
                     .padding(.horizontal, 9)
                     .padding(.vertical, 3.5)
                     .background(
                         Capsule()
-                            .fill(Color.black.opacity(0.85))
-                            .overlay(Capsule().stroke(activeColor.opacity(0.5), lineWidth: 0.9))
+                            .fill(.ultraThinMaterial)
+                            .overlay(
+                                Capsule()
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [activeColor.opacity(0.55), Color.white.opacity(0.20)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        lineWidth: 0.8
+                                    )
+                            )
                     )
-                    .padding(.bottom, 16)
+                    .padding(.bottom, 20)
                 }
+                .frame(width: orbSize, height: orbSize)
 
-                // 6. Tactical Quick-Action Controls (Reveals on mouse hover)
+                // ── LAYER 9: Frosted Glass Floating Action Controls ─────────
                 if model.isHovered {
                     VStack {
                         HStack {
@@ -426,10 +574,10 @@ struct BatGlobeOrbView: View {
                                 model.sendAction("toggle_mute")
                             }) {
                                 Image(systemName: model.isMuted ? "mic.slash.fill" : "mic.fill")
-                                    .font(.system(size: 9.5, weight: .bold))
+                                    .font(.system(size: 9.2, weight: .bold))
                                     .foregroundColor(model.isMuted ? .red : activeColor)
                                     .frame(width: 22, height: 22)
-                                    .background(Circle().fill(Color.black.opacity(0.75)))
+                                    .background(Circle().fill(.ultraThinMaterial))
                                     .overlay(Circle().stroke(activeColor.opacity(0.4), lineWidth: 0.8))
                             }
                             .buttonStyle(.plain)
@@ -443,10 +591,10 @@ struct BatGlobeOrbView: View {
                                 model.sendAction("expand_hud")
                             }) {
                                 Image(systemName: "arrow.up.left.and.arrow.down.right")
-                                    .font(.system(size: 9.5, weight: .bold))
+                                    .font(.system(size: 9.2, weight: .bold))
                                     .foregroundColor(activeColor)
                                     .frame(width: 22, height: 22)
-                                    .background(Circle().fill(Color.black.opacity(0.75)))
+                                    .background(Circle().fill(.ultraThinMaterial))
                                     .overlay(Circle().stroke(activeColor.opacity(0.4), lineWidth: 0.8))
                             }
                             .buttonStyle(.plain)
@@ -458,25 +606,26 @@ struct BatGlobeOrbView: View {
                                 NSApp.terminate(nil)
                             }) {
                                 Image(systemName: "xmark")
-                                    .font(.system(size: 9.5, weight: .bold))
-                                    .foregroundColor(.white.opacity(0.8))
+                                    .font(.system(size: 9.2, weight: .bold))
+                                    .foregroundColor(.white.opacity(0.85))
                                     .frame(width: 22, height: 22)
-                                    .background(Circle().fill(Color.black.opacity(0.75)))
+                                    .background(Circle().fill(.ultraThinMaterial))
                                     .overlay(Circle().stroke(Color.white.opacity(0.3), lineWidth: 0.8))
                             }
                             .buttonStyle(.plain)
                         }
-                        .padding(.horizontal, 20)
-                        .padding(.top, 16)
+                        .padding(.horizontal, 24)
+                        .padding(.top, 20)
 
                         Spacer()
                     }
+                    .frame(width: orbSize, height: orbSize)
                     .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 }
             }
             .frame(width: 230, height: 230)
             .contentShape(Circle())
-            .scaleEffect(model.isHovered ? 1.04 : 1.0)
+            .scaleEffect(model.isHovered ? 1.03 : 1.0)
             .animation(.easeOut(duration: 0.18), value: model.isHovered)
             .onHover { hovering in
                 model.isHovered = hovering
