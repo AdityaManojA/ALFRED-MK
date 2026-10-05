@@ -64,3 +64,5 @@ config/hud_overlay_pos.json
 config/bat_globe_pos.json
 config/users/
 dashboard/uploads/
+bin/
+

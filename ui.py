@@ -2984,24 +2984,37 @@ class HudCanvas(QWidget):
                     return c
 
                 if getattr(self, "is_orb_mode", False):
-                    # ── Orb Mode: Translucent Circular Cyber Bat Globe ─────────
+                    # ── Orb Mode: Translucent Liquid Glass Cyber Bat Globe ─────
                     orb_r = min(W, H) * 0.46
-                    # 1. Translucent Cyber Radial Core Background
+                    # 1. Translucent Liquid Glass Core (Blends smoothly into background)
                     grad = QRadialGradient(cx, cy, orb_r)
-                    grad.setColorAt(0.0, QColor(4, 16, 28, 235))
-                    grad.setColorAt(0.68, QColor(2, 10, 20, 215))
-                    grad.setColorAt(0.92, QColor(0, 20, 36, 160))
+                    grad.setColorAt(0.0, QColor(8, 20, 36, 130))
+                    grad.setColorAt(0.65, QColor(4, 12, 24, 95))
+                    grad.setColorAt(0.88, QColor(2, 8, 16, 45))
                     grad.setColorAt(1.0, QColor(0, 0, 0, 0))
                     p.setBrush(QBrush(grad))
                     p.setPen(Qt.PenStyle.NoPen)
                     p.drawEllipse(QPointF(cx, cy), orb_r, orb_r)
 
-                    # 2. Glowing perimeter halo ring with Plosive boost
+                    # 1b. Siri AI Specular Liquid Glass Curved Lens Reflection
+                    spec_grad = QRadialGradient(cx - orb_r * 0.32, cy - orb_r * 0.32, orb_r * 0.58)
+                    spec_grad.setColorAt(0.0, QColor(255, 255, 255, 50))
+                    spec_grad.setColorAt(0.45, QColor(255, 255, 255, 12))
+                    spec_grad.setColorAt(1.0, QColor(255, 255, 255, 0))
+                    p.setBrush(QBrush(spec_grad))
+                    p.setPen(Qt.PenStyle.NoPen)
+                    p.drawEllipse(QPointF(cx, cy), orb_r, orb_r)
+
+                    # 2. Glowing Liquid Caustic Perimeter Halo Ring with Plosive boost
                     _pf = getattr(self, '_plosive_flash', 0.0)
                     _halo_boost = 0.35 * amp + _pf * 0.50
-                    outer_pen = self._get_pen(self._blend(main, min(1.0, 0.45 + _halo_boost)), 1.5 + _pf * 1.5)
-                    p.setPen(outer_pen)
+                    # Outer diffuse caustic glow
+                    p.setPen(self._get_pen(self._blend(main, min(1.0, 0.25 + _halo_boost * 0.5)), 3.0 + _pf * 2.0))
                     p.setBrush(Qt.BrushStyle.NoBrush)
+                    p.drawEllipse(QPointF(cx, cy), orb_r - 2, orb_r - 2)
+                    # Inner crisp liquid rim
+                    outer_pen = self._get_pen(self._blend(main, min(1.0, 0.60 + _halo_boost)), 1.2)
+                    p.setPen(outer_pen)
                     p.drawEllipse(QPointF(cx, cy), orb_r - 2, orb_r - 2)
 
                     # 3. Rotating cyber reticle tick marks around perimeter
@@ -7426,6 +7439,9 @@ class MainWindow(QMainWindow):
         sc_intr.activated.connect(self._do_interrupt)
         sc_orb = QShortcut(QKeySequence("Ctrl+M"), self)
         sc_orb.activated.connect(self.show_bat_globe_orb)
+        if _OS == "Darwin":
+            sc_orb_mac = QShortcut(QKeySequence("Meta+M"), self)
+            sc_orb_mac.activated.connect(self.show_bat_globe_orb)
 
     def show_bat_globe_orb(self) -> None:
         """Switch to minimal floating interactive Bat Globe Orb (Siri / Assistant style)."""
@@ -11101,6 +11117,9 @@ class JarvisUI:
             except Exception:
                 pass
         self._app = QApplication.instance() or QApplication(sys.argv)
+        if sys.platform == "darwin":
+            self._app.setApplicationName("ALFRED")
+            self._app.setApplicationDisplayName("ALFRED Mark-V")
         self._app.setStyle("Fusion")
         self._win = MainWindow(face_path)
         self.root = _RootShim(self._app)
@@ -11272,8 +11291,31 @@ class JarvisUI:
     def request_say(self, cb):
         self._win.request_say = cb
 
-    def enable_orb_mode(self) -> None:
-        """Switch from full Tactical HUD to the floating Bat Globe Orb."""
+    def enable_orb_mode(self, native: bool = False) -> None:
+        """Switch from full Tactical HUD to the floating Bat Globe Orb.
+        If native=True on macOS, launches the native Swift/Metal companion."""
+        if native and sys.platform == "darwin":
+            self._win.hide()
+            try:
+                from core.orb_ipc import get_orb_ipc_server, launch_native_orb
+                ipc = get_orb_ipc_server()
+                def _handle_swift_action(action: str, payload: dict):
+                    if action == "expand_hud":
+                        QTimer.singleShot(0, self._win.show)
+                    elif action == "tap":
+                        if callable(self.on_wake_manual):
+                            self.on_wake_manual()
+                        elif hasattr(self._win, "_do_interrupt"):
+                            self._win._do_interrupt()
+                    elif action == "toggle_mute":
+                        QTimer.singleShot(0, self._win._toggle_mute)
+                    elif action == "close":
+                        pass
+                ipc.set_action_callback(_handle_swift_action)
+                launch_native_orb()
+                return
+            except Exception:
+                pass
         self._win.show_bat_globe_orb()
 
     def set_audio_level(self, level: float) -> None:
@@ -11286,6 +11328,17 @@ class JarvisUI:
                 self._win._bat_globe_orb.canvas.set_audio_level(level)
         except Exception:
             pass
+
+        if sys.platform == "darwin":
+            try:
+                import time as _t
+                now = _t.monotonic()
+                if now - getattr(self, "_last_ipc_audio_broadcast", 0.0) >= 0.030:
+                    self._last_ipc_audio_broadcast = now
+                    from core.orb_ipc import get_orb_ipc_server
+                    get_orb_ipc_server().broadcast({"rms": float(level)})
+            except Exception:
+                pass
 
     def glance(self, dx: float, dy: float, hold: float = 1.1) -> None:
         """No-op: gaze tracking removed (face renderer removed)."""
@@ -11333,6 +11386,13 @@ class JarvisUI:
             self._win._state_sig.emit(state)
         except (RuntimeError, AttributeError):
             pass
+
+        if sys.platform == "darwin":
+            try:
+                from core.orb_ipc import get_orb_ipc_server
+                get_orb_ipc_server().broadcast({"state": str(state)})
+            except Exception:
+                pass
 
     def write_log(self, text: str):
         try:

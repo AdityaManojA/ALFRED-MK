@@ -124,8 +124,12 @@ def get_onnx_session(model_name: str = "omniparser_v2_quant.onnx") -> Any:
     try:
         opts = ort.SessionOptions()
         opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
-        opts.intra_op_num_threads = min(4, os.cpu_count() or 4)
-        session = ort.InferenceSession(str(model_path), sess_options=opts, providers=["CPUExecutionProvider"])
+        available = ort.get_available_providers()
+        providers = []
+        if sys.platform == "darwin" and "CoreMLExecutionProvider" in available:
+            providers.append("CoreMLExecutionProvider")
+        providers.append("CPUExecutionProvider")
+        session = ort.InferenceSession(str(model_path), sess_options=opts, providers=providers)
         _GLOBAL_ONNX_SESSIONS[model_name] = session
         return session
     except Exception as e:
