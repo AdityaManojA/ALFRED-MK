@@ -33,7 +33,7 @@ from PyQt6.QtCore import (
 )
 from PyQt6.QtGui import (
     QBrush, QColor, QConicalGradient, QCursor, QDragEnterEvent, QDropEvent, QFont,
-    QFontDatabase, QIcon, QKeyEvent, QKeySequence, QLinearGradient, QMouseEvent,
+    QFontDatabase, QFontMetrics, QIcon, QKeyEvent, QKeySequence, QLinearGradient, QMouseEvent,
     QPainter, QPainterPath, QPen, QPixmap, QRadialGradient, QShortcut,
 )
 from core.sentry.mode_manager import get_sentry_mode_manager, SentrySnapshot
@@ -1546,11 +1546,16 @@ class HudCanvas(QWidget):
     _req_sentry_snapshot = pyqtSignal(object)
     _req_start_animations = pyqtSignal()
 
-    def __init__(self, face_path: str, assistant_name: str = "J.A.R.V.I.S", parent=None):
+    def __init__(self, face_path: str, assistant_name: str = "J.A.R.V.I.S", parent=None, is_orb_mode: bool = False):
         super().__init__(parent)
-        self.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent)
-        self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground)
-        self.setMinimumSize(300, 300)
+        self.is_orb_mode = is_orb_mode
+        if is_orb_mode:
+            self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+            self.setMinimumSize(160, 160)
+        else:
+            self.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent)
+            self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground)
+            self.setMinimumSize(300, 300)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         self._req_sentry_snapshot.connect(self._apply_sentry_snapshot)
@@ -1651,6 +1656,24 @@ class HudCanvas(QWidget):
 
     def mouseMoveEvent(self, event):
         event.ignore()
+
+    def mousePressEvent(self, event):
+        if getattr(self, "is_orb_mode", False):
+            event.ignore()
+            return
+        super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        if getattr(self, "is_orb_mode", False):
+            event.ignore()
+            return
+        super().mouseReleaseEvent(event)
+
+    def mouseDoubleClickEvent(self, event):
+        if getattr(self, "is_orb_mode", False):
+            event.ignore()
+            return
+        super().mouseDoubleClickEvent(event)
 
     def _blend(self, col: QColor, a: float, bg: QColor | None = None) -> QColor:
         k = max(0.0, min(1.0, a))
@@ -2940,7 +2963,6 @@ class HudCanvas(QWidget):
                 return
             try:
                 p.setRenderHint(QPainter.RenderHint.Antialiasing)
-                p.fillRect(self.rect(), qcol(C.BG))
 
                 cx, cy = W / 2, H / 2
                 fw = min(W, H)
@@ -2960,6 +2982,100 @@ class HudCanvas(QWidget):
                     if len(self._blend_cache) < 512:
                         self._blend_cache[key] = c
                     return c
+
+                if getattr(self, "is_orb_mode", False):
+                    # ── Orb Mode: Translucent Circular Cyber Bat Globe ─────────
+                    orb_r = min(W, H) * 0.46
+                    # 1. Translucent Cyber Radial Core Background
+                    grad = QRadialGradient(cx, cy, orb_r)
+                    grad.setColorAt(0.0, QColor(4, 16, 28, 235))
+                    grad.setColorAt(0.68, QColor(2, 10, 20, 215))
+                    grad.setColorAt(0.92, QColor(0, 20, 36, 160))
+                    grad.setColorAt(1.0, QColor(0, 0, 0, 0))
+                    p.setBrush(QBrush(grad))
+                    p.setPen(Qt.PenStyle.NoPen)
+                    p.drawEllipse(QPointF(cx, cy), orb_r, orb_r)
+
+                    # 2. Glowing perimeter halo ring with Plosive boost
+                    _pf = getattr(self, '_plosive_flash', 0.0)
+                    _halo_boost = 0.35 * amp + _pf * 0.50
+                    outer_pen = self._get_pen(self._blend(main, min(1.0, 0.45 + _halo_boost)), 1.5 + _pf * 1.5)
+                    p.setPen(outer_pen)
+                    p.setBrush(Qt.BrushStyle.NoBrush)
+                    p.drawEllipse(QPointF(cx, cy), orb_r - 2, orb_r - 2)
+
+                    # 3. Rotating cyber reticle tick marks around perimeter
+                    p.setPen(self._get_pen(self._blend(main, 0.22 + 0.30 * amp), 1.0))
+                    tick_count = 16
+                    rot_angle = (self._core_phase * 0.20) % (2 * math.pi)
+                    for i in range(tick_count):
+                        ang = rot_angle + i * (2 * math.pi / tick_count)
+                        r_inner = orb_r - 8
+                        r_outer = orb_r - 3
+                        p.drawLine(
+                            QPointF(cx + math.cos(ang) * r_inner, cy + math.sin(ang) * r_inner),
+                            QPointF(cx + math.cos(ang) * r_outer, cy + math.sin(ang) * r_outer)
+                        )
+
+                    # 4. Constellation Particles inside Orb
+                    _is_sleeping = (self.state == "SLEEPING")
+                    if not _is_sleeping:
+                        p.setPen(Qt.PenStyle.NoPen)
+                        for pt in self._particles[:14]:
+                            dx = (pt['x'] - 0.5) * (orb_r * 1.5)
+                            dy = (pt['y'] - 0.5) * (orb_r * 1.5)
+                            px = cx + dx
+                            py = cy + dy
+                            if (px - cx)**2 + (py - cy)**2 < (orb_r * 0.85)**2:
+                                pulse = 0.6 + 0.4 * math.sin(pt['phase'] + self._tick * 0.05)
+                                a = min(255, max(0, int(pt['alpha'] * pulse * 140)))
+                                p.setBrush(QBrush(blend(main, a / 255.0)))
+                                sz = pt['size'] * (1.2 if self.speaking else 1.0)
+                                p.drawEllipse(QPointF(px, py), sz, sz)
+
+                    # 5. Centerpiece Wayne Emblem Watermark
+                    emblem_sz = orb_r * 1.05
+                    self._draw_custom_emblem(p, cx, cy - 4, emblem_sz, emblem_sz)
+
+                    # 6. Centerpiece: 3D Vector Wireframe Globe
+                    globe_r = orb_r * 0.70
+                    self._paint_3d_vector_globe(p, cx, cy - 4, globe_r, W, H)
+
+                    # 7. Oscilloscope Waveforms across globe bottom
+                    self._paint_globe_waveforms(p, cx, cy + globe_r * 0.62, W, H)
+
+                    # 8. Status pill at base of orb
+                    st_text = self.state.upper()
+                    if self.speaking:
+                        st_text = "SPEAKING"
+                        st_col = main
+                    elif self.state in ("LISTENING", "HEARING"):
+                        st_text = "LISTENING"
+                        st_col = qcol("#ffaa00")
+                    elif self.state in ("THINKING", "PROCESSING"):
+                        st_text = "THINKING"
+                        st_col = qcol("#a070ff")
+                    elif _is_sleeping:
+                        st_text = "SLEEPING"
+                        st_col = self._blend(main, 0.45)
+                    else:
+                        st_text = f"{self._assistant_name.upper()} // READY"
+                        st_col = main
+
+                    p.setFont(mono_font(6, QFont.Weight.Bold, letter_spacing=1.0))
+                    fm = QFontMetrics(mono_font(6, QFont.Weight.Bold))
+                    tw = fm.horizontalAdvance(st_text)
+                    pill_w = max(56.0, float(tw + 10))
+                    pill_h = 13.0
+                    pill_rect = QRectF(cx - pill_w / 2, cy + orb_r - 20, pill_w, pill_h)
+                    p.setBrush(QBrush(QColor(4, 16, 28, 200)))
+                    p.setPen(self._get_pen(self._blend(st_col, 0.50), 1.0))
+                    p.drawRoundedRect(pill_rect, 3, 3)
+                    p.setPen(st_col)
+                    p.drawText(pill_rect, Qt.AlignmentFlag.AlignCenter, st_text)
+                    return
+
+                p.fillRect(self.rect(), qcol(C.BG))
 
                 # 1. Subtle CRT coordinate background grid with crosshairs (Screenshot 2)
                 self._paint_crt_grid(p, W, H)
@@ -4461,6 +4577,239 @@ class MinimizedHudOverlay(QWidget):
         bounds = screen.availableGeometry()
         if position is None:
             position = QPoint(bounds.right() - self.width() - 24, bounds.bottom() - self.height() - 24)
+        x = max(bounds.left(), min(position.x(), bounds.right() - self.width() + 1))
+        y = max(bounds.top(), min(position.y(), bounds.bottom() - self.height() + 1))
+        self.move(x, y)
+
+
+class BatGlobeOrb(QWidget):
+    """
+    Minimal interactive floating Bat Globe Orb widget (like Siri AI or Google Assistant).
+    Features a frameless, translucent circular window showing the live 3D vector
+    wireframe Bat Globe with full speech and audio reactivity.
+    """
+    _POSITION_FILE = "bat_globe_pos.json"
+
+    def __init__(self, main_window, assistant_name: str = "ALFRED"):
+        super().__init__(None)
+        self._main_window = main_window
+        self._assistant_name = assistant_name
+        self._press_pos: QPoint | None = None
+        self._press_t: float = 0.0
+        self._is_dragging: bool = False
+        self._last_drag_pos: QPoint | None = None
+
+        self.setWindowFlags(
+            Qt.WindowType.Window
+            | Qt.WindowType.FramelessWindowHint
+            | Qt.WindowType.WindowStaysOnTopHint
+        )
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, False)
+        self.setFixedSize(240, 240)
+        self.setWindowTitle("ALFRED // BAT GLOBE ORB")
+        self.setObjectName("batGlobeOrb")
+
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(0)
+
+        # Embedded HudCanvas operating in standalone orb mode
+        self.canvas = HudCanvas(main_window._face_path, assistant_name, parent=self, is_orb_mode=True)
+        lay.addWidget(self.canvas)
+
+        # Floating Mini Control Bar (visible on hover)
+        self._controls_overlay = QWidget(self)
+        self._controls_overlay.setGeometry(0, 0, 240, 36)
+        self._controls_overlay.setStyleSheet("background: transparent;")
+        c_lay = QHBoxLayout(self._controls_overlay)
+        c_lay.setContentsMargins(18, 8, 18, 0)
+        c_lay.setSpacing(6)
+
+        # Close/Hide button
+        self._close_btn = QPushButton("✕", self._controls_overlay)
+        self._close_btn.setFixedSize(20, 20)
+        self._close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._close_btn.setToolTip("Hide Bat Globe Orb")
+        self._close_btn.setStyleSheet("""
+            QPushButton {
+                background: rgba(3, 14, 26, 0.85);
+                color: #8899aa;
+                border: 1px solid rgba(0, 240, 255, 0.25);
+                border-radius: 10px;
+                font-size: 10px;
+                font-weight: bold;
+                padding: 0;
+            }
+            QPushButton:hover {
+                background: rgba(255, 60, 80, 0.75);
+                color: #ffffff;
+                border: 1px solid #ff3c50;
+            }
+        """)
+        self._close_btn.clicked.connect(self.hide)
+        c_lay.addWidget(self._close_btn)
+
+        c_lay.addStretch()
+
+        # Expand to full HUD button
+        self._expand_btn = QPushButton("⤢", self._controls_overlay)
+        self._expand_btn.setFixedSize(20, 20)
+        self._expand_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._expand_btn.setToolTip("Expand to Full Tactical HUD (Double-click orb)")
+        self._expand_btn.setStyleSheet("""
+            QPushButton {
+                background: rgba(3, 14, 26, 0.85);
+                color: #00f0ff;
+                border: 1px solid rgba(0, 240, 255, 0.25);
+                border-radius: 10px;
+                font-size: 11px;
+                font-weight: bold;
+                padding: 0;
+            }
+            QPushButton:hover {
+                background: rgba(0, 240, 255, 0.55);
+                color: #ffffff;
+                border: 1px solid #00f0ff;
+            }
+        """)
+        self._expand_btn.clicked.connect(self.restore_full_hud)
+        c_lay.addWidget(self._expand_btn)
+
+        self._controls_overlay.hide()
+        self._load_position()
+
+    def enterEvent(self, e):
+        self._controls_overlay.show()
+        super().enterEvent(e)
+
+    def leaveEvent(self, e):
+        self._controls_overlay.hide()
+        super().leaveEvent(e)
+
+    def mousePressEvent(self, e: QMouseEvent):
+        if e.button() == Qt.MouseButton.LeftButton:
+            self._press_pos = e.globalPosition().toPoint()
+            self._last_drag_pos = e.globalPosition().toPoint()
+            self._press_t = time.time()
+            self._is_dragging = False
+        super().mousePressEvent(e)
+
+    def mouseMoveEvent(self, e: QMouseEvent):
+        if e.buttons() & Qt.MouseButton.LeftButton and self._press_pos is not None:
+            cur_pos = e.globalPosition().toPoint()
+            if (cur_pos - self._press_pos).manhattanLength() > 4:
+                self._is_dragging = True
+                delta = cur_pos - self._last_drag_pos
+                self.move(self.pos() + delta)
+                self._last_drag_pos = cur_pos
+        super().mouseMoveEvent(e)
+
+    def mouseReleaseEvent(self, e: QMouseEvent):
+        if e.button() == Qt.MouseButton.LeftButton:
+            if self._is_dragging:
+                self._save_position()
+            else:
+                # Genuine click / tap on orb!
+                self._on_orb_clicked()
+            self._is_dragging = False
+            self._press_pos = None
+        super().mouseReleaseEvent(e)
+
+    def mouseDoubleClickEvent(self, e: QMouseEvent):
+        if e.button() == Qt.MouseButton.LeftButton:
+            self.restore_full_hud()
+        super().mouseDoubleClickEvent(e)
+
+    def _on_orb_clicked(self):
+        """Click action: Interrupt if speaking, or trigger Push-to-Talk / listening."""
+        if getattr(self.canvas, "speaking", False):
+            if getattr(self._main_window, "on_interrupt", None):
+                self._main_window.on_interrupt()
+        else:
+            if getattr(self._main_window, "on_wake_manual", None):
+                self._main_window.on_wake_manual()
+            elif hasattr(self._main_window, "_on_ptt_click"):
+                self._main_window._on_ptt_click()
+
+    def restore_full_hud(self):
+        self.hide()
+        self._main_window.showNormal()
+        self._main_window.activateWindow()
+        self._main_window.raise_()
+
+    def show_orb(self):
+        self.show()
+        self.activateWindow()
+        self.raise_()
+
+    def contextMenuEvent(self, e):
+        menu = QMenu(self)
+        menu.setStyleSheet("""
+            QMenu {
+                background: rgba(3, 14, 26, 0.95);
+                color: #e0f0ff;
+                border: 1px solid rgba(0, 240, 255, 0.4);
+                border-radius: 4px;
+                padding: 4px;
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 11px;
+            }
+            QMenu::item {
+                padding: 6px 20px;
+                border-radius: 2px;
+            }
+            QMenu::item:selected {
+                background: rgba(0, 240, 255, 0.25);
+                color: #ffffff;
+            }
+        """)
+        act_expand = menu.addAction("◈  Expand to Full HUD")
+        act_ptt = menu.addAction("🎙️  Push-to-Talk (Listen)")
+        act_mute = menu.addAction("🔇  Toggle Mute")
+        menu.addSeparator()
+        act_close = menu.addAction("✕  Exit ALFRED")
+
+        action = menu.exec(e.globalPos())
+        if action == act_expand:
+            self.restore_full_hud()
+        elif action == act_ptt:
+            self._on_orb_clicked()
+        elif action == act_mute:
+            self._main_window._toggle_mute()
+        elif action == act_close:
+            self._main_window.close()
+
+    @property
+    def _position_path(self) -> Path:
+        return CONFIG_DIR / self._POSITION_FILE
+
+    def _save_position(self) -> None:
+        try:
+            CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+            self._position_path.write_text(
+                json.dumps({"x": self.x(), "y": self.y()}), encoding="utf-8"
+            )
+        except OSError:
+            pass
+
+    def _load_position(self) -> None:
+        position: QPoint | None = None
+        try:
+            saved = json.loads(self._position_path.read_text(encoding="utf-8"))
+            position = QPoint(int(saved["x"]), int(saved["y"]))
+        except (OSError, ValueError, TypeError, KeyError, json.JSONDecodeError):
+            pass
+
+        screen = QApplication.screenAt(position) if position is not None else None
+        screen = screen or QApplication.primaryScreen()
+        if screen is None:
+            if position is not None:
+                self.move(position)
+            return
+        bounds = screen.availableGeometry()
+        if position is None:
+            position = QPoint(bounds.right() - self.width() - 28, bounds.bottom() - self.height() - 28)
         x = max(bounds.left(), min(position.x(), bounds.right() - self.width() + 1))
         y = max(bounds.top(), min(position.y(), bounds.bottom() - self.height() + 1))
         self.move(x, y)
@@ -7023,6 +7372,7 @@ class MainWindow(QMainWindow):
         self._hud_overlay = MinimizedHudOverlay(
             self, self._log_sig, self._assistant_name
         )
+        self._bat_globe_orb = BatGlobeOrb(self, self._assistant_name)
         self._focus_card = FloatingFocusCard()
         self._state_sig.connect(self._apply_state)
         self._content_sig.connect(self._show_content)
@@ -7074,6 +7424,26 @@ class MainWindow(QMainWindow):
         sc_full.activated.connect(self._toggle_fullscreen)
         sc_intr = QShortcut(QKeySequence("Escape"), self)
         sc_intr.activated.connect(self._do_interrupt)
+        sc_orb = QShortcut(QKeySequence("Ctrl+M"), self)
+        sc_orb.activated.connect(self.show_bat_globe_orb)
+
+    def show_bat_globe_orb(self) -> None:
+        """Switch to minimal floating interactive Bat Globe Orb (Siri / Assistant style)."""
+        self.hide()
+        if hasattr(self, "_hud_overlay"):
+            self._hud_overlay.hide_overlay()
+        if hasattr(self, "_quick_drawer") and self._quick_drawer.isVisible():
+            self._quick_drawer.hide()
+        if hasattr(self, "_bat_globe_orb") and self._bat_globe_orb:
+            self._bat_globe_orb.show_orb()
+
+    def restore_from_bat_globe_orb(self) -> None:
+        """Restore full Tactical HUD from Bat Globe Orb."""
+        if hasattr(self, "_bat_globe_orb") and self._bat_globe_orb:
+            self._bat_globe_orb.hide()
+        self.showNormal()
+        self.activateWindow()
+        self.raise_()
 
         # Background score player initialized earlier before left panel for UI docking
 
@@ -7854,6 +8224,31 @@ class MainWindow(QMainWindow):
         self._sentry_btn.clicked.connect(self._toggle_sentry_mode)
         attach_hover_help(self._sentry_btn, "Toggle continuous visual monitoring and active task focus tracking.")
         lay.addWidget(self._sentry_btn)
+
+        self._orb_mode_btn = QPushButton("[ 🌐 ]  BAT GLOBE")
+        self._orb_mode_btn.setFixedHeight(30)
+        self._orb_mode_btn.setFont(mono_font(8, QFont.Weight.Bold, letter_spacing=0.6))
+        self._orb_mode_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._orb_mode_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: {C.PANEL2};
+                color: {C.TEXT_MED};
+                border: 1px solid {C.BORDER_A};
+                border-radius: 2px;
+                padding: 0 12px;
+            }}
+            QPushButton:hover {{
+                background: rgba(0, 240, 255, 0.16);
+                color: #00f0ff;
+                border: 1px solid {C.PRI};
+            }}
+            QPushButton:pressed {{
+                background: rgba(0, 240, 255, 0.28);
+            }}
+        """)
+        self._orb_mode_btn.clicked.connect(self.show_bat_globe_orb)
+        attach_hover_help(self._orb_mode_btn, "Switch to minimal floating interactive Bat Globe Orb (Siri / Assistant style).")
+        lay.addWidget(self._orb_mode_btn)
 
         lay.addStretch()
 
@@ -10381,6 +10776,9 @@ class MainWindow(QMainWindow):
     def _apply_state(self, state: str):
         self.hud.state    = state
         self.hud.speaking = (state == "SPEAKING")
+        if hasattr(self, "_bat_globe_orb") and self._bat_globe_orb is not None:
+            self._bat_globe_orb.canvas.state = state
+            self._bat_globe_orb.canvas.speaking = (state == "SPEAKING")
         if state == "SLEEPING":
             try:
                 if hasattr(self.hud, "_blend_cache"):
@@ -10531,6 +10929,8 @@ class MainWindow(QMainWindow):
             pass
         if hasattr(self, "_hud_overlay"):
             self._hud_overlay.shutdown()
+        if hasattr(self, "_bat_globe_orb") and self._bat_globe_orb is not None:
+            self._bat_globe_orb.close()
         if getattr(self, "_sentry_btn", None) and self._sentry_btn.isChecked():
             try:
                 if self.on_screen_monitor_toggle:
@@ -10872,12 +11272,18 @@ class JarvisUI:
     def request_say(self, cb):
         self._win.request_say = cb
 
+    def enable_orb_mode(self) -> None:
+        """Switch from full Tactical HUD to the floating Bat Globe Orb."""
+        self._win.show_bat_globe_orb()
+
     def set_audio_level(self, level: float) -> None:
         """Thread-safe: feed a 0.0–1.0 live audio level to the HUD waveform.
         Called from the audio threads; a plain float store is atomic under the
         GIL, so no signal/lock is needed for this cosmetic value."""
         try:
             self._win.hud.set_audio_level(level)
+            if hasattr(self._win, "_bat_globe_orb") and self._win._bat_globe_orb is not None:
+                self._win._bat_globe_orb.canvas.set_audio_level(level)
         except Exception:
             pass
 
@@ -10907,6 +11313,8 @@ class JarvisUI:
         sound, not the time of the call. See HudCanvas.push_visemes()."""
         try:
             self._win.hud.push_visemes(frames, hop, at)
+            if hasattr(self._win, "_bat_globe_orb") and self._win._bat_globe_orb is not None:
+                self._win._bat_globe_orb.canvas.push_visemes(frames, hop, at)
         except Exception:
             pass
 
