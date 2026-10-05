@@ -61,4 +61,6 @@ screenshots/
 
 config/intel_notes.json
 config/hud_overlay_pos.json
+config/bat_globe_pos.json
+config/users/
 dashboard/uploads/

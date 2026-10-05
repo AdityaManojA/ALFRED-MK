@@ -3886,6 +3886,8 @@ def main():
     except Exception:
         pass
     ui = JarvisUI("face.png")
+    if any(arg in sys.argv for arg in ("--orb", "--globe", "--mini")):
+        ui.enable_orb_mode()
 
     def runner():
         ui.wait_for_api_key()

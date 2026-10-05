@@ -119,13 +119,13 @@ def main():
                             noise_floor = 0.98 * noise_floor + 0.02 * min(rms, 250.0)
 
                     # Live VU Meter (continuous terminal update)
-                    if rms >= 140:
-                        now = time.monotonic()
-                        if (now - last_ui) >= 0.08:
-                            bar_len = min(20, int(rms / 100))
-                            bar = "█" * bar_len
-                            print(f"\r  🎙️ Mic [{bar:<20}] RMS={rms:4.0f} | Wake Score={score:.3f}  ", end="", flush=True)
-                            last_ui = now
+                    now = time.monotonic()
+                    if (now - last_ui) >= 0.08:
+                        bar_len = min(20, int(rms / 50))
+                        bar = "█" * bar_len
+                        status_hint = " ⚠️ (Zero signal: Check macOS Privacy > Microphone)" if rms == 0 else ""
+                        print(f"\r  🎙️ Mic [{bar:<20}] RMS={rms:4.0f} | Wake Score={score:.3f}{status_hint}  ", end="", flush=True)
+                        last_ui = now
 
                 time.sleep(0.01)
         except KeyboardInterrupt:
