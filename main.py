@@ -3915,8 +3915,10 @@ def main():
     except Exception:
         pass
     ui = JarvisUI("face.png")
-    if any(arg in sys.argv for arg in ("--orb", "--globe", "--mini")):
-        ui.enable_orb_mode()
+    if any(arg in sys.argv for arg in ("--swift-orb", "--native-orb")):
+        ui.enable_orb_mode(native=True)
+    elif any(arg in sys.argv for arg in ("--orb", "--globe", "--mini")):
+        ui.enable_orb_mode(native=(sys.platform == "darwin"))
 
     def runner():
         ui.wait_for_api_key()

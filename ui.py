@@ -11241,8 +11241,25 @@ class JarvisUI:
     def request_say(self, cb):
         self._win.request_say = cb
 
-    def enable_orb_mode(self) -> None:
-        """Switch from full Tactical HUD to the floating Bat Globe Orb."""
+    def enable_orb_mode(self, native: bool = False) -> None:
+        """Switch from full Tactical HUD to the floating Bat Globe Orb.
+        If native=True on macOS, launches the native Swift/Metal companion."""
+        if native and sys.platform == "darwin":
+            self._win.hide()
+            try:
+                from core.orb_ipc import get_orb_ipc_server, launch_native_orb
+                ipc = get_orb_ipc_server()
+                def _handle_swift_action(action: str, payload: dict):
+                    if action == "expand_hud":
+                        QTimer.singleShot(0, self._win.show)
+                    elif action == "tap":
+                        if callable(self.on_wake_manual):
+                            self.on_wake_manual()
+                ipc.set_action_callback(_handle_swift_action)
+                launch_native_orb()
+                return
+            except Exception:
+                pass
         self._win.show_bat_globe_orb()
 
     def set_audio_level(self, level: float) -> None:
@@ -11255,6 +11272,17 @@ class JarvisUI:
                 self._win._bat_globe_orb.canvas.set_audio_level(level)
         except Exception:
             pass
+
+        if sys.platform == "darwin":
+            try:
+                import time as _t
+                now = _t.monotonic()
+                if now - getattr(self, "_last_ipc_audio_broadcast", 0.0) >= 0.030:
+                    self._last_ipc_audio_broadcast = now
+                    from core.orb_ipc import get_orb_ipc_server
+                    get_orb_ipc_server().broadcast({"rms": float(level)})
+            except Exception:
+                pass
 
     def glance(self, dx: float, dy: float, hold: float = 1.1) -> None:
         """No-op: gaze tracking removed (face renderer removed)."""
@@ -11302,6 +11330,13 @@ class JarvisUI:
             self._win._state_sig.emit(state)
         except (RuntimeError, AttributeError):
             pass
+
+        if sys.platform == "darwin":
+            try:
+                from core.orb_ipc import get_orb_ipc_server
+                get_orb_ipc_server().broadcast({"state": str(state)})
+            except Exception:
+                pass
 
     def write_log(self, text: str):
         try:
