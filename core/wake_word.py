@@ -206,7 +206,7 @@ def install_and_download(logger: Callable[[str], None] = print,
         _tell("Wake word: downloading models…")
         try:
             import openwakeword.utils as _u
-            _u.download_models([WAKE_MODEL])
+            _u.download_models()
             if not WAKE_MODEL_PATH.is_file():
                 WAKE_MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
                 temp_path = WAKE_MODEL_PATH.with_suffix(".download")

@@ -1,7 +1,14 @@
 import unittest
 from unittest.mock import MagicMock, patch
 import os
+import sys
 import core.audio_ducker as audio_ducker
+
+# On macOS/Linux, mock pycaw if not present so Windows tests can run with patch
+if "pycaw" not in sys.modules:
+    pycaw_mock = MagicMock()
+    sys.modules["pycaw"] = pycaw_mock
+    sys.modules["pycaw.pycaw"] = pycaw_mock.pycaw
 
 
 class TestAudioDucker(unittest.TestCase):
@@ -180,6 +187,41 @@ class TestAudioDucker(unittest.TestCase):
             audio_ducker._on_watchdog_timeout()
             self.assertFalse(audio_ducker.is_ducked())
             spotify_vol.SetMasterVolume.assert_called_with(0.5, None)
+
+    @patch("core.audio_ducker.platform.system", return_value="Darwin")
+    @patch("core.audio_ducker.subprocess.run")
+    def test_duck_and_unduck_macos(self, mock_subproc, mock_system):
+        """Verify macOS audio ducking queries and sets Spotify/Music sound volume via AppleScript."""
+        def fake_run(cmd, capture_output=True, text=False, timeout=None):
+            m = MagicMock()
+            script = cmd[2] if len(cmd) > 2 else ""
+            if 'application "Spotify" is running' in script:
+                m.returncode = 0
+                m.stdout = "true"
+            elif 'tell application "Spotify" to sound volume' in script:
+                m.returncode = 0
+                m.stdout = "80"
+            elif 'application "Music" is running' in script:
+                m.returncode = 0
+                m.stdout = "false"
+            else:
+                m.returncode = 0
+                m.stdout = ""
+            return m
+
+        mock_subproc.side_effect = fake_run
+
+        # Duck
+        res = audio_ducker.duck_media_apps(volume_factor=0.3, sync=True)
+        self.assertIn("spotify", res)
+        self.assertAlmostEqual(res["spotify"], 0.24, places=2)
+        self.assertTrue(audio_ducker.is_ducked())
+
+        # Unduck
+        res_unduck = audio_ducker.unduck_media_apps(sync=True)
+        self.assertIn("spotify", res_unduck)
+        self.assertAlmostEqual(res_unduck["spotify"], 0.80, places=2)
+        self.assertFalse(audio_ducker.is_ducked())
 
 
 if __name__ == "__main__":

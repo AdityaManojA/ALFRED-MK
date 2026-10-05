@@ -7424,6 +7424,9 @@ class MainWindow(QMainWindow):
         sc_intr.activated.connect(self._do_interrupt)
         sc_orb = QShortcut(QKeySequence("Ctrl+M"), self)
         sc_orb.activated.connect(self.show_bat_globe_orb)
+        if _OS == "Darwin":
+            sc_orb_mac = QShortcut(QKeySequence("Meta+M"), self)
+            sc_orb_mac.activated.connect(self.show_bat_globe_orb)
 
     def show_bat_globe_orb(self) -> None:
         """Switch to minimal floating interactive Bat Globe Orb (Siri / Assistant style)."""
@@ -11064,6 +11067,9 @@ class JarvisUI:
             except Exception:
                 pass
         self._app = QApplication.instance() or QApplication(sys.argv)
+        if sys.platform == "darwin":
+            self._app.setApplicationName("ALFRED")
+            self._app.setApplicationDisplayName("ALFRED Mark-V")
         self._app.setStyle("Fusion")
         self._win = MainWindow(face_path)
         self.root = _RootShim(self._app)

@@ -64,6 +64,8 @@ class SharedAudioStream:
 
         self._last_chunk_time: float = 0.0
         self._chunks_received: int = 0
+        self._zero_chunk_count: int = 0
+        self._zero_warned: bool = False
 
     def is_running(self) -> bool:
         """Check if audio capture stream is actively open."""
@@ -120,6 +122,22 @@ class SharedAudioStream:
 
         self._last_chunk_time = time.monotonic()
         self._chunks_received += 1
+
+        # On macOS, zero signal typically indicates missing TCC microphone permission
+        if not self._zero_warned and self._chunks_received <= 50:
+            if np.max(np.abs(pcm_array)) == 0:
+                self._zero_chunk_count += 1
+                if self._zero_chunk_count >= 50:
+                    import platform
+                    if platform.system() == "Darwin":
+                        _LOGGER.warning(
+                            "macOS Audio: Microphone input stream is returning 100%% silent zeros. "
+                            "Please ensure Terminal/Python/ALFRED has Microphone permission in "
+                            "System Settings > Privacy & Security > Microphone."
+                        )
+                    self._zero_warned = True
+            else:
+                self._zero_warned = True
 
         # Fan out to all active subscribers safely
         with self._sub_lock:
