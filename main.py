@@ -1013,6 +1013,9 @@ class JarvisLive:
         self._wake_lock        = threading.Lock()
         self._wake_detector: WakeWordDetector | None = None
         self._wake_sleep_timeout = WAKE_SLEEP_TIMEOUT
+        self._has_logged_online: bool = False
+        self._has_logged_sleep: bool = False
+        self._has_logged_wake: bool = False
 
         # Restore the saved push-to-talk preference. Doing it here rather than
         # in __init__ means the hotkey thread only exists once there is a
@@ -1076,7 +1079,10 @@ class JarvisLive:
         self._last_user_speech = time.monotonic()   # start the auto-sleep clock now
         if not self.ui.muted:
             self.ui.set_state("LISTENING")
-        self.ui.write_log(f"SYS: Awake — {reason}.")
+        # Log to chat once on initial wake, or when manually/explicitly triggered
+        if not getattr(self, "_has_logged_wake", False) or not reason.startswith("wake word"):
+            self.ui.write_log(f"SYS: Awake — {reason}.")
+            self._has_logged_wake = True
         _tlog("ALFRED", "wake", f"Awake ({reason})", getattr(self, "_dashboard", None))
 
     def sleep(self, reason: str = "timeout") -> None:
@@ -1085,7 +1091,10 @@ class JarvisLive:
         self._awake = False
         self.set_speaking(False)
         self.ui.set_state("SLEEPING")
-        self.ui.write_log(f"SYS: Sleeping — {reason}. Say '{WAKE_PHRASE}' to wake me.")
+        # Log to chat once on initial sleep notice, or when explicitly requested by user
+        if not getattr(self, "_has_logged_sleep", False) or not reason.startswith("silence for"):
+            self.ui.write_log(f"SYS: Sleeping — {reason}. Say '{WAKE_PHRASE}' to wake me.")
+            self._has_logged_sleep = True
         _tlog("ALFRED", "wake", f"Sleeping ({reason})", getattr(self, "_dashboard", None))
         if self._wake_detector is None and (getattr(self, "_wake_enabled", False) or wake_is_ready()):
             try:
@@ -3703,7 +3712,7 @@ class JarvisLive:
                         # Say it plainly: the difference between "it reconnected"
                         # and "it reconnected and still knows what we were doing"
                         # is the whole point, and it is invisible otherwise.
-                        self.ui.write_log("SYS: Reconnected â€” conversation restored.")
+                        self.ui.write_log("SYS: Reconnected — conversation restored.")
 
                     # Wake word: if enabled, come up ASLEEP (mic gated, silent)
                     # until the user says "Hey Alfred" or taps wake in the UI.
@@ -3711,13 +3720,18 @@ class JarvisLive:
                         self._ensure_wake_detector()
                         self._awake = False
                         self.ui.set_state("SLEEPING")
-                        self.ui.write_log(
-                            f"SYS: ALFRED online â€” sleeping. Say '{WAKE_PHRASE}' to wake me."
-                        )
+                        if not getattr(self, "_has_logged_online", False):
+                            self.ui.write_log(
+                                f"SYS: ALFRED online — sleeping. Say '{WAKE_PHRASE}' to wake me."
+                            )
+                            self._has_logged_online = True
+                            self._has_logged_sleep = True
                     else:
                         self._awake = True
                         self.ui.set_state("LISTENING")
-                        self.ui.write_log("SYS: ALFRED online.")
+                        if not getattr(self, "_has_logged_online", False):
+                            self.ui.write_log("SYS: ALFRED online.")
+                            self._has_logged_online = True
 
                     if self._dashboard:
                         await self._dashboard.broadcast({"type": "status", "state": "active"})
@@ -3776,13 +3790,28 @@ class JarvisLive:
                     or "INVALID_ARGUMENT" in str(e)
                     or "NOT_FOUND" in str(e)
                 ):
-                    _tlog("ALFRED", "warn", "Resumption handle rejected â€” starting a fresh session", self._dashboard)
-                    self.ui.write_log("SYS: Could not restore the conversation â€” starting fresh.")
+                    _tlog("ALFRED", "warn", "Resumption handle rejected — starting a fresh session", self._dashboard)
+                    self.ui.write_log("SYS: Could not restore the conversation — starting fresh.")
                     self._resume_handle = None
                     self._conn_backoff = 0
                     continue
 
                 err_str = str(e)
+
+                # WebSocket Close Code 1011 (Internal Error), 1008 (Policy/Concurrency Limit), or 1006 (Abnormal Closure):
+                # Occurs when:
+                # 1. Google Gemini Live's ~10-minute session duration ceiling is reached.
+                # 2. Concurrency collision: Multiple clients connecting simultaneously with the same API key.
+                # 3. Server-side transient reset on Google's live audio servers.
+                # In these cases, the previous session is terminated on Google's side, so we must
+                # discard the stale resumption handle, log a clean diagnostic, and reconnect with a fresh session.
+                if "1011" in err_str or "Internal error encountered" in err_str or "1008" in err_str or "1006" in err_str:
+                    _tlog("ALFRED", "warn", "Gemini Live session reset by Google (Code 1011 / session timeout / concurrency limit) — starting fresh session.", self._dashboard)
+                    self.ui.write_log("SYS: Gemini Live session refreshed (Code 1011) — reconnecting clean...")
+                    self._resume_handle = None
+                    self._conn_backoff = 2.0
+                    continue
+
                 _tlog("ALFRED", "error", f"Error ({type(e).__name__}): {e}", self._dashboard)
                 traceback.print_exc()
 

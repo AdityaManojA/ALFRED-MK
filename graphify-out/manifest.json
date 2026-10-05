@@ -228,9 +228,9 @@
     "semantic_hash": "d9c6de0df2bf028d93924aff92487904"
   },
   "main.py": {
-    "mtime": 1791010862.0157175,
-    "seen": 1791030150.827911,
-    "ast_hash": "42541248f2b52d28c99fe4aed9404cc8",
+    "mtime": 1791051479.242372,
+    "seen": 1791051526.888257,
+    "ast_hash": "cd2018495d5938881ddee6dfede61889",
     "semantic_hash": ""
   },
   "memory/__init__.py": {
@@ -270,9 +270,9 @@
     "semantic_hash": ""
   },
   "ui.py": {
-    "mtime": 1791029597.6520233,
-    "seen": 1791030150.8281503,
-    "ast_hash": "c4a8f367bfdb829c634e333235cac98b",
+    "mtime": 1791050765.2785115,
+    "seen": 1791050871.9517508,
+    "ast_hash": "7639d400fcde24edf894b3c17398d27b",
     "semantic_hash": ""
   },
   ".agents/rules/graphify.md": {
@@ -306,9 +306,9 @@
     "semantic_hash": ""
   },
   "readme.md": {
-    "mtime": 1791007591.2775126,
-    "seen": 1791030150.8284326,
-    "ast_hash": "2790e540e19d262cb3770e02a79bb0ab",
+    "mtime": 1791049274.1688838,
+    "seen": 1791050871.9520373,
+    "ast_hash": "a0c7389802db78d4e61518afb9ac15d0",
     "semantic_hash": ""
   },
   "requirements.txt": {
@@ -426,8 +426,8 @@
     "semantic_hash": ""
   },
   "config/music_playlist.json": {
-    "mtime": 1791027483.116265,
-    "seen": 1791030150.827571,
+    "mtime": 1791051412.9408627,
+    "seen": 1791051526.8878963,
     "ast_hash": "7fa7e2bc71c6dc1c1d3dc72bcb692421",
     "semantic_hash": ""
   },
@@ -2112,9 +2112,9 @@
     "semantic_hash": ""
   },
   "core/hud/visuals/slots/arkham.py": {
-    "mtime": 1790708713.3432198,
-    "seen": 1790709696.8817205,
-    "ast_hash": "e1add828434a7d3fb5290ac41b207ff3",
+    "mtime": 1791050739.636147,
+    "seen": 1791050871.9512403,
+    "ast_hash": "4ca283909ad67c4c35a72f7e659f53b1",
     "semantic_hash": ""
   },
   "core/hud/visuals/slots/bane.py": {
@@ -2154,9 +2154,9 @@
     "semantic_hash": ""
   },
   "core/hud/visuals/slots/two_face.py": {
-    "mtime": 1790708726.5604503,
-    "seen": 1790709696.8817384,
-    "ast_hash": "23dade56fa085fb218406fade9c1527e",
+    "mtime": 1791050748.4116743,
+    "seen": 1791050871.9512558,
+    "ast_hash": "8da594026ac8921b4e4be033bfa57951",
     "semantic_hash": ""
   },
   "core/hud/visuals/slots/watchtower.py": {
@@ -2196,9 +2196,9 @@
     "semantic_hash": ""
   },
   "tests/hud_visuals/test_visuals.py": {
-    "mtime": 1790713407.66681,
-    "seen": 1790713759.0164893,
-    "ast_hash": "83fb1528819447e8ea4e69e8c8d2e8a7",
+    "mtime": 1791050825.3051283,
+    "seen": 1791050871.9515846,
+    "ast_hash": "7da1b1f03cb2c0c5c1e1184135d6d1f8",
     "semantic_hash": ""
   },
   "tests/test_crossplatform_backend.py": {
@@ -3609,12 +3609,6 @@
     "mtime": 1790930956.1309834,
     "seen": 1790932058.4016566,
     "ast_hash": "464bc8bddbfcffe7501e72b3aff7851e",
-    "semantic_hash": ""
-  },
-  "scratch/debug_test.py": {
-    "mtime": 1791028934.3225577,
-    "seen": 1791030150.827926,
-    "ast_hash": "ac1726074ed6f4ec298e276f660b50fa",
     "semantic_hash": ""
   },
   "tests/test_hover_help_in_window.py": {
