@@ -11255,6 +11255,12 @@ class JarvisUI:
                     elif action == "tap":
                         if callable(self.on_wake_manual):
                             self.on_wake_manual()
+                        elif hasattr(self._win, "_do_interrupt"):
+                            self._win._do_interrupt()
+                    elif action == "toggle_mute":
+                        QTimer.singleShot(0, self._win._toggle_mute)
+                    elif action == "close":
+                        pass
                 ipc.set_action_callback(_handle_swift_action)
                 launch_native_orb()
                 return
