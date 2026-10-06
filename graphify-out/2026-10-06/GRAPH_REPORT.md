@@ -1,7 +1,7 @@
 # Graph Report - Alfred-Mark-VIII  (2026-10-06)
 
 ## Corpus Check
-- 536 files · ~753,639 words
+- 536 files · ~753,618 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 29 file(s) not represented in the graph (top: .onnx 12, .ico 8, (none) 3)
 
@@ -1761,7 +1761,7 @@ Nodes (3): Graphify Citations, Phase 1 Notes: Uplink Transport Hardening, Summar
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `MainWindow` connect `MainWindow` to `.__init__`, `ui.py`, `CustomizeOverlay`, `ALFRED-MK-V — Media Command v1: Phase 0 Reconnaissance`, `PluginSettingsOverlay`, `._build_right_panel`, `._apply_ptt_shortcut`, `config_manager.py`, `SentrySnapshot`, `HudVideoController`, `LocalUrlBackend`, `execute_mute_me`, `.pause_core`, `LogWidget`, `ImageDeckPanel`, `is_gui_thread`, `FileDropZone`, `_read_full_config`, `raise_overlay`, `update_app_icon`, `VoiceEnrollModal`, `HudCanvas`, `tech_font`, `PlayableRef`, `FloatingFocusCard`, `TestDesktopShortcut`, `get_media_arbiter`, `setter`, `TacticalControlsDrawer`, `MinimizedHudOverlay`, `TaskBoard`, `._apply_sentry_snapshot`, `MediaArbiter`, `TacticalHoverHelpManager`, `subprocess`, `._refresh_wake_btns`, `screen_monitor.py`, `TestThreadSafeSetAppIcon`, `SetupOverlay`, `lookup`, `AudioSource`, `SetupApiModal`, `._on_dashboard_action`, `PHASE 1 — Surface + Controller Skeleton: Implementation Notes`, `.reset_instance`, `HudVideoSurface`?**
-  _High betweenness centrality (0.045) - this node is a cross-community bridge._
+  _High betweenness centrality (0.044) - this node is a cross-community bridge._
 - **Why does `HudCanvas` connect `HudCanvas` to `MainWindow`, `.__init__`, `ui.py`, `BatGlobeOrb`, `2. Profiling & Measurement Audit (10 Key Areas)`, `SentrySnapshot`, `LogWidget`, `PHASE 0 RECONNAISSANCE NOTES — HUD VIDEO SURFACE`, `0.4 The Frame-Rate Question`, `tech_font`, `typing`, `Test Matrix & Live Verification Status`, `MinimizedHudOverlay`, `TestIdleSleepOptimizations`, `.set_sentry_snapshot`, `TestHudReactivity`, `._on_dashboard_action`, `PHASE 1 — Surface + Controller Skeleton: Implementation Notes`, `.reset_instance`?**
   _High betweenness centrality (0.036) - this node is a cross-community bridge._
 - **Why does `SpeculativePrefetcher` connect `SpeculativePrefetcher` to `SharedAudioStream`, `ui.py`, `browser_control.py`, `IntentRouter`?**

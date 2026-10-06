@@ -1717,7 +1717,7 @@
       "file_type": "code",
       "norm_label": "wakeworddetector",
       "source_file": "core/wake_word.py",
-      "source_location": "L409"
+      "source_location": "L401"
     },
     {
       "id": "tests_test_hybrid_wake_hybridwakedetectiontests",
@@ -13193,7 +13193,7 @@
       "file_type": "code",
       "norm_label": ".reload_speaker_profiles()",
       "source_file": "core/wake_word.py",
-      "source_location": "L593"
+      "source_location": "L585"
     },
     {
       "id": "core_hud_visuals_slots_watchtower_watchtowerfluxringvisual_init",
@@ -20033,7 +20033,7 @@
       "file_type": "code",
       "norm_label": "._drain()",
       "source_file": "core/wake_word.py",
-      "source_location": "L985"
+      "source_location": "L977"
     },
     {
       "id": "core_wake_word_wakeworddetector_feed",
@@ -20045,7 +20045,7 @@
       "file_type": "code",
       "norm_label": ".feed()",
       "source_file": "core/wake_word.py",
-      "source_location": "L620"
+      "source_location": "L612"
     },
     {
       "id": "core_wake_word_wakeworddetector_flush_model",
@@ -20057,7 +20057,7 @@
       "file_type": "code",
       "norm_label": "._flush_model()",
       "source_file": "core/wake_word.py",
-      "source_location": "L569"
+      "source_location": "L561"
     },
     {
       "id": "core_wake_word_wakeworddetector_is_triggered",
@@ -20069,7 +20069,7 @@
       "file_type": "code",
       "norm_label": ".is_triggered()",
       "source_file": "core/wake_word.py",
-      "source_location": "L977"
+      "source_location": "L969"
     },
     {
       "id": "core_wake_word_wakeworddetector_loop",
@@ -20081,7 +20081,7 @@
       "file_type": "code",
       "norm_label": "._loop()",
       "source_file": "core/wake_word.py",
-      "source_location": "L800"
+      "source_location": "L792"
     },
     {
       "id": "core_wake_word_wakeworddetector_ready",
@@ -20093,7 +20093,7 @@
       "file_type": "code",
       "norm_label": ".ready()",
       "source_file": "core/wake_word.py",
-      "source_location": "L590"
+      "source_location": "L582"
     },
     {
       "id": "core_wake_word_wakeworddetector_reset",
@@ -20105,7 +20105,7 @@
       "file_type": "code",
       "norm_label": ".reset()",
       "source_file": "core/wake_word.py",
-      "source_location": "L559"
+      "source_location": "L551"
     },
     {
       "id": "core_wake_word_wakeworddetector_start",
@@ -20117,7 +20117,7 @@
       "file_type": "code",
       "norm_label": ".start()",
       "source_file": "core/wake_word.py",
-      "source_location": "L479"
+      "source_location": "L471"
     },
     {
       "id": "core_wake_word_wakeworddetector_stop",
@@ -20129,7 +20129,7 @@
       "file_type": "code",
       "norm_label": ".stop()",
       "source_file": "core/wake_word.py",
-      "source_location": "L533"
+      "source_location": "L525"
     },
     {
       "id": "core_wake_word_wakeworddetector_trigger_match",
@@ -20141,7 +20141,7 @@
       "file_type": "code",
       "norm_label": "._trigger_match()",
       "source_file": "core/wake_word.py",
-      "source_location": "L644"
+      "source_location": "L636"
     },
     {
       "id": "core_wake_word_wakeworddetector_verify_burst_async",
@@ -20153,7 +20153,7 @@
       "file_type": "code",
       "norm_label": "._verify_burst_async()",
       "source_file": "core/wake_word.py",
-      "source_location": "L701"
+      "source_location": "L693"
     },
     {
       "id": "core_wake_word_wakeworddetector_verify_candidate_async",
@@ -20165,7 +20165,7 @@
       "file_type": "code",
       "norm_label": "._verify_candidate_async()",
       "source_file": "core/wake_word.py",
-      "source_location": "L664"
+      "source_location": "L656"
     },
     {
       "id": "tests_test_dual_gate_wakeword_dualgatewakewordtests_test_enrolled_speaker_with_wake_phrase_triggers_wake",
@@ -24569,7 +24569,7 @@
       "file_type": "code",
       "norm_label": "install_and_download()",
       "source_file": "core/wake_word.py",
-      "source_location": "L372"
+      "source_location": "L364"
     },
     {
       "id": "core_wake_word_is_installed",
@@ -29381,7 +29381,7 @@
       "file_type": "code",
       "norm_label": ".__init__()",
       "source_file": "core/wake_word.py",
-      "source_location": "L425"
+      "source_location": "L417"
     },
     {
       "id": "tests_test_speaker_interfaces_testaudioringbuffer_test_buffer_capacity_and_slicing",
@@ -39461,7 +39461,7 @@
       "file_type": "code",
       "norm_label": "get_detector()",
       "source_file": "core/wake_word.py",
-      "source_location": "L396"
+      "source_location": "L388"
     },
     {
       "id": "core_wake_word_get_wake_model_paths",
@@ -51519,7 +51519,7 @@
       "file_type": "code",
       "norm_label": "reload_active_speaker_profiles()",
       "source_file": "core/wake_word.py",
-      "source_location": "L401"
+      "source_location": "L393"
     },
     {
       "id": "tests_test_enroll_voice_cli_testenrollvoicecli_setup",
@@ -58218,7 +58218,7 @@
       "source_location": "L93"
     },
     {
-      "id": "core_wake_word_rationale_594",
+      "id": "core_wake_word_rationale_586",
       "label": "Reload or initialize speaker verification profiles in real-time. Thread-safe;\u2026",
       "_origin": "ast",
       "community": 135,
@@ -58226,7 +58226,7 @@
       "file_type": "rationale",
       "norm_label": "reload or initialize speaker verification profiles in real-time. thread-safe;...",
       "source_file": "core/wake_word.py",
-      "source_location": "L594"
+      "source_location": "L586"
     },
     {
       "id": "core_hud_visuals_slots_watchtower_py_qpainter",
@@ -63699,7 +63699,7 @@
       "source_location": "L209"
     },
     {
-      "id": "core_wake_word_rationale_410",
+      "id": "core_wake_word_rationale_402",
       "label": "Dedicated wake-word inference thread. CRITICAL: Each instance creates its OWN\u2026",
       "_origin": "ast",
       "community": 180,
@@ -63707,10 +63707,10 @@
       "file_type": "rationale",
       "norm_label": "dedicated wake-word inference thread. critical: each instance creates its own...",
       "source_file": "core/wake_word.py",
-      "source_location": "L410"
+      "source_location": "L402"
     },
     {
-      "id": "core_wake_word_rationale_480",
+      "id": "core_wake_word_rationale_472",
       "label": "Load a fresh Model and spawn the inference thread. Idempotent.",
       "_origin": "ast",
       "community": 180,
@@ -63718,10 +63718,10 @@
       "file_type": "rationale",
       "norm_label": "load a fresh model and spawn the inference thread. idempotent.",
       "source_file": "core/wake_word.py",
-      "source_location": "L480"
+      "source_location": "L472"
     },
     {
-      "id": "core_wake_word_rationale_560",
+      "id": "core_wake_word_rationale_552",
       "label": "Reset trigger latch, cooldown, and burst buffer so detector is immediately\u2026",
       "_origin": "ast",
       "community": 180,
@@ -63729,10 +63729,10 @@
       "file_type": "rationale",
       "norm_label": "reset trigger latch, cooldown, and burst buffer so detector is immediately...",
       "source_file": "core/wake_word.py",
-      "source_location": "L560"
+      "source_location": "L552"
     },
     {
-      "id": "core_wake_word_rationale_570",
+      "id": "core_wake_word_rationale_562",
       "label": "Pump silence through the model to flush its internal rolling window.\u2026",
       "_origin": "ast",
       "community": 180,
@@ -63740,10 +63740,10 @@
       "file_type": "rationale",
       "norm_label": "pump silence through the model to flush its internal rolling window....",
       "source_file": "core/wake_word.py",
-      "source_location": "L570"
+      "source_location": "L562"
     },
     {
-      "id": "core_wake_word_rationale_621",
+      "id": "core_wake_word_rationale_613",
       "label": "Queue a raw mic frame for inference. Non-blocking; drops if backed up.",
       "_origin": "ast",
       "community": 180,
@@ -63751,10 +63751,10 @@
       "file_type": "rationale",
       "norm_label": "queue a raw mic frame for inference. non-blocking; drops if backed up.",
       "source_file": "core/wake_word.py",
-      "source_location": "L621"
+      "source_location": "L613"
     },
     {
-      "id": "core_wake_word_rationale_978",
+      "id": "core_wake_word_rationale_970",
       "label": "Consume and return the trigger flag (used by InterruptDetector poll).",
       "_origin": "ast",
       "community": 180,
@@ -63762,7 +63762,7 @@
       "file_type": "rationale",
       "norm_label": "consume and return the trigger flag (used by interruptdetector poll).",
       "source_file": "core/wake_word.py",
-      "source_location": "L978"
+      "source_location": "L970"
     },
     {
       "id": "tests_test_dual_gate_wakeword_rationale_106",
@@ -67989,7 +67989,7 @@
       "source_location": "L277"
     },
     {
-      "id": "core_wake_word_rationale_374",
+      "id": "core_wake_word_rationale_366",
       "label": "Setup: pip-install openwakeword if missing, then ensure all models are ready.",
       "_origin": "ast",
       "community": 220,
@@ -67997,7 +67997,7 @@
       "file_type": "rationale",
       "norm_label": "setup: pip-install openwakeword if missing, then ensure all models are ready.",
       "source_file": "core/wake_word.py",
-      "source_location": "L374"
+      "source_location": "L366"
     },
     {
       "id": "setup_rationale_1",
@@ -82686,7 +82686,7 @@
       "source_location": "L216"
     },
     {
-      "id": "core_wake_word_rationale_397",
+      "id": "core_wake_word_rationale_389",
       "label": "Return the currently active WakeWordDetector instance.",
       "_origin": "ast",
       "community": 45,
@@ -82694,7 +82694,7 @@
       "file_type": "rationale",
       "norm_label": "return the currently active wakeworddetector instance.",
       "source_file": "core/wake_word.py",
-      "source_location": "L397"
+      "source_location": "L389"
     },
     {
       "id": "core_wake_word_rationale_72",
@@ -93459,7 +93459,7 @@
       "source_location": "L141"
     },
     {
-      "id": "core_wake_word_rationale_402",
+      "id": "core_wake_word_rationale_394",
       "label": "Reload enrolled speaker profiles in real-time on active detector.",
       "_origin": "ast",
       "community": 97,
@@ -93467,7 +93467,7 @@
       "file_type": "rationale",
       "norm_label": "reload enrolled speaker profiles in real-time on active detector.",
       "source_file": "core/wake_word.py",
-      "source_location": "L402"
+      "source_location": "L394"
     },
     {
       "id": "tests_test_enroll_voice_cli_rationale_1",
@@ -117658,7 +117658,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "core/wake_word.py",
-      "source_location": "L316",
+      "source_location": "L308",
       "weight": 1.0
     },
     {
@@ -117670,7 +117670,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "core/wake_word.py",
-      "source_location": "L364",
+      "source_location": "L356",
       "weight": 1.0
     },
     {
@@ -117682,7 +117682,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "core/wake_word.py",
-      "source_location": "L377",
+      "source_location": "L369",
       "weight": 1.0
     },
     {
@@ -117694,7 +117694,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "core/wake_word.py",
-      "source_location": "L387",
+      "source_location": "L379",
       "weight": 1.0
     },
     {
@@ -117778,7 +117778,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "core/wake_word.py",
-      "source_location": "L403",
+      "source_location": "L395",
       "weight": 1.0
     },
     {
@@ -117790,7 +117790,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "core/wake_word.py",
-      "source_location": "L451",
+      "source_location": "L443",
       "weight": 1.0
     },
     {
@@ -117802,7 +117802,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "core/wake_word.py",
-      "source_location": "L843",
+      "source_location": "L835",
       "weight": 1.0
     },
     {
@@ -117814,7 +117814,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "core/wake_word.py",
-      "source_location": "L859",
+      "source_location": "L851",
       "weight": 1.0
     },
     {
@@ -117826,7 +117826,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "core/wake_word.py",
-      "source_location": "L879",
+      "source_location": "L871",
       "weight": 1.0
     },
     {
@@ -117838,7 +117838,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "core/wake_word.py",
-      "source_location": "L926",
+      "source_location": "L918",
       "weight": 1.0
     },
     {
@@ -117850,7 +117850,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "core/wake_word.py",
-      "source_location": "L566",
+      "source_location": "L558",
       "weight": 1.0
     },
     {
@@ -117862,7 +117862,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "core/wake_word.py",
-      "source_location": "L518",
+      "source_location": "L510",
       "weight": 1.0
     },
     {
@@ -117874,7 +117874,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "core/wake_word.py",
-      "source_location": "L522",
+      "source_location": "L514",
       "weight": 1.0
     },
     {
@@ -117886,7 +117886,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "core/wake_word.py",
-      "source_location": "L529",
+      "source_location": "L521",
       "weight": 1.0
     },
     {
@@ -117898,7 +117898,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "core/wake_word.py",
-      "source_location": "L652",
+      "source_location": "L644",
       "weight": 1.0
     },
     {
@@ -117910,7 +117910,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "core/wake_word.py",
-      "source_location": "L719",
+      "source_location": "L711",
       "weight": 1.0
     },
     {
@@ -117922,7 +117922,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "core/wake_word.py",
-      "source_location": "L751",
+      "source_location": "L743",
       "weight": 1.0
     },
     {
@@ -117934,7 +117934,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "core/wake_word.py",
-      "source_location": "L791",
+      "source_location": "L783",
       "weight": 1.0
     },
     {
@@ -117946,7 +117946,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "core/wake_word.py",
-      "source_location": "L673",
+      "source_location": "L665",
       "weight": 1.0
     },
     {
@@ -190138,7 +190138,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "core/wake_word.py",
-      "source_location": "L425",
+      "source_location": "L417",
       "weight": 1.0
     },
     {
@@ -190150,7 +190150,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "core/wake_word.py",
-      "source_location": "L664",
+      "source_location": "L656",
       "weight": 1.0
     },
     {
@@ -204425,7 +204425,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "core/wake_word.py",
-      "source_location": "L372",
+      "source_location": "L364",
       "weight": 1.0
     },
     {
@@ -204436,7 +204436,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "core/wake_word.py",
-      "source_location": "L396",
+      "source_location": "L388",
       "weight": 1.0
     },
     {
@@ -204447,7 +204447,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "core/wake_word.py",
-      "source_location": "L401",
+      "source_location": "L393",
       "weight": 1.0
     },
     {
@@ -204458,7 +204458,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "core/wake_word.py",
-      "source_location": "L409",
+      "source_location": "L401",
       "weight": 1.0
     },
     {
@@ -234697,7 +234697,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "core/wake_word.py",
-      "source_location": "L425",
+      "source_location": "L417",
       "weight": 1.0
     },
     {
@@ -234708,7 +234708,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "core/wake_word.py",
-      "source_location": "L479",
+      "source_location": "L471",
       "weight": 1.0
     },
     {
@@ -234719,7 +234719,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "core/wake_word.py",
-      "source_location": "L533",
+      "source_location": "L525",
       "weight": 1.0
     },
     {
@@ -234730,7 +234730,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "core/wake_word.py",
-      "source_location": "L559",
+      "source_location": "L551",
       "weight": 1.0
     },
     {
@@ -234741,7 +234741,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "core/wake_word.py",
-      "source_location": "L569",
+      "source_location": "L561",
       "weight": 1.0
     },
     {
@@ -234752,7 +234752,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "core/wake_word.py",
-      "source_location": "L590",
+      "source_location": "L582",
       "weight": 1.0
     },
     {
@@ -234763,7 +234763,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "core/wake_word.py",
-      "source_location": "L593",
+      "source_location": "L585",
       "weight": 1.0
     },
     {
@@ -234774,7 +234774,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "core/wake_word.py",
-      "source_location": "L620",
+      "source_location": "L612",
       "weight": 1.0
     },
     {
@@ -234785,7 +234785,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "core/wake_word.py",
-      "source_location": "L644",
+      "source_location": "L636",
       "weight": 1.0
     },
     {
@@ -234796,7 +234796,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "core/wake_word.py",
-      "source_location": "L664",
+      "source_location": "L656",
       "weight": 1.0
     },
     {
@@ -234807,7 +234807,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "core/wake_word.py",
-      "source_location": "L701",
+      "source_location": "L693",
       "weight": 1.0
     },
     {
@@ -234818,7 +234818,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "core/wake_word.py",
-      "source_location": "L800",
+      "source_location": "L792",
       "weight": 1.0
     },
     {
@@ -234829,7 +234829,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "core/wake_word.py",
-      "source_location": "L977",
+      "source_location": "L969",
       "weight": 1.0
     },
     {
@@ -234840,7 +234840,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "core/wake_word.py",
-      "source_location": "L985",
+      "source_location": "L977",
       "weight": 1.0
     },
     {
@@ -263323,30 +263323,41 @@
       "weight": 1.0
     },
     {
-      "source": "core_wake_word_rationale_374",
+      "source": "core_wake_word_rationale_366",
       "target": "core_wake_word_install_and_download",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "core/wake_word.py",
-      "source_location": "L374",
+      "source_location": "L366",
       "weight": 1.0
     },
     {
-      "source": "core_wake_word_rationale_397",
+      "source": "core_wake_word_rationale_389",
       "target": "core_wake_word_get_detector",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "core/wake_word.py",
-      "source_location": "L397",
+      "source_location": "L389",
+      "weight": 1.0
+    },
+    {
+      "source": "core_wake_word_rationale_394",
+      "target": "core_wake_word_reload_active_speaker_profiles",
+      "relation": "rationale_for",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "core/wake_word.py",
+      "source_location": "L394",
       "weight": 1.0
     },
     {
       "source": "core_wake_word_rationale_402",
-      "target": "core_wake_word_reload_active_speaker_profiles",
+      "target": "core_wake_word_wakeworddetector",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -263356,69 +263367,58 @@
       "weight": 1.0
     },
     {
-      "source": "core_wake_word_rationale_410",
-      "target": "core_wake_word_wakeworddetector",
-      "relation": "rationale_for",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "core/wake_word.py",
-      "source_location": "L410",
-      "weight": 1.0
-    },
-    {
-      "source": "core_wake_word_rationale_480",
+      "source": "core_wake_word_rationale_472",
       "target": "core_wake_word_wakeworddetector_start",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "core/wake_word.py",
-      "source_location": "L480",
+      "source_location": "L472",
       "weight": 1.0
     },
     {
-      "source": "core_wake_word_rationale_560",
+      "source": "core_wake_word_rationale_552",
       "target": "core_wake_word_wakeworddetector_reset",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "core/wake_word.py",
-      "source_location": "L560",
+      "source_location": "L552",
       "weight": 1.0
     },
     {
-      "source": "core_wake_word_rationale_570",
+      "source": "core_wake_word_rationale_562",
       "target": "core_wake_word_wakeworddetector_flush_model",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "core/wake_word.py",
-      "source_location": "L570",
+      "source_location": "L562",
       "weight": 1.0
     },
     {
-      "source": "core_wake_word_rationale_594",
+      "source": "core_wake_word_rationale_586",
       "target": "core_wake_word_wakeworddetector_reload_speaker_profiles",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "core/wake_word.py",
-      "source_location": "L594",
+      "source_location": "L586",
       "weight": 1.0
     },
     {
-      "source": "core_wake_word_rationale_621",
+      "source": "core_wake_word_rationale_613",
       "target": "core_wake_word_wakeworddetector_feed",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "core/wake_word.py",
-      "source_location": "L621",
+      "source_location": "L613",
       "weight": 1.0
     },
     {
@@ -263444,14 +263444,14 @@
       "weight": 1.0
     },
     {
-      "source": "core_wake_word_rationale_978",
+      "source": "core_wake_word_rationale_970",
       "target": "core_wake_word_wakeworddetector_is_triggered",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "core/wake_word.py",
-      "source_location": "L978",
+      "source_location": "L970",
       "weight": 1.0
     },
     {
@@ -272081,7 +272081,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "core/wake_word.py",
-      "source_location": "L526",
+      "source_location": "L518",
       "weight": 1.0
     },
     {
@@ -289851,7 +289851,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "core/wake_word.py",
-      "source_location": "L432",
+      "source_location": "L424",
       "weight": 0.8
     },
     {
@@ -289862,7 +289862,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "core/wake_word.py",
-      "source_location": "L451",
+      "source_location": "L443",
       "weight": 0.8
     },
     {
@@ -289873,7 +289873,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "core/wake_word.py",
-      "source_location": "L664",
+      "source_location": "L656",
       "weight": 0.8
     },
     {

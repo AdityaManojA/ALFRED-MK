@@ -8856,6 +8856,19 @@ class MainWindow(QMainWindow):
         attach_hover_help(self._brief_btn, "Deliver an automated morning briefing with weather, unread emails, and schedule on startup.")
         lay.addWidget(self._brief_btn)
 
+        self._clipboard_btn = QPushButton()
+        self._clipboard_btn.setFixedHeight(29)
+        self._clipboard_btn.setFont(mono_font(8, letter_spacing=0.5))
+        self._clipboard_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._clipboard_btn.clicked.connect(self._toggle_clipboard_monitor)
+        attach_hover_help(
+            self._clipboard_btn,
+            "Toggle real-time clipboard copy stream interception and tools. "
+            "Disabled by default to protect passkeys, tokens, and sensitive credentials."
+        )
+        lay.addWidget(self._clipboard_btn)
+        self._refresh_clipboard_btn()
+
         # ── Wake word ──────────────────────────────────────────────────────────
         self._wake_btn = QPushButton()
         self._wake_btn.setFixedHeight(29)
@@ -9787,6 +9800,52 @@ class MainWindow(QMainWindow):
         save_brief_enabled(new_val)
         self._update_brief_btn(new_val)
 
+    def _refresh_clipboard_btn(self):
+        if not hasattr(self, "_clipboard_btn"):
+            return
+        from memory.config_manager import get_clipboard_monitor_enabled
+        enabled = get_clipboard_monitor_enabled()
+        self._clipboard_monitor_enabled = enabled
+        if enabled:
+            self._clipboard_btn.setText("[ ◈ ]  CLIPBOARD STREAM : ON")
+            self._clipboard_btn.setStyleSheet(f"""
+                QPushButton {{
+                    background: rgba(0, 240, 255, 0.14); color: {C.PRI};
+                    border: 1px solid {C.PRI}; border-radius: 2px;
+                    text-align: left; padding: 0 10px; font-weight: 500;
+                }}
+                QPushButton:hover {{ color: #ffffff; border: 1px solid {C.PRI}; background: rgba(0, 240, 255, 0.22); }}
+                QPushButton:pressed {{ background: rgba(0, 240, 255, 0.30); }}
+            """)
+        else:
+            self._clipboard_btn.setText("[ ⊘ ]  CLIPBOARD STREAM : OFF")
+            self._clipboard_btn.setStyleSheet(f"""
+                QPushButton {{
+                    background: {C.PANEL2}; color: {C.TEXT_MED};
+                    border: 1px solid {C.BORDER_A}; border-radius: 2px;
+                    text-align: left; padding: 0 10px; font-weight: 500;
+                }}
+                QPushButton:hover {{ color: #ffffff; border: 1px solid {C.PRI}; background: rgba(142, 155, 255, 0.10); }}
+                QPushButton:pressed {{ background: rgba(142, 155, 255, 0.20); }}
+            """)
+
+    def _toggle_clipboard_monitor(self):
+        from memory.config_manager import (
+            get_clipboard_monitor_enabled,
+            save_clipboard_monitor_enabled,
+        )
+        new_val = not get_clipboard_monitor_enabled()
+        save_clipboard_monitor_enabled(new_val)
+        self._clipboard_monitor_enabled = new_val
+        self._refresh_clipboard_btn()
+        if not new_val and hasattr(self, "_clipboard_panel"):
+            self._clipboard_panel.hide()
+        status = "ENABLED" if new_val else "DISABLED (passkeys protected)"
+        try:
+            self._log.append_log(f"SEC: Clipboard stream intercept {status}, sir.")
+        except Exception:
+            pass
+
     # ── Wake word settings ───────────────────────────────────────────────────
 
     def _wake_state(self) -> dict:
@@ -10675,6 +10734,10 @@ class MainWindow(QMainWindow):
 
     def _on_clipboard_changed(self):
         try:
+            from memory.config_manager import get_clipboard_monitor_enabled
+
+            if not get_clipboard_monitor_enabled():
+                return
             text = QApplication.clipboard().text().strip()
             if len(text) >= 10:
                 self._clipboard_sig.emit(text)

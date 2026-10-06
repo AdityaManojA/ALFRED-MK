@@ -226,8 +226,22 @@ class ClipboardManager:
         except Exception as e:
             print(f"{_RED}[clipboard]{_RESET} Error saving clipboard history: {e}")
 
-    def add_clipboard_item(self, text: str, source_app: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    def add_clipboard_item(
+        self,
+        text: str,
+        source_app: Optional[str] = None,
+        bypass_toggle: bool = False,
+    ) -> Optional[Dict[str, Any]]:
         """Append item to history stack with deduplication and sensitive data filtering."""
+        if not bypass_toggle:
+            try:
+                from memory.config_manager import get_clipboard_monitor_enabled
+
+                if not get_clipboard_monitor_enabled():
+                    return None
+            except Exception:
+                pass
+
         clean_text = text.strip() if text else ""
         if not clean_text:
             return None
@@ -372,6 +386,12 @@ class ClipboardManager:
         """Polling loop inspecting OS clipboard."""
         while self._running:
             try:
+                from memory.config_manager import get_clipboard_monitor_enabled
+
+                if not get_clipboard_monitor_enabled():
+                    time.sleep(0.5)
+                    continue
+
                 if _PYPERCLIP_OK:
                     current_clip = pyperclip.paste()
                     if current_clip and current_clip != self._last_raw:
@@ -395,8 +415,12 @@ def paste_clipboard_item(index_or_id: Union[int, str]) -> Optional[Dict[str, Any
     return ClipboardManager.get_instance().paste_clipboard_item(index_or_id)
 
 
-def add_clipboard_item(text: str, source_app: Optional[str] = None) -> Optional[Dict[str, Any]]:
-    return ClipboardManager.get_instance().add_clipboard_item(text, source_app)
+def add_clipboard_item(
+    text: str, source_app: Optional[str] = None, bypass_toggle: bool = False
+) -> Optional[Dict[str, Any]]:
+    return ClipboardManager.get_instance().add_clipboard_item(
+        text, source_app, bypass_toggle=bypass_toggle
+    )
 
 
 def start_clipboard_listener() -> None:

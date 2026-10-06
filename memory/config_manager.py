@@ -250,6 +250,17 @@ def save_push_to_talk_enabled(enabled: bool) -> None:
     _save_flag("push_to_talk_enabled", enabled)
 
 
+def get_clipboard_monitor_enabled() -> bool:
+    """Whether real-time clipboard copy stream interception and monitoring is enabled.
+    Defaults to False to safeguard user passkeys, credentials, and sensitive data."""
+    return bool(load_api_keys().get("clipboard_monitor_enabled", False))
+
+
+def save_clipboard_monitor_enabled(enabled: bool) -> None:
+    """Persist user preference for clipboard stream interception."""
+    _save_flag("clipboard_monitor_enabled", bool(enabled))
+
+
 HUD_STYLES = ("reactive",)
 
 

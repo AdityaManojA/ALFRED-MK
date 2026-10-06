@@ -240,9 +240,9 @@
     "semantic_hash": "24935121ac923a382fcc4509d2b8053a"
   },
   "memory/config_manager.py": {
-    "mtime": 1791182815.5244532,
-    "seen": 1791183109.7865481,
-    "ast_hash": "48a7905199ad870fa94dbb1c4e845de0",
+    "mtime": 1791293968.1021326,
+    "seen": 1791294381.0970232,
+    "ast_hash": "2a4418082f6fa0bd2362961302d634ce",
     "semantic_hash": ""
   },
   "memory/memory_manager.py": {
@@ -270,15 +270,15 @@
     "semantic_hash": ""
   },
   "ui.py": {
-    "mtime": 1791290809.4748921,
-    "seen": 1791291010.7996268,
-    "ast_hash": "f3983934ab1d119ba780fc94889819ac",
+    "mtime": 1791294213.4530196,
+    "seen": 1791294381.0972934,
+    "ast_hash": "545c40c6024bd65b771884ed207a2f56",
     "semantic_hash": ""
   },
   ".agents/rules/graphify.md": {
-    "mtime": 1790278398.118226,
-    "seen": 1790279812.8498611,
-    "ast_hash": "a0e4d192b9e2e17256124dbfc8e24e6a",
+    "mtime": 1791293890.3636293,
+    "seen": 1791294381.097312,
+    "ast_hash": "2cae84fa168b007c47c2e19e93b966c0",
     "semantic_hash": ""
   },
   ".agents/workflows/graphify.md": {
@@ -288,9 +288,9 @@
     "semantic_hash": ""
   },
   "core/prompt.txt": {
-    "mtime": 1790862143.8522234,
-    "seen": 1790862406.6351144,
-    "ast_hash": "4c9c6e789497e903177ccd24d17ed964",
+    "mtime": 1791294785.2848837,
+    "seen": 1791294844.648256,
+    "ast_hash": "3cc95b0af191d92a94a3c99f8badf5ad",
     "semantic_hash": ""
   },
   "dashboard/static/app.html": {
@@ -426,8 +426,8 @@
     "semantic_hash": ""
   },
   "config/music_playlist.json": {
-    "mtime": 1791290954.4205544,
-    "seen": 1791291010.798758,
+    "mtime": 1791294816.2377172,
+    "seen": 1791294844.6474187,
     "ast_hash": "5e902c918db6e9ea5e750fa4d66dec82",
     "semantic_hash": ""
   },
@@ -558,10 +558,10 @@
     "semantic_hash": ""
   },
   "actions/clipboard_manager.py": {
-    "mtime": 1790441666.166012,
-    "seen": 1790443582.5166767,
-    "ast_hash": "07dda0a4eb543bb5251363caeeedbb6b",
-    "semantic_hash": "07dda0a4eb543bb5251363caeeedbb6b"
+    "mtime": 1791294039.3819284,
+    "seen": 1791294381.0965443,
+    "ast_hash": "e285110709637750b42f6bbb77d660ab",
+    "semantic_hash": ""
   },
   "actions/protocol_engine.py": {
     "mtime": 1790530419.360982,
@@ -576,9 +576,9 @@
     "semantic_hash": ""
   },
   "tests/test_clipboard_manager.py": {
-    "mtime": 1791262445.1469924,
-    "seen": 1791262692.789913,
-    "ast_hash": "d994dd89546802b05fc615c43aaeb133",
+    "mtime": 1791294298.7161667,
+    "seen": 1791294381.0971565,
+    "ast_hash": "2935ff0b7bb8551e69366185598b2ed3",
     "semantic_hash": ""
   },
   "tests/test_protocol_engine.py": {
@@ -4413,6 +4413,12 @@
     "mtime": 1791280565.644742,
     "seen": 1791287509.0807743,
     "ast_hash": "f50e41ab2737553fcb146ab078b14e2b",
+    "semantic_hash": ""
+  },
+  ".agents/workflows/token-reduction.md": {
+    "mtime": 1791293831.7247107,
+    "seen": 1791294381.0973227,
+    "ast_hash": "b7b1e62bf2b5bb147d403d925e5411b9",
     "semantic_hash": ""
   }
 }

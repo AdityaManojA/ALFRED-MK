@@ -33,7 +33,12 @@ class TestClipboardManager(unittest.TestCase):
         self.mgr = ClipboardManager.get_instance()
         self.mgr._history = []
 
+        # By default enable in standard tests unless explicitly testing disabled state
+        self.config_patcher = patch("memory.config_manager.get_clipboard_monitor_enabled", return_value=True)
+        self.config_patcher.start()
+
     def tearDown(self):
+        self.config_patcher.stop()
         self.patcher.stop()
         self.tmp_dir.cleanup()
 
@@ -159,6 +164,33 @@ class TestClipboardManager(unittest.TestCase):
         with patch("pyperclip.copy"):
             out_paste = clipboard_manager_action({"action": "paste", "index": 1})
             self.assertIn("Active clipboard restored", out_paste)
+
+    def test_clipboard_monitoring_disabled_by_default_protects_passkeys(self):
+        """When clipboard monitoring is disabled, clipboard items are ignored to protect passkeys."""
+        with patch("memory.config_manager.get_clipboard_monitor_enabled", return_value=False):
+            res = add_clipboard_item("MySecretPasskey123_DoNotIntercept")
+            self.assertIsNone(res)
+            self.assertEqual(len(self.mgr._history), 0)
+
+    def test_config_manager_clipboard_monitor_toggle(self):
+        """Verify config_manager getter and setter for clipboard monitoring."""
+        self.config_patcher.stop()
+        try:
+            from memory.config_manager import (
+                get_clipboard_monitor_enabled,
+                save_clipboard_monitor_enabled,
+            )
+
+            with patch("memory.config_manager.load_api_keys", return_value={}):
+                self.assertFalse(get_clipboard_monitor_enabled())
+
+            with patch("memory.config_manager._save_flag") as mock_save:
+                save_clipboard_monitor_enabled(True)
+                mock_save.assert_called_with("clipboard_monitor_enabled", True)
+                save_clipboard_monitor_enabled(False)
+                mock_save.assert_called_with("clipboard_monitor_enabled", False)
+        finally:
+            self.config_patcher.start()
 
 
 if __name__ == "__main__":
