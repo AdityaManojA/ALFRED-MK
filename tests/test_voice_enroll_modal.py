@@ -137,6 +137,67 @@ class TestVoiceEnrollModal(unittest.TestCase):
         modal.reject()
         self.assertNotIn(modal._on_theme_changed, ThemeChrome._listeners)
 
+    def test_modal_advanced_mode_selection(self):
+        modal = VoiceEnrollModal(
+            profile_store=self.store,
+            extractor=self.extractor,
+            default_user="Bruce",
+        )
+        self.assertEqual(modal._target_steps, 3)
+        self.assertIn("Sample 1 of 3", modal._step_label.text())
+
+        # Switch to advanced mode
+        modal.set_mode("advanced")
+        self.assertEqual(modal._target_steps, 10)
+        self.assertEqual(modal._mode, "advanced")
+        self.assertIn("Sample 1 of 10", modal._step_label.text())
+        self.assertIn("10", modal._mode_info_label.text())
+        self.assertIn("wake success", modal._mode_info_label.text().lower())
+
+        # Switch back to standard mode
+        modal.set_mode("standard")
+        self.assertEqual(modal._target_steps, 3)
+        self.assertEqual(modal._mode, "standard")
+        self.assertIn("Sample 1 of 3", modal._step_label.text())
+
+    def test_modal_success_flow_10_samples_advanced(self):
+        modal = VoiceEnrollModal(
+            profile_store=self.store,
+            extractor=self.extractor,
+            default_user="Bruce Wayne",
+            default_mode="advanced",
+        )
+        self.assertEqual(modal._target_steps, 10)
+        self.assertEqual(modal._current_step, 1)
+        self.assertIn("Sample 1 of 10", modal._step_label.text())
+
+        sr = 16000
+        t = np.linspace(0, 1.2, int(1.2 * sr), endpoint=False)
+        audio = 0.5 * np.sin(2 * np.pi * 440 * t)
+
+        enrolled_user = []
+        modal.profile_enrolled.connect(lambda name: enrolled_user.append(name))
+
+        # Feed 10 consecutive samples
+        for step in range(1, 11):
+            ok, msg = modal.process_audio_sample(audio, sr)
+            self.assertTrue(ok, f"Step {step} failed: {msg}")
+            if step < 10:
+                self.assertEqual(modal._current_step, step + 1)
+                self.assertIn(f"Sample {step + 1} of 10", modal._step_label.text())
+
+        # Verify completion after 10 samples
+        self.assertEqual(len(enrolled_user), 1)
+        self.assertEqual(enrolled_user[0], "Bruce Wayne")
+
+        # Verify saved in profile store with 10 samples
+        saved = self.store.load_profile("Bruce Wayne")
+        self.assertIsNotNone(saved)
+        self.assertEqual(saved.user_name, "Bruce Wayne")
+        self.assertEqual(saved.sample_count, 10)
+        self.assertEqual(len(saved.template_embeddings), 10)
+        self.assertGreater(saved.threshold, 0.40)
+
 
 if __name__ == "__main__":
     unittest.main()

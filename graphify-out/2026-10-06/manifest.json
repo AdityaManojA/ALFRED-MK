@@ -204,9 +204,9 @@
     "semantic_hash": "e8db5f5ff95246fc94c67379d160264e"
   },
   "core/wake_word.py": {
-    "mtime": 1791229835.320678,
-    "seen": 1791231100.5238378,
-    "ast_hash": "0aa9ef5156dec032d6eb9215c069f9eb",
+    "mtime": 1791264006.6464407,
+    "seen": 1791264081.680114,
+    "ast_hash": "c6ea0304aefb2db48c2359cbb3027711",
     "semantic_hash": ""
   },
   "dashboard/__init__.py": {
@@ -228,9 +228,9 @@
     "semantic_hash": "d9c6de0df2bf028d93924aff92487904"
   },
   "main.py": {
-    "mtime": 1791262445.099884,
-    "seen": 1791262692.7894707,
-    "ast_hash": "c010acda2d4945a42b8f3cbb8c244527",
+    "mtime": 1791263935.837576,
+    "seen": 1791264081.6801236,
+    "ast_hash": "450f58a8f3333cb9a35c286f8acf5cb0",
     "semantic_hash": ""
   },
   "memory/__init__.py": {
@@ -270,9 +270,9 @@
     "semantic_hash": ""
   },
   "ui.py": {
-    "mtime": 1791262445.099884,
-    "seen": 1791262692.7903063,
-    "ast_hash": "c0f367b179cdbd9763af465f5f73ff7b",
+    "mtime": 1791263965.4046109,
+    "seen": 1791264081.680371,
+    "ast_hash": "f08ddcd5f2af96a3206980cc68115f00",
     "semantic_hash": ""
   },
   ".agents/rules/graphify.md": {
@@ -426,8 +426,8 @@
     "semantic_hash": ""
   },
   "config/music_playlist.json": {
-    "mtime": 1791263243.6675825,
-    "seen": 1791263660.680708,
+    "mtime": 1791263714.4648666,
+    "seen": 1791264081.6797688,
     "ast_hash": "5e902c918db6e9ea5e750fa4d66dec82",
     "semantic_hash": ""
   },
@@ -540,15 +540,15 @@
     "semantic_hash": "b05bdc463bf8f7141b3a8bbb40b53482"
   },
   "core/audio_ducker.py": {
-    "mtime": 1790714201.828927,
-    "seen": 1790714415.7762892,
-    "ast_hash": "16acb0b53af3272d3f5d1c734da3225f",
+    "mtime": 1791263863.7229686,
+    "seen": 1791264081.679794,
+    "ast_hash": "5e65382a763876724989b85a12dfcdd6",
     "semantic_hash": ""
   },
   "tests/test_audio_ducker.py": {
-    "mtime": 1790714303.8321373,
-    "seen": 1790714415.7766528,
-    "ast_hash": "b980baf7593df47af47cf70affbe4ae2",
+    "mtime": 1791263863.7346306,
+    "seen": 1791264081.6802356,
+    "ast_hash": "50ab6781d7f8100dea162b5db3412106",
     "semantic_hash": ""
   },
   "tests/test_background_worker.py": {
@@ -570,10 +570,10 @@
     "semantic_hash": ""
   },
   "actions/screen_find.py": {
-    "mtime": 1790426844.958352,
-    "seen": 1790443582.5172513,
-    "ast_hash": "295dc0b50df6c5d85b16b7ecedb3465e",
-    "semantic_hash": "295dc0b50df6c5d85b16b7ecedb3465e"
+    "mtime": 1791263863.7229686,
+    "seen": 1791264081.679734,
+    "ast_hash": "d7ba94eafb2b973a5ba24c33c3b15046",
+    "semantic_hash": ""
   },
   "tests/test_clipboard_manager.py": {
     "mtime": 1791262445.1469924,
@@ -2916,9 +2916,9 @@
     "semantic_hash": ""
   },
   "core/audio/stream.py": {
-    "mtime": 1790890937.9462066,
-    "seen": 1790891683.3897104,
-    "ast_hash": "94988b0654a1d0d482e6ffb94b504e58",
+    "mtime": 1791263863.7229686,
+    "seen": 1791264081.6797843,
+    "ast_hash": "f8f7cd5ca42813c473c8adfd4bc4914c",
     "semantic_hash": ""
   },
   "core/audio/vad.py": {
@@ -4281,6 +4281,30 @@
     "mtime": 1791229103.3514307,
     "seen": 1791262389.4485586,
     "ast_hash": "225438fc531ff09bf360197a1c6ca279",
+    "semantic_hash": ""
+  },
+  "core/orb_ipc.py": {
+    "mtime": 1791263863.7229686,
+    "seen": 1791264081.6799712,
+    "ast_hash": "58a51db29bf43434f16db7a378fd6b80",
+    "semantic_hash": ""
+  },
+  "native/macos/BatGlobeOrb.swift": {
+    "mtime": 1791263863.7326274,
+    "seen": 1791264081.6801307,
+    "ast_hash": "6c54993dcb67ccd5a787bd994a351197",
+    "semantic_hash": ""
+  },
+  "tests/test_orb_ipc.py": {
+    "mtime": 1791263863.73617,
+    "seen": 1791264081.6802998,
+    "ast_hash": "9a72911d5e8a5434796909aac9358f73",
+    "semantic_hash": ""
+  },
+  "CODE_OF_CONDUCT.md": {
+    "mtime": 1791263863.7220204,
+    "seen": 1791264081.6803987,
+    "ast_hash": "06e01a66abed8258963db0a1909d647a",
     "semantic_hash": ""
   }
 }

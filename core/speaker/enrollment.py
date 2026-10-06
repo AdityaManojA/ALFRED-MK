@@ -115,6 +115,10 @@ class SpeakerEnrollmentManager:
         self._sessions: Dict[str, List[np.ndarray]] = {}
         self._session_embeddings: Dict[str, List[np.ndarray]] = {}
 
+    def set_target_samples(self, target_samples: int) -> None:
+        """Update target sample count (e.g. 3 for standard, 10 for advanced)."""
+        self.target_samples = max(self.min_samples, target_samples)
+
     def reset_session(self, user_name: str) -> None:
         """Reset incremental enrollment session for a user."""
         clean_name = user_name.strip()
@@ -140,10 +144,12 @@ class SpeakerEnrollmentManager:
 
         current_embs = self._session_embeddings.setdefault(clean_name, [])
         # Check consistency against previously accepted samples in this session
+        # For advanced multi-sample calibration (>= 3 existing samples), tolerate natural acoustic inflections (down to 0.35)
+        pairwise_min = 0.35 if len(current_embs) >= 3 else MIN_PAIRWISE_CONSISTENCY
         for idx, prev in enumerate(current_embs, start=1):
             sim = float(np.dot(emb.vector, prev))
-            if sim < MIN_PAIRWISE_CONSISTENCY:
-                return False, f"Inconsistent with sample {idx} (similarity {sim:.2f} < {MIN_PAIRWISE_CONSISTENCY:.2f}). Please repeat the phrase."
+            if sim < pairwise_min:
+                return False, f"Inconsistent with sample {idx} (similarity {sim:.2f} < {pairwise_min:.2f}). Please repeat the phrase."
 
         current_embs.append(emb.vector)
         self._sessions.setdefault(clean_name, []).append(audio)
@@ -203,16 +209,17 @@ class SpeakerEnrollmentManager:
         # 3. Check mutual consistency between samples
         pairwise_sims = []
         n = len(embeddings)
+        pairwise_min = 0.35 if n > 3 else MIN_PAIRWISE_CONSISTENCY
         for i in range(n):
             for j in range(i + 1, n):
                 sim = float(np.dot(embeddings[i], embeddings[j]))
                 pairwise_sims.append(sim)
-                if sim < MIN_PAIRWISE_CONSISTENCY:
+                if sim < pairwise_min:
                     return EnrollmentResult(
                         success=False,
                         error_message=(
                             f"Inconsistent voice samples detected (similarity between sample {i+1} "
-                            f"and {j+1} is {sim:.2f} < {MIN_PAIRWISE_CONSISTENCY:.2f}). "
+                            f"and {j+1} is {sim:.2f} < {pairwise_min:.2f}). "
                             "Ensure the same person speaks all enrollment phrases in a consistent tone."
                         ),
                         pairwise_similarities=pairwise_sims,
