@@ -55,8 +55,32 @@ from core.speaker.enrollment import (
     validate_utterance_quality,
 )
 
+try:
+    from core.wake_word import reload_active_speaker_profiles
+except Exception:
+    reload_active_speaker_profiles = lambda: 0
+
 SAMPLE_RATE = 16000
 RECORD_DURATION_S = 2.0
+
+STEP_PROMPTS_3 = [
+    "Normal speaking voice — speak clearly and naturally",
+    "Slight acoustic variation — vary distance or tone slightly",
+    "Final calibration sample — one final utterance to calibrate threshold",
+]
+
+STEP_PROMPTS_10 = [
+    "Normal speaking voice — clear and natural",
+    "Conversational tone — speak as if answering a colleague",
+    "Quiet / soft voice — speaking in a low or late-night room",
+    "Louder / enthusiastic tone — projecting across the room",
+    "Slightly faster pace — brisk and natural",
+    "Deeper / relaxed pitch — comfortable resting voice",
+    "Distance variation — step back ~1 to 2 meters from microphone",
+    "Close proximity — speak closer to the microphone",
+    "Ambient acoustic angle — turn head or speak slightly off-axis",
+    "Final confirmation sample — natural resting tone",
+]
 
 
 def record_clip(duration_s: float = RECORD_DURATION_S) -> np.ndarray:
@@ -74,6 +98,7 @@ def enroll_interactive(
     profile_store: Optional[SpeakerProfileStore] = None,
     extractor: Optional[SpeakerEmbeddingExtractor] = None,
     target_samples: int = 3,
+    train_wake_model: bool = False,
 ) -> bool:
     """Interactively guide user through recording enrollment utterances."""
     store = profile_store or get_default_profile_store()
@@ -85,26 +110,23 @@ def enroll_interactive(
         print("❌ Error: User name cannot be empty.")
         return False
 
+    mode_name = "ADVANCED (10 SAMPLES)" if target_samples >= 10 else "STANDARD (3 SAMPLES)"
     print("\n" + "=" * 65)
-    print(f"🎙️  ALFRED VOICE BIOMETRIC ENROLLMENT: {clean_name}")
+    print(f"🎙️  ALFRED VOICE BIOMETRIC ENROLLMENT: {clean_name} [{mode_name}]")
     print("=" * 65)
     print("Instructions:")
-    print("  • You will be prompted to speak 'Hey Alfred' 3 times.")
-    print("  • Speak clearly in your natural voice.")
-    print("  • The system verifies acoustic quality and inter-sample consistency.\n")
+    print(f"  • You will record {target_samples} 'Hey Alfred' utterances in real-time.")
+    print("  • Follow the prompt guidance for each sample to maximize accuracy.")
+    print("  • Audio samples are automatically cached for optional acoustic fine-tuning.\n")
 
+    prompts = STEP_PROMPTS_10 if target_samples >= 10 else STEP_PROMPTS_3
     accepted_audio = []
     attempt = 1
     sample_idx = 1
 
     while sample_idx <= target_samples:
-        prompt_suffix = ""
-        if sample_idx == 2:
-            prompt_suffix = " (vary distance or tone slightly)"
-        elif sample_idx == 3:
-            prompt_suffix = " (one final sample to calibrate threshold)"
-
-        input(f"[{sample_idx}/{target_samples}] Press ENTER, then immediately say 'Hey Alfred'{prompt_suffix}...")
+        hint = prompts[sample_idx - 1] if sample_idx - 1 < len(prompts) else "Speak 'Hey Alfred'"
+        input(f"[{sample_idx}/{target_samples}] ({hint})\n   Press ENTER, then say 'Hey Alfred' immediately...")
         print(f"  🔴 Recording ({RECORD_DURATION_S:.1f}s)... ", end="", flush=True)
 
         audio = record_clip(RECORD_DURATION_S)
@@ -116,16 +138,16 @@ def enroll_interactive(
             print(f"  ⚠️  Quality Check Failed: {val.message}")
             print("      Please repeat this sample.\n")
             attempt += 1
-            if attempt > 8:
+            if attempt > 12:
                 print("❌ Too many failed attempts. Enrollment aborted.")
                 return False
             continue
 
         accepted_audio.append(audio)
         sample_idx += 1
-        print(f"  ✓ Sample {sample_idx - 1} captured successfully.\n")
+        print(f"  ✓ Sample {sample_idx - 1} captured and verified.\n")
 
-    print("⏳ Analyzing samples and calibrating personal speaker threshold...")
+    print("⏳ Analyzing samples and calibrating personal speaker threshold in real-time...")
     res = mgr.enroll_user(clean_name, accepted_audio, sample_rate=SAMPLE_RATE)
     if not res.success:
         print(f"❌ Enrollment Failed: {res.error_message}")
@@ -135,13 +157,37 @@ def enroll_interactive(
     print("\n🎉 ENROLLMENT SUCCESSFUL!")
     print(f"  • Profile ID:           {prof.profile_id}")
     print(f"  • User Name:            {prof.user_name}")
+    print(f"  • Mode:                 {mode_name}")
     print(f"  • Samples Count:        {prof.sample_count}")
     print(f"  • Calibrated Threshold: {prof.threshold:.3f}")
     if res.pairwise_similarities:
         avg_sim = float(np.mean(res.pairwise_similarities))
         print(f"  • Consistency Score:    {avg_sim * 100:.1f}%")
     print(f"  • Profile Storage:      {store.storage_dir / (prof.profile_id + '.json')}")
-    print("\nHands-free wake ('Hey Alfred') is now armed for this voice profile.\n")
+
+    active_count = reload_active_speaker_profiles()
+    print(f"  • Real-time Arming:     Active ({active_count} profiles armed in detector)")
+    print("\nHands-free wake ('Hey Alfred') is now armed in real-time for this voice profile.\n")
+
+    # Real-time local terminal acoustic training option:
+    should_train = train_wake_model
+    if not should_train and sys.stdin.isatty():
+        try:
+            choice = input("Would you like to fine-tune the wake word acoustic model in terminal now? (y/n) [n]: ").strip().lower()
+            should_train = choice in ("y", "yes")
+        except (EOFError, KeyboardInterrupt):
+            should_train = False
+
+    if should_train:
+        print("\n" + "=" * 65)
+        print("🚀 STARTING REAL-TIME ACOUSTIC MODEL FINE-TUNING IN TERMINAL")
+        print("=" * 65)
+        try:
+            from tools.record_training_samples import train_local
+            train_local()
+        except Exception as exc:
+            print(f"❌ Real-time training note: {exc}")
+
     return True
 
 
@@ -189,6 +235,12 @@ def delete_enrolled_profile(user_name: str, profile_store: Optional[SpeakerProfi
 def main():
     parser = argparse.ArgumentParser(description="ALFRED Voice Biometric Profile Manager")
     parser.add_argument("--enroll", metavar="NAME", help="Interactively enroll voice profile for NAME")
+    parser.add_argument("--samples", type=int, choices=[3, 10], default=None,
+                        help="Number of enrollment samples (3 for standard, 10 for advanced)")
+    parser.add_argument("--advanced", action="store_true",
+                        help="Use advanced 10-sample enrollment mode for higher resilience across pitch, whisper, and distance")
+    parser.add_argument("--train-wake", action="store_true",
+                        help="Immediately fine-tune acoustic wake word model (models/alfred.onnx) in terminal using enrolled samples")
     parser.add_argument("--from-wavs", nargs="+", metavar="WAV", help="Enroll from existing WAV files")
     parser.add_argument("--user", metavar="NAME", help="User name when using --from-wavs")
     parser.add_argument("--list", action="store_true", help="List enrolled voice profiles")
@@ -221,6 +273,7 @@ def main():
         ok = delete_enrolled_profile(args.delete, store)
         if ok:
             print(f"✓ Successfully deleted voice profile for '{args.delete}'.")
+            reload_active_speaker_profiles()
         else:
             print(f"❌ Failed to delete voice profile for '{args.delete}'. Check that it exists.")
         return
@@ -232,13 +285,35 @@ def main():
         res = enroll_from_files(args.user, args.from_wavs, profile_store=store)
         if res.success:
             print(f"✓ Enrolled profile '{args.user}' with calibrated threshold {res.profile.threshold:.3f}")
+            reload_active_speaker_profiles()
         else:
             print(f"❌ Enrollment failed: {res.error_message}")
             sys.exit(1)
         return
 
     if args.enroll:
-        ok = enroll_interactive(args.enroll, profile_store=store)
+        target = 3
+        if args.advanced or args.samples == 10:
+            target = 10
+        elif args.samples == 3:
+            target = 3
+        elif sys.stdin.isatty():
+            print("\nSelect Voice Enrollment Mode:")
+            print("  [1] Standard Enrollment (3 samples) - Quick setup")
+            print("  [2] Advanced Enrollment (10 samples) - Deep multi-condition acoustic calibration (Recommended)")
+            try:
+                choice = input("Enter choice [1 or 2, default 1]: ").strip()
+                if choice == "2":
+                    target = 10
+            except (EOFError, KeyboardInterrupt):
+                target = 3
+
+        ok = enroll_interactive(
+            args.enroll,
+            profile_store=store,
+            target_samples=target,
+            train_wake_model=args.train_wake,
+        )
         sys.exit(0 if ok else 1)
 
     if args.benchmark:

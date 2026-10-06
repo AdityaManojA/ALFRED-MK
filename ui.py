@@ -9963,11 +9963,23 @@ class MainWindow(QMainWindow):
     def _open_voice_enroll(self):
         try:
             from core.ui.voice_enroll_modal import VoiceEnrollModal
+            from core.wake_word import reload_active_speaker_profiles
             cfg = _read_full_config() if callable(globals().get("_read_full_config")) else {}
             user_name = cfg.get("user_name", "") or "Operator"
             modal = VoiceEnrollModal(parent=self, default_user=user_name)
-            modal.profile_enrolled.connect(lambda _: self._refresh_wake_btns())
-            modal.profile_deleted.connect(lambda: self._refresh_wake_btns())
+
+            def _on_enrolled(uname: str):
+                count = reload_active_speaker_profiles()
+                self._log_sig.emit(f"SYS: Voice profile armed for '{uname}' in real-time ({count} active profiles).")
+                self._refresh_wake_btns()
+
+            def _on_deleted():
+                count = reload_active_speaker_profiles()
+                self._log_sig.emit(f"SYS: Voice profile deleted in real-time ({count} active profiles remaining).")
+                self._refresh_wake_btns()
+
+            modal.profile_enrolled.connect(_on_enrolled)
+            modal.profile_deleted.connect(_on_deleted)
             modal.exec()
         except Exception as exc:
             self._log_sig.emit(f"SYS: Voice enrollment error: {exc}")

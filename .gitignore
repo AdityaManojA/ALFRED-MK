@@ -65,4 +65,5 @@ config/bat_globe_pos.json
 config/users/
 dashboard/uploads/
 bin/
+data/wakeword_samples/
 

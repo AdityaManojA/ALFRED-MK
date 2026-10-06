@@ -394,6 +394,14 @@ def get_detector() -> "WakeWordDetector | None":
     return _GLOBAL_DETECTOR
 
 
+def reload_active_speaker_profiles() -> int:
+    """Reload enrolled speaker profiles in real-time on active detector."""
+    det = get_detector()
+    if det is not None:
+        return det.reload_speaker_profiles()
+    return 0
+
+
 class WakeWordDetector:
     """
     Dedicated wake-word inference thread.
@@ -577,6 +585,31 @@ class WakeWordDetector:
     @property
     def ready(self) -> bool:
         return self._ready
+
+    def reload_speaker_profiles(self) -> int:
+        """Reload or initialize speaker verification profiles in real-time.
+
+        Thread-safe; immediately arms or updates enrolled speaker profiles
+        for real-time hands-free verification without restarting the application.
+        """
+        with self._lock:
+            if self._speaker_verifier is None and self._enable_speaker_verification:
+                try:
+                    self._speaker_verifier = SpeakerVerifier()
+                except Exception as e:
+                    self._logger(f"[WakeWord] Speaker verifier init error: {e}")
+                    return 0
+
+            if self._speaker_verifier is not None:
+                profiles = self._speaker_verifier.profile_store.list_profiles()
+                count = len(profiles)
+                names = [p.user_name for p in profiles]
+                if count > 0:
+                    self._logger(f"[WakeWord] Armed {count} speaker profile(s) in real-time: {', '.join(names)}.")
+                else:
+                    self._logger("[WakeWord] Speaker profiles reloaded in real-time: 0 enrolled profiles.")
+                return count
+            return 0
 
     # ── data path (real-time, called from mic callback) ────────────────────────
 

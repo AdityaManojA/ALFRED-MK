@@ -87,31 +87,44 @@ class SpeakerVerifier:
 
         for p in profiles:
             thresh = p.threshold if p.threshold > 0 else self.default_threshold
-            scores = []
 
             # 1. Similarity with centroid
+            centroid_score: Optional[float] = None
             if p.centroid_embedding:
                 c_vec = np.asarray(p.centroid_embedding, dtype=np.float32)
                 c_norm = np.linalg.norm(c_vec)
                 if c_norm > 0:
                     c_vec = c_vec / c_norm
-                    scores.append(float(np.dot(cand_emb.vector, c_vec)))
+                    centroid_score = float(np.dot(cand_emb.vector, c_vec))
 
-            # 2. Max similarity across individual enrollment templates
+            # 2. Individual template matches across enrolled utterances
+            template_scores: List[float] = []
             for tmpl in p.template_embeddings:
                 t_vec = np.asarray(tmpl, dtype=np.float32)
                 t_norm = np.linalg.norm(t_vec)
                 if t_norm > 0:
                     t_vec = t_vec / t_norm
-                    scores.append(float(np.dot(cand_emb.vector, t_vec)))
+                    template_scores.append(float(np.dot(cand_emb.vector, t_vec)))
 
-            if not scores:
+            if centroid_score is None and not template_scores:
                 continue
 
-            # Combined score: blend of centroid and highest template match
-            max_score = max(scores)
-            avg_score = sum(scores) / len(scores)
-            combined_score = 0.6 * max_score + 0.4 * avg_score
+            # Multi-template fusion:
+            # We combine the centroid (vocal tract identity anchor) with the best-matching
+            # templates. This ensures 10 diverse samples (whisper, loud, distant, casual)
+            # are NOT penalized by non-matching templates, while providing superior resilience.
+            if template_scores:
+                sorted_tmpls = sorted(template_scores, reverse=True)
+                top_template = sorted_tmpls[0]
+                top_k = sorted_tmpls[:min(3, len(sorted_tmpls))]
+                top_k_avg = float(sum(top_k) / len(top_k))
+
+                if centroid_score is not None:
+                    combined_score = 0.50 * centroid_score + 0.35 * top_template + 0.15 * top_k_avg
+                else:
+                    combined_score = 0.70 * top_template + 0.30 * top_k_avg
+            else:
+                combined_score = centroid_score if centroid_score is not None else 0.0
 
             if combined_score > best_score:
                 best_score = combined_score

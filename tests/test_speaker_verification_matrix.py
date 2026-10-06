@@ -329,6 +329,82 @@ class TestSpeakerVerificationMatrix(unittest.TestCase):
         # Ensure no extra verification calls were made!
         self.assertEqual(verify_call_count, 1, "Speaker verification must NOT be called for normal dialogue")
 
+    # ── Test Case 13: Advanced 10-sample template fusion resilience ─────────
+    def test_case_13_advanced_10_sample_template_fusion_resilience(self):
+        # Create 10 diverse acoustic templates for Bruce (whisper, loud, distant, casual, etc.)
+        templates = []
+        dim = 512
+        base = np.zeros(dim, dtype=np.float32)
+        base[0] = 1.0  # primary vocal identity
+
+        for i in range(10):
+            vec = base.copy()
+            # Add acoustic variation in other dimensions
+            vec[i + 10] = 0.35
+            vec = vec / np.linalg.norm(vec)
+            templates.append(vec.tolist())
+
+        centroid = np.mean(templates, axis=0)
+        centroid = (centroid / np.linalg.norm(centroid)).tolist()
+
+        adv_profile = SpeakerProfile(
+            profile_id="bruce_adv",
+            user_name="Bruce Wayne Advanced",
+            enrolled_at=time.time(),
+            template_embeddings=templates,
+            centroid_embedding=centroid,
+            threshold=0.52,
+            sample_count=10,
+        )
+        self.store.save_profile(adv_profile)
+
+        # Test utterance matching template #7 specifically (e.g. distant/whisper mode)
+        target_vec = np.array(templates[7], dtype=np.float32)
+        self.extractor.register_fake("bruce_whisper", target_vec)
+
+        cand = self._make_candidate("bruce_whisper")
+        dec = self.verifier.verify(cand)
+
+        self.assertTrue(dec.verified, f"10-sample profile failed to verify acoustic variation: {dec.reject_reason}")
+        self.assertGreaterEqual(dec.similarity_score, 0.70)
+        self.assertEqual(dec.matched_profile_id, "bruce_adv")
+
+        # Impostor must still be rejected
+        cand_impostor = self._make_candidate("joker")
+        dec_imp = self.verifier.verify(cand_impostor)
+        self.assertFalse(dec_imp.verified)
+        self.assertLess(dec_imp.similarity_score, 0.52)
+
+    # ── Test Case 14: Realtime profile reload on detector ──────────────────
+    def test_case_14_realtime_profile_reload_on_detector(self):
+        empty_dir = Path(tempfile.mkdtemp())
+        try:
+            live_store = ProfileStore(storage_dir=empty_dir)
+            live_verifier = SpeakerVerifier(profile_store=live_store, embedding_extractor=self.extractor)
+            det = WakeWordDetector(
+                on_detect=lambda: None,
+                threshold=0.50,
+                speaker_verifier=live_verifier,
+            )
+
+            # Initially 0 profiles armed
+            self.assertEqual(det.reload_speaker_profiles(), 0)
+
+            # Dynamically enroll profile in realtime (as happens in terminal / app modal)
+            live_store.save_profile(self.bruce_profile)
+
+            # Reload in realtime without restarting detector
+            armed_count = det.reload_speaker_profiles()
+            self.assertEqual(armed_count, 1)
+
+            # Candidate now verifies successfully
+            cand = self._make_candidate("bruce")
+            dec = live_verifier.verify(cand)
+            self.assertTrue(dec.verified)
+            self.assertEqual(dec.matched_user, "Bruce Wayne")
+        finally:
+            shutil.rmtree(empty_dir, ignore_errors=True)
+
 
 if __name__ == "__main__":
     unittest.main()

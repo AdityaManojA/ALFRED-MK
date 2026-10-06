@@ -6,8 +6,9 @@ from __future__ import annotations
 
 import dataclasses
 import logging
+from pathlib import Path
 import time
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 import numpy as np
 
 from core.speaker.types import SpeakerProfile
@@ -144,8 +145,13 @@ class SpeakerEnrollmentManager:
 
         current_embs = self._session_embeddings.setdefault(clean_name, [])
         # Check consistency against previously accepted samples in this session
-        # For advanced multi-sample calibration (>= 3 existing samples), tolerate natural acoustic inflections (down to 0.35)
-        pairwise_min = 0.35 if len(current_embs) >= 3 else MIN_PAIRWISE_CONSISTENCY
+        # For advanced multi-sample calibration (e.g. 10 samples), allow acoustic variations (down to 0.32)
+        if len(current_embs) >= 6:
+            pairwise_min = 0.32
+        elif len(current_embs) >= 3:
+            pairwise_min = 0.35
+        else:
+            pairwise_min = MIN_PAIRWISE_CONSISTENCY
         for idx, prev in enumerate(current_embs, start=1):
             sim = float(np.dot(emb.vector, prev))
             if sim < pairwise_min:
@@ -209,7 +215,7 @@ class SpeakerEnrollmentManager:
         # 3. Check mutual consistency between samples
         pairwise_sims = []
         n = len(embeddings)
-        pairwise_min = 0.35 if n > 3 else MIN_PAIRWISE_CONSISTENCY
+        pairwise_min = 0.32 if n >= 7 else (0.35 if n > 3 else MIN_PAIRWISE_CONSISTENCY)
         for i in range(n):
             for j in range(i + 1, n):
                 sim = float(np.dot(embeddings[i], embeddings[j]))
@@ -247,7 +253,25 @@ class SpeakerEnrollmentManager:
             metadata={"avg_pairwise_sim": avg_sim, "model": "campplus"},
         )
 
-        # 6. Opt-in diagnostic storage: raw WAVs are discarded by default for privacy
+        # 6. Auto-persist positive enrollment WAVs to training dataset so real-time enrollment
+        # organically accumulates positive wake clips without requiring IDE recording tools
+        try:
+            pos_dir = Path(__file__).resolve().parent.parent.parent / "data" / "wakeword_samples" / "positive"
+            pos_dir.mkdir(parents=True, exist_ok=True)
+            import scipy.io.wavfile as wavfile
+            ts = int(time.time())
+            for idx, sample in enumerate(audio_samples, start=1):
+                raw = np.asarray(sample).flatten()
+                if np.issubdtype(raw.dtype, np.floating):
+                    pcm = np.clip(raw * 32767.0, -32768, 32767).astype(np.int16)
+                else:
+                    pcm = raw.astype(np.int16)
+                out_path = pos_dir / f"{profile_id}_enroll_{ts}_{idx:02d}.wav"
+                wavfile.write(str(out_path), sample_rate, pcm)
+        except Exception as e:
+            _LOGGER.debug(f"Could not auto-persist positive training sample: {e}")
+
+        # 7. Opt-in diagnostic storage: raw WAVs in user voice profile folder
         if retain_diagnostic_wavs:
             diag_dir = self.store.storage_dir / "diagnostics" / profile_id
             diag_dir.mkdir(parents=True, exist_ok=True)
@@ -258,7 +282,7 @@ class SpeakerEnrollmentManager:
             except Exception as e:
                 _LOGGER.warning(f"Could not save diagnostic enrollment wavs: {e}")
 
-        # 7. Persist profile
+        # 8. Persist profile
         saved = self.store.save_profile(profile)
         if not saved:
             return EnrollmentResult(success=False, error_message="Failed to write profile to disk.")
