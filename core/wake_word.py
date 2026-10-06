@@ -44,6 +44,9 @@ WAKE_MODEL_SHA256 = "65acc2f28a2c8be07719cbdc51cf417346432232762e309c60c3f0ab387
 VALID_WAKE_MODEL_SHA256S = {
     "65acc2f28a2c8be07719cbdc51cf417346432232762e309c60c3f0ab387675f7",
     "6b67237ff9da3bf00cb443438503ef842655263b62323f7da48e3f7c2e81940e",
+    "76ddfd260988bcffb4e8c8fd68750882b68d6f5be9da0424356614e6bbc1cb35",  # 1.onnx
+    "8b14adf6f4b5e1fcfe0555f24940c945123f15f561145cf2789ef847c19b6a55",  # 2.onnx
+    "236991fc43ba75e93ffc41064c7abec1242e313dba945f4029175ec28ef317a7",  # 3.onnx
 }
 
 SPEAKER_MODEL_PATH = Path(__file__).resolve().parent.parent / "models" / "speaker_verifier.onnx"
@@ -176,7 +179,7 @@ def get_wake_model_paths() -> list[str]:
                 or "tmp" in low
             ):
                 continue
-            if "alfred" in low:
+            if "alfred" in low or re.match(r"^\d+\.onnx$", low) or "wake" in low or "hey" in low:
                 model_paths.append(str(p))
                 seen_names.add(low)
 
@@ -199,22 +202,18 @@ get_shared_model = _make_model
 
 
 def _prediction_score(scores: object) -> float:
-    """Return the Alfred score while tolerating backend-specific key suffixes and ensembles."""
+    """Return the Alfred score across all active ensemble wake models."""
     if not isinstance(scores, dict) or not scores:
         return 0.0
-    matches = [float(v) for k, v in scores.items() if "alfred" in str(k).lower()]
-    return max(matches) if matches else max(float(v) for v in scores.values())
+    return max(float(v) for v in scores.values())
 
 
 def _top_prediction(scores: object) -> tuple[str, float]:
-    """Return the top matching model name and score among Alfred wake models."""
+    """Return the top matching model name and score among all loaded wake models."""
     if not isinstance(scores, dict) or not scores:
         return "alfred", 0.0
-    matches = {str(k): float(v) for k, v in scores.items() if "alfred" in str(k).lower()}
-    if not matches:
-        return "alfred", max(float(v) for v in scores.values()) if scores else 0.0
-    top_name = max(matches, key=matches.get)
-    return top_name, matches[top_name]
+    top_name = max(scores, key=lambda k: float(scores[k]))
+    return str(top_name), float(scores[top_name])
 
 
 def is_installed() -> bool:

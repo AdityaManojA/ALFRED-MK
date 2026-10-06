@@ -823,11 +823,11 @@ py tools/record_training_samples.py --train-local
 
 ### 🌐 Option C: Community & External OpenWakeWord Models (e.g., openwakeword.com/library)
 
-ALFRED natively supports loading pre-trained community models from the [OpenWakeWord Model Library](https://openwakeword.com/library) (such as `Hey_Alfred_rung2_half_20260911_155005.onnx`):
+ALFRED natively supports loading pre-trained community models from the [OpenWakeWord Model Library](https://openwakeword.com/library) (such as `1.onnx`, `2.onnx`, `3.onnx`):
 
-1. **Drop Model into `models/` or `training/`**: Place any external ONNX model containing `alfred` in its filename into `models/` or `training/`.
-2. **Zero-Overhead Multi-Head Ensemble**: On startup, ALFRED automatically discovers all active wake-word models. OpenWakeWord executes the shared feature extractor (`melspectrogram.onnx` + `embedding_model.onnx`) once per audio frame, evaluating both the baseline model and community models in parallel with near-zero added latency (<0.2ms).
-3. **Trigger Evaluation**: ALFRED wakes up if *either* model fires with high confidence, providing the broad generalization of large synthetic community datasets alongside the microphone specialization of local training.
+1. **Drop Model into `models/` or `training/`**: Place any external ONNX model into `models/` or `training/` (e.g. named `1.onnx`, `2.onnx`, `3.onnx`, or containing `alfred`/`wake`/`hey`).
+2. **Zero-Overhead Multi-Head Ensemble**: On startup, ALFRED automatically discovers all active wake-word models. OpenWakeWord executes the shared feature extractor (`melspectrogram.onnx` + `embedding_model.onnx`) once per audio frame, evaluating both the baseline model and community models (`alfred`, `1`, `2`, `3`) in parallel with near-zero added latency (<0.2ms).
+3. **Trigger Evaluation**: ALFRED wakes up if *any* model in the ensemble fires with high confidence, providing the broad generalization of large synthetic community datasets alongside the microphone specialization of local training.
 4. **Live Verification**: Run `py tools/test_wake_model.py` to inspect live scores and see which model triggers.
 
 ### 🎧 Step 3: Live Microphone Acoustic Verification & VU Meter
@@ -1196,7 +1196,7 @@ ALFRED-MK-IX/
 │   ├── train_alfred_colab.ipynb # Google Colab / Local IDE training notebook
 │   ├── content.md              # Personalized Hey Siri research reference
 │   ├── alfred.onnx             # Baseline training model
-│   └── Hey_Alfred_*.onnx       # OpenWakeWord community trained models
+│   └── 1.onnx, 2.onnx, 3.onnx  # OpenWakeWord community & fine-tuned wake models
 ├── plugins/
 │   ├── _template.py
 │   ├── calendar_sync.py
