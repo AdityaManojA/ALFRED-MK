@@ -11,6 +11,7 @@ from __future__ import annotations
 import logging
 import os
 import platform
+import subprocess
 import sys
 import threading
 from typing import Dict, Optional
@@ -358,6 +359,75 @@ def _unduck_linux(targets: set[str]) -> dict[str, float]:
     return restored_apps
 
 
+def _duck_macos(volume_factor: float, targets: set[str]) -> dict[str, float]:
+    """Execute audio ducking on macOS for media players (Spotify, Music)."""
+    global _is_ducked
+    ducked_apps: dict[str, float] = {}
+
+    media_apps = [("Spotify", "spotify"), ("Music", "music")]
+    for app_display, app_key in media_apps:
+        if app_key in targets or "*" in targets or "all" in targets:
+            try:
+                # Check if app is running
+                r = subprocess.run(
+                    ["osascript", "-e", f'application "{app_display}" is running'],
+                    capture_output=True, text=True, timeout=1
+                )
+                if r.returncode == 0 and r.stdout.strip() == "true":
+                    # Get current sound volume (0-100)
+                    r_vol = subprocess.run(
+                        ["osascript", "-e", f'tell application "{app_display}" to sound volume'],
+                        capture_output=True, text=True, timeout=1
+                    )
+                    if r_vol.returncode == 0 and r_vol.stdout.strip().isdigit():
+                        cur_vol = float(r_vol.stdout.strip())
+                        if app_key not in _original_volumes:
+                            _original_volumes[app_key] = cur_vol
+                        target_vol = max(0, min(100, int(cur_vol * volume_factor)))
+                        subprocess.run(
+                            ["osascript", "-e", f'tell application "{app_display}" to set sound volume to {target_vol}'],
+                            capture_output=True, timeout=1
+                        )
+                        ducked_apps[app_key] = target_vol / 100.0
+            except Exception as e:
+                logger.debug(f"macOS ducking failed for {app_display}: {e}")
+
+    if ducked_apps or _original_volumes:
+        _is_ducked = True
+        _schedule_auto_unduck_watchdog(timeout_s=30.0)
+
+    return ducked_apps
+
+
+def _unduck_macos(targets: set[str]) -> dict[str, float]:
+    """Restore ducked audio on macOS for media players (Spotify, Music)."""
+    global _is_ducked
+    restored_apps: dict[str, float] = {}
+
+    if not _original_volumes:
+        _is_ducked = False
+        _cancel_auto_unduck_watchdog()
+        return restored_apps
+
+    media_apps = [("Spotify", "spotify"), ("Music", "music")]
+    for app_display, app_key in media_apps:
+        if app_key in _original_volumes:
+            try:
+                orig_vol = int(_original_volumes[app_key])
+                subprocess.run(
+                    ["osascript", "-e", f'tell application "{app_display}" to set sound volume to {orig_vol}'],
+                    capture_output=True, timeout=1
+                )
+                restored_apps[app_key] = orig_vol / 100.0
+            except Exception as e:
+                logger.debug(f"macOS unducking failed for {app_display}: {e}")
+
+    _original_volumes.clear()
+    _is_ducked = False
+    _cancel_auto_unduck_watchdog()
+    return restored_apps
+
+
 def duck_media_apps(
     volume_factor: float = 0.3,
     targets: Optional[set[str]] = None,
@@ -380,6 +450,8 @@ def duck_media_apps(
                 return _duck_windows(volume_factor, target_names)
             elif sys_name == "Linux":
                 return _duck_linux(volume_factor, target_names)
+            elif sys_name == "Darwin":
+                return _duck_macos(volume_factor, target_names)
             return {}
 
     if sync:
@@ -409,6 +481,8 @@ def unduck_media_apps(
                 return _unduck_windows(target_names)
             elif sys_name == "Linux":
                 return _unduck_linux(target_names)
+            elif sys_name == "Darwin":
+                return _unduck_macos(target_names)
             return {}
 
     if sync:
