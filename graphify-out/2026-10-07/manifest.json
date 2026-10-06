@@ -270,9 +270,9 @@
     "semantic_hash": ""
   },
   "ui.py": {
-    "mtime": 1791308644.7157767,
-    "seen": 1791308951.6638908,
-    "ast_hash": "e7a71cb02a2ab0ae5e042d0da3636be8",
+    "mtime": 1791312746.8795795,
+    "seen": 1791313121.6587877,
+    "ast_hash": "aa60ac21b8db9f762e5b75009d565a17",
     "semantic_hash": ""
   },
   ".agents/rules/graphify.md": {
@@ -2712,9 +2712,9 @@
     "semantic_hash": ""
   },
   "core/intents/router.py": {
-    "mtime": 1791280242.6723576,
-    "seen": 1791280535.832395,
-    "ast_hash": "ca22525e3ec19a0df21baf91e12598ec",
+    "mtime": 1791312182.0179768,
+    "seen": 1791313121.6581488,
+    "ast_hash": "56285dbf0e2d59ab1a68776cc9237a25",
     "semantic_hash": ""
   },
   "core/speech/__init__.py": {
@@ -4431,6 +4431,144 @@
     "mtime": 1791295841.8857932,
     "seen": 1791299636.5364826,
     "ast_hash": "12bb4fb3e1aa9054ddcaca1f62bf4585",
+    "semantic_hash": ""
+  },
+  "actions/streaming_pilot.py": {
+    "mtime": 1791313027.7525356,
+    "seen": 1791313121.6579442,
+    "ast_hash": "9ebda2327326f4b085c92da08cf227d2",
+    "semantic_hash": ""
+  },
+  "core/streaming/__init__.py": {
+    "mtime": 1791311778.6137753,
+    "seen": 1791313121.6583524,
+    "ast_hash": "d16d40f82efe263dc4054531e85db0e6",
+    "semantic_hash": ""
+  },
+  "core/streaming/discovery.py": {
+    "mtime": 1791311743.2525327,
+    "seen": 1791313121.6583545,
+    "ast_hash": "df02a38bb014d3e7e9943530da00355a",
+    "semantic_hash": ""
+  },
+  "core/streaming/preferences.py": {
+    "mtime": 1791312763.2375546,
+    "seen": 1791313121.6583562,
+    "ast_hash": "01eb92048819199c60a37b1e1871a14e",
+    "semantic_hash": ""
+  },
+  "core/streaming/provider.py": {
+    "mtime": 1791312960.244097,
+    "seen": 1791313121.6583579,
+    "ast_hash": "f58df1ce973155f4e90653f39a8e8bfd",
+    "semantic_hash": ""
+  },
+  "core/streaming/providers/crunchyroll.py": {
+    "mtime": 1791311972.8985813,
+    "seen": 1791313121.6583593,
+    "ast_hash": "b0c233242be3e64b9366e35b6fb5a5b8",
+    "semantic_hash": ""
+  },
+  "core/streaming/providers/netflix.py": {
+    "mtime": 1791311905.5504687,
+    "seen": 1791313121.6583607,
+    "ast_hash": "d02d516ee776842e11e6d863e06471a5",
+    "semantic_hash": ""
+  },
+  "core/streaming/registry.py": {
+    "mtime": 1791311649.3114889,
+    "seen": 1791313121.6583624,
+    "ast_hash": "0fbc54b9fc126e178b80e77319371ad0",
+    "semantic_hash": ""
+  },
+  "core/streaming/selectors.json": {
+    "mtime": 1791311633.4445946,
+    "seen": 1791313121.6583645,
+    "ast_hash": "9218594f31046019408c1b639dd0f1c6",
+    "semantic_hash": ""
+  },
+  "tests/test_crunchyroll_provider.py": {
+    "mtime": 1791312000.8824353,
+    "seen": 1791313121.6586092,
+    "ast_hash": "afbe6d175ce28e07c24993bcb647e34c",
+    "semantic_hash": ""
+  },
+  "tests/test_netflix_provider.py": {
+    "mtime": 1791311920.424019,
+    "seen": 1791313121.6586604,
+    "ast_hash": "6ac38c5002408bc71b3295e384b74fe5",
+    "semantic_hash": ""
+  },
+  "tests/test_streaming_integration.py": {
+    "mtime": 1791312920.6249652,
+    "seen": 1791313121.658714,
+    "ast_hash": "2f8fd46e5ed9877862087ddaf7a9aa4d",
+    "semantic_hash": ""
+  },
+  "tests/test_streaming_preferences.py": {
+    "mtime": 1791311799.931224,
+    "seen": 1791313121.658716,
+    "ast_hash": "74cb4cb8766d1136b17e0a1306dac767",
+    "semantic_hash": ""
+  },
+  "tests/test_streaming_provider_interface.py": {
+    "mtime": 1791311673.271358,
+    "seen": 1791313121.6587176,
+    "ast_hash": "2f977a93c41876d96d7839e856be0cd9",
+    "semantic_hash": ""
+  },
+  "tests/test_streaming_routing_precedence.py": {
+    "mtime": 1791312196.150387,
+    "seen": 1791313121.6587195,
+    "ast_hash": "f4ceee626f29152e3d5dc6f15b34f9cf",
+    "semantic_hash": ""
+  },
+  "docs/streaming/PHASE_0_NOTES.md": {
+    "mtime": 1791311593.7785614,
+    "seen": 1791313121.6590905,
+    "ast_hash": "b727518e0d76f6d1cebf1e00163d8218",
+    "semantic_hash": ""
+  },
+  "docs/streaming/PHASE_1_NOTES.md": {
+    "mtime": 1791311719.1695216,
+    "seen": 1791313121.6590924,
+    "ast_hash": "254a487611201f6fe55a926dd859b412",
+    "semantic_hash": ""
+  },
+  "docs/streaming/PHASE_2_NOTES.md": {
+    "mtime": 1791311823.566511,
+    "seen": 1791313121.6590946,
+    "ast_hash": "bf32464eceaf92c61238b6b33352f224",
+    "semantic_hash": ""
+  },
+  "docs/streaming/PHASE_3_NOTES.md": {
+    "mtime": 1791311946.460416,
+    "seen": 1791313121.6590967,
+    "ast_hash": "dfcf7dafa72c046169cb9c764209a07a",
+    "semantic_hash": ""
+  },
+  "docs/streaming/PHASE_4_NOTES.md": {
+    "mtime": 1791312048.7191348,
+    "seen": 1791313121.6590986,
+    "ast_hash": "e77b0a633891023fb9face052c9e3301",
+    "semantic_hash": ""
+  },
+  "docs/streaming/PHASE_5_NOTES.md": {
+    "mtime": 1791312227.8916407,
+    "seen": 1791313121.6591008,
+    "ast_hash": "ecc141842ac84b1587dc27ac0a808675",
+    "semantic_hash": ""
+  },
+  "docs/streaming/PHASE_6_NOTES.md": {
+    "mtime": 1791312824.655859,
+    "seen": 1791313121.6591027,
+    "ast_hash": "92aefb84c1bff3505728e9019e0c0138",
+    "semantic_hash": ""
+  },
+  "docs/streaming/VERIFY.md": {
+    "mtime": 1791313078.3319466,
+    "seen": 1791313121.659105,
+    "ast_hash": "55e091e014336bd9e5051c4ac0c6c72b",
     "semantic_hash": ""
   }
 }

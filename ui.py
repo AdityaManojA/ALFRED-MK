@@ -39,6 +39,13 @@ from PyQt6.QtGui import (
 )
 from core.sentry.mode_manager import get_sentry_mode_manager, SentrySnapshot
 from core.sentry.focus.card import FloatingFocusCard
+from ui.drag_handler import (
+    CrossPlatformDragHandler,
+    MAX_HEADER_DRAG_Y_PX,
+    is_tiling_wm,
+    load_window_position,
+    save_window_position,
+)
 from core.logger import install_timestamped_logging
 install_timestamped_logging()
 from core.gui_thread import assert_gui_thread, is_gui_thread, run_on_gui_thread
@@ -4388,17 +4395,19 @@ class MinimizedHudOverlay(QWidget):
         self._lines: deque[str] = deque(maxlen=10)
         self._assistant_name = ""
         self._ai_tags: tuple[str, ...] = ()
-        self._drag_offset: QPoint | None = None
+        self._drag_handler = CrossPlatformDragHandler()
         self._user_closed = False
         self._shutting_down = False
 
-        # This must be a real top-level Window, rather than Qt.Tool, so its
-        # minimize control creates an independently restorable taskbar item.
-        self.setWindowFlags(
+        # Real top-level Window (avoiding Tool which gets hidden/demoted by Linux compositors)
+        flags = (
             Qt.WindowType.Window
             | Qt.WindowType.FramelessWindowHint
             | Qt.WindowType.WindowStaysOnTopHint
         )
+        if is_tiling_wm():
+            flags |= Qt.WindowType.Dialog
+        self.setWindowFlags(flags)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, True)
         self.setFixedSize(420, 230)
@@ -4621,6 +4630,15 @@ class MinimizedHudOverlay(QWidget):
         self._sync_sentry_state()
         self.show()
         self.raise_()
+        # Explicit transient parent ensures Linux compositors stack mini HUD above parent
+        if hasattr(self, "_main_window") and self._main_window:
+            wh = self.windowHandle()
+            m_wh = self._main_window.windowHandle()
+            if wh is not None and m_wh is not None:
+                try:
+                    wh.setTransientParent(m_wh)
+                except Exception:
+                    pass
 
     def hide_overlay(self) -> None:
         self._save_position()
@@ -4647,21 +4665,21 @@ class MinimizedHudOverlay(QWidget):
         event.ignore()
 
     def mousePressEvent(self, event) -> None:
-        if event.button() == Qt.MouseButton.LeftButton and event.position().y() <= 42:
-            self._drag_offset = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
+        if self._drag_handler.handle_mouse_press(self, event, max_header_y=MAX_HEADER_DRAG_Y_PX):
             event.accept()
             return
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event) -> None:
-        if event.buttons() & Qt.MouseButton.LeftButton and self._drag_offset is not None:
-            self.move(event.globalPosition().toPoint() - self._drag_offset)
+        if self._drag_handler.handle_mouse_move(self, event):
             event.accept()
             return
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event) -> None:
-        self._drag_offset = None
+        if event.button() == Qt.MouseButton.LeftButton:
+            if self._drag_handler.handle_mouse_release(self, event):
+                self._save_position()
         super().mouseReleaseEvent(event)
 
     @property
@@ -4669,6 +4687,7 @@ class MinimizedHudOverlay(QWidget):
         return CONFIG_DIR / self._POSITION_FILE
 
     def _save_position(self) -> None:
+        save_window_position("mini_hud", self.x(), self.y())
         try:
             CONFIG_DIR.mkdir(parents=True, exist_ok=True)
             self._position_path.write_text(
@@ -4678,25 +4697,8 @@ class MinimizedHudOverlay(QWidget):
             pass
 
     def _load_position(self) -> None:
-        position: QPoint | None = None
-        try:
-            saved = json.loads(self._position_path.read_text(encoding="utf-8"))
-            position = QPoint(int(saved["x"]), int(saved["y"]))
-        except (OSError, ValueError, TypeError, KeyError, json.JSONDecodeError):
-            pass
-
-        screen = QApplication.screenAt(position) if position is not None else None
-        screen = screen or QApplication.primaryScreen()
-        if screen is None:
-            if position is not None:
-                self.move(position)
-            return
-        bounds = screen.availableGeometry()
-        if position is None:
-            position = QPoint(bounds.right() - self.width() - 24, bounds.bottom() - self.height() - 24)
-        x = max(bounds.left(), min(position.x(), bounds.right() - self.width() + 1))
-        y = max(bounds.top(), min(position.y(), bounds.bottom() - self.height() + 1))
-        self.move(x, y)
+        pos = load_window_position("mini_hud", self.width(), self.height(), legacy_config_file=self._POSITION_FILE)
+        self.move(pos)
 
 
 class BatGlobeOrb(QWidget):
@@ -4713,14 +4715,16 @@ class BatGlobeOrb(QWidget):
         self._assistant_name = assistant_name
         self._press_pos: QPoint | None = None
         self._press_t: float = 0.0
-        self._is_dragging: bool = False
-        self._last_drag_pos: QPoint | None = None
+        self._drag_handler = CrossPlatformDragHandler()
 
-        self.setWindowFlags(
+        flags = (
             Qt.WindowType.Window
             | Qt.WindowType.FramelessWindowHint
             | Qt.WindowType.WindowStaysOnTopHint
         )
+        if is_tiling_wm():
+            flags |= Qt.WindowType.Dialog
+        self.setWindowFlags(flags)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, False)
         self.setFixedSize(260, 260)
@@ -4847,31 +4851,24 @@ class BatGlobeOrb(QWidget):
 
     def mousePressEvent(self, e: QMouseEvent):
         if e.button() == Qt.MouseButton.LeftButton:
-            self._press_pos = e.globalPosition().toPoint()
-            self._last_drag_pos = e.globalPosition().toPoint()
+            self._drag_handler.handle_mouse_press(self, e)
             self._press_t = time.time()
-            self._is_dragging = False
         super().mousePressEvent(e)
 
     def mouseMoveEvent(self, e: QMouseEvent):
         self._show_controls()
-        if e.buttons() & Qt.MouseButton.LeftButton and self._press_pos is not None:
-            cur_pos = e.globalPosition().toPoint()
-            if (cur_pos - self._press_pos).manhattanLength() > 4:
-                self._is_dragging = True
-                delta = cur_pos - self._last_drag_pos
-                self.move(self.pos() + delta)
-                self._last_drag_pos = cur_pos
+        if self._drag_handler.handle_mouse_move(self, e):
+            return
         super().mouseMoveEvent(e)
 
     def mouseReleaseEvent(self, e: QMouseEvent):
         if e.button() == Qt.MouseButton.LeftButton:
-            if self._is_dragging:
+            was_dragging = self._drag_handler.handle_mouse_release(self, e)
+            if was_dragging:
                 self._save_position()
             else:
                 # Genuine click / tap on orb!
                 self._on_orb_clicked()
-            self._is_dragging = False
             self._press_pos = None
         super().mouseReleaseEvent(e)
 
@@ -4898,6 +4895,7 @@ class BatGlobeOrb(QWidget):
         self._main_window.raise_()
 
     def show_orb(self):
+        self._load_position()
         self.show()
         self.activateWindow()
         self.raise_()
@@ -4944,6 +4942,7 @@ class BatGlobeOrb(QWidget):
         return CONFIG_DIR / self._POSITION_FILE
 
     def _save_position(self) -> None:
+        save_window_position("bat_globe", self.x(), self.y())
         try:
             CONFIG_DIR.mkdir(parents=True, exist_ok=True)
             self._position_path.write_text(
@@ -4953,25 +4952,8 @@ class BatGlobeOrb(QWidget):
             pass
 
     def _load_position(self) -> None:
-        position: QPoint | None = None
-        try:
-            saved = json.loads(self._position_path.read_text(encoding="utf-8"))
-            position = QPoint(int(saved["x"]), int(saved["y"]))
-        except (OSError, ValueError, TypeError, KeyError, json.JSONDecodeError):
-            pass
-
-        screen = QApplication.screenAt(position) if position is not None else None
-        screen = screen or QApplication.primaryScreen()
-        if screen is None:
-            if position is not None:
-                self.move(position)
-            return
-        bounds = screen.availableGeometry()
-        if position is None:
-            position = QPoint(bounds.right() - self.width() - 28, bounds.bottom() - self.height() - 28)
-        x = max(bounds.left(), min(position.x(), bounds.right() - self.width() + 1))
-        y = max(bounds.top(), min(position.y(), bounds.bottom() - self.height() + 1))
-        self.move(x, y)
+        pos = load_window_position("bat_globe", self.width(), self.height(), legacy_config_file=self._POSITION_FILE)
+        self.move(pos)
 
 
 class NotesTerminalWidget(QWidget):
