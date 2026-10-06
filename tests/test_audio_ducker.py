@@ -223,6 +223,53 @@ class TestAudioDucker(unittest.TestCase):
         self.assertAlmostEqual(res_unduck["spotify"], 0.80, places=2)
         self.assertFalse(audio_ducker.is_ducked())
 
+    @patch("core.audio_ducker.platform.system", return_value="Windows")
+    def test_zero_original_volume_fallbacks_to_fifty_percent(self, mock_system):
+        """If an external app volume is 0 when ducking begins, it must fallback to 50% rather than staying permanently muted."""
+        spotify_proc = MagicMock()
+        spotify_proc.name.return_value = "Spotify.exe"
+        spotify_proc.pid = 7777
+        spotify_vol = MagicMock()
+        spotify_vol.GetMasterVolume.return_value = 0.0  # Muted initially
+        spotify_session = MagicMock()
+        spotify_session.Process = spotify_proc
+        spotify_session._ctl.QueryInterface.return_value = spotify_vol
+
+        mock_sessions = [spotify_session]
+        with patch("pycaw.pycaw.AudioUtilities.GetAllSessions", return_value=mock_sessions):
+            audio_ducker.duck_media_apps(sync=True)
+            # Original volume stored should be 0.5 (50%) safety check
+            self.assertEqual(audio_ducker._original_volumes[7777], 0.5)
+
+            restored = audio_ducker.unduck_media_apps(sync=True)
+            self.assertEqual(restored["spotify.exe"], 0.5)
+            spotify_vol.SetMasterVolume.assert_called_with(0.5, None)
+
+    @patch("core.audio_ducker.platform.system", return_value="Windows")
+    def test_duck_audio_context_guarantees_restoration_on_exception(self, mock_system):
+        """AudioDuckContext must restore volume even if the task/TTS raises an unhandled exception."""
+        spotify_proc = MagicMock()
+        spotify_proc.name.return_value = "Spotify.exe"
+        spotify_proc.pid = 8881
+        spotify_vol = MagicMock()
+        spotify_vol.GetMasterVolume.return_value = 0.9
+        spotify_session = MagicMock()
+        spotify_session.Process = spotify_proc
+        spotify_session._ctl.QueryInterface.return_value = spotify_vol
+
+        mock_sessions = [spotify_session]
+        with patch("pycaw.pycaw.AudioUtilities.GetAllSessions", return_value=mock_sessions):
+            try:
+                with audio_ducker.AudioDuckContext(sync=True):
+                    self.assertTrue(audio_ducker.is_ducked())
+                    raise RuntimeError("Crash during speech playback")
+            except RuntimeError:
+                pass
+
+            self.assertFalse(audio_ducker.is_ducked())
+            spotify_vol.SetMasterVolume.assert_called_with(0.9, None)
+
 
 if __name__ == "__main__":
     unittest.main()
+

@@ -10,6 +10,8 @@ from core.browser.platform import get_platform_browser_driver
 from core.browser.platform.base import BaseBrowserPlatformDriver
 
 # ── Named Constants ──────────────────────────────────────────────────────────
+HOTKEY_CLOSE_WIN = ('ctrl', 'w')
+HOTKEY_CLOSE_MAC = ('command', 'w')
 CONTROLLER_TIMEOUT_S: float = 3.0
 MSG_TAB_CLOSED: str = "Tab closed, sir."
 MSG_TAB_CLOSE_FAILED: str = "Could not close active tab, sir."
@@ -43,11 +45,15 @@ class BrowserController:
     def close_active_tab(self) -> str:
         """Close the active browser tab without opening blank pages or windows."""
         browser = self.get_frontmost_browser()
-        if not browser:
-            # Fallback: if browser detection is strict, try closing tab anyway if user explicitly requested
-            _LOGGER.info("[BrowserController] No browser recognized in foreground. Attempting direct close.")
-        
         ok = self._driver.close_active_tab()
+        if not ok:
+            # Fallback: keyboard automation with window-focus restoration
+            try:
+                from core.browser.commands import close_tab as cmd_close_tab
+                ok = cmd_close_tab()
+            except Exception as exc:
+                _LOGGER.debug("[BrowserController] Keyboard close fallback failed: %s", exc)
+
         if ok:
             _LOGGER.info("[BrowserController] Active tab closed successfully in %s.", browser or "frontmost window")
             try:
@@ -59,7 +65,7 @@ class BrowserController:
                 pass
             return MSG_TAB_CLOSED
         
-        # If platform driver returned False because frontmost was not browser, report cleanly
+        # If platform driver and keyboard fallback returned False because frontmost was not browser, report cleanly
         if not browser:
             return MSG_NO_BROWSER_FRONTMOST
         return MSG_TAB_CLOSE_FAILED

@@ -24,6 +24,10 @@ except ImportError:
 from core import confirm
 from core.undo import push_undo
 
+# ── Named Constants for Browser Tab Control ──────────────────────────────────
+HOTKEY_CLOSE_WIN = ('ctrl', 'w')
+HOTKEY_CLOSE_MAC = ('command', 'w')
+
 _OS = platform.system()  # "Windows" | "Darwin" | "Linux"
 
 if _OS == "Windows":
@@ -95,6 +99,32 @@ def volume_mute():
     else:
         subprocess.run(["pactl", "set-sink-mute", "@DEFAULT_SINK@", "toggle"],
             capture_output=True)
+
+def mute_microphone() -> str:
+    """Mute the system input capture device with ALFRED verbal confirmation."""
+    from core.audio.mute import execute_mute_me
+    try:
+        from core.registry import get
+        player = get("main_player") or get("hud_controller") or get("ui")
+        if player and hasattr(player, "speak"):
+            return execute_mute_me(speak_fn=player.speak)
+    except Exception:
+        pass
+    return execute_mute_me()
+
+def unmute_microphone() -> str:
+    """Unmute the system input capture device."""
+    from core.audio.mute import unmute_system_microphone
+    unmute_system_microphone()
+    return "Microphone unmuted, sir."
+
+def toggle_microphone() -> str:
+    """Toggle the system input capture device mute status."""
+    from core.audio.mute import is_microphone_muted, unmute_system_microphone
+    if is_microphone_muted():
+        unmute_system_microphone()
+        return "Microphone unmuted, sir."
+    return mute_microphone()
 
 def volume_get() -> int | None:
     from core.platform import get_backend
@@ -321,14 +351,23 @@ def refresh_page():
 
 def close_tab():
     try:
+        from core.browser.commands import close_tab as cmd_close_tab
+        if cmd_close_tab():
+            print("[ComputerSettings] Active tab closed via keyboard automation.")
+            return
+    except Exception as e:
+        print(f"[ComputerSettings] commands.close_tab fallback: {e}")
+    try:
         from core.browser.controller import close_active_tab
         msg = close_active_tab()
         print(f"[ComputerSettings] {msg}")
         return
     except Exception as e:
         print(f"[ComputerSettings] Controller close_tab fallback: {e}")
-    if _OS == "Darwin": pyautogui.hotkey("command", "w")
-    else:               pyautogui.hotkey("ctrl", "w")
+    if _OS == "Darwin":
+        if _PYAUTOGUI: pyautogui.hotkey(*HOTKEY_CLOSE_MAC)
+    else:
+        if _PYAUTOGUI: pyautogui.hotkey(*HOTKEY_CLOSE_WIN)
 
 def new_tab():
     try:
@@ -617,9 +656,11 @@ ACTION_MAP: dict[str, callable] = {
     "mute":                volume_mute,
     "unmute":              volume_mute,
     "toggle_mute":         volume_mute,
-    "mute_mic":            volume_mute,
-    "unmute_mic":          volume_mute,
-    "toggle_mic":          volume_mute,
+    "mute_mic":            mute_microphone,
+    "unmute_mic":          unmute_microphone,
+    "toggle_mic":          toggle_microphone,
+    "mute_microphone":     mute_microphone,
+    "mute_me":             mute_microphone,
     "brightness_up":       brightness_up,
     "brightness_down":     brightness_down,
     "sleep_display":       sleep_display,

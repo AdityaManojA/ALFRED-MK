@@ -87,6 +87,43 @@ def _setup_wake_word() -> None:
         print("    You can retry later from ⚙ → WAKE WORD inside the app.")
 
 
+def _check_and_install_linux_audio_deps() -> None:
+    """Ensure portaudio and audio tools are installed on Linux (Debian/Ubuntu/Arch/Fedora)."""
+    if sys.platform != "linux" and OS != "Linux":
+        return
+    print("\n▶ Checking Linux system audio libraries (PortAudio)…")
+    try:
+        import ctypes.util
+        lib = ctypes.util.find_library("portaudio")
+        if lib:
+            print(f"✅ Found system PortAudio library: {lib}")
+            return
+    except Exception:
+        pass
+
+    import shutil
+    if shutil.which("apt-get"):
+        print("⚠️  PortAudio not found. Attempting to install via sudo apt-get...")
+        try:
+            cmd = ["sudo", "apt-get", "install", "-y", "portaudio19-dev", "python3-pyaudio", "pulseaudio-utils"]
+            subprocess.run(cmd, check=True)
+            print("✅ Successfully installed portaudio19-dev and audio utilities.")
+            return
+        except Exception as e:
+            print(f"⚠️  Could not auto-install via sudo apt-get: {e}")
+
+    print(
+        "\n=============================================================\n"
+        "CRITICAL DEPENDENCY MISSING: PortAudio\n"
+        "ALFRED requires the system audio library to use the microphone.\n"
+        "\n"
+        "To fix this on Linux (Ubuntu/Debian), run:\n"
+        "    sudo apt-get update\n"
+        "    sudo apt-get install portaudio19-dev python3-pyaudio\n"
+        "=============================================================\n"
+    )
+
+
 def main() -> None:
     print(f"⚙  MARK-IX setup — detected OS: {OS or 'unknown'}, "
           f"Python {sys.version_info[0]}.{sys.version_info[1]}")
@@ -142,6 +179,7 @@ def main() -> None:
                     f'    "{sys.executable}" "{postinstall}" -install'
                 )
     elif OS == "Linux":
+        _check_and_install_linux_audio_deps()
         print(
             "\nℹ️  Linux note — a few voice-controlled OS actions shell out to "
             "native tools. Install the ones you'll use via your package manager:\n"

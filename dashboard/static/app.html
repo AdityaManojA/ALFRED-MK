@@ -1437,7 +1437,7 @@
     let isSpeaking = false;
     let assistantName = 'ALFRED';
 let _ttsActive = true;
-let _initialHistoryLoaded = true;
+var _initialHistoryLoaded = false;
 
 function toggleTTS() {
   _ttsActive = !_ttsActive;
@@ -2066,7 +2066,7 @@ function speakOnMobile(text) {
     let _wsReconnectTimer = null;
     let _wsReconnectDelay = RECONNECT_BASE_S * 1000;
     let _pingInterval = null;
-    let _initialHistoryLoaded = false;
+    _initialHistoryLoaded = false;
 
     function initWebSocket() {
       if (ws) {
@@ -2726,6 +2726,14 @@ function speakOnMobile(text) {
       }
       _micIdle();
     }
+
+    // Explicit global attachments for mobile uplink inline onclick handlers
+    window.doSend = doSend;
+    window.doMic = doMic;
+    window.doWake = doWake;
+    window.executeTacticalAction = executeTacticalAction;
+    window.toggleTTS = toggleTTS;
+    window.clearChatFeed = clearChatFeed;
   </script>
 </body>
 </html>

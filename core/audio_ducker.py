@@ -8,6 +8,8 @@ speaks, and restores their original volumes when speech ends or is interrupted.
 
 from __future__ import annotations
 
+import atexit
+from contextlib import contextmanager
 import logging
 import os
 import platform
@@ -18,7 +20,12 @@ from typing import Dict, Optional
 
 logger = logging.getLogger("audio_ducker")
 
-# Default target media processes (case-insensitive)
+# Named constants for volume ducking configuration
+DUCK_VOLUME_PCT: int = 30
+DEFAULT_DUCK_FACTOR: float = DUCK_VOLUME_PCT / 100.0  # 0.3 (duck by 70%)
+SAFE_RESTORE_VOLUME_PCT: int = 50
+SAFE_RESTORE_VOLUME_FACTOR: float = SAFE_RESTORE_VOLUME_PCT / 100.0  # 0.5 (fallback if volume was 0)
+
 # Default target media processes (case-insensitive)
 DEFAULT_MEDIA_PROCESSES = {
     "spotify.exe",
@@ -157,6 +164,10 @@ def _duck_windows(volume_factor: float, targets: set[str]) -> dict[str, float]:
 
                         # Record original volume only if not already recorded
                         if pid not in _original_volumes:
+                            # Safety check: if original_volume == 0, fallback to 50%
+                            # so external apps are never permanently stuck in a muted state
+                            if cur_vol <= 0.0:
+                                cur_vol = SAFE_RESTORE_VOLUME_FACTOR
                             _original_volumes[pid] = cur_vol
 
                         target_vol = max(0.0, min(1.0, _original_volumes[pid] * volume_factor))
@@ -234,6 +245,8 @@ def _unduck_windows(targets: set[str]) -> dict[str, float]:
             if pid in _original_volumes:
                 try:
                     orig_vol = _original_volumes[pid]
+                    if orig_vol <= 0.0:
+                        orig_vol = SAFE_RESTORE_VOLUME_FACTOR
                     vol_ctrl = None
                     if hasattr(session, "_ctl") and hasattr(session._ctl, "QueryInterface"):
                         try:
@@ -308,6 +321,8 @@ def _duck_linux(volume_factor: float, targets: set[str]) -> dict[str, float]:
                 if pname in targets or "*" in targets or "all" in targets:
                     cur_vol = sink_input.volume.value_flat
                     if pid not in _original_volumes:
+                        if cur_vol <= 0.0:
+                            cur_vol = SAFE_RESTORE_VOLUME_FACTOR
                         _original_volumes[pid] = cur_vol
 
                     target_vol = max(0.0, min(1.0, _original_volumes[pid] * volume_factor))
@@ -347,6 +362,8 @@ def _unduck_linux(targets: set[str]) -> dict[str, float]:
 
                 if pid in _original_volumes:
                     orig_vol = _original_volumes[pid]
+                    if orig_vol <= 0.0:
+                        orig_vol = SAFE_RESTORE_VOLUME_FACTOR
                     pulse.volume_set_all_flat(sink_input, orig_vol)
                     restored_apps[pname or str(pid)] = orig_vol
 
@@ -382,8 +399,10 @@ def _duck_macos(volume_factor: float, targets: set[str]) -> dict[str, float]:
                     if r_vol.returncode == 0 and r_vol.stdout.strip().isdigit():
                         cur_vol = float(r_vol.stdout.strip())
                         if app_key not in _original_volumes:
+                            if cur_vol <= 0.0:
+                                cur_vol = float(SAFE_RESTORE_VOLUME_PCT)
                             _original_volumes[app_key] = cur_vol
-                        target_vol = max(0, min(100, int(cur_vol * volume_factor)))
+                        target_vol = max(0, min(100, int(_original_volumes[app_key] * volume_factor)))
                         subprocess.run(
                             ["osascript", "-e", f'tell application "{app_display}" to set sound volume to {target_vol}'],
                             capture_output=True, timeout=1
@@ -414,6 +433,8 @@ def _unduck_macos(targets: set[str]) -> dict[str, float]:
         if app_key in _original_volumes:
             try:
                 orig_vol = int(_original_volumes[app_key])
+                if orig_vol <= 0:
+                    orig_vol = SAFE_RESTORE_VOLUME_PCT
                 subprocess.run(
                     ["osascript", "-e", f'tell application "{app_display}" to set sound volume to {orig_vol}'],
                     capture_output=True, timeout=1
@@ -429,7 +450,7 @@ def _unduck_macos(targets: set[str]) -> dict[str, float]:
 
 
 def duck_media_apps(
-    volume_factor: float = 0.3,
+    volume_factor: float = DEFAULT_DUCK_FACTOR,
     targets: Optional[set[str]] = None,
     sync: bool = False,
 ) -> dict[str, float]:
@@ -495,4 +516,48 @@ def unduck_media_apps(
 def is_ducked() -> bool:
     """Return whether media ducking is currently active."""
     return _is_ducked
+
+
+class AudioDuckContext:
+    """
+    Context manager guaranteeing that media app volumes are ducked during
+    speech or an execution task, and ALWAYS restored to original levels upon completion or error.
+    """
+    def __init__(
+        self,
+        volume_factor: float = DEFAULT_DUCK_FACTOR,
+        targets: Optional[set[str]] = None,
+        sync: bool = False,
+    ):
+        self.volume_factor = volume_factor
+        self.targets = targets
+        self.sync = sync
+
+    def __enter__(self):
+        duck_media_apps(volume_factor=self.volume_factor, targets=self.targets, sync=self.sync)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        unduck_media_apps(targets=self.targets, sync=self.sync)
+        return False
+
+
+@contextmanager
+def ducked_audio(
+    volume_factor: float = DEFAULT_DUCK_FACTOR,
+    targets: Optional[set[str]] = None,
+    sync: bool = False,
+):
+    """
+    Context manager function to guarantee volume ducking and restoration.
+    """
+    try:
+        duck_media_apps(volume_factor=volume_factor, targets=targets, sync=sync)
+        yield
+    finally:
+        unduck_media_apps(targets=targets, sync=sync)
+
+
+# Guarantee volume restoration if interpreter shuts down while ducked
+atexit.register(lambda: unduck_media_apps(sync=True))
 

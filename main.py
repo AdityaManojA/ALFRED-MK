@@ -86,7 +86,12 @@ gc.set_threshold(70000, 15, 15)
 from datetime import datetime
 from pathlib import Path
 
-import sounddevice as sd
+try:
+    import sounddevice as sd
+except OSError as e:
+    from core.audio_portaudio import handle_portaudio_os_error
+    handle_portaudio_os_error(e)
+    raise
 import numpy as np
 from google import genai
 from google.genai import types
@@ -3254,6 +3259,17 @@ class AlfredLive:
         """Background task: voice alerts when metrics exceed thresholds."""
         while True:
             await asyncio.sleep(10)
+            try:
+                from core.audio.mute import is_microphone_muted
+                hw_mic_muted = await asyncio.to_thread(is_microphone_muted)
+                if hasattr(self, "ui") and self.ui:
+                    if hasattr(self.ui, "set_hardware_mic_muted"):
+                        self.ui.set_hardware_mic_muted(hw_mic_muted)
+                    elif hw_mic_muted != getattr(self.ui, "muted", False):
+                        self.ui.muted = hw_mic_muted
+            except Exception:
+                pass
+
             try:
                 alert = await asyncio.to_thread(self._sys_monitor.check)
             except (RuntimeError, asyncio.CancelledError):

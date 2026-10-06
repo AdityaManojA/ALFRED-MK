@@ -30,6 +30,13 @@ from core.audio.vad import (
     VAD_WINDOW_SAMPLES,
     VoiceActivityDetector,
 )
+from core.audio.mute import (
+    MUTE_CONFIRMATION_SPEECH,
+    mute_system_microphone,
+    unmute_system_microphone,
+    is_microphone_muted,
+    execute_mute_me,
+)
 from core.audio.wakeword_tiny import (
     DualWakeWordDetector,
     WakeDetectionResult,

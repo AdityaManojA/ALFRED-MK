@@ -160,6 +160,30 @@ class TestIntentRoutingAndAliases(unittest.TestCase):
         self.assertEqual(res, MSG_TAB_CLOSED)
         mock_close_tab.assert_called_once()
 
+    def test_intent_router_close_this_tab_fast_path(self):
+        from core.intents.router import IntentRouter
+        router = IntentRouter()
+        match = router.route("close this tab")
+        self.assertIsNotNone(match)
+        self.assertEqual(match.intent_name, "close_tab")
+        self.assertEqual(match.action_name, "browser_control")
+
+    @patch("pyautogui.hotkey")
+    @patch("platform.system", return_value="Windows")
+    def test_browser_commands_close_tab_hotkey_windows(self, mock_sys, mock_hotkey):
+        from core.browser.commands import close_tab, HOTKEY_CLOSE_WIN
+        ok = close_tab()
+        self.assertTrue(ok)
+        mock_hotkey.assert_called_with(*HOTKEY_CLOSE_WIN)
+
+    @patch("pyautogui.hotkey")
+    @patch("platform.system", return_value="Darwin")
+    def test_browser_commands_close_tab_hotkey_mac(self, mock_sys, mock_hotkey):
+        from core.browser.commands import close_tab, HOTKEY_CLOSE_MAC
+        ok = close_tab()
+        self.assertTrue(ok)
+        mock_hotkey.assert_called_with(*HOTKEY_CLOSE_MAC)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -10675,6 +10675,17 @@ class MainWindow(QMainWindow):
             self._apply_state("LISTENING")
             self._log.append_log("SYS: Cowl acoustic sensors online. Batcomputer listening.")
 
+    def set_hardware_mic_muted(self, muted: bool):
+        """Set explicit hardware microphone mute visual state without toggling."""
+        if self._muted != muted:
+            self._muted = muted
+            self.hud.muted = muted
+            self._style_mute_btn()
+            if muted:
+                self._apply_state("MUTED")
+            else:
+                self._apply_state("LISTENING")
+
     def _style_mute_btn(self):
         if self._muted:
             self._mute_btn.setText("[ ⊘ ]  SILENCE PROTOCOL : ENGAGED  //  COWL MUTED")
@@ -11324,6 +11335,10 @@ class AlfredUI:
     def toggle_mute(self) -> None:
         """Toggle audio mute state."""
         self._win._toggle_mute()
+
+    def set_hardware_mic_muted(self, muted: bool) -> None:
+        """Update HUD visual indicators to reflect system microphone mute level."""
+        self._win.set_hardware_mic_muted(muted)
 
     def set_media_arbiter(self, arbiter) -> None:
         """Connect application-level media state to MainWindow."""

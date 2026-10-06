@@ -16,7 +16,12 @@ import threading
 from typing import Callable, Optional
 
 import numpy as np
-import sounddevice as sd
+try:
+    import sounddevice as sd
+except OSError as e:
+    from core.audio_portaudio import handle_portaudio_os_error
+    handle_portaudio_os_error(e)
+    raise
 
 from core.tts.engine_base import Capability, TTSEngine
 

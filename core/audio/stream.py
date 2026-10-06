@@ -163,7 +163,12 @@ class SharedAudioStream:
 
             self._device = device
             try:
-                import sounddevice as sd
+                try:
+                    import sounddevice as sd
+                except OSError as e:
+                    from core.audio_portaudio import handle_portaudio_os_error
+                    handle_portaudio_os_error(e)
+                    raise
 
                 def _audio_callback(indata, frames, time_info, status):
                     # Sounddevice provides float32 or int16. We use int16.
