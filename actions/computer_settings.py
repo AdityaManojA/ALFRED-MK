@@ -180,7 +180,7 @@ def volume_set(value: int):
             vol = getattr(devices, "EndpointVolume", None)
             if vol is None:
                 interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-                vol = cast(interface, POINTER(IAudioEndpointVolume))
+                vol = interface.QueryInterface(IAudioEndpointVolume)
             vol.SetMasterVolumeLevelScalar(value / 100.0, None)
             return
         except Exception as e:

@@ -3221,8 +3221,8 @@ class HudCanvas(QWidget):
                 p.end()
                 t_paint_ms = (time.perf_counter() - t_paint_start) * 1000.0
                 now = time.monotonic()
-                # Ignore initial cold-cache frames (tick <= 2) for slow paint warning
-                if self._tick > 2 and t_paint_ms > FRAME_WARN_MS and (now - getattr(self, "_last_slow_paint_warn", 0.0)) > FRAME_WARN_COOLDOWN_S:
+                # Ignore initial cold-cache frames (tick <= 10) for slow paint warning
+                if self._tick > 10 and t_paint_ms > FRAME_WARN_MS and (now - getattr(self, "_last_slow_paint_warn", 0.0)) > FRAME_WARN_COOLDOWN_S:
                     self._last_slow_paint_warn = now
                     print(f"[HUD] Slow paintEvent: {t_paint_ms:.1f}ms exceeds {FRAME_WARN_MS:.0f}ms budget (throttled)")
         except Exception as exc:

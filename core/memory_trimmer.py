@@ -66,28 +66,27 @@ def trim_process_memory() -> bool:
             except Exception:
                 pass
 
-        # 5. Windows CRT heap compaction & Working Set trim
+        # 5. Safe Windows Working Set trim via SetProcessWorkingSetSize
         if sys.platform == "win32":
-            import ctypes
             try:
-                if hasattr(ctypes.cdll, "msvcrt"):
-                    ctypes.cdll.msvcrt._heapmin()
-            except Exception:
-                pass
-            try:
-                ctypes.CDLL("ucrtbase.dll")._heapmin()
-            except Exception:
-                pass
-
-            k32 = ctypes.windll.kernel32
-            psapi = ctypes.windll.psapi
-            pid = k32.GetCurrentProcessId()
-            # PROCESS_SET_QUOTA (0x0100) | PROCESS_QUERY_INFORMATION (0x0400) = 0x0500
-            h_proc = k32.OpenProcess(0x0500, False, pid)
-            if h_proc:
-                ok = psapi.EmptyWorkingSet(h_proc)
-                k32.CloseHandle(h_proc)
+                import ctypes
+                from ctypes import wintypes
+                k32 = ctypes.windll.kernel32
+                k32.GetCurrentProcess.restype = wintypes.HANDLE
+                k32.SetProcessWorkingSetSize.argtypes = [
+                    wintypes.HANDLE,
+                    ctypes.c_size_t,
+                    ctypes.c_size_t,
+                ]
+                k32.SetProcessWorkingSetSize.restype = wintypes.BOOL
+                # (size_t)-1, (size_t)-1 instructs the Windows memory manager
+                # to trim resident pages back to the operating system without
+                # touching C heap structures or risking multithreaded corruption.
+                neg1 = ctypes.c_size_t(-1).value
+                ok = k32.SetProcessWorkingSetSize(k32.GetCurrentProcess(), neg1, neg1)
                 return bool(ok)
+            except Exception:
+                pass
         return True
     except Exception:
         return False

@@ -81,7 +81,7 @@ class WindowsPlatformBackend(PlatformBackend):
             from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
             devices = AudioUtilities.GetSpeakers()
             interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-            volume = cast(interface, POINTER(IAudioEndpointVolume))
+            volume = interface.QueryInterface(IAudioEndpointVolume)
             volume.SetMasterVolumeLevelScalar(max(0.0, min(1.0, pct / 100.0)), None)
             return True
         except Exception as e:
@@ -95,7 +95,7 @@ class WindowsPlatformBackend(PlatformBackend):
             from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
             devices = AudioUtilities.GetSpeakers()
             interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-            volume = cast(interface, POINTER(IAudioEndpointVolume))
+            volume = interface.QueryInterface(IAudioEndpointVolume)
             return max(0, min(100, round(volume.GetMasterVolumeLevelScalar() * 100)))
         except Exception:
             return None

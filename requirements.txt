@@ -25,7 +25,6 @@ playwright>=1.40,<2
 # ── Automation / input control ────────────────────────────────────────────────
 pyautogui
 pyperclip
-pygetwindow
 
 # ── Vision & media ────────────────────────────────────────────────────────────
 pillow>=10,<13
@@ -55,13 +54,17 @@ google-auth-oauthlib
 tinytuya
 
 # ── Windows-only (pip skips these automatically on macOS / Linux) ─────────────
-comtypes;   sys_platform == "win32"
-pycaw;      sys_platform == "win32"
-win10toast; sys_platform == "win32"
-pywinauto;  sys_platform == "win32"
-pywin32;    sys_platform == "win32"
-wmi;        sys_platform == "win32"
-winsdk;     sys_platform == "win32"  # SMTC session pause for exclusive playback
+comtypes;    sys_platform == "win32"
+pycaw;       sys_platform == "win32"
+win10toast;  sys_platform == "win32"
+pywinauto;   sys_platform == "win32"
+pywin32;     sys_platform == "win32"
+wmi;         sys_platform == "win32"
+winsdk;      sys_platform == "win32"  # SMTC session pause for exclusive playback
+pygetwindow; sys_platform == "win32"
+
+# ── Linux-only (pip skips these automatically on Windows / macOS) ─────────────
+pulsectl;    sys_platform == "linux"
 
 # ── Documents, media & hardware readouts ──────────────────────────────────────
 # Every one of these is imported inside a try/except at the point of use, so a

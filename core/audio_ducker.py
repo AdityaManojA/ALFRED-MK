@@ -182,11 +182,9 @@ def _duck_windows(volume_factor: float, targets: set[str]) -> dict[str, float]:
     except Exception as e:
         logger.debug(f"Windows pycaw audio ducking error: {e}")
     finally:
-        try:
-            import comtypes
-            comtypes.CoUninitialize()
-        except Exception:
-            pass
+        sessions = None
+        session = None
+        vol_ctrl = None
 
     return ducked_apps
 
@@ -288,11 +286,9 @@ def _unduck_windows(targets: set[str]) -> dict[str, float]:
             _is_ducked = False
             _cancel_auto_unduck_watchdog()
     finally:
-        try:
-            import comtypes
-            comtypes.CoUninitialize()
-        except Exception:
-            pass
+        sessions = None
+        session = None
+        vol_ctrl = None
 
     return restored_apps
 

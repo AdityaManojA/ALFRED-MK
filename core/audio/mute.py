@@ -48,7 +48,7 @@ def mute_system_microphone() -> bool:
                 iid = getattr(IAudioEndpointVolume, "_iid_", None)
                 interface = mic.Activate(iid, CLSCTX_ALL, None) if iid else mic
                 try:
-                    volume = cast(interface, POINTER(IAudioEndpointVolume))
+                    volume = interface.QueryInterface(IAudioEndpointVolume)
                 except Exception:
                     volume = interface
                 volume.SetMute(1, None)
@@ -57,12 +57,6 @@ def mute_system_microphone() -> bool:
         except Exception as exc:
             logger.error(f"[Mute] Failed to mute microphone on Windows: {exc}")
             return False
-        finally:
-            try:
-                import comtypes
-                comtypes.CoUninitialize()
-            except Exception:
-                pass
     elif sys_name == "Linux":
         try:
             r = subprocess.run(MUTE_OS_LINUX_CMD, capture_output=True, timeout=2)
@@ -103,7 +97,7 @@ def unmute_system_microphone() -> bool:
                 iid = getattr(IAudioEndpointVolume, "_iid_", None)
                 interface = mic.Activate(iid, CLSCTX_ALL, None) if iid else mic
                 try:
-                    volume = cast(interface, POINTER(IAudioEndpointVolume))
+                    volume = interface.QueryInterface(IAudioEndpointVolume)
                 except Exception:
                     volume = interface
                 volume.SetMute(0, None)
@@ -112,12 +106,6 @@ def unmute_system_microphone() -> bool:
         except Exception as exc:
             logger.error(f"[Mute] Failed to unmute microphone on Windows: {exc}")
             return False
-        finally:
-            try:
-                import comtypes
-                comtypes.CoUninitialize()
-            except Exception:
-                pass
     elif sys_name == "Linux":
         try:
             r = subprocess.run(UNMUTE_OS_LINUX_CMD, capture_output=True, timeout=2)
@@ -155,7 +143,7 @@ def is_microphone_muted() -> bool:
                 iid = getattr(IAudioEndpointVolume, "_iid_", None)
                 interface = mic.Activate(iid, CLSCTX_ALL, None) if iid else mic
                 try:
-                    volume = cast(interface, POINTER(IAudioEndpointVolume))
+                    volume = interface.QueryInterface(IAudioEndpointVolume)
                 except Exception:
                     volume = interface
                 if volume.GetMute():
@@ -164,12 +152,6 @@ def is_microphone_muted() -> bool:
                 return volume.GetMasterVolumeLevelScalar() <= 0.001
         except Exception:
             pass
-        finally:
-            try:
-                import comtypes
-                comtypes.CoUninitialize()
-            except Exception:
-                pass
     elif sys_name == "Linux":
         try:
             r = subprocess.run(["pactl", "get-source-mute", "@DEFAULT_SOURCE@"], capture_output=True, text=True, timeout=1)

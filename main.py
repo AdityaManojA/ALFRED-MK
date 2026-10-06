@@ -142,6 +142,13 @@ from core.wake_word            import (
 # again (wake-word mode only). 15s allows follow-up questions without lingering awake.
 WAKE_SLEEP_TIMEOUT = 15.0   # seconds
 
+# Voice-command sleep synchronization timings
+VOICE_SLEEP_WAIT_TTS_START_MAX_S: float = 3.0
+VOICE_SLEEP_WAIT_TTS_POLL_INTERVAL_S: float = 0.05
+VOICE_SLEEP_WAIT_TTS_FINISH_MAX_S: float = 8.0
+VOICE_SLEEP_WAIT_TTS_FINISH_POLL_INTERVAL_S: float = 0.1
+VOICE_SLEEP_DRAIN_SETTLE_S: float = 0.5
+
 _SLEEP_DIRECTIVE_PATTERN = re.compile(
     r"^(?:alfred\s*[,.]?\s*)?"
     r"(?:please\s+)?"
@@ -1641,6 +1648,8 @@ class AlfredLive:
                         pass
         if value:
             self.ui.set_state("SPEAKING")
+        elif not getattr(self, "_awake", True):
+            self.ui.set_state("SLEEPING")
         elif not self.ui.muted:
             self.ui.set_state("LISTENING")
 
@@ -2308,21 +2317,23 @@ class AlfredLive:
             elif name in ("go_to_sleep", "sleep", "sleep_mode"):
                 self.ui.write_log("SYS: Sleep requested via voice directive.")
                 async def _do_voice_sleep():
-                    # Phase 1: Wait up to 1.5s for TTS speech to begin playing if incoming
-                    for _ in range(15):
+                    # Phase 1: Wait up to 3.0s for TTS speech to begin playing if incoming
+                    start_iters = int(VOICE_SLEEP_WAIT_TTS_START_MAX_S / VOICE_SLEEP_WAIT_TTS_POLL_INTERVAL_S)
+                    for _ in range(start_iters):
                         if getattr(self, "_is_speaking", False) or (
                             hasattr(self, "audio_in_queue") and not self.audio_in_queue.empty()
                         ):
                             break
-                        await asyncio.sleep(0.05)
+                        await asyncio.sleep(VOICE_SLEEP_WAIT_TTS_POLL_INTERVAL_S)
                     # Phase 2: If speaking, wait for playback to finish
-                    for _ in range(60):
+                    finish_iters = int(VOICE_SLEEP_WAIT_TTS_FINISH_MAX_S / VOICE_SLEEP_WAIT_TTS_FINISH_POLL_INTERVAL_S)
+                    for _ in range(finish_iters):
                         if not getattr(self, "_is_speaking", False) and (
                             not hasattr(self, "audio_in_queue") or self.audio_in_queue.empty()
                         ):
                             break
-                        await asyncio.sleep(0.1)
-                    await asyncio.sleep(0.4)
+                        await asyncio.sleep(VOICE_SLEEP_WAIT_TTS_FINISH_POLL_INTERVAL_S)
+                    await asyncio.sleep(VOICE_SLEEP_DRAIN_SETTLE_S)
                     # Drain any TTS echo that queued during the wait before
                     # committing to sleep, so stale model state is discarded.
                     det = getattr(self, "_wake_detector", None)
@@ -2411,7 +2422,7 @@ class AlfredLive:
 
         result = await self._dispatch_tool(name, args)
 
-        if not self.ui.muted:
+        if not self.ui.muted and name not in ("go_to_sleep", "sleep", "sleep_mode", "shutdown_alfred", "shutdown_jarvis"):
             self.ui.set_state("LISTENING")
 
         _sched = (self._action_registry.scheduling(name)
@@ -2728,21 +2739,29 @@ class AlfredLive:
                                 elif self._awake and is_sleep_command(full_in):
                                     self.ui.write_log("SYS: Sleep directive recognized in voice input.")
                                     async def _do_stt_sleep():
-                                        # Phase 1: Wait up to 1.5s for TTS speech to begin playing if incoming
-                                        for _ in range(15):
+                                        # Phase 1: Wait up to 3.0s for TTS speech to begin playing if incoming
+                                        start_iters = int(VOICE_SLEEP_WAIT_TTS_START_MAX_S / VOICE_SLEEP_WAIT_TTS_POLL_INTERVAL_S)
+                                        for _ in range(start_iters):
                                             if getattr(self, "_is_speaking", False) or (
                                                 hasattr(self, "audio_in_queue") and not self.audio_in_queue.empty()
                                             ):
                                                 break
-                                            await asyncio.sleep(0.05)
+                                            await asyncio.sleep(VOICE_SLEEP_WAIT_TTS_POLL_INTERVAL_S)
                                         # Phase 2: If speaking, wait for playback to finish
-                                        for _ in range(60):
+                                        finish_iters = int(VOICE_SLEEP_WAIT_TTS_FINISH_MAX_S / VOICE_SLEEP_WAIT_TTS_FINISH_POLL_INTERVAL_S)
+                                        for _ in range(finish_iters):
                                             if not getattr(self, "_is_speaking", False) and (
                                                 not hasattr(self, "audio_in_queue") or self.audio_in_queue.empty()
                                             ):
                                                 break
-                                            await asyncio.sleep(0.1)
-                                        await asyncio.sleep(0.4)
+                                            await asyncio.sleep(VOICE_SLEEP_WAIT_TTS_FINISH_POLL_INTERVAL_S)
+                                        await asyncio.sleep(VOICE_SLEEP_DRAIN_SETTLE_S)
+                                        det = getattr(self, "_wake_detector", None)
+                                        if det is not None:
+                                            try:
+                                                det._drain()
+                                            except Exception:
+                                                pass
                                         self.sleep(reason="voice command")
                                     asyncio.create_task(_do_stt_sleep())
                             in_buf = []
@@ -3363,15 +3382,19 @@ class AlfredLive:
     async def _run_gc_manager(self) -> None:
         """
         Periodically sweeps garbage and trims OS working set during idle silence
-        so physical memory stays under 100MB and never pauses threads mid-speech.
+        so physical memory stays under 150MB and never pauses threads mid-speech.
         """
+        # Initial trim 6 seconds after launch to reclaim import and model loading working set
+        await asyncio.sleep(6)
+        from core.memory_trimmer import trim_process_memory
+        await asyncio.to_thread(trim_process_memory)
+
         while True:
             await asyncio.sleep(45)
             with self._speaking_lock:
                 speaking = self._is_speaking
             silent_for = time.monotonic() - self._last_user_speech
             if not speaking and silent_for > 8.0:
-                from core.memory_trimmer import trim_process_memory
                 await asyncio.to_thread(trim_process_memory)
 
     # ── Phone audio relay ───────────────────────────────────────────────────────

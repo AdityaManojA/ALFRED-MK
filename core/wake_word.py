@@ -112,12 +112,16 @@ def _is_alfred_wake_phrase(text: str) -> bool:
 def _prewarm_whisper_background() -> None:
     """Prewarm Whisper in background so first verification doesn't stall."""
     try:
+        # Yield CPU during initial HUD launch frames to prevent paintEvent budget spikes
+        time.sleep(2.0)
         vm = _get_whisper_verifier()
         if vm is not None:
             import numpy as np
             t = np.linspace(0, 0.4, 6400, dtype=np.float32)
             dummy = (np.sin(2 * np.pi * 440 * t) * 0.1).astype(np.float32)
             list(vm.transcribe(dummy, language="en", beam_size=1, temperature=0.0, vad_filter=False)[0])
+        from core.memory_trimmer import trim_process_memory
+        trim_process_memory()
     except Exception:
         pass
 

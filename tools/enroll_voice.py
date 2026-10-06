@@ -84,11 +84,11 @@ STEP_PROMPTS_10 = [
 
 
 def record_clip(duration_s: float = RECORD_DURATION_S) -> np.ndarray:
-    """Record mono 16 kHz float32 audio from default input device."""
+    """Record mono 16 kHz int16 audio from default input device."""
     import sounddevice as sd
 
     samples_n = int(duration_s * SAMPLE_RATE)
-    recording = sd.rec(samples_n, samplerate=SAMPLE_RATE, channels=1, dtype="float32")
+    recording = sd.rec(samples_n, samplerate=SAMPLE_RATE, channels=1, dtype="int16")
     sd.wait()
     return recording.flatten()
 

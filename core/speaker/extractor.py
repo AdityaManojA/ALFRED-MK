@@ -70,8 +70,12 @@ class CampplusOnnxExtractor:
 
     def _compute_fbank(self, audio_pcm: np.ndarray, sample_rate: int) -> np.ndarray:
         """Compute 80-dimensional mean-normalized filterbank features."""
-        # Convert int16 -> float32 waveform
-        audio_float = audio_pcm.astype(np.float32)
+        # Convert to 1D float32 waveform and ensure canonical 16-bit PCM amplitude scale [-32768, 32767]
+        raw = np.asarray(audio_pcm, dtype=np.float32).flatten()
+        if len(raw) > 0 and np.max(np.abs(raw)) <= 1.05:
+            audio_float = raw * 32767.0
+        else:
+            audio_float = raw
 
         # Pad very short utterances to at least 400ms (6400 samples)
         min_samples = int(sample_rate * 0.4)
@@ -84,7 +88,7 @@ class CampplusOnnxExtractor:
             import torchaudio.compliance.kaldi as kaldi
 
             tensor = torch.from_numpy(audio_float).unsqueeze(0)
-            fb = kaldi.fbank(tensor, num_mel_bins=80, sample_frequency=sample_rate)
+            fb = kaldi.fbank(tensor, num_mel_bins=80, sample_frequency=sample_rate, dither=0.0)
             # Time-domain mean normalization
             fb = fb - fb.mean(dim=0, keepdim=True)
             return fb.unsqueeze(0).numpy().astype(np.float32)
