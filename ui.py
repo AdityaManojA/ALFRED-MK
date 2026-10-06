@@ -7531,6 +7531,8 @@ class MainWindow(QMainWindow):
         QApplication.clipboard().dataChanged.connect(self._on_clipboard_changed)
 
         self._overlay: SetupOverlay | None = None
+        self.on_shutdown_requested = None
+        self._is_shutting_down = False
         self._ready = self._check_config()
         if not self._ready:
             self._show_setup()
@@ -11091,6 +11093,20 @@ class MainWindow(QMainWindow):
         return {"is_playing": False, "volume": 10, "source_mode": "tron", "track": "The Son of Flynn"}
 
     def closeEvent(self, e):
+        cb = getattr(self, "on_shutdown_requested", None)
+        if callable(cb) and not getattr(self, "_is_shutting_down", False):
+            self._is_shutting_down = True
+            e.ignore()
+            try:
+                self.hide()
+            except Exception:
+                pass
+            try:
+                cb()
+            except Exception:
+                super().closeEvent(e)
+            return
+
         try:
             from core.ui.themes import ThemeChrome
             ThemeChrome.remove_listener(self._on_theme_chrome_updated)
@@ -11362,6 +11378,14 @@ class AlfredUI:
     @on_screen_monitor_toggle.setter
     def on_screen_monitor_toggle(self, cb):
         self._win.on_screen_monitor_toggle = cb
+
+    @property
+    def on_shutdown_requested(self):
+        return getattr(self._win, "on_shutdown_requested", None)
+
+    @on_shutdown_requested.setter
+    def on_shutdown_requested(self, cb):
+        self._win.on_shutdown_requested = cb
 
     def apply_sentry_snapshot(self, snapshot: SentrySnapshot) -> None:
         """Thread-safe Sentry Mode snapshot update."""

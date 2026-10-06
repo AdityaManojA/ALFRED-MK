@@ -228,9 +228,9 @@
     "semantic_hash": "d9c6de0df2bf028d93924aff92487904"
   },
   "main.py": {
-    "mtime": 1791263935.837576,
-    "seen": 1791264081.6801236,
-    "ast_hash": "450f58a8f3333cb9a35c286f8acf5cb0",
+    "mtime": 1791266365.3580291,
+    "seen": 1791266599.47984,
+    "ast_hash": "958f1d4586b672514f9276ba84de0830",
     "semantic_hash": ""
   },
   "memory/__init__.py": {
@@ -270,9 +270,9 @@
     "semantic_hash": ""
   },
   "ui.py": {
-    "mtime": 1791263965.4046109,
-    "seen": 1791264081.680371,
-    "ast_hash": "f08ddcd5f2af96a3206980cc68115f00",
+    "mtime": 1791266456.0046377,
+    "seen": 1791266599.4802165,
+    "ast_hash": "8e3766c64d46ed3a86b9622818ebca17",
     "semantic_hash": ""
   },
   ".agents/rules/graphify.md": {
@@ -426,8 +426,8 @@
     "semantic_hash": ""
   },
   "config/music_playlist.json": {
-    "mtime": 1791264755.1527517,
-    "seen": 1791265440.7152545,
+    "mtime": 1791266541.526106,
+    "seen": 1791266599.4792552,
     "ast_hash": "5e902c918db6e9ea5e750fa4d66dec82",
     "semantic_hash": ""
   },
@@ -1974,9 +1974,9 @@
     "semantic_hash": ""
   },
   "tests/test_stability_v1.py": {
-    "mtime": 1790920595.5746665,
-    "seen": 1790920880.1532884,
-    "ast_hash": "666d23019e0064ea575e87a4ad14803a",
+    "mtime": 1791266530.8873863,
+    "seen": 1791266599.480149,
+    "ast_hash": "a486cad39d0ce1afc67b96d41845073e",
     "semantic_hash": ""
   },
   "docs/stability_v1/PHASE_2_NOTES.md": {
@@ -4311,6 +4311,12 @@
     "mtime": 1791229103.3514307,
     "seen": 1791265440.716161,
     "ast_hash": "225438fc531ff09bf360197a1c6ca279",
+    "semantic_hash": ""
+  },
+  "tests/test_shutdown.py": {
+    "mtime": 1791266166.493496,
+    "seen": 1791266599.4801369,
+    "ast_hash": "b4e85e6d59666590213788e3555a0e82",
     "semantic_hash": ""
   }
 }

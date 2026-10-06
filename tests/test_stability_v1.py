@@ -103,8 +103,9 @@ class TestStabilityV1(unittest.TestCase):
         """Verify shutdown_jarvis tool requires confirmation boolean to prevent false triggering."""
         from main import TOOL_DECLARATIONS
         tools = {t["name"]: t for t in TOOL_DECLARATIONS}
-        self.assertIn("shutdown_jarvis", tools)
-        decl = tools["shutdown_jarvis"]
+        cmd_name = "shutdown_alfred" if "shutdown_alfred" in tools else "shutdown_jarvis"
+        self.assertIn(cmd_name, tools)
+        decl = tools[cmd_name]
         self.assertIn("confirmation", decl["parameters"]["properties"])
         self.assertIn("confirmation", decl["parameters"]["required"])
 

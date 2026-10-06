@@ -183,6 +183,59 @@ def is_sleep_command(text: str) -> bool:
             return True
     return False
 
+_SHUTDOWN_PHRASE_PATTERN = re.compile(
+    r"\b(?:shut\s*down|power\s+down|exit\s+assistant|turn\s+off\s+alfred|quit\s+alfred|exit\s+alfred)\b",
+    re.IGNORECASE,
+)
+
+_SHUTDOWN_DIRECTIVE_PATTERN = re.compile(
+    r"^(?:(?:hey\s+|ok\s+|okay\s+)?alfred[,]?\s*)?(?:please\s+)?(?:shut\s*down|power\s+down|turn\s+off|quit|exit)(?:\s+(?:now|alfred|the\s+assistant|the\s+app|completely|please))?[.!]?$",
+    re.IGNORECASE,
+)
+
+_SHUTDOWN_NEGATION_PATTERN = re.compile(
+    r"\b(?:don'?t|do\s+not|never|not|why|before|if|how|what|when)\b",
+    re.IGNORECASE,
+)
+
+def is_shutdown_command(text: str) -> bool:
+    """Returns True if the user text is an unambiguous verbal directive to shut down ALFRED."""
+    if not text:
+        return False
+    clean = text.strip().lower()
+    # Reject queries, negations, or conditionals
+    if _SHUTDOWN_NEGATION_PATTERN.search(clean):
+        return False
+    # Check exact directive patterns
+    if _SHUTDOWN_DIRECTIVE_PATTERN.match(clean):
+        return True
+    # Check explicit shutdown phrases within short command utterances
+    if _SHUTDOWN_PHRASE_PATTERN.search(clean):
+        words = clean.split()
+        if len(words) <= 8:
+            return True
+    return False
+
+def resolve_shutdown_username() -> str:
+    """Resolve user name for shutdown greeting with fallbacks."""
+    try:
+        from memory.config_manager import get_user_name
+        uname = get_user_name()
+        if uname and uname.strip():
+            return uname.strip()
+    except Exception:
+        pass
+    try:
+        from core.speaker.profile_store import get_default_profile_store
+        profs = get_default_profile_store().list_profiles()
+        if profs and getattr(profs[0], "user_name", None):
+            uname = profs[0].user_name.strip()
+            if uname:
+                return uname
+    except Exception:
+        pass
+    return "sir"
+
 def get_base_dir():
     if getattr(sys, "frozen", False):
         return Path(sys.executable).parent
@@ -943,6 +996,7 @@ class AlfredLive:
         self.ui.on_audio_device_change = self._on_audio_device_change
         self.ui.on_clear_chat     = self._on_gui_clear_chat
         self.ui.on_screen_monitor_toggle = self._ui_screen_monitor_toggle
+        self.ui.on_shutdown_requested = self._trigger_ui_shutdown
         self._reconnect_event: asyncio.Event | None = None
         self._reconnect_keep = True   # False â†’ next rebuild drops the resumption handle
 
@@ -1122,6 +1176,91 @@ class AlfredLive:
         except Exception:
             pass
 
+    def _trigger_ui_shutdown(self) -> None:
+        """Invoked when UI window close or quit requests application shutdown."""
+        if self._loop and self._loop.is_running():
+            asyncio.run_coroutine_threadsafe(self.execute_shutdown(), self._loop)
+        else:
+            try:
+                asyncio.run(self.execute_shutdown())
+            except Exception:
+                pass
+
+    async def execute_shutdown(self) -> None:
+        """Gracefully shut down ALFRED after speaking farewell message."""
+        if getattr(self, "_is_shutting_down", False):
+            return
+        self._is_shutting_down = True
+
+        self.ui.write_log("SYS: Shutdown requested.")
+        _tlog("ALFRED", "halt", "Shutdown requested.", getattr(self, "_dashboard", None))
+
+        # Stop background screen monitoring and scheduler
+        if hasattr(self, "_screen_monitor") and self._screen_monitor:
+            try:
+                self._screen_monitor.stop(wait=False)
+            except Exception:
+                pass
+        if hasattr(self, "scheduler") and self.scheduler:
+            try:
+                self.scheduler.stop()
+            except Exception:
+                pass
+
+        # Save session summary if possible
+        try:
+            await self._save_session_summary()
+        except Exception as e:
+            print(f"[Shutdown] Error saving session summary: {e}")
+
+        # Disconnect cloud session to avoid conflicting audio
+        if self.session:
+            try:
+                self.session = None
+            except Exception:
+                pass
+
+        # Drain any residual cloud audio playback
+        if hasattr(self, "audio_in_queue") and self.audio_in_queue:
+            while not self.audio_in_queue.empty():
+                try:
+                    self.audio_in_queue.get_nowait()
+                except Exception:
+                    break
+
+        user_name = resolve_shutdown_username()
+        farewell_phrase = f"I am alfred your loyal butler , Hoping to be of service again {user_name} , shutting down."
+
+        self.ui.write_log(f"ALFRED: {farewell_phrase}")
+        _tlog("ALFRED", "tts", f"ALFRED: \"{farewell_phrase}\"", getattr(self, "_dashboard", None))
+        if self._dashboard:
+            try:
+                asyncio.create_task(self._dashboard.broadcast({
+                    "type": "log", "speaker": "alfred",
+                    "text": farewell_phrase,
+                    "ts": datetime.now().isoformat(),
+                }))
+            except Exception:
+                pass
+
+        loop = asyncio.get_running_loop()
+
+        def _play_farewell():
+            self.set_speaking(True)
+            try:
+                from core.tts import get_engine
+                engine = get_engine()
+                engine.speak(farewell_phrase)
+            except Exception as exc:
+                print(f"[Shutdown] TTS error: {exc}")
+            finally:
+                self.set_speaking(False)
+
+        await loop.run_in_executor(None, _play_farewell)
+        await asyncio.sleep(0.3)
+        import os as _os
+        _os._exit(0)
+
     async def _run_sleep_watch(self) -> None:
         """Auto-sleep after the configured silence window (wake-word mode only)."""
         while True:
@@ -1272,6 +1411,11 @@ class AlfredLive:
             if self.focus_engine.answer_window.submit_answer(text):
                 self.ui.write_log(f"You (Focus Answer): {text}")
                 return
+
+        if is_shutdown_command(text):
+            self.ui.write_log("SYS: Shutdown directive recognized in text input.")
+            asyncio.run_coroutine_threadsafe(self.execute_shutdown(), self._loop)
+            return
 
         # Respect wake-word sleep: a typed command must not be answered while
         # asleep either (the sleep gate is not just for the mic). Wake first with
@@ -2191,23 +2335,9 @@ class AlfredLive:
                     self.ui.write_log("SYS: Shutdown ignored (missing explicit confirmation).")
                     result = "Shutdown command ignored: explicit confirmation=True required."
                 else:
-                    self.ui.write_log("SYS: Shutdown requested.")
-                    async def _do_shutdown():
-                        self._screen_monitor.stop(wait=False)
-                        await self._save_session_summary()
-                        if self.session:
-                            try:
-                                await self.session.send_client_content(
-                                    turns={"role": "user", "parts": [{"text": "Say a brief natural goodbye to the user."}]},
-                                    turn_complete=True,
-                                )
-                            except Exception:
-                                pass
-                        await asyncio.sleep(1.5)
-                        import os as _os
-                        _os._exit(0)
-                    asyncio.create_task(_do_shutdown())
-                    result = "Shutting down ALFRED, sir."
+                    asyncio.create_task(self.execute_shutdown())
+                    uname = resolve_shutdown_username()
+                    result = f"I am alfred your loyal butler , Hoping to be of service again {uname} , shutting down."
 
             elif self._action_registry.has(name):
                 # file_processor: fall back to the currently-uploaded file when none is given
@@ -2587,7 +2717,10 @@ class AlfredLive:
                                         "ts": datetime.now().isoformat(),
                                     }))
 
-                                if self._awake and is_sleep_command(full_in):
+                                if self._awake and is_shutdown_command(full_in):
+                                    self.ui.write_log("SYS: Shutdown directive recognized in voice input.")
+                                    asyncio.create_task(self.execute_shutdown())
+                                elif self._awake and is_sleep_command(full_in):
                                     self.ui.write_log("SYS: Sleep directive recognized in voice input.")
                                     async def _do_stt_sleep():
                                         # Phase 1: Wait up to 1.5s for TTS speech to begin playing if incoming
