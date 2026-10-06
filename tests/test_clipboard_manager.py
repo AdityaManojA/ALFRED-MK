@@ -43,7 +43,7 @@ class TestClipboardManager(unittest.TestCase):
         Copy 3 distinct text blocks sequentially.
         Call get_recent_clipboards(3) and verify all 3 items return accurately in chronological order.
         """
-        block1 = "First block: System architecture overview of ALFRED-MK-VIII."
+        block1 = "First block: System architecture overview of ALFRED-MK-IX."
         block2 = "Second block: RapidOCR and ONNX element detector pipeline."
         block3 = "Third block: Process-level audio ducking using pycaw session controls."
 
@@ -92,7 +92,7 @@ class TestClipboardManager(unittest.TestCase):
         self.assertIsNone(res, "High entropy secret pattern should be scrubbed")
 
         # 4. Normal text is NOT scrubbed
-        normal_text = "Wayne Enterprises Tactical Terminal MK-VIII"
+        normal_text = "Wayne Enterprises Tactical Terminal MK-IX"
         self.assertFalse(is_sensitive_content(normal_text, source_proc="code.exe", source_title="VS Code"))
         res = add_clipboard_item(normal_text)
         self.assertIsNotNone(res)
@@ -137,7 +137,7 @@ class TestClipboardManager(unittest.TestCase):
 
     def test_content_type_classification(self):
         """Verify content type heuristic classification."""
-        self.assertEqual(classify_content_type("https://github.com/AdityaManojA/ALFRED-MK-VIII"), "url")
+        self.assertEqual(classify_content_type("https://github.com/AdityaManojA/ALFRED-MK-IX"), "url")
         self.assertEqual(classify_content_type("bruce@wayne-enterprises.com"), "email")
         self.assertEqual(classify_content_type('{"key": "value", "status": true}'), "json")
         self.assertEqual(classify_content_type("def calculate_metrics(items):\n    return len(items)"), "code")

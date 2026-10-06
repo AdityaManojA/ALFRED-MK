@@ -1,5 +1,5 @@
 """
-Registry for ALFRED-MK-VIII themes.
+Registry for ALFRED-MK-IX themes.
 Provides lookup, validation, and listing of all registered themes.
 """
 from __future__ import annotations

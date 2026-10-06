@@ -6,9 +6,9 @@
     "semantic_hash": ""
   },
   "actions/browser_control.py": {
-    "mtime": 1790885587.3367393,
-    "seen": 1790885769.717696,
-    "ast_hash": "2e1347d1b78c09a88e3bd05872c04c9a",
+    "mtime": 1791180913.1681094,
+    "seen": 1791183109.7860997,
+    "ast_hash": "187768b393c627f3783584af3ffb37cb",
     "semantic_hash": ""
   },
   "actions/code_helper.py": {
@@ -30,10 +30,10 @@
     "semantic_hash": ""
   },
   "actions/desktop.py": {
-    "mtime": 1790275670.8909302,
-    "seen": 1790278410.9365003,
-    "ast_hash": "ff19215cbe9791e883a8eb150acf6d62",
-    "semantic_hash": "ff19215cbe9791e883a8eb150acf6d62"
+    "mtime": 1791180882.5567267,
+    "seen": 1791183109.7861173,
+    "ast_hash": "6f29d12ac0e51b5306265f9e86fe12a1",
+    "semantic_hash": ""
   },
   "actions/dev_agent.py": {
     "mtime": 1790410411.9742846,
@@ -78,10 +78,10 @@
     "semantic_hash": "d77271c7f24fd6862e344568f7695ebf"
   },
   "actions/reminder.py": {
-    "mtime": 1790407565.3925233,
-    "seen": 1790414772.298371,
-    "ast_hash": "bb6497c5dbbe2d8d2d8090c7599b05b5",
-    "semantic_hash": "bb6497c5dbbe2d8d2d8090c7599b05b5"
+    "mtime": 1791181030.6413352,
+    "seen": 1791183109.7861557,
+    "ast_hash": "ba62daa39e830758e1e8a95541cc17df",
+    "semantic_hash": ""
   },
   "actions/screen_processor.py": {
     "mtime": 1790712334.522185,
@@ -174,9 +174,9 @@
     "semantic_hash": "5eda5dd712fd0e20d94097addf2bfb1d"
   },
   "core/llm_client.py": {
-    "mtime": 1790888625.328299,
-    "seen": 1790888814.6245468,
-    "ast_hash": "ae276d40bf64f72f0ebd231d02c5b67c",
+    "mtime": 1791262445.11685,
+    "seen": 1791262692.788913,
+    "ast_hash": "337b4cecf42078a785421a7cf3ac6ec9",
     "semantic_hash": ""
   },
   "core/plugin_loader.py": {
@@ -204,9 +204,9 @@
     "semantic_hash": "e8db5f5ff95246fc94c67379d160264e"
   },
   "core/wake_word.py": {
-    "mtime": 1791010803.7000892,
-    "seen": 1791030150.8279011,
-    "ast_hash": "6aff7a22a9517686fdf78ae09ffeb833",
+    "mtime": 1791229835.320678,
+    "seen": 1791231100.5238378,
+    "ast_hash": "0aa9ef5156dec032d6eb9215c069f9eb",
     "semantic_hash": ""
   },
   "dashboard/__init__.py": {
@@ -228,9 +228,9 @@
     "semantic_hash": "d9c6de0df2bf028d93924aff92487904"
   },
   "main.py": {
-    "mtime": 1791051479.242372,
-    "seen": 1791051526.888257,
-    "ast_hash": "cd2018495d5938881ddee6dfede61889",
+    "mtime": 1791262445.099884,
+    "seen": 1791262692.7894707,
+    "ast_hash": "c010acda2d4945a42b8f3cbb8c244527",
     "semantic_hash": ""
   },
   "memory/__init__.py": {
@@ -240,9 +240,9 @@
     "semantic_hash": "24935121ac923a382fcc4509d2b8053a"
   },
   "memory/config_manager.py": {
-    "mtime": 1790714289.4934366,
-    "seen": 1790714415.7765522,
-    "ast_hash": "1d23530f7f61baeac1cd763e14ee8691",
+    "mtime": 1791182815.5244532,
+    "seen": 1791183109.7865481,
+    "ast_hash": "48a7905199ad870fa94dbb1c4e845de0",
     "semantic_hash": ""
   },
   "memory/memory_manager.py": {
@@ -264,15 +264,15 @@
     "semantic_hash": "22c386ff3b730e560fb9b4f5e925f90c"
   },
   "setup.py": {
-    "mtime": 1790888446.7482214,
-    "seen": 1790888814.6245468,
-    "ast_hash": "ff7022f7cb637ed95b39e4706d2114b6",
+    "mtime": 1791262445.1160822,
+    "seen": 1791262692.7895117,
+    "ast_hash": "982b99fc4228ddadf8b4adfe21b07cff",
     "semantic_hash": ""
   },
   "ui.py": {
-    "mtime": 1791050765.2785115,
-    "seen": 1791050871.9517508,
-    "ast_hash": "7639d400fcde24edf894b3c17398d27b",
+    "mtime": 1791262445.099884,
+    "seen": 1791262692.7903063,
+    "ast_hash": "c0f367b179cdbd9763af465f5f73ff7b",
     "semantic_hash": ""
   },
   ".agents/rules/graphify.md": {
@@ -294,51 +294,51 @@
     "semantic_hash": ""
   },
   "dashboard/static/app.html": {
-    "mtime": 1790888715.5541382,
-    "seen": 1790888814.6245468,
-    "ast_hash": "61214426b7bbbe709983cc83e8078cfc",
+    "mtime": 1791262445.11685,
+    "seen": 1791262692.7904572,
+    "ast_hash": "df2cccd1e3469ba01680ae65762076e0",
     "semantic_hash": ""
   },
   "dashboard/static/login.html": {
-    "mtime": 1790888495.5844176,
-    "seen": 1790888814.6245468,
-    "ast_hash": "ddd73a81cca76e7e97df99133abdd362",
+    "mtime": 1791262445.11685,
+    "seen": 1791262692.7904603,
+    "ast_hash": "1e08b93fcc6d85332881ff6ec0fe2ac1",
     "semantic_hash": ""
   },
   "readme.md": {
-    "mtime": 1791049274.1688838,
-    "seen": 1791050871.9520373,
-    "ast_hash": "a0c7389802db78d4e61518afb9ac15d0",
+    "mtime": 1791262646.101159,
+    "seen": 1791262692.7909834,
+    "ast_hash": "e123f2793aa83b7e1d39075d8d6fb763",
     "semantic_hash": ""
   },
   "requirements.txt": {
-    "mtime": 1790888437.9143827,
-    "seen": 1790888814.6245468,
-    "ast_hash": "d87bdbb7ce3238bb02e5cf628b8dd1a4",
+    "mtime": 1791262445.11685,
+    "seen": 1791262692.7909865,
+    "ast_hash": "8a872949429790e19fea71bcc04938e1",
     "semantic_hash": ""
   },
   "actions/daily_brief.py": {
-    "mtime": 1790888521.8777757,
-    "seen": 1790888814.6245468,
-    "ast_hash": "f04d5242b37a9efbabe3a153e24b769f",
+    "mtime": 1791262445.1332018,
+    "seen": 1791262692.7882495,
+    "ast_hash": "3ffe022579c84de6f230e9b019549d2b",
     "semantic_hash": ""
   },
   "actions/gmail_manager.py": {
-    "mtime": 1790888515.9892104,
-    "seen": 1790888814.6245468,
-    "ast_hash": "4c1ef3822b65b5041f61bd3f6b254426",
+    "mtime": 1791262445.1332018,
+    "seen": 1791262692.7882876,
+    "ast_hash": "5fced86b9158d76aa04f7a3f1abb2bee",
     "semantic_hash": ""
   },
   "plugins/calendar_sync.py": {
-    "mtime": 1790888508.421379,
-    "seen": 1790888814.6245468,
-    "ast_hash": "b8357dec96509016b65a22feb9e57966",
+    "mtime": 1791262445.1410868,
+    "seen": 1791262692.7895026,
+    "ast_hash": "6f470ac0357a3629cf23615eb456b118",
     "semantic_hash": ""
   },
   "plugins/focus_protocol.py": {
-    "mtime": 1790888502.0492213,
-    "seen": 1790888814.6245468,
-    "ast_hash": "aa89e709c2d8a06c0f26deb6eab61054",
+    "mtime": 1791262445.1410868,
+    "seen": 1791262692.789507,
+    "ast_hash": "d9447c7c78d8a3a0da4e8d5bd1e2f221",
     "semantic_hash": ""
   },
   ".agents/rules/daily_brief_protocol.md": {
@@ -414,21 +414,21 @@
     "semantic_hash": ""
   },
   "actions/update_app_icon.py": {
-    "mtime": 1790888527.2250483,
-    "seen": 1790888814.6245468,
-    "ast_hash": "b2f9fa15d97091179efb6faf4143a4ad",
+    "mtime": 1791262445.1410868,
+    "seen": 1791262692.7884333,
+    "ast_hash": "653a2d8c4e1937f008dbff80636d6781",
     "semantic_hash": ""
   },
   "actions/update_daily_briefing.py": {
-    "mtime": 1790888534.1520183,
-    "seen": 1790888814.6245468,
-    "ast_hash": "fcf81de4de6c33ff7af8ea8e7d2c1c7a",
+    "mtime": 1791262445.1410868,
+    "seen": 1791262692.7884383,
+    "ast_hash": "42a444be5a49ff331b7843c7aa69f74e",
     "semantic_hash": ""
   },
   "config/music_playlist.json": {
-    "mtime": 1791051412.9408627,
-    "seen": 1791051526.8878963,
-    "ast_hash": "7fa7e2bc71c6dc1c1d3dc72bcb692421",
+    "mtime": 1791263243.6675825,
+    "seen": 1791263660.680708,
+    "ast_hash": "5e902c918db6e9ea5e750fa4d66dec82",
     "semantic_hash": ""
   },
   "core/path_guard.py": {
@@ -504,9 +504,9 @@
     "semantic_hash": "a38aa4f3c2efa3372801e453bd2bd81d"
   },
   "core/cache.py": {
-    "mtime": 1790888648.962286,
-    "seen": 1790888814.6245468,
-    "ast_hash": "ce07939f79ffb586fc8e408344f5c714",
+    "mtime": 1791262445.11685,
+    "seen": 1791262692.7886155,
+    "ast_hash": "e123f841e5591acbb0a014478055e12d",
     "semantic_hash": ""
   },
   "tests/test_cache.py": {
@@ -522,9 +522,9 @@
     "semantic_hash": "0a39d08cb28a90b2f61fba8db0d1262b"
   },
   "tests/test_screen_processor.py": {
-    "mtime": 1790888668.5794127,
-    "seen": 1790888814.6245468,
-    "ast_hash": "a29afb19d54bd07d48491fc023d748ec",
+    "mtime": 1791262445.1469924,
+    "seen": 1791262692.7901108,
+    "ast_hash": "74685525fa88dee04528223aa4643731",
     "semantic_hash": ""
   },
   ".claude/settings.local.json": {
@@ -576,9 +576,9 @@
     "semantic_hash": "295dc0b50df6c5d85b16b7ecedb3465e"
   },
   "tests/test_clipboard_manager.py": {
-    "mtime": 1790888682.4119349,
-    "seen": 1790888814.6245468,
-    "ast_hash": "8d770040d639a7d464a67e6e901d20d9",
+    "mtime": 1791262445.1469924,
+    "seen": 1791262692.789913,
+    "ast_hash": "d994dd89546802b05fc615c43aaeb133",
     "semantic_hash": ""
   },
   "tests/test_protocol_engine.py": {
@@ -624,9 +624,9 @@
     "semantic_hash": ""
   },
   "config/device_sessions.json": {
-    "mtime": 1790691487.5542405,
-    "seen": 1790691628.5950005,
-    "ast_hash": "0a25ce58c536b182cd81862c3dec2626",
+    "mtime": 1791135826.2886038,
+    "seen": 1791183109.7861948,
+    "ast_hash": "3423970b16da13cf7c4239a9e738ef65",
     "semantic_hash": ""
   },
   "core/local_pipeline.py": {
@@ -690,9 +690,9 @@
     "semantic_hash": ""
   },
   "tests/test_hud_reactivity.py": {
-    "mtime": 1790624160.167838,
-    "seen": 1790628576.709417,
-    "ast_hash": "6d15ab0ba9006460dc670985640400db",
+    "mtime": 1791180946.9509013,
+    "seen": 1791183109.7867029,
+    "ast_hash": "0ceae6add2fd47bfc6c9a75d4c1c70ad",
     "semantic_hash": ""
   },
   "graphify-out/memory/query_20260928_132310_bc6968ad_why_did_completed_screen_monitoring_issue_duplicat.md": {
@@ -714,9 +714,9 @@
     "semantic_hash": ""
   },
   "tests/test_wake_word.py": {
-    "mtime": 1790787359.9324965,
-    "seen": 1790787401.7077527,
-    "ast_hash": "4e0dd7e1d0231043fdf9f852375941a3",
+    "mtime": 1791229874.6487246,
+    "seen": 1791231100.5240853,
+    "ast_hash": "5384ae0be01de7dffb0c51ea423418e7",
     "semantic_hash": ""
   },
   "graphify-out/memory/query_20260928_141445_caec2359_remove_classic_hud_mode_from_alfred_mk_iv.md": {
@@ -1224,15 +1224,15 @@
     "semantic_hash": ""
   },
   "core/tts/__init__.py": {
-    "mtime": 1790670029.5021243,
-    "seen": 1790671888.9149604,
-    "ast_hash": "d6118115a91966f2db3500fc95062acc",
+    "mtime": 1791180801.112986,
+    "seen": 1791183109.7865076,
+    "ast_hash": "f05fc53fbbcb4f334a22396b60e3bfc2",
     "semantic_hash": ""
   },
   "core/tts/capability.py": {
-    "mtime": 1790713397.0707555,
-    "seen": 1790713759.0163796,
-    "ast_hash": "494d3e3751a95ffe3d9e497f70a1c072",
+    "mtime": 1791180786.8259625,
+    "seen": 1791183109.786509,
+    "ast_hash": "e5b12d8395f83dfaa4243f02a1610ee5",
     "semantic_hash": ""
   },
   "core/tts/engine_base.py": {
@@ -1254,39 +1254,39 @@
     "semantic_hash": ""
   },
   "core/ui/themes/__init__.py": {
-    "mtime": 1790888732.398583,
-    "seen": 1790888814.6245468,
-    "ast_hash": "d6c0b16e1e7c55902c9827c34ffee9eb",
+    "mtime": 1791262445.1332018,
+    "seen": 1791262692.7893958,
+    "ast_hash": "7abd174980bdf41cc5eb290b5f18e91e",
     "semantic_hash": ""
   },
   "core/ui/themes/apply.py": {
-    "mtime": 1790888720.749697,
-    "seen": 1790888814.6245468,
-    "ast_hash": "2794ea2aa42f3f7fca6083c0bfcfec6a",
+    "mtime": 1791262445.1332018,
+    "seen": 1791262692.7894003,
+    "ast_hash": "dc6395b609d3cc6807cfef7fa55ed89f",
     "semantic_hash": ""
   },
   "core/ui/themes/catalog.py": {
-    "mtime": 1790888743.556338,
-    "seen": 1790888814.6245468,
-    "ast_hash": "832e1bb934764aa5c58a653e69c69e3c",
+    "mtime": 1791262445.1332018,
+    "seen": 1791262692.789405,
+    "ast_hash": "4d6123f3aa094dcfa42117855349ad6b",
     "semantic_hash": ""
   },
   "core/ui/themes/registry.py": {
-    "mtime": 1790888726.3599017,
-    "seen": 1790888814.6245468,
-    "ast_hash": "845996457b6ee3d7c9cd4f3cd576cf9b",
+    "mtime": 1791262445.1332018,
+    "seen": 1791262692.7894099,
+    "ast_hash": "6b8c18bf08ea7b302129bab0822393a9",
     "semantic_hash": ""
   },
   "core/ui/themes/schema.py": {
-    "mtime": 1790888737.1022923,
-    "seen": 1790888814.6245468,
-    "ast_hash": "e5459f727d11792a6b6c3e2ff403b045",
+    "mtime": 1791262445.1332018,
+    "seen": 1791262692.789414,
+    "ast_hash": "00e1e00edd8b6c3d751aa29eb975a9d6",
     "semantic_hash": ""
   },
   "tests/sentry/test_sentry_ui_routing.py": {
-    "mtime": 1790891317.6621478,
-    "seen": 1790891683.3902276,
-    "ast_hash": "665aaa5ecc821919d055fd224441bc0a",
+    "mtime": 1791180963.2867544,
+    "seen": 1791183109.786651,
+    "ast_hash": "37f8244818bafdf7b7630e350592715c",
     "semantic_hash": ""
   },
   "tests/test_jarvis_voice_phase1.py": {
@@ -1308,9 +1308,9 @@
     "semantic_hash": ""
   },
   "tests/test_platform_stability.py": {
-    "mtime": 1790888554.0582576,
-    "seen": 1790888814.6245468,
-    "ast_hash": "793bef43355623f1f553c5a3c95a82d0",
+    "mtime": 1791262445.1410868,
+    "seen": 1791262692.790075,
+    "ast_hash": "664573362c3e2aa2d87824ea58ec79df",
     "semantic_hash": ""
   },
   "tests/test_remote_key_overlay.py": {
@@ -1320,9 +1320,9 @@
     "semantic_hash": ""
   },
   "tests/test_thematic_hud.py": {
-    "mtime": 1790888559.6998901,
-    "seen": 1790888814.6245468,
-    "ast_hash": "05e4fe682f4326e5d846ca1c81c5142d",
+    "mtime": 1791262445.1454654,
+    "seen": 1791262692.790165,
+    "ast_hash": "216187a1fb60f8f6874e24bb28ecfecf",
     "semantic_hash": ""
   },
   "docs/jarvis_voice/PHASE_0_NOTES.md": {
@@ -1770,9 +1770,9 @@
     "semantic_hash": ""
   },
   "core/image_viewer/fetch.py": {
-    "mtime": 1790888636.3223193,
-    "seen": 1790888814.6245468,
-    "ast_hash": "29f04ea09f0b2bec186ce090e74a6e9a",
+    "mtime": 1791262445.11685,
+    "seen": 1791262692.7888408,
+    "ast_hash": "1f78d1b29d66ed6cdd3fd49a2cfe6d30",
     "semantic_hash": ""
   },
   "core/image_viewer/fit.py": {
@@ -1806,9 +1806,9 @@
     "semantic_hash": ""
   },
   "tests/test_ui_mismatches_ast.py": {
-    "mtime": 1790712837.069033,
-    "seen": 1790712921.4773448,
-    "ast_hash": "4e63d72478ef0bfa46d1ef6b808ba935",
+    "mtime": 1791180933.1563978,
+    "seen": 1791183109.7867644,
+    "ast_hash": "97f4518f3405d0eac09d0ca3d596307f",
     "semantic_hash": ""
   },
   "docs/image_viewer/PHASE_0_NOTES.md": {
@@ -2124,9 +2124,9 @@
     "semantic_hash": ""
   },
   "core/hud/visuals/slots/batcave.py": {
-    "mtime": 1791030081.074076,
-    "seen": 1791030150.8276665,
-    "ast_hash": "b6ec22b4673180624d1a0a39128ad035",
+    "mtime": 1791262445.11685,
+    "seen": 1791262692.7887144,
+    "ast_hash": "a1f15dd61cf733284b6d4c3c50079369",
     "semantic_hash": ""
   },
   "core/hud/visuals/slots/beyond.py": {
@@ -2328,9 +2328,9 @@
     "semantic_hash": ""
   },
   "core/apis/oauth.py": {
-    "mtime": 1790888696.8259585,
-    "seen": 1790888814.6245468,
-    "ast_hash": "fa6bc24339a72ea673f81e5ac1537ad6",
+    "mtime": 1791262445.11685,
+    "seen": 1791262692.7884965,
+    "ast_hash": "030771eba0d5c41556f3fab846f0d577",
     "semantic_hash": ""
   },
   "core/apis/registry.py": {
@@ -2352,9 +2352,9 @@
     "semantic_hash": ""
   },
   "core/secrets/store.py": {
-    "mtime": 1790888757.5462244,
-    "seen": 1790888814.6245468,
-    "ast_hash": "8a7d5bbd99b06b7c7dc1bdd06d1a0a6d",
+    "mtime": 1791262445.1332018,
+    "seen": 1791262692.789108,
+    "ast_hash": "528a6d180d4641ff75910578e7063594",
     "semantic_hash": ""
   },
   "core/ui/setup_api_modal.py": {
@@ -2484,9 +2484,9 @@
     "semantic_hash": ""
   },
   "ui/overlays/setup_overlay.py": {
-    "mtime": 1790888479.685723,
-    "seen": 1790888814.6245468,
-    "ast_hash": "7a9607c85856df5d181cf849d24ba3ec",
+    "mtime": 1791262445.11685,
+    "seen": 1791262692.7903278,
+    "ast_hash": "f1c194a28be9b8f006abfa86a1102f45",
     "semantic_hash": ""
   },
   "tests/hud_video/__init__.py": {
@@ -2796,15 +2796,15 @@
     "semantic_hash": ""
   },
   "tests/test_wake_word_latency.py": {
-    "mtime": 1790772682.8710377,
-    "seen": 1790773326.498372,
-    "ast_hash": "c462a1c8d508d994c2200332f954adaa",
+    "mtime": 1791230690.3852262,
+    "seen": 1791231100.5240867,
+    "ast_hash": "e6a6ea889fc0935e4280d5340dec9fc0",
     "semantic_hash": ""
   },
   "tools/benchmark_latency_pipeline.py": {
-    "mtime": 1790888547.8464353,
-    "seen": 1790888814.6245468,
-    "ast_hash": "ed810c0b76f67e28a72e2146419d75a5",
+    "mtime": 1791262445.1410868,
+    "seen": 1791262692.7902298,
+    "ast_hash": "e607e7b709fab69deb275a58cc05b49d",
     "semantic_hash": ""
   },
   "docs/latency/PHASE_0_NOTES.md": {
@@ -2874,15 +2874,15 @@
     "semantic_hash": ""
   },
   "tests/test_hybrid_wake.py": {
-    "mtime": 1791010882.172021,
-    "seen": 1791030150.8280694,
-    "ast_hash": "5c928e8d6f65563fbd54ccbb6525fe1d",
+    "mtime": 1791230849.9717216,
+    "seen": 1791231100.524012,
+    "ast_hash": "4d1b8cca9dc21d5f51f0e5f35fa2297b",
     "semantic_hash": ""
   },
   "tests/test_voice_sleep.py": {
-    "mtime": 1790862308.9521601,
-    "seen": 1790862406.6340923,
-    "ast_hash": "c16d03d9405205fa40f8a27bdb18bbc2",
+    "mtime": 1791230975.6264849,
+    "seen": 1791231100.5240831,
+    "ast_hash": "8b0790eb653de8376e5bf38bedc6f392",
     "semantic_hash": ""
   },
   "tests/test_idle_sleep_optimizations.py": {
@@ -3102,9 +3102,9 @@
     "semantic_hash": ""
   },
   "tools/train_personal_verifier.py": {
-    "mtime": 1790931978.0494063,
-    "seen": 1790932058.4026678,
-    "ast_hash": "3b5e7ab9d2bba424ed2449a2a204eee8",
+    "mtime": 1791230341.161131,
+    "seen": 1791231100.5241013,
+    "ast_hash": "cd29815fb9a95d4fce5f0824ae54f802",
     "semantic_hash": ""
   },
   "docs/GRAPHIFY_WORKFLOW.md": {
@@ -3120,9 +3120,9 @@
     "semantic_hash": ""
   },
   "tools/record_training_samples.py": {
-    "mtime": 1790936949.1425507,
-    "seen": 1791030150.8281426,
-    "ast_hash": "2bb760636431eceb5732978b455e9da0",
+    "mtime": 1791230351.8362947,
+    "seen": 1791231100.5240974,
+    "ast_hash": "3c077a7c8134022b0349f0ca99af1866",
     "semantic_hash": ""
   },
   "data/wakeword_samples/negative/neg_1790926788_01.wav": {
@@ -3618,9 +3618,669 @@
     "semantic_hash": ""
   },
   "tools/test_wake_model.py": {
-    "mtime": 1790936353.7066743,
-    "seen": 1791030150.8281443,
-    "ast_hash": "6f10e65bf1ce85af2f39aebd65d3be12",
+    "mtime": 1791179892.8979988,
+    "seen": 1791183109.7867851,
+    "ast_hash": "20059c05c98845619010d8e6c7c9da08",
+    "semantic_hash": ""
+  },
+  "tests/test_bat_globe_orb.py": {
+    "mtime": 1791183395.9025867,
+    "seen": 1791183454.5270374,
+    "ast_hash": "19efa21b20b1981bed6100e760fe5e33",
+    "semantic_hash": ""
+  },
+  "tests/test_desktop_shortcut.py": {
+    "mtime": 1791052530.3232372,
+    "seen": 1791183109.7866929,
+    "ast_hash": "8da6f53ac38a6eee55587a5735c914d7",
+    "semantic_hash": ""
+  },
+  "tests/test_update_app_icon.py": {
+    "mtime": 1791054950.78101,
+    "seen": 1791183109.786766,
+    "ast_hash": "56a62ebcbb0640653cdcc322e3aec281",
+    "semantic_hash": ""
+  },
+  "tools/create_desktop_shortcut.py": {
+    "mtime": 1791052594.1462991,
+    "seen": 1791183109.7867787,
+    "ast_hash": "fcf1c64e3cf8c8bd54a415f7221477e6",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya2_hey_alfred_1791181341_01.wav": {
+    "mtime": 1791181341.9380603,
+    "seen": 1791183109.787208,
+    "ast_hash": "10f37f219841fc78cbf397f2e7edccdb",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya2_hey_alfred_1791181344_02.wav": {
+    "mtime": 1791181344.0711412,
+    "seen": 1791183109.7872097,
+    "ast_hash": "77b306a127ac4fc45c4f4cb33b19e9c6",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya2_hey_alfred_1791181347_03.wav": {
+    "mtime": 1791181347.9649389,
+    "seen": 1791183109.7872112,
+    "ast_hash": "4b1a464faa9997b6037d6ad0756fc2c8",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya2_hey_alfred_1791181352_04.wav": {
+    "mtime": 1791181352.2495742,
+    "seen": 1791183109.7872128,
+    "ast_hash": "658b29d04ffdd714402d304cfc8be871",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya2_hey_alfred_1791181356_05.wav": {
+    "mtime": 1791181356.2999375,
+    "seen": 1791183109.7872143,
+    "ast_hash": "34e2240516f18958ac779758b26d3df8",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya2_hey_alfred_1791181359_06.wav": {
+    "mtime": 1791181359.5672433,
+    "seen": 1791183109.787216,
+    "ast_hash": "cc8ad28733a64e9798bf143c1f246319",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya2_hey_alfred_1791181362_07.wav": {
+    "mtime": 1791181362.5074148,
+    "seen": 1791183109.7872174,
+    "ast_hash": "f9f5d1c56e65c0106a4fbf613e8583a5",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya2_hey_alfred_1791181365_08.wav": {
+    "mtime": 1791181365.8884623,
+    "seen": 1791183109.7872186,
+    "ast_hash": "8b7144576882e47de248c2bbfcf6a9a7",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya2_hey_alfred_1791181368_09.wav": {
+    "mtime": 1791181368.7574742,
+    "seen": 1791183109.7872207,
+    "ast_hash": "aafc4c45bf385346de86ea9888c56c9b",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya2_hey_alfred_1791181371_10.wav": {
+    "mtime": 1791181371.4985883,
+    "seen": 1791183109.787222,
+    "ast_hash": "d912b3e137332283e9ef8b45c1e07761",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya3_hey_alfred_1791181441_01.wav": {
+    "mtime": 1791181441.1483557,
+    "seen": 1791183109.7872236,
+    "ast_hash": "65a0788c0fdf891046872156f71e4b23",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya3_hey_alfred_1791181443_02.wav": {
+    "mtime": 1791181443.274397,
+    "seen": 1791183109.787225,
+    "ast_hash": "9566010e409c930deaaa48c5efdb4345",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya3_hey_alfred_1791181445_03.wav": {
+    "mtime": 1791181445.8191073,
+    "seen": 1791183109.7872267,
+    "ast_hash": "4f72685fefb5b59c21c77f3b8df890d4",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya3_hey_alfred_1791181448_04.wav": {
+    "mtime": 1791181448.6486945,
+    "seen": 1791183109.7872279,
+    "ast_hash": "aed1bd6e14fe7ebfb6b9b0e2469de938",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya3_hey_alfred_1791181451_05.wav": {
+    "mtime": 1791181451.573169,
+    "seen": 1791183109.7872295,
+    "ast_hash": "e425abb4cfc37d2148796d26fa909596",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya3_hey_alfred_1791181454_06.wav": {
+    "mtime": 1791181454.2059455,
+    "seen": 1791183109.7872307,
+    "ast_hash": "3e8fe885d9f4fa6d59af0689ff19c534",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya3_hey_alfred_1791181457_07.wav": {
+    "mtime": 1791181457.1085691,
+    "seen": 1791183109.7872322,
+    "ast_hash": "35a8037572945fa27d3c00ec6371d564",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya3_hey_alfred_1791181459_08.wav": {
+    "mtime": 1791181459.7418785,
+    "seen": 1791183109.7872336,
+    "ast_hash": "9bd04ff914746faf3b855a1e7d664f7d",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya3_hey_alfred_1791181462_09.wav": {
+    "mtime": 1791181462.8482614,
+    "seen": 1791183109.7872353,
+    "ast_hash": "c622393ec092506cb2fdc34e98ca215f",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya3_hey_alfred_1791181465_10.wav": {
+    "mtime": 1791181465.4584627,
+    "seen": 1791183109.7872367,
+    "ast_hash": "3abcaf98b63d107687c518cc5a5a426f",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/hrishi_hey_alfred_1791054601_01.wav": {
+    "mtime": 1791055216.6041472,
+    "seen": 1791183109.7872922,
+    "ast_hash": "361f22aef10dd49bf3f0055abe9de26d",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/hrishi_hey_alfred_1791054604_02.wav": {
+    "mtime": 1791055216.6071756,
+    "seen": 1791183109.7872937,
+    "ast_hash": "bfea27fc5adc7183a3c778942e0e1740",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/hrishi_hey_alfred_1791054608_03.wav": {
+    "mtime": 1791055216.6092165,
+    "seen": 1791183109.7872953,
+    "ast_hash": "0fb60d0982cf8c85148e7a323153f32a",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/hrishi_hey_alfred_1791054611_04.wav": {
+    "mtime": 1791055216.611241,
+    "seen": 1791183109.7872968,
+    "ast_hash": "22a7f8c6a027e16de55916b27357a1c3",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/hrishi_hey_alfred_1791054614_05.wav": {
+    "mtime": 1791055216.6132524,
+    "seen": 1791183109.7872992,
+    "ast_hash": "2a3a09308bbbce46ffdc7dd28b17c775",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/hrishi_hey_alfred_1791054618_06.wav": {
+    "mtime": 1791055216.6132524,
+    "seen": 1791183109.7873015,
+    "ast_hash": "8dfb2cc5110bc18b89506e3a5e0546d3",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/hrishi_hey_alfred_1791054621_07.wav": {
+    "mtime": 1791055216.6181266,
+    "seen": 1791183109.7873042,
+    "ast_hash": "26f3a33e5e8d980141e79fe14d07ec23",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/hrishi_hey_alfred_1791054624_08.wav": {
+    "mtime": 1791055216.6201403,
+    "seen": 1791183109.7873065,
+    "ast_hash": "43ea299941d28588e2cd27b30f962bb3",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/hrishi_hey_alfred_1791054628_09.wav": {
+    "mtime": 1791055216.6221306,
+    "seen": 1791183109.7873094,
+    "ast_hash": "580999ce41c5bd1ed251dfcc828e3e85",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/hrishi_hey_alfred_1791054632_10.wav": {
+    "mtime": 1791055216.623148,
+    "seen": 1791183109.7873116,
+    "ast_hash": "124f3eca554a39ec68de0de155700328",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/manoj_hey_alfred_1791096869_01.wav": {
+    "mtime": 1791179658.5566237,
+    "seen": 1791183109.7873144,
+    "ast_hash": "d003aa3f4c2f120583235b234842b7c1",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/manoj_hey_alfred_1791096878_02.wav": {
+    "mtime": 1791179658.5582666,
+    "seen": 1791183109.787316,
+    "ast_hash": "a68f3e3cf6f3f2d5755065e30761305e",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/manoj_hey_alfred_1791096885_03.wav": {
+    "mtime": 1791179658.5593472,
+    "seen": 1791183109.7873175,
+    "ast_hash": "a473d0e84c727a832e13d8a68438418f",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/manoj_hey_alfred_1791096891_04.wav": {
+    "mtime": 1791179658.561078,
+    "seen": 1791183109.7873187,
+    "ast_hash": "be01ec7837420e09cbfd824cb687ae25",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/manoj_hey_alfred_1791096895_05.wav": {
+    "mtime": 1791179658.5616398,
+    "seen": 1791183109.7873206,
+    "ast_hash": "06d14810a9483683a3be756d536e82fd",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/manoj_hey_alfred_1791096899_06.wav": {
+    "mtime": 1791179658.5616398,
+    "seen": 1791183109.7873223,
+    "ast_hash": "45931e2dbc6637b5b2b12125fac6cc1b",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/manoj_hey_alfred_1791096904_07.wav": {
+    "mtime": 1791179658.5616398,
+    "seen": 1791183109.787324,
+    "ast_hash": "f2180de0dd1630ea77b0dc6c4edc7dd4",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/manoj_hey_alfred_1791096907_08.wav": {
+    "mtime": 1791179658.5616398,
+    "seen": 1791183109.7873251,
+    "ast_hash": "5813afcc3eddf9736b4489c89f5b4b27",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/manoj_hey_alfred_1791096910_09.wav": {
+    "mtime": 1791179658.5616398,
+    "seen": 1791183109.7873268,
+    "ast_hash": "6aeb5b39b6e556094b81a56acdeeb899",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/manoj_hey_alfred_1791096913_10.wav": {
+    "mtime": 1791179658.5690925,
+    "seen": 1791183109.787328,
+    "ast_hash": "b358c13ff269199f5d1b26b5a7b17c61",
+    "semantic_hash": ""
+  },
+  "core/speaker/__init__.py": {
+    "mtime": 1791229675.3267434,
+    "seen": 1791231100.523781,
+    "ast_hash": "e3a61a14150003dd18e503c58fbc8323",
+    "semantic_hash": ""
+  },
+  "core/speaker/enrollment.py": {
+    "mtime": 1791230157.204552,
+    "seen": 1791231100.5237834,
+    "ast_hash": "2b03e6a49fb91390d14ac323d97191e7",
+    "semantic_hash": ""
+  },
+  "core/speaker/extractor.py": {
+    "mtime": 1791230407.019089,
+    "seen": 1791231100.523785,
+    "ast_hash": "5984269f4a610341b41b51e86b42be97",
+    "semantic_hash": ""
+  },
+  "core/speaker/profile_store.py": {
+    "mtime": 1791230130.85898,
+    "seen": 1791231100.5237873,
+    "ast_hash": "230a0927b8b73568f75ffa6f1bf57496",
+    "semantic_hash": ""
+  },
+  "core/speaker/ring_buffer.py": {
+    "mtime": 1791229580.769824,
+    "seen": 1791231100.5237887,
+    "ast_hash": "2c490f3a74f8fcc06535fc92a83006b3",
+    "semantic_hash": ""
+  },
+  "core/speaker/types.py": {
+    "mtime": 1791230569.2202573,
+    "seen": 1791231100.5237901,
+    "ast_hash": "b92dacc2deb2ad60b6165eb6e0b36671",
+    "semantic_hash": ""
+  },
+  "core/speaker/verifier.py": {
+    "mtime": 1791230580.7479596,
+    "seen": 1791231100.5237916,
+    "ast_hash": "8300c46e11355e77c935fea5096ec915",
+    "semantic_hash": ""
+  },
+  "core/ui/voice_enroll_modal.py": {
+    "mtime": 1791263574.5116436,
+    "seen": 1791263660.68133,
+    "ast_hash": "dc5acbc97ed30a7c65c5bde6708ce0dd",
+    "semantic_hash": ""
+  },
+  "tests/test_dual_gate_wakeword.py": {
+    "mtime": 1791229696.9660084,
+    "seen": 1791231100.523999,
+    "ast_hash": "175c7f6e0163d2664c4b5268e5023989",
+    "semantic_hash": ""
+  },
+  "tests/test_enroll_voice_cli.py": {
+    "mtime": 1791230276.6002338,
+    "seen": 1791231100.524001,
+    "ast_hash": "b1cb2b62c6900b37bb715d431f2f9997",
+    "semantic_hash": ""
+  },
+  "tests/test_speaker_enrollment.py": {
+    "mtime": 1791229650.6614523,
+    "seen": 1791231100.5240521,
+    "ast_hash": "6ce6ca310bb087b9e6ef59ee60e6d43f",
+    "semantic_hash": ""
+  },
+  "tests/test_speaker_interfaces.py": {
+    "mtime": 1791229632.5183482,
+    "seen": 1791231100.524054,
+    "ast_hash": "2c992f6ead19424a283469aebded13f1",
+    "semantic_hash": ""
+  },
+  "tests/test_speaker_verification_matrix.py": {
+    "mtime": 1791230616.6382265,
+    "seen": 1791231100.5240557,
+    "ast_hash": "934fc0b92528bc2ac71e18a2ed370394",
+    "semantic_hash": ""
+  },
+  "tests/test_voice_enroll_modal.py": {
+    "mtime": 1791262223.563581,
+    "seen": 1791262389.4484982,
+    "ast_hash": "738af1853dc6add905c7f364feeb5a1f",
+    "semantic_hash": ""
+  },
+  "tools/enroll_voice.py": {
+    "mtime": 1791230312.086872,
+    "seen": 1791231100.5240936,
+    "ast_hash": "3b714b76bdc6d821d9269644f8f65e46",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1791227780_01.wav": {
+    "mtime": 1791227780.8481019,
+    "seen": 1791231100.5245125,
+    "ast_hash": "ef6695b7820550be56dd6279f5025bcd",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1791227785_02.wav": {
+    "mtime": 1791227785.07539,
+    "seen": 1791231100.5245137,
+    "ast_hash": "32526fae5f498941df17107ab8de7d5d",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1791227788_03.wav": {
+    "mtime": 1791227788.1329389,
+    "seen": 1791231100.5245154,
+    "ast_hash": "e6312c692e9d283cefcb810448f51fab",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1791227791_04.wav": {
+    "mtime": 1791227791.5850914,
+    "seen": 1791231100.5245166,
+    "ast_hash": "bdcf77f0cdee1da13de88f05a50fbc75",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1791227794_05.wav": {
+    "mtime": 1791227794.0997164,
+    "seen": 1791231100.5245178,
+    "ast_hash": "58fbce3c257b309bac376fad01e22330",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1791227797_06.wav": {
+    "mtime": 1791227797.2106922,
+    "seen": 1791231100.5245194,
+    "ast_hash": "d56a913d83ee7121523bbbd8ad83295a",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1791227799_07.wav": {
+    "mtime": 1791227799.8054407,
+    "seen": 1791231100.5245206,
+    "ast_hash": "3f9035b91c4f4aa4195f428052bf7ed8",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1791227802_08.wav": {
+    "mtime": 1791227802.522353,
+    "seen": 1791231100.524522,
+    "ast_hash": "6e44e776c3452c2cd31f7400413eeb54",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1791227805_09.wav": {
+    "mtime": 1791227805.0514402,
+    "seen": 1791231100.5245235,
+    "ast_hash": "6afd9f2b715701470da4efeb443f9385",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1791227807_10.wav": {
+    "mtime": 1791227807.6730237,
+    "seen": 1791231100.5245247,
+    "ast_hash": "5367856b84b89ffb988b3d1a842e97a2",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1791227810_11.wav": {
+    "mtime": 1791227810.2736833,
+    "seen": 1791231100.5245261,
+    "ast_hash": "76807edcc1d6ecbc0fcd468ccfa7e14d",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1791227813_12.wav": {
+    "mtime": 1791227813.8082755,
+    "seen": 1791231100.5245278,
+    "ast_hash": "07751971aa6889b23753c3fae59d1a24",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1791227816_13.wav": {
+    "mtime": 1791227816.2359965,
+    "seen": 1791231100.5245295,
+    "ast_hash": "89203f952f59ed4c6405a7c802c941c2",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1791227818_14.wav": {
+    "mtime": 1791227818.7805436,
+    "seen": 1791231100.524531,
+    "ast_hash": "de5baa2f33e71e18a1268e1465a48cc2",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1791227821_15.wav": {
+    "mtime": 1791227821.247492,
+    "seen": 1791231100.5245323,
+    "ast_hash": "aa04ae991ddf4d4b3200580e5abf14f5",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1791227823_16.wav": {
+    "mtime": 1791227823.7111235,
+    "seen": 1791231100.5245337,
+    "ast_hash": "3893dbc700b6a0c83643493d5af04c85",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1791227826_17.wav": {
+    "mtime": 1791227826.826683,
+    "seen": 1791231100.5245352,
+    "ast_hash": "7c8c0badac94e3df94abe50167623b9b",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1791227829_18.wav": {
+    "mtime": 1791227829.9611402,
+    "seen": 1791231100.5245366,
+    "ast_hash": "abe633652a896b2e64f4e650a626435c",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1791227832_19.wav": {
+    "mtime": 1791227832.887016,
+    "seen": 1791231100.524538,
+    "ast_hash": "5f65d93facb82548fbfc07cec3975052",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/negative/neg_1791227835_20.wav": {
+    "mtime": 1791227835.7676387,
+    "seen": 1791231100.5245395,
+    "ast_hash": "8c3f982426f31b143425f7f6125f8f3c",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227848_01.wav": {
+    "mtime": 1791227848.0546112,
+    "seen": 1791231100.5247028,
+    "ast_hash": "4a1548c4a4be58a1b8528c8eb96c91ef",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227850_02.wav": {
+    "mtime": 1791227850.2209752,
+    "seen": 1791231100.524704,
+    "ast_hash": "def263f1185612bf6c8355af037823ed",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227852_03.wav": {
+    "mtime": 1791227852.3695009,
+    "seen": 1791231100.5247052,
+    "ast_hash": "876a37e74b0d59d5a11c36ace0cf7cbc",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227855_04.wav": {
+    "mtime": 1791227855.7301283,
+    "seen": 1791231100.5247068,
+    "ast_hash": "5e4cf797d50bd16733967dcf93be2e2b",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227858_05.wav": {
+    "mtime": 1791227858.333683,
+    "seen": 1791231100.524708,
+    "ast_hash": "d29eee0a3f262cccf081d6748bda5a34",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227861_06.wav": {
+    "mtime": 1791227861.0104556,
+    "seen": 1791231100.5247095,
+    "ast_hash": "946a3af8c230b7bacaf9a6961ae4631f",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227863_07.wav": {
+    "mtime": 1791227863.7154424,
+    "seen": 1791231100.524711,
+    "ast_hash": "7d1687b6294ba73e06cf0a5186209b87",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227866_08.wav": {
+    "mtime": 1791227866.425342,
+    "seen": 1791231100.524712,
+    "ast_hash": "b839773f592029c558234075bd2cba12",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227869_09.wav": {
+    "mtime": 1791227869.146916,
+    "seen": 1791231100.5247138,
+    "ast_hash": "38d652ea1b8e27f914cb8d2f60fc989c",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227871_10.wav": {
+    "mtime": 1791227871.8872056,
+    "seen": 1791231100.5247154,
+    "ast_hash": "517a30afab95be11fa9a3c4032bdde1f",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227874_11.wav": {
+    "mtime": 1791227874.4583569,
+    "seen": 1791231100.5247169,
+    "ast_hash": "74febbdedc1f82a8e1acc7f5a6392a94",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227877_12.wav": {
+    "mtime": 1791227877.4954069,
+    "seen": 1791231100.524718,
+    "ast_hash": "5f319a1d8b0c313d8a027ebf979ca1e4",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227880_13.wav": {
+    "mtime": 1791227880.2085688,
+    "seen": 1791231100.5247195,
+    "ast_hash": "cd7a752d9509014a7d83b2588bcfb7fd",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227882_14.wav": {
+    "mtime": 1791227882.9752517,
+    "seen": 1791231100.5247207,
+    "ast_hash": "76de0b39ade4de9fafdd7ea0ef177421",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227885_15.wav": {
+    "mtime": 1791227885.4821012,
+    "seen": 1791231100.5247219,
+    "ast_hash": "7335280969034ed0ebdc67187b86f5a9",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227888_16.wav": {
+    "mtime": 1791227888.11781,
+    "seen": 1791231100.5247235,
+    "ast_hash": "4d5608923653aa0e76f5e1089ef43082",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227890_17.wav": {
+    "mtime": 1791227890.6204374,
+    "seen": 1791231100.5247247,
+    "ast_hash": "5f2bd94df4dd1fa5cc41d8ae52d4c94e",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227893_18.wav": {
+    "mtime": 1791227893.393331,
+    "seen": 1791231100.5247264,
+    "ast_hash": "62196e9e98f61aa72ae9f5bf6718dbca",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227895_19.wav": {
+    "mtime": 1791227895.8536162,
+    "seen": 1791231100.5247276,
+    "ast_hash": "d3c6129ab7f79de2580d63920650fe5a",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227898_20.wav": {
+    "mtime": 1791227898.4537868,
+    "seen": 1791231100.5247288,
+    "ast_hash": "8085e48e6c0ee17efa3614514a494af3",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227900_21.wav": {
+    "mtime": 1791227900.9165232,
+    "seen": 1791231100.5247302,
+    "ast_hash": "fc8d249066eb1a4bf27ba817881610b3",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227903_22.wav": {
+    "mtime": 1791227903.362551,
+    "seen": 1791231100.5247314,
+    "ast_hash": "271abc158baaf4e01cfd45da868e1858",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227905_23.wav": {
+    "mtime": 1791227905.8794627,
+    "seen": 1791231100.5247328,
+    "ast_hash": "9035a6163505ec98420f87fb90d6510d",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227908_24.wav": {
+    "mtime": 1791227908.3784518,
+    "seen": 1791231100.5247343,
+    "ast_hash": "67361dd7298248223516d5e82bd42528",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227910_25.wav": {
+    "mtime": 1791227910.913005,
+    "seen": 1791231100.5247355,
+    "ast_hash": "85c0f6a48a22e2ef3e8d794619810189",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227913_26.wav": {
+    "mtime": 1791227913.3402386,
+    "seen": 1791231100.524737,
+    "ast_hash": "45ccfe9756a50a480738addd1da05ad4",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227915_27.wav": {
+    "mtime": 1791227915.9903598,
+    "seen": 1791231100.524738,
+    "ast_hash": "ffdaf81b6138c5f0171e98b5924a6de8",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227918_28.wav": {
+    "mtime": 1791227918.490256,
+    "seen": 1791231100.5247393,
+    "ast_hash": "8b6c4fa9f89c82749e6fba2ff171f12e",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227921_29.wav": {
+    "mtime": 1791227921.0233064,
+    "seen": 1791231100.5247407,
+    "ast_hash": "829a8933efcf37c7a771b2c5d710b65a",
+    "semantic_hash": ""
+  },
+  "data/wakeword_samples/positive/aditya_hey_alfred_1791227923_30.wav": {
+    "mtime": 1791227924.002097,
+    "seen": 1791231100.524742,
+    "ast_hash": "130d2914505d1a2a98f4eb787e56aac6",
+    "semantic_hash": ""
+  },
+  "content.md": {
+    "mtime": 1791229103.3514307,
+    "seen": 1791262389.4485586,
+    "ast_hash": "225438fc531ff09bf360197a1c6ca279",
     "semantic_hash": ""
   }
 }

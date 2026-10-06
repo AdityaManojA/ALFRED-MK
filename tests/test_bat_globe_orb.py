@@ -28,7 +28,6 @@ class TestBatGlobeOrb(unittest.TestCase):
         self.config_patch = patch.object(ui, "CONFIG_DIR", Path(self.temp_dir.name))
         self.config_patch.start()
         self.main = QMainWindow()
-        self.main._face_path = "face.png"
         self.main.on_interrupt = MagicMock()
         self.main.on_wake_manual = MagicMock()
         self.orb = BatGlobeOrb(self.main, "Alfred")
@@ -41,8 +40,8 @@ class TestBatGlobeOrb(unittest.TestCase):
 
     def test_orb_window_properties(self):
         self.assertTrue(self.orb.testAttribute(Qt.WidgetAttribute.WA_TranslucentBackground))
-        self.assertEqual(self.orb.width(), 240)
-        self.assertEqual(self.orb.height(), 240)
+        self.assertEqual(self.orb.width(), 260)
+        self.assertEqual(self.orb.height(), 260)
         self.assertTrue(bool(self.orb.windowFlags() & Qt.WindowType.FramelessWindowHint))
         self.assertTrue(bool(self.orb.windowFlags() & Qt.WindowType.WindowStaysOnTopHint))
 

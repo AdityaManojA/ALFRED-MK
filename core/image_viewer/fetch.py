@@ -41,7 +41,7 @@ ALLOWED_CONTENT_TYPES: tuple[str, ...] = (
     "image/bmp",
     "image/gif",
 )
-USER_AGENT: str = "Alfred-Mark-VIII/1.0 (Desktop Assistant)"
+USER_AGENT: str = "Alfred-Mark-IX/1.0 (Desktop Assistant)"
 
 
 @dataclass(frozen=True)

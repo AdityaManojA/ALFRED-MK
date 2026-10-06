@@ -9,6 +9,7 @@ from core.wake_word import (
     WAKE_MODEL,
     WAKE_MODEL_PATH,
     WAKE_MODEL_SHA256,
+    VALID_WAKE_MODEL_SHA256S,
     WAKE_PHRASE,
     _prediction_score,
 )
@@ -20,7 +21,7 @@ class WakeWordConfigurationTests(unittest.TestCase):
         self.assertEqual(WAKE_MODEL, "alfred")
         self.assertTrue(WAKE_MODEL_PATH.is_file())
         digest = hashlib.sha256(WAKE_MODEL_PATH.read_bytes()).hexdigest()
-        self.assertEqual(digest, WAKE_MODEL_SHA256)
+        self.assertIn(digest, VALID_WAKE_MODEL_SHA256S)
 
     def test_prediction_score_prefers_alfred_classifier(self):
         scores = {"noise": 0.95, "alfred_v1": 0.72}

@@ -20,8 +20,9 @@ class TestVoiceSleep(unittest.TestCase):
         """Verify shutdown_jarvis requires confirmation and explicitly warns against sleep commands."""
         from main import TOOL_DECLARATIONS
         tools = {t["name"]: t for t in TOOL_DECLARATIONS}
-        self.assertIn("shutdown_jarvis", tools)
-        decl = tools["shutdown_jarvis"]
+        cmd_name = "shutdown_alfred" if "shutdown_alfred" in tools else "shutdown_jarvis"
+        self.assertIn(cmd_name, tools)
+        decl = tools[cmd_name]
         self.assertIn("confirmation", decl["parameters"]["required"])
         # Description should distinguish shutdown from sleep
         self.assertIn("sleep", decl["description"].lower())
@@ -100,8 +101,8 @@ class TestVoiceSleep(unittest.TestCase):
             try:
                 res = loop.run_until_complete(app._dispatch_tool("go_to_sleep", {}))
                 self.assertIn("sleep", res.lower())
-                # Allow background task to fire (it waits 0.4s + 0.3s = 0.7s)
-                loop.run_until_complete(asyncio.sleep(1.0))
+                # Allow background task to fire (waits up to 1.15s)
+                loop.run_until_complete(asyncio.sleep(1.5))
                 app.sleep.assert_called_once()
                 self.assertEqual(app.sleep.call_args[1].get("reason"), "voice command")
             finally:
@@ -133,6 +134,7 @@ class TestVoiceSleep(unittest.TestCase):
             app = JarvisLive(None)
             app.set_speaking = MagicMock()
             app.ui = MagicMock()
+            app.ui.muted = False
             app._wake_detector = MagicMock()
             app._dashboard = None
             app._has_logged_sleep = False

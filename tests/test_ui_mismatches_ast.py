@@ -69,6 +69,12 @@ class TestUiMismatchesAST(unittest.TestCase):
         params = list(sig.parameters.keys())
         self.assertEqual(params, ["self", "arbiter"], f"Expected (self, arbiter), got {params}")
 
+    def test_alfred_ui_alias(self):
+        """Assert that AlfredUI is exposed and aliased to JarvisUI."""
+        import ui
+        self.assertTrue(hasattr(ui, "AlfredUI"), "ui must expose AlfredUI")
+        self.assertIs(ui.AlfredUI, ui.JarvisUI, "AlfredUI and JarvisUI must be aliases")
+
     def test_no_duplicate_methods_in_classes(self):
         """Assert that no class in the repository redefines/shadows an existing method."""
         duplicates = []
@@ -96,13 +102,14 @@ class TestUiMismatchesAST(unittest.TestCase):
 
     def test_duplicate_methods_in_main_window_and_jarvis_live(self):
         """Specifically verify MainWindow in ui.py and JarvisLive in main.py have no duplicate methods."""
-        target_classes = {
-            WORKSPACE_ROOT / "ui.py": "MainWindow",
-            WORKSPACE_ROOT / "main.py": "JarvisLive",
-        }
+        target_classes = [
+            (WORKSPACE_ROOT / "ui.py", "MainWindow"),
+            (WORKSPACE_ROOT / "main.py", "AlfredLive"),
+            (WORKSPACE_ROOT / "main.py", "JarvisLive"),
+        ]
         duplicates = []
         found_classes = set()
-        for path, target_cls in target_classes.items():
+        for path, target_cls in target_classes:
             with open(path, "r", encoding="utf-8") as f:
                 tree = ast.parse(f.read(), filename=str(path))
             for node in ast.walk(tree):
@@ -123,7 +130,7 @@ class TestUiMismatchesAST(unittest.TestCase):
                         if len(lines) > 1:
                             duplicates.append(f"{target_cls}.{m} defined multiple times on lines {lines}")
 
-        self.assertEqual(found_classes, {"MainWindow", "JarvisLive"}, "Both MainWindow and JarvisLive classes must be found and scanned")
+        self.assertEqual(found_classes, {"MainWindow", "AlfredLive", "JarvisLive"}, "MainWindow, AlfredLive, and JarvisLive classes must be found and scanned")
         self.assertEqual(duplicates, [], f"Duplicate method definitions found in core classes: {duplicates}")
 
 

@@ -1,8 +1,18 @@
-"""tools/train_personal_verifier.py — Record voice samples and train multi-user custom verifier.
+"""tools/train_personal_verifier.py — [LEGACY / EXPERIMENTAL] openWakeWord Feature Classifier.
 
-Allows you and your friend to record short audio clips of "Hey Alfred" / "Alfred"
-and trains a lightweight, voice-specific verifier model (models/alfred_verifier.pkl).
-Only authorized voices will be permitted to wake ALFRED.
+NOTE: This script is deprecated and isolated from production activation.
+ALFRED now uses true neural speaker verification via:
+  • Pretrained CAM++ ONNX speaker embeddings (models/speaker_verifier.onnx)
+  • Per-user atomic profile storage (~/.alfred/voice_profiles/)
+  • Official enrollment tool: python tools/enroll_voice.py --enroll <username>
+  • In-app tactical HUD drawer: [VOICE BIOMETRICS] button
+
+Why this legacy script was superseded:
+  1. openWakeWord feature frames (1, 16, 96) encode acoustic/phonetic information,
+     not robust speaker identity embeddings.
+  2. Training against silence/synthetic noise without other-speaker wake utterances
+     yields uncalibrated decision boundaries and high false-acceptance rates.
+  3. models/alfred_verifier.pkl is NOT used by production wake detection.
 """
 
 from __future__ import annotations

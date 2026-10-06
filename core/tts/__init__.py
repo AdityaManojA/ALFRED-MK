@@ -19,7 +19,7 @@ from core.tts.engine_default import (
     _play_audio_bytes,
 )
 
-from core.tts.capability import check_jarvis_capability
+from core.tts.capability import check_jarvis_capability, check_alfred_capability
 from core.tts.jarvis_assets import are_assets_downloaded
 
 __all__ = [
@@ -33,6 +33,7 @@ __all__ = [
     "create_tts_player",
     "get_engine",
     "check_jarvis_capability",
+    "check_alfred_capability",
     "are_assets_downloaded",
     "_to_numpy",
     "_compress_silence",
@@ -44,11 +45,11 @@ __all__ = [
 def get_engine(name: str = "default", config: dict | None = None) -> TTSEngine:
     """Factory to retrieve a configured TTSEngine instance."""
     clean_name = (name or "default").strip().lower()
-    if clean_name == "jarvis":
+    if clean_name in ("jarvis", "alfred"):
         try:
             from core.tts.engine_jarvis import EngineJarvis
             return EngineJarvis(config=config)
         except Exception as e:
-            print(f"[TTS] Failed to instantiate Jarvis engine: {e} — falling back to default.")
+            print(f"[TTS] Failed to instantiate Alfred/Jarvis engine: {e} — falling back to default.")
             return EngineDefault(config=config)
     return EngineDefault(config=config)

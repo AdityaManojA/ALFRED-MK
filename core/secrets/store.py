@@ -1,5 +1,5 @@
 """
-core/secrets/store.py — Encrypted Secrets Store for ALFRED-MK-VIII.
+core/secrets/store.py — Encrypted Secrets Store for ALFRED-MK-IX.
 
 Provides:
 - Machine-local encrypted storage at ~/.alfred/secrets.env using cryptography.Fernet.
@@ -197,7 +197,7 @@ class SecretStore:
         with self._rw_lock:
             self._path.parent.mkdir(parents=True, exist_ok=True)
             lines = [
-                "# ALFRED-MK-VIII Encrypted Secrets Store",
+                "# ALFRED-MK-IX Encrypted Secrets Store",
                 "# Do not edit manually. Machine-local encryption active.",
             ]
             for k, v in sorted(self._cache.items()):

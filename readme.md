@@ -1,19 +1,19 @@
-# 🦇 ALFRED — MARK-VIII (Wayne Protocol Edition)
+# 🦇 ALFRED — MARK-IX (Wayne Protocol Edition)
 ### 🎩 Autonomous Multimodal AI Desktop Assistant & Tactical Terminal
-**Version 8 — Stable Build (Windows)** | **Architect & Lead Creator:** **ADITYA MANOJ**
+**Version 9 — Stable Build (Windows)** | **Architect & Lead Creator:** **ADITYA MANOJ**
 
-[![Version 8 (Stable Build · Windows)](https://img.shields.io/badge/Build-Version%208%20(Stable%20Build%20%7C%20Windows)-00f0ff.svg?logo=windows&logoColor=white)](#)
+[![Version 9 (Stable Build · Windows)](https://img.shields.io/badge/Build-Version%209%20(Stable%20Build%20%7C%20Windows)-00f0ff.svg?logo=windows&logoColor=white)](#)
 [![Python 3.12 (Recommended)](https://img.shields.io/badge/Python-3.12%20(Recommended)-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![AI Backend](https://img.shields.io/badge/AI-Gemini%203.1%20Flash%20Live%20%7C%20Local%20Ollama-8E75B2.svg?logo=google&logoColor=white)](https://ai.google.dev/)
 [![Local LLMs](https://img.shields.io/badge/Local%20LLM-Ollama%20%7C%20LM%20Studio%20%7C%20vLLM-orange.svg)](https://ollama.com)
 [![PyQt6](https://img.shields.io/badge/GUI-PyQt6%20Software%20Renderer-41CD52.svg?logo=qt&logoColor=white)](https://riverbankcomputing.com/software/pyqt/)
-[![AES-256 Remote](https://img.shields.io/badge/Mobile-Quantum%20Dashboard%20(iOS%2FAndroid)-00f0ff.svg)](https://github.com/AdityaManojA/ALFRED-MK-VIII)
+[![AES-256 Remote](https://img.shields.io/badge/Mobile-Quantum%20Dashboard%20(iOS%2FAndroid)-00f0ff.svg)](https://github.com/AdityaManojA/ALFRED-MK-IX)
 [![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
 
-> **ALFRED MARK-VIII (Version 8 — Stable Build · Windows)** is an autonomous, real-time voice, vision, and system-control executive assistant built for complete digital sovereignty and tactical computing. Native bidirectional audio streaming, real-time visual grounding, full desktop automation, high-performance long-term memory, and encrypted mobile remote telemetry — engineered as one of the **most function-dense, production-hardened tactical AI assistants** in the open ecosystem.
+> **ALFRED MARK-IX (Version 9 — Stable Build · Windows)** is an autonomous, real-time voice, vision, and system-control executive assistant built for complete digital sovereignty and tactical computing. Native bidirectional audio streaming, real-time visual grounding, full desktop automation, high-performance long-term memory, and encrypted mobile remote telemetry — engineered as one of the **most function-dense, production-hardened tactical AI assistants** in the open ecosystem.
 
 <p align="center">
-  <img src="Screenies/Default_theme.png" alt="ALFRED MARK-VIII Tactical HUD Interface" width="92%">
+  <img src="Screenies/Default_theme.png" alt="ALFRED MARK-IX Tactical HUD Interface" width="92%">
 </p>
 
 ---
@@ -24,12 +24,12 @@
 2. [🔑 Gemini API Key Setup & Configuration](#gemini-api-key)
 3. [🌐 100% Local & Air-Gapped Operation](#local-operation)
 4. [🏆 Why ALFRED Outclasses Every Other "Jarvis"](#why-alfred)
-5. [🆕 What's New in Version 8 (Stable Build · Windows)](#whats-new)
+5. [🆕 What's New in Version 9 / Mark IX (Personalized Voice Trigger & Tactical Biometrics)](#whats-new)
 6. [🎭 Example Tactical Commands](#tactical-commands)
 7. [🛡️ Security, Privacy & Defensive Architecture](#security-privacy)
 8. [🎙️ Master Voice Command Codex](#voice-codex)
 9. [🎧 Real-Time Multimodal Intelligence](#multimodal-intelligence)
-10. [🎙️ Custom Wake-Word Neural Network & Multi-Speaker Training](#wake-training)
+10. [🎙️ Dual-Gate Voice Trigger & Personalized Speaker Verification Workflow](#wake-training)
 11. [🎵 Tactical Audio Matrix & Background Score](#tactical-audio)
 12. [🎶 Spotify AI Agent](#spotify-agent)
 13. [🎬 Visual HUD v2: Embedded Multimedia & Tactical Layering](#visual-hud)
@@ -52,7 +52,7 @@
 ## 🚀 1. Quick Start & Installation
 
 ### 📋 Prerequisites
-* **Operating System**: **Windows 10/11 (Primary Target — Version 8 Stable Build)**, macOS, or Linux.
+* **Operating System**: **Windows 10/11 (Primary Target — Version 9 Stable Build)**, macOS, or Linux.
 * **Python**: **`3.12.x` (Recommended)**. *(Note: Python `3.11` is also supported. Python `3.13` is not recommended due to upstream binary wheel and C-extension compatibility issues with PyAudio, PyQt6, and PyAutoGUI).*
 * **Hardware**: Standard microphone and speakers. *No dedicated GPU required — runs on lightweight software rendering.*
 * **Intelligence Backend**: Free Gemini API key from [Google AI Studio](https://aistudio.google.com/) **OR** local Ollama / LM Studio.
@@ -63,7 +63,7 @@
 ```powershell
 # 1. Clone repository & install dependencies
 git clone https://github.com/AdityaManojA/ALFRED-MK-V.git
-cd ALFRED-MK-VIII
+cd ALFRED-MK-IX
 python setup.py
 
 # 2. Launch ALFRED
@@ -76,8 +76,8 @@ python main.py
 brew install yt-dlp ffmpeg portaudio python-tk@3.12
 
 # 2. Clone repository & install dependencies
-git clone https://github.com/AdityaManojA/ALFRED-MK-VIII.git
-cd ALFRED-MK-VIII
+git clone https://github.com/AdityaManojA/ALFRED-MK-IX.git
+cd ALFRED-MK-IX
 pip install -r requirements.txt
 
 # 3. Launch ALFRED (zero Ollama required - defaults to Gemini Live)
@@ -90,7 +90,7 @@ python main.py
 sudo apt install -y python3-pyqt6 python3-tk yt-dlp ffmpeg gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-libav xdotool wmctrl playerctl libportaudio2 maim
 
 # 2. Clone & launch
-git clone https://github.com/AdityaManojA/ALFRED-MK-VIII.git
+git clone https://github.com/AdityaManojA/ALFRED-MK-IX.git
 cd ALFRED-MK-V
 pip install -r requirements.txt
 python main.py
@@ -253,11 +253,11 @@ ALFRED automatically prioritizes Gemini Live when a valid key is detected.
 <a id="why-alfred"></a>
 ## 🏆 4. Why ALFRED Outclasses Every Other "Jarvis"
 
-Most projects branded as "Jarvis clones" ship with a wake word, a chat window, and a handful of shell scripts. **ALFRED MARK-VIII is fundamentally different** — it is a full executive control plane for the operating system, engineered around latency, reliability, structural privacy, and the **sheer density of real, production-hardened functions** it dispatches to your machine.
+Most projects branded as "Jarvis clones" ship with a wake word, a chat window, and a handful of shell scripts. **ALFRED MARK-IX is fundamentally different** — it is a full executive control plane for the operating system, engineered around latency, reliability, structural privacy, and the **sheer density of real, production-hardened functions** it dispatches to your machine.
 
 ### 🎯 What "Best-in-Class Optimisation" Actually Means Here
 
-| Pillar | ALFRED MARK-VIII | Typical "Jarvis Clone" |
+| Pillar | ALFRED MARK-IX | Typical "Jarvis Clone" |
 |---|---|---|
 | **Action Surface** | 30+ self-describing, auto-discovered tools (OS, files, vision, music, protocols, sentry, network, windows, clipboard, news, translate, process control, and beyond) | 5–15 brittle, hardcoded scripts |
 | **Dual Cognitive Backend** | Gemini Live **or** fully local Ollama / LM Studio / vLLM / OpenRouter — same codebase, single config flip | Cloud-only or local-only |
@@ -279,14 +279,44 @@ Film Jarvis is narrative UI — a beautiful HUD without an OS underneath. **ALFR
 These optimise for safe, shallow, cloud-mediated skills. **ALFRED optimises for power-user sovereignty**: local models, filesystem law, YAML compound protocols, watchdog throttling, and a tactical PyQt6 chassis you can theme and hot-swap insignia on at runtime.
 
 ### 🧪 Compared to Other Open "Agent" Repos
-Many maximise model hype and under-ship the glue. MARK-VIII invests in the glue that **fails in production for everyone else**: debounce, explicit OS media commands, encoding resilience, reconnect classifiers, background workers, cache TTLs, hybrid grounding, and structural privacy for focus telemetry.
+Many maximise model hype and under-ship the glue. MARK-IX invests in the glue that **fails in production for everyone else**: debounce, explicit OS media commands, encoding resilience, reconnect classifiers, background workers, cache TTLs, hybrid grounding, and structural privacy for focus telemetry.
 
-> **The Verdict:** ALFRED MARK-VIII is not "another Jarvis skin." It is one of the most **function-dense, optimisation-conscious, safety-instrumented** open tactical assistants ever released in the Wayne-protocol class — built to *run the desk*, not merely answer questions.
+> **The Verdict:** ALFRED MARK-IX is not "another Jarvis skin." It is one of the most **function-dense, optimisation-conscious, safety-instrumented** open tactical assistants ever released in the Wayne-protocol class — built to *run the desk*, not merely answer questions.
 
 ---
 
 <a id="whats-new"></a>
-## 🆕 5. What's New in Version 8 / Mark VIII (Stable Build · Windows)
+## 🆕 5. What's New in Version 9 / Mark IX (Personalized Voice Trigger & Tactical Biometrics)
+
+### 🎙️ Personalized Voice Trigger & Dual-Gate Speaker Verification (Flagship Major Upgrade)
+
+> **Research Foundation & Academic Attribution:**
+> ALFRED MARK-IX's hands-free voice trigger architecture is directly inspired by foundational edge acoustic and speaker-recognition research published by **Apple Machine Learning Research**:
+> * 📄 **[Personalized Hey Siri](https://machinelearning.apple.com/research/personalized-hey-siri)** (Apple ML Research) — Exploring dual-stage personalized acoustic scoring and enrolled user centroid matching to suppress unintended wake-ups from strangers and ambient television/media.
+> * 📄 **[Voice Trigger System for Siri](https://machinelearning.apple.com/research/voice-trigger)** (Apple ML Research) — Multi-stage acoustic models, temporal alignment, and low-latency cascaded verification on resource-constrained devices.
+> * 📄 **[Streaming Speaker Verification](https://arxiv.org/abs/2011.01151)** — Incremental temporal embedding extraction and calibrated decision thresholds.
+>
+> Rather than relying on cloud biometrics or naive keyword spotters that trigger on any stranger's voice, **ALFRED MARK-IX adapts these principles for complete desktop digital sovereignty**: running 100% locally, air-gapped, in real time with zero telemetry.
+
+* **Two-Pass Cascaded Architecture**:
+  * **Pass 1 (Continuous Acoustic Keyword Gate)**: Ultra-lightweight OpenWakeWord ONNX acoustic keyword spotting (`core/audio/wakeword_tiny.py`, `core/wake_word.py`) continuously listening for `"Hey Alfred"` ($\ge 0.70$) or `"Alfred"` ($\ge 0.85$), fortified with active `GATE_TTS` hardware echo suppression.
+  * **Pass 2 (Biometric Speaker Verification Gate)**: When candidate wake audio is detected, the pipeline automatically extracts the time-aligned speech segment from a bounded 5.0-second circular audio ring buffer (`core/speaker/ring_buffer.py`). It computes a 512-dimensional acoustic embedding using a pre-trained **CAM++ deep neural extractor** (`CampplusOnnxExtractor`, `models/speaker_verifier.onnx`), comparing it against enrolled operator centroid embeddings via cosine similarity.
+* **Calibrated Decision Boundary & Adaptive Thresholding**:
+  * Evaluates speaker similarity score $S = \cos(\mathbf{e}_{\text{sample}}, \mathbf{c}_{\text{profile}})$.
+  * Matches against per-operator calibrated verification thresholds ($\theta \in [0.45, 0.65]$, auto-tuned during enrollment based on intra-sample variance and margin floors).
+  * Unauthorized voices, TV dialogues, or ambient chatter matching the phonetics of "Hey Alfred" are immediately dropped at near-zero compute cost without waking the system or engaging Gemini Live / LLM streams.
+* **Conversational Parity (Post-Wake Multi-User Freedom)**:
+  * Biometric verification is enforced strictly at the **hands-free wake gate**. Once an enrolled operator speaks the wake phrase and awakens ALFRED, anyone present in the room can converse naturally with ALFRED during the active dialogue session without repeated verification friction.
+* **Interactive HUD Voice Biometric Profile Enrollment Modal (`core/ui/voice_enroll_modal.py`)**:
+  * Integrated directly into ALFRED's HUD via the **Tactical Controls Drawer** (`[ ⚙ ]` → `[VOICE BIOMETRICS]`).
+  * Guided 3-step interactive calibration prompt (*"Say 'Hey Alfred' 1/3, 2/3, 3/3"*).
+  * Real-time acoustic quality verification checking speech duration ($0.4\text{s} \le t \le 2.0\text{s}$), RMS audio level ($\text{RMS} \ge 0.015$), clipping prevention, and intra-utterance embedding consistency.
+  * Dynamically skins and re-themes with [ThemeChrome](core/ui/themes/) across all Batcomputer CRT palettes (Batcave obsidian, Joker purple/cyan, Batman Beyond crimson, Matrix emerald).
+* **Headless CLI Administration (`tools/enroll_voice.py`)**:
+  * Full CLI toolkit for headless, remote SSH, or automated terminal enrollment:
+    `py tools/enroll_voice.py --enroll <name>`, `--list`, `--verify <audio.wav>`, `--delete <name>`.
+* **100% Air-Gapped Local Profile Store (`~/.alfred/voice_profiles/`)**:
+  * Persists versioned atomic JSON metadata with L2-normalized 512-dim centroid vectors and calibration parameters. Raw microphone audio is immediately scrubbed from memory after feature extraction. Zero audio or biometrics ever touch a network socket.
 
 ### 🌐 Cross-Platform Parity (macOS + Linux Architecture)
 * **Unified Platform Dispatch (`core/platform/`)**: Centralized OS backend interface providing clean runtime abstraction for windowing flags, master volume (`osascript`, `pactl`, `pycaw`), native TTS fallbacks (`say`, `espeak-ng`), media pause/resume (`playerctl`, AppleScript, `WM_APPCOMMAND`), and screen capture.
@@ -318,7 +348,7 @@ Many maximise model hype and under-ship the glue. MARK-VIII invests in the glue 
 * **OpenWakeWord ONNX Fine-Tuning**: Complete offline acoustic model training pipeline allowing operators to train custom `alfred.onnx` models specialized to their voice, secondary operators (e.g., friend/family), and ambient room noise.
 * **Hybrid Google Colab & Local IDE Notebook**: Shipped [`train_alfred_colab.ipynb`](train_alfred_colab.ipynb) for cloud GPU/CPU training with automated active-kernel package management, audio augmentation, and transfer learning from baseline weights.
 * **Multi-Speaker Dataset Recorder & Packager (`tools/record_training_samples.py`)**: Interactive CLI tool for recording positive utterances per speaker, negative room noise/speech, auto-zipping datasets (`--zip`), and direct local PyTorch-to-ONNX compilation (`--train-local`).
-* **Personal Biometric Voice Verifier (`tools/train_personal_verifier.py`)**: Lightweight voice classifier generating `models/alfred_verifier.pkl` to gate wake activations strictly to authorized voices.
+* **Neural Speaker Verification Engine (`core/speaker/`)**: Dual-gate biometric speaker verification using pre-trained CAM++ embeddings (`models/speaker_verifier.onnx`). Bounded 5s ring buffer extracts time-aligned wake audio, matching against locally stored, versioned voice profiles (`~/.alfred/voice_profiles/`) with calibrated cosine thresholds. Hands-free wake is restricted strictly to enrolled users, while post-wake dialogue remains open to all conversation participants.
 * **Dual-Phrase Gating & Real-Time Acoustic HUD (`tools/test_wake_model.py`)**: Dual-phrase architecture ("Hey Alfred" >= 0.70, "Alfred" >= 0.85) with `GATE_TTS` acoustic shielding, 1500 ms refractory suppression, and live console VU meter testing.
 
 ### 🎵 Tactical Audio Core Voice Control
@@ -576,17 +606,143 @@ ALFRED treats human privacy as an **absolute structural invariant** rather than 
 ---
 
 <a id="wake-training"></a>
-## 🎙️ 10. Custom Wake-Word Neural Network & Multi-Speaker Training (.onnx)
+## 🎙️ 10. Dual-Gate Voice Trigger & Personalized Speaker Verification Workflow
 
-ALFRED MARK-VIII features an autonomous, multi-speaker **OpenWakeWord acoustic neural network pipeline** engineered for zero-latency, 100% offline keyword detection. Rather than relying on generic synthetic models or cloud speech APIs, ALFRED allows you to train and fine-tune your own production `.onnx` acoustic model directly on real-world voice samples from you, your family, or your team — fortified with negative ambient room calibration to eliminate false activations permanently.
+ALFRED MARK-IX introduces a **two-pass, dual-gate voice trigger and speaker verification architecture** engineered for 100% offline, real-time keyword spotting with biometric caller authentication. This design guarantees that only authorized operators (such as Master Wayne) can awaken the system hands-free, preventing inadvertent triggers from room occupants, television dialogue, or background media.
 
-### 🛡️ Dual-Phrase Gating & Acoustic Shielding
-The detection engine (`core/audio/wakeword_tiny.py` & `core/wake_word.py`) operates with hardened real-time guarantees:
-* **Compound Phrase (`"Hey Alfred"`)**: Calibrated threshold **`>= 0.70`** for natural conversational triggers.
-* **Bare Phrase (`"Alfred"`)**: Elevated threshold **`>= 0.85`** creating a strict barrier against ambient speech and Hollywood Batman media.
-* **Acoustic Gate (`GATE_TTS`)**: Active hardware suppression during ALFRED's speech synthesis — ALFRED will **never** self-trigger on his own voice.
-* **Refractory Cooldown (`1500 ms`)**: Atomic lockout window preventing re-trigger bouncing on long syllables.
-* **Biometric Voice Verifier (`alfred_verifier.pkl`)**: Optional secondary acoustic classifier ensuring only authorized individuals (e.g., Master Wayne & verified allies) can awaken the system.
+### 🔬 Academic Research & Architectural Lineage
+
+The dual-gate trigger design in ALFRED MARK-IX adapts published edge-acoustic methodologies pioneered by **Apple Machine Learning Research**:
+* 📄 **[Personalized Hey Siri](https://machinelearning.apple.com/research/personalized-hey-siri)** (Apple Machine Learning Research) — Principles of multi-stage speaker scoring, intra-speaker centroid modeling, and false-alarm suppression against unintended ambient speakers.
+* 📄 **[Voice Trigger System for Siri](https://machinelearning.apple.com/research/voice-trigger)** (Apple Machine Learning Research) — Cascaded low-power acoustic keyword detection followed by secondary phonetic and speaker verification verification.
+* 📄 **[Streaming Speaker Verification](https://arxiv.org/abs/2011.01151)** — Incremental temporal embedding extraction and calibrated decision boundaries.
+
+In ALFRED, this architecture is implemented completely on-device, running air-gapped without external dependencies or cloud verification APIs.
+
+---
+
+### 🏗️ Dual-Gate Architecture & Audio Pipeline
+
+```
+                                      🎙️ Live Microphone Input (16 kHz Mono)
+                                                        │
+                                                        ▼
+                                    ┌───────────────────────────────────────┐
+                                    │ Bounded Ring Buffer (5.0s Circular)   │
+                                    │ core/speaker/ring_buffer.py           │
+                                    └───────────────────┬───────────────────┘
+                                                        │
+                                                        ▼
+                        ┌───────────────────────────────────────────────────────────────┐
+                        │ PASS 1: Acoustic Keyword Spotting (OpenWakeWord ONNX)        │
+                        │ - "Hey Alfred"  (Threshold >= 0.70)                           │
+                        │ - "Alfred"      (Threshold >= 0.85)                           │
+                        │ - Active GATE_TTS hardware echo suppression                   │
+                        └───────────────────────┬───────────────────────────────────────┘
+                                                │
+                                    Candidate Keyword Triggered?
+                                                │
+                                   NO ──────────┴────────── YES
+                                   │                        │
+                                   ▼                        ▼
+                               [Continue]   ┌───────────────────────────────────────────┐
+                                            │ PASS 2: Temporal Window Extraction        │
+                                            │ Slice ~1.5s–2.0s Pre-Trigger Audio Buffer │
+                                            └───────────────────┬───────────────────────┘
+                                                                │
+                                                                ▼
+                                            ┌───────────────────────────────────────────┐
+                                            │ CAM++ Neural Embedding Extraction         │
+                                            │ models/speaker_verifier.onnx (512-dim)    │
+                                            └───────────────────┬───────────────────────┘
+                                                                │
+                                                                ▼
+                                            ┌───────────────────────────────────────────┐
+                                            │ Cosine Similarity vs. Enrolled Centroid   │
+                                            │ Sim(e, c) = (e · c) / (||e|| ||c||)       │
+                                            │ ~/.alfred/voice_profiles/{user}.json      │
+                                            └───────────────────┬───────────────────────┘
+                                                                │
+                                            Similarity >= Calibrated Threshold θ?
+                                                                │
+                                   NO (Unauthorized) ───────────┴─────────── YES (Authorized Operator)
+                                   │                                         │
+                                   ▼                                         ▼
+                 ┌───────────────────────────────────┐     ┌───────────────────────────────────┐
+                 │ Rejection & Telemetry Log         │     │ Wake Acknowledged!                │
+                 │ "Rejecting trigger (score < θ)"   │     │ - Un-gate Gemini Live / STT       │
+                 │ Mic remains in sleep mode         │     │ - Animate Batcomputer HUD Orb     │
+                 │                                   │     │ - Begin Open Multi-User Session   │
+                 └───────────────────────────────────┘     └───────────────────────────────────┘
+```
+
+---
+
+### ⚙️ Stage-by-Stage Workflow Breakdown
+
+#### 1. Continuous Pre-Trigger Ring Buffer (`core/speaker/ring_buffer.py`)
+Incoming 16 kHz PCM audio chunks from `sounddevice` are continuously pushed into a thread-safe, bounded circular ring buffer maintaining the most recent 5.0 seconds of audio. This guarantees that when a keyword trigger fires, the full acoustic onset of the speaker's utterance (including leading consonants and diphthongs) is preserved without clipping.
+
+#### 2. Pass 1: Acoustic Keyword Spotting (`core/wake_word.py`)
+* The audio stream is fed into OpenWakeWord (`models/alfred.onnx`) running on ONNX Runtime.
+* **Compound Phrase (`"Hey Alfred"`)**: Evaluated at $\ge 0.70$ confidence.
+* **Bare Phrase (`"Alfred"`)**: Evaluated at $\ge 0.85$ confidence to eliminate media false-triggers.
+* **Acoustic Gate (`GATE_TTS`)**: Active hardware suppression during ALFRED's speech synthesis prevents self-trigger feedback loops.
+
+#### 3. Pass 2: Temporal Extraction & CAM++ Embedding (`core/speaker/extractor.py`)
+* Upon keyword detection, ALFRED slices the active utterance window from the ring buffer.
+* The pre-trained **CAM++ deep neural network** (`models/speaker_verifier.onnx`) extracts an acoustic embedding vector $\mathbf{e} \in \mathbb{R}^{512}$ that captures the unique vocal tract characteristics of the speaker.
+* The vector is L2-normalized: $\|\mathbf{e}\| = 1.0$.
+
+#### 4. Pass 3: Profile Centroid Comparison & Adaptive Thresholding (`core/speaker/profile_store.py`)
+* The embedding is compared against the enrolled operator's profile centroid $\mathbf{c}_{\text{profile}}$ via cosine similarity:
+  $$\text{Score} = \mathbf{e} \cdot \mathbf{c}_{\text{profile}}$$
+* **Verification Gate**:
+  $$\text{Score} \ge \theta_{\text{calibrated}} \quad (\text{typically } 0.50 \le \theta \le 0.65)$$
+* If verified: The system acknowledges the wake event, illuminates the HUD, and opens bidirectional Gemini Live or local STT streaming.
+* If unverified: The candidate trigger is dropped silently with an internal telemetry audit log.
+
+#### 5. Conversational Parity (Post-Wake Multi-User Dialogue)
+Biometric gating is enforced strictly at the **wake barrier**. Once an enrolled operator awakens ALFRED, the session remains active: colleagues, friends, or guests present in the room can converse naturally with ALFRED without requiring secondary biometric verification for each response. When ALFRED goes to sleep (via timeout or *"go to sleep"*), the biometric gate is re-engaged.
+
+---
+
+### 🛡️ Operator Voice Enrollment
+
+Operators can enroll their voice in under 30 seconds using either the interactive Batcomputer HUD modal or the headless CLI.
+
+#### Option A: In-App Tactical GUI Enrollment (Recommended)
+1. Launch ALFRED and open the **Tactical Controls Drawer** by clicking the gear icon `[ ⚙ ]` in the top right.
+2. Click the **`[VOICE BIOMETRICS]`** button.
+3. The themed **Voice Biometric Profile Enrollment Modal** (`core/ui/voice_enroll_modal.py`) will appear:
+   * Dynamically inherits your active HUD theme palette (Batcave obsidian, Joker purple/cyan, Batman Beyond crimson, etc.).
+   * Confirms your Operator Identity (e.g., `Master Wayne`).
+   * Guides you through **3 short utterances** (*"Say 'Hey Alfred' clearly in your normal speaking voice"*).
+   * Validates speech quality in real-time (detects audio clipping, enforces minimum RMS volume $\ge 0.015$, and requires valid utterance duration between 0.4s and 2.0s).
+   * Calculates intra-sample consistency, derives the mathematical centroid vector, auto-calibrates the optimal cosine threshold, and saves the profile atomically.
+
+#### Option B: Headless CLI Enrollment (`tools/enroll_voice.py`)
+For headless servers, SSH sessions, or terminal automation:
+
+```powershell
+# 1. Interactive 3-sample microphone enrollment
+py tools/enroll_voice.py --enroll "Master Wayne"
+
+# 2. Inspect enrolled profiles and calibrated thresholds
+py tools/enroll_voice.py --list
+
+# 3. Test verification against a recorded WAV sample
+py tools/enroll_voice.py --verify sample.wav --user "Master Wayne"
+
+# 4. Remove an enrolled profile
+py tools/enroll_voice.py --delete "Master Wayne"
+```
+
+> **🔒 Complete Privacy Guarantee:** All voice embeddings and calibrated thresholds are stored locally in `~/.alfred/voice_profiles/<user_id>.json`. Raw microphone audio is immediately discarded from memory after vector extraction. No biometric data, vectors, or audio clips are ever transmitted over the network.
+
+---
+
+### 🛠️ Acoustic Model Customization & Fine-Tuning Pipeline
 
 ```
                                 ┌──────────────────────────────────────────────┐
@@ -664,25 +820,6 @@ py tools/record_training_samples.py --train-local
 * **Transfer Learning Initialization**: Automatically harvests base weights from `models/alfred.onnx` for instant convergence and broad generalization.
 * **Synthetic Calibration**: Automatically synthesizes Gaussian white noise and ambient calibration clips if the negative training pool is under 30 clips.
 * **Direct ONNX Export**: Compiles PyTorch weights into ONNX Opset 14 with dynamic batching matching OpenWakeWord's exact runtime signature (`PartitionedCall:0`).
-
-### 🛡️ Step 2 (Optional): Train Personal Biometric Voice Verifier
-
-To enforce that **only your voice** (or your friend's voice) can activate ALFRED while rejecting unauthorized third parties, train the personal verifier (`models/alfred_verifier.pkl`):
-
-```powershell
-# 1. Record authorized speaker samples
-py tools/train_personal_verifier.py --record-positive --speaker aditya --clips 10
-py tools/train_personal_verifier.py --record-positive --speaker friend --clips 10
-
-# 2. Record unauthorized / ambient negative speech
-py tools/train_personal_verifier.py --record-negative --clips 10
-
-# 3. Train biometric classifier (creates models/alfred_verifier.pkl)
-py tools/train_personal_verifier.py --train
-
-# 4. Live interactive test against the verifier
-py tools/train_personal_verifier.py --test
-```
 
 ### 🎧 Step 3: Live Microphone Acoustic Verification & VU Meter
 
@@ -948,7 +1085,7 @@ ALFRED incorporates an OS security & performance watchdog daemon actively monito
 ## 🏗️ 22. System Architecture & File Structure
 
 ```
-ALFRED-MK-VIII/
+ALFRED-MK-IX/
 ├── main.py                     # Main loop, Live WebSocket / Local LLM router, audio, tool dispatcher
 ├── ui.py                       # PyQt6 HUD, audio visualizer, drawer settings
 ├── ui_overlay.py               # Minimalist floating HUD widget
@@ -1116,11 +1253,11 @@ ALFRED-MK-VIII/
 
 This codebase is indexed with a persistent **GraphRAG Knowledge Graph** in `graphify-out/`:
 * **📊 5,436 nodes** & **11,125 relationships** across **283 semantic communities**.
-* **🌐 Interactive Visualization**: [`graphify-out/graph.html`](file:///d:/Projects/Alfred-Mark-VIII/graphify-out/graph.html)
-* **📄 Architectural Report**: [`graphify-out/GRAPH_REPORT.md`](file:///d:/Projects/Alfred-Mark-VIII/graphify-out/GRAPH_REPORT.md)
+* **🌐 Interactive Visualization**: [`graphify-out/graph.html`](file:///d:/Projects/Alfred-Mark-IX/graphify-out/graph.html)
+* **📄 Architectural Report**: [`graphify-out/GRAPH_REPORT.md`](file:///d:/Projects/Alfred-Mark-IX/graphify-out/GRAPH_REPORT.md)
 * **⚡ Dynamic Graph Management**: Real-time mutation, entity/relationship addition, exponential decay, 2-hop querying via `memory/graph_manager.py`.
 
-### 🎁 Mark VIII New Actions (Auto-Discovered)
+### 🎁 Mark IX New Actions (Auto-Discovered)
 
 | Action | Purpose |
 |---|---|
@@ -1190,7 +1327,7 @@ yt-dlp format selector explicitly excludes AV1 (`av01`) and prefers VP9+Opus, fa
 ## 👤 25. Author & Licensing
 
 * **🎩 Lead Architect & Creator:** **ADITYA MANOJ**
-* **🦇 Project:** ALFRED-MK-VIII — Version 8 (Stable Build · Windows, Wayne Protocol Edition)
+* **🦇 Project:** ALFRED-MK-IX — Version 8 (Stable Build · Windows, Wayne Protocol Edition)
 * **📜 License:** [Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)](https://creativecommons.org/licenses/by-nc/4.0/)
 
 <p align="center">

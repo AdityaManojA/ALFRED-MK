@@ -1,5 +1,5 @@
 """
-Theme schema definitions for ALFRED-MK-VIII.
+Theme schema definitions for ALFRED-MK-IX.
 Every selectable theme is a structured ThemeDefinition instance.
 """
 from __future__ import annotations

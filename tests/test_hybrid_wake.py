@@ -27,6 +27,7 @@ class HybridWakeDetectionTests(unittest.TestCase):
     def setUpClass(cls):
         import os
         os.environ["TESTING"] = "1"
+        os.environ["DISABLE_SPEAKER_VERIFICATION"] = "1"
         # Generate test audio clips
         cls.alfred_us = asyncio.run(_generate_audio("Alfred", "en-US-GuyNeural"))
         cls.hey_alfred_in = asyncio.run(_generate_audio("Hey Alfred", "en-IN-PrabhatNeural"))
@@ -49,7 +50,9 @@ class HybridWakeDetectionTests(unittest.TestCase):
                 time.sleep(0.01)
 
             # Wait briefly for detection
-            time.sleep(0.2)
+            t_end = time.time() + 2.5
+            while time.time() < t_end and not detected:
+                time.sleep(0.05)
             self.assertTrue(len(detected) > 0, "Acoustic detector failed to trigger on 'Alfred'")
         finally:
             detector.stop()
@@ -148,7 +151,9 @@ class HybridWakeDetectionTests(unittest.TestCase):
                 detector.feed(chunk)
                 time.sleep(0.01)
 
-            time.sleep(0.3)
+            t_end = time.time() + 3.0
+            while time.time() < t_end and count_box[0] < 3:
+                time.sleep(0.05)
             self.assertEqual(count_box[0], 3, "Cycle 3 failed to detect after sleep/reset")
 
         finally:

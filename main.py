@@ -14,7 +14,7 @@ import subprocess as _subprocess
 if _platform.system() == "Windows":
     try:
         import ctypes
-        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("alfred.wayne.batcomputer.mk8")
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("alfred.wayne.batcomputer.mk9")
     except Exception:
         pass
 
@@ -90,7 +90,7 @@ import sounddevice as sd
 import numpy as np
 from google import genai
 from google.genai import types
-from ui import JarvisUI
+from ui import AlfredUI, JarvisUI
 from memory.memory_manager import (
     load_memory, update_memory, format_memory_for_prompt,
     save_session_summary, pop_last_session,
@@ -101,7 +101,7 @@ from memory.memory_manager import (
 # imported or declared here â€” they self-describe via a TOOL dict in their own
 # actions/*.py file and are auto-discovered by core.action_loader at startup.
 # Only tools that are tied to live-session state stay inline in this file
-# (screen_process, close_camera, save_memory, manage_monitor, shutdown_jarvis,
+# (screen_process, close_camera, save_memory, manage_monitor, shutdown_alfred,
 # system_status).
 from actions.screen_processor  import _capture_camera, _capture_screen
 from actions.screen_monitor import ScreenMonitorController, ScreenMonitorEvent, ScreenMonitorStatus
@@ -471,7 +471,7 @@ TOOL_DECLARATIONS = [
     # handling is woven into live-session state â€” vision capture/injection,
     # camera stream, memory writes, the monitor engine, and shutdown. All other
     # tools live in their own action file and are auto-discovered by
-    # core.action_loader (see JarvisLive.__init__).
+    # core.action_loader (see AlfredLive.__init__).
     {
         "name": "system_status",
         "description": (
@@ -665,7 +665,7 @@ TOOL_DECLARATIONS = [
         }
     },
     {
-        "name": "shutdown_jarvis",
+        "name": "shutdown_alfred",
         "description": (
             "Shuts down the ALFRED assistant application completely. "
             "Call this ONLY when the user explicitly gives a direct, unambiguous verbal command to exit, quit, shut down, or close ALFRED (e.g. 'shut down Alfred', 'quit Alfred', 'exit the assistant'). "
@@ -834,8 +834,8 @@ def _keep_context_of(exc: BaseException) -> bool:
     return True
 
 
-class JarvisLive:
-    def __init__(self, ui: JarvisUI):
+class AlfredLive:
+    def __init__(self, ui: AlfredUI):
         self.ui             = ui
         from core.media import get_media_arbiter
         self.media_arbiter = get_media_arbiter()
@@ -1104,6 +1104,11 @@ class JarvisLive:
         if self._wake_detector is not None:
             try:
                 self._wake_detector.reset()
+                # Impose a 3-second echo holdoff: TTS room reverb of Alfred's
+                # sleep confirmation phrase can score near 1.0 on the model.
+                # Stamping last_trigger_time here suppresses those phantom hits.
+                with self._wake_detector._lock:
+                    self._wake_detector._last_trigger_time = time.monotonic() + 3.0
             except Exception:
                 pass
         # Trim resident memory working set and collect garbage during sleep in background
@@ -1166,7 +1171,7 @@ class JarvisLive:
 
     def plugin_say(self, instruction: str) -> None:
         """
-        Thread-safe speech channel for plugins: lets a plugin ask JARVIS to
+        Thread-safe speech channel for plugins: lets a plugin ask ALFRED to
         say something short WHILE its run() is still executing (plugins block
         their executor thread, so they can't speak through the tool response
         until they finish). The instruction is injected into the Live session
@@ -1475,6 +1480,16 @@ class JarvisLive:
             # still needs it to recognise our own voice. It is dropped when the
             # tail expires. What the guard learned about the room always stays.
             self._out_level = 0.0
+            # If already sleeping (or transitioning to sleep), drain the wake
+            # detector queue immediately so TTS reverb doesn't accumulate in
+            # the model's rolling buffer before the echo holdoff kicks in.
+            if not getattr(self, "_awake", True):
+                det = getattr(self, "_wake_detector", None)
+                if det is not None:
+                    try:
+                        det._drain()
+                    except Exception:
+                        pass
         if value:
             self.ui.set_state("SPEAKING")
         elif not self.ui.muted:
@@ -1527,7 +1542,7 @@ class JarvisLive:
             pass
 
     def interrupt(self) -> None:
-        """Stop JARVIS mid-speech: drain queued audio and open mic immediately."""
+        """Stop ALFRED mid-speech: drain queued audio and open mic immediately."""
         self._interrupted = True
         self._briefing_cancelled = True
         if hasattr(self, "_deliver_news_task") and self._deliver_news_task and not self._deliver_news_task.done():
@@ -1911,7 +1926,7 @@ class JarvisLive:
                 handle=self._resume_handle
             ),
             # Sliding-window compression: session never dies from a full context
-            # window â€” JARVIS can stay in one conversation for hours
+            # window â€” ALFRED can stay in one conversation for hours
             context_window_compression=types.ContextWindowCompressionConfig(
                 sliding_window=types.SlidingWindow(),
             ),
@@ -1924,7 +1939,7 @@ class JarvisLive:
             ),
         )
         if self._enhanced_live:
-            # Proactive audio: JARVIS stays silent when speech isn't addressed
+            # Proactive audio: ALFRED stays silent when speech isn't addressed
             # to it (background chatter, talking to someone else in the room).
             # (Affective dialog was dropped: gemini-3.1-flash-live does not
             #  support it, and it never reliably detected tone in practice.
@@ -2159,11 +2174,19 @@ class JarvisLive:
                             break
                         await asyncio.sleep(0.1)
                     await asyncio.sleep(0.4)
+                    # Drain any TTS echo that queued during the wait before
+                    # committing to sleep, so stale model state is discarded.
+                    det = getattr(self, "_wake_detector", None)
+                    if det is not None:
+                        try:
+                            det._drain()
+                        except Exception:
+                            pass
                     self.sleep(reason="voice command")
                 asyncio.create_task(_do_voice_sleep())
                 result = "Going to sleep now, sir. Call me when you need me."
 
-            elif name == "shutdown_jarvis":
+            elif name in ("shutdown_alfred", "shutdown_jarvis"):
                 if not args.get("confirmation"):
                     self.ui.write_log("SYS: Shutdown ignored (missing explicit confirmation).")
                     result = "Shutdown command ignored: explicit confirmation=True required."
@@ -2287,7 +2310,7 @@ class JarvisLive:
         def callback(indata, frames, time_info, status):
             # â”€â”€ Wake-word gate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             # While asleep, the mic audio NEVER goes to Gemini (nothing is
-            # streamed, so JARVIS can't respond to speech not addressed to it and
+            # streamed, so ALFRED can't respond to speech not addressed to it and
             # nothing leaves the machine). Frames are instead handed to the local
             # detector, which runs its model in ITS OWN thread â€” the cost here is
             # only a queue push, so the audio path is never slowed. When wake word
@@ -2311,10 +2334,10 @@ class JarvisLive:
                 return
 
             with self._speaking_lock:
-                jarvis_speaking = self._is_speaking
+                alfred_speaking = self._is_speaking
 
             # While Alfred speaks, mic audio is NOT sent to Gemini.
-            if jarvis_speaking:
+            if alfred_speaking:
                 return
 
             if self._tail_active():
@@ -2437,7 +2460,7 @@ class JarvisLive:
         )
 
         if self._vision_cam_active:
-            # Camera: stay busy until JARVIS has finished speaking the answer,
+            # Camera: stay busy until ALFRED has finished speaking the answer,
             # then close the preview.
             self._vision_cam_active    = False
             self._vision_close_pending = True
@@ -2751,7 +2774,7 @@ class JarvisLive:
                     except asyncio.QueueEmpty:
                         break
 
-                # Drive the HUD waveform and the avatar's mouth from JARVIS's
+                # Drive the HUD waveform and the avatar's mouth from ALFRED's
                 # own voice. The batch is up to 200 ms long, so we hand over a
                 # *schedule* of 20 ms viseme frames instead of a single averaged
                 # level and let the HUD play it out in step with the audio.
@@ -3121,7 +3144,7 @@ class JarvisLive:
         await asyncio.sleep(300)          # wait 5 min after startup before first check
         while True:
             if self.session and self._awake:
-                # Don't interrupt if user spoke recently or JARVIS is mid-sentence
+                # Don't interrupt if user spoke recently or ALFRED is mid-sentence
                 with self._speaking_lock:
                     speaking = self._is_speaking
                 recent_speech = (time.monotonic() - self._last_user_speech) < 45
@@ -3186,7 +3209,7 @@ class JarvisLive:
             except Exception as e:
                 print(f"[Proactive] âš ï¸ {e}")
 
-    # â”€â”€ Background GC maintenance â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # ── Background GC maintenance ───────────────────────────────────────────────
 
     async def _run_gc_manager(self) -> None:
         """
@@ -3202,7 +3225,7 @@ class JarvisLive:
                 from core.memory_trimmer import trim_process_memory
                 await asyncio.to_thread(trim_process_memory)
 
-    # â”€â”€ Phone audio relay â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # ── Phone audio relay ───────────────────────────────────────────────────────
 
     async def _relay_phone_audio(self) -> None:
         """Forward phone mic PCM chunks from dashboard queue into the Gemini Live session."""
@@ -3908,19 +3931,24 @@ class JarvisLive:
             _tlog("ALFRED", "link", f"Reconnecting in {delay:.1f}s...", self._dashboard)
             await asyncio.sleep(delay)
 
+# Backward compatibility subclass
+class JarvisLive(AlfredLive):
+    """Backward compatibility subclass for JarvisLive."""
+    pass
+
 def main():
     try:
-        from core.tts.capability import prewarm_jarvis_capability_async
-        prewarm_jarvis_capability_async()
+        from core.tts.capability import prewarm_alfred_capability_async
+        prewarm_alfred_capability_async()
     except Exception:
         pass
-    ui = JarvisUI("face.png")
+    ui = AlfredUI()
     if any(arg in sys.argv for arg in ("--orb", "--globe", "--mini")):
         ui.enable_orb_mode()
 
     def runner():
         ui.wait_for_api_key()
-        alfred = JarvisLive(ui)
+        alfred = AlfredLive(ui)
         try:
             asyncio.run(alfred.run())
         except KeyboardInterrupt:

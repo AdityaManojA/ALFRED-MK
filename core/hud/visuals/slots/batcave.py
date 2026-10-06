@@ -244,7 +244,7 @@ class BatcaveBlueprintVisual(SlotVisual):
         self.align_center: int = int(Qt.AlignmentFlag.AlignCenter)
         self.align_left: int = int(Qt.AlignmentFlag.AlignLeft)
         self.align_right: int = int(Qt.AlignmentFlag.AlignRight)
-        self.title_text: str = "BATWING MK-VIII BLUEPRINT // 3D"
+        self.title_text: str = "BATWING MK-IX BLUEPRINT // 3D"
         self.aero_text: str = "AERO: 99.4%"
         self.vector_text: str = "VECTOR: LOCK"
         self.static_title: QStaticText = QStaticText(self.title_text)

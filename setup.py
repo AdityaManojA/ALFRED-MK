@@ -1,21 +1,24 @@
 """
-MARK-VIII — one-time setup.
+MARK-IX — one-time setup.
 
 Installs the Python dependencies for THIS operating system only: the OS-specific
 packages in requirements.txt carry `sys_platform` markers, so a macOS or Linux
 user never pulls Windows-only libraries (and vice-versa). Then it fetches the
-Playwright browsers needed for web automation (current-OS builds only).
-
-Two things it deliberately does NOT install:
-  * the optional local wake word ("Hey Alfred") — one-click, opt-in, from
-    ⚙ → WAKE WORD inside the app;
-  * anything for the avatar — the holographic head renders in software on the
-    PyQt6 and numpy already listed here. No GPU, no OpenGL, no extra packages.
+Playwright browsers needed for web automation (current-OS builds only), downloads
+and verifies the offline wake word models ("Hey Alfred"), and enables wake word
+by default.
 """
 import platform
 import subprocess
 import sys
 from pathlib import Path
+
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
 OS = platform.system()  # "Windows" | "Darwin" | "Linux"
 HERE = Path(__file__).resolve().parent
@@ -47,7 +50,7 @@ def _check_python() -> None:
               f"{MAX_PY[0]}.{MAX_PY[1]} and run setup with that.")
         return
     if v < MIN_PY:
-        print(f"\n❌ Python {v[0]}.{v[1]} detected — MARK-VIII needs at "
+        print(f"\n❌ Python {v[0]}.{v[1]} detected — MARK-IX needs at "
               f"least Python {MIN_PY[0]}.{MIN_PY[1]}.")
         print("   Install a supported version and run setup with it, e.g.:")
         print(f"     py -{MIN_PY[0]}.{MIN_PY[1]} setup.py        (Windows)")
@@ -66,8 +69,26 @@ def _check_assets() -> None:
         )
 
 
+def _setup_wake_word() -> None:
+    """Download wake-word feature models, verify alfred.onnx, and enable wake word."""
+    print("\n▶ Setting up Wake Word ('Hey Alfred')…")
+    try:
+        from core.wake_word import ensure_models_downloaded, is_ready
+        from memory.config_manager import save_wake_word_enabled
+        ok, msg = ensure_models_downloaded(logger=lambda m: print(f"  {m}"))
+        if ok and is_ready():
+            save_wake_word_enabled(True)
+            print("✅ Wake word ('Hey Alfred') models verified and enabled by default.")
+        else:
+            print(f"⚠️  Wake word setup notice: {msg}")
+            print("    You can retry wake word setup anytime from ⚙ → WAKE WORD in the app.")
+    except Exception as e:
+        print(f"⚠️  Wake word setup could not be completed during setup ({e}).")
+        print("    You can retry later from ⚙ → WAKE WORD inside the app.")
+
+
 def main() -> None:
-    print(f"⚙  MARK-VIII setup — detected OS: {OS or 'unknown'}, "
+    print(f"⚙  MARK-IX setup — detected OS: {OS or 'unknown'}, "
           f"Python {sys.version_info[0]}.{sys.version_info[1]}")
     _check_python()
 
@@ -90,6 +111,7 @@ def main() -> None:
         print(f'    {sys.executable} -m playwright install chromium firefox')
 
     _check_assets()
+    _setup_wake_word()
 
     # ── OS-specific post-install notes ────────────────────────────────────────
     if OS == "Windows":
@@ -138,7 +160,7 @@ def main() -> None:
     print("\n✅ Setup complete!")
     print("   1) Launch it:  python main.py")
     print("   2) Paste your free Gemini API key when the setup screen appears.")
-    print("   3) (Optional) Enable Wake Word from ⚙ → WAKE WORD.")
+    print("   3) Wake word is active: say 'Hey Alfred' to wake him, or tap the mic in the HUD.")
 
 
 if __name__ == "__main__":

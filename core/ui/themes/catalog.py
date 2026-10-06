@@ -1,5 +1,5 @@
 """
-Theme catalog for ALFRED-MK-VIII.
+Theme catalog for ALFRED-MK-IX.
 Houses structured ThemeDefinitions for classic, rogues gallery, and ops skins.
 """
 from __future__ import annotations

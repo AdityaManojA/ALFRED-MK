@@ -1,16 +1,13 @@
-"""tools/record_training_samples.py — Record and package multi-user voice samples for model training.
+"""tools/record_training_samples.py — Record training samples for generic wake phrase detector.
 
-Workflow:
-  1. Record User's voice:
-     py tools/record_training_samples.py --speaker aditya --clips 15
-  2. Record Friend's voice:
-     py tools/record_training_samples.py --speaker friend --clips 15
-  3. Record Background Noise / Chatter:
-     py tools/record_training_samples.py --negative --clips 10
-  4. Package into alfred_training_data.zip:
-     py tools/record_training_samples.py --zip
-  5. (Optional) Train ONNX directly on your local machine:
-     py tools/record_training_samples.py --train-local
+IMPORTANT ARCHITECTURAL NOTE:
+  This tool is used to record and compile multi-speaker audio clips to train or fine-tune
+  the generic speaker-independent wake-word phrase detector (models/alfred.onnx).
+
+  Do NOT use this tool to create per-user voiceprints!
+  For per-user speaker verification (ensuring only you can wake ALFRED), use:
+      python tools/enroll_voice.py --enroll <your_name>
+  or open the in-app tactical HUD drawer: [VOICE BIOMETRICS].
 """
 
 from __future__ import annotations
@@ -151,30 +148,50 @@ def train_local() -> None:
     print(f"  • Positive clips: {len(pos_files)}")
     print(f"  • Negative clips: {len(neg_files)}")
 
-    # Add synthetic noise if negative set is small
-    if len(neg_files) < 30:
-        NEG_DIR.mkdir(parents=True, exist_ok=True)
-        for i in range(40):
-            noise = (np.random.randn(int(RECORD_SECONDS * SAMPLE_RATE)) * np.random.uniform(50, 350)).astype(np.int16)
-            wavfile.write(str(NEG_DIR / f"synthetic_noise_{i:02d}.wav"), SAMPLE_RATE, noise)
-        neg_files = sorted(glob.glob(str(NEG_DIR / "*.wav")))
+    # ── Ensure sufficient & diverse negative samples ──────────────────────────
+    # Three synthetic categories are critical:
+    #   1. Gaussian noise at various amplitudes  (handles loud room noise)
+    #   2. Near-silence / microphone hiss        (the most commonly missed case)
+    #   3. Pure zeros                            (baseline silence sanity check)
+    NEG_DIR.mkdir(parents=True, exist_ok=True)
+    for i in range(40):
+        amp = np.random.uniform(30, 300)
+        noise = (np.random.randn(int(RECORD_SECONDS * SAMPLE_RATE)) * amp).astype(np.int16)
+        wavfile.write(str(NEG_DIR / f"synthetic_noise_{i:02d}.wav"), SAMPLE_RATE, noise)
+    for i in range(20):
+        amp = np.random.uniform(1, 20)
+        hiss = (np.random.randn(int(RECORD_SECONDS * SAMPLE_RATE)) * amp).astype(np.int16)
+        wavfile.write(str(NEG_DIR / f"synthetic_silence_{i:02d}.wav"), SAMPLE_RATE, hiss)
+    for i in range(10):
+        wavfile.write(str(NEG_DIR / f"pure_silence_{i:02d}.wav"), SAMPLE_RATE,
+                      np.zeros(int(RECORD_SECONDS * SAMPLE_RATE), dtype=np.int16))
+    neg_files = sorted(glob.glob(str(NEG_DIR / "*.wav")))
+    print(f"  \u2022 Negative clips (after synthetic augment): {len(neg_files)}")
 
+    # ── Load OWW feature extractor using the ORIGINAL (backup) model ──────────
+    # Always prefer the backup so a corrupted alfred.onnx can't poison features.
     from core.wake_word import _ensure_openwakeword, _MODEL_INIT_LOCK
+    backup_path = MODELS_DIR / "alfred.onnx.original"
+    feature_model_path = backup_path if backup_path.exists() else MODELS_DIR / "alfred.onnx"
+    print(f"  \u2022 Feature extractor: {feature_model_path.name}")
     with _MODEL_INIT_LOCK:
         _ensure_openwakeword()
         from openwakeword.model import Model
-        base_onnx = str((MODELS_DIR / "alfred.onnx").resolve())
-        oww = Model(wakeword_models=[base_onnx], inference_framework="onnx")
+        oww = Model(wakeword_models=[str(feature_model_path)], inference_framework="onnx")
 
     preprocessor = oww.preprocessor
     X_list, y_list = [], []
     step_size = 1280
 
-    print("⏳ Extracting acoustic feature embeddings...")
+    print("Extracting acoustic feature embeddings...")
     for pf in pos_files:
         sr, dat = wavfile.read(pf)
         if dat.ndim > 1:
             dat = dat[:, 0]
+        # CRITICAL: reset OWW state between clips -- model is stateful and
+        # bleeds audio context across files, contaminating extracted features.
+        if hasattr(oww, "reset"):
+            oww.reset()
         for offset in [0, 320, 640, 960]:
             sliced = dat[offset:]
             frames = []
@@ -184,8 +201,11 @@ def train_local() -> None:
                 feat = preprocessor.get_features(16)
                 if feat.shape == (1, 16, 96):
                     frames.append(feat)
-            if frames:
-                for f in frames[len(frames) // 3 : (2 * len(frames)) // 3 + 1]:
+            # Only the middle third of frames is reliably on-keyword
+            if len(frames) >= 3:
+                start = len(frames) // 3
+                end   = (2 * len(frames)) // 3 + 1
+                for f in frames[start:end]:
                     X_list.append(f)
                     y_list.append(1.0)
 
@@ -193,6 +213,8 @@ def train_local() -> None:
         sr, dat = wavfile.read(nf)
         if dat.ndim > 1:
             dat = dat[:, 0]
+        if hasattr(oww, "reset"):
+            oww.reset()
         for i in range(0, len(dat) - step_size, step_size * 2):
             chunk = dat[i:i + step_size]
             oww.predict(chunk)
@@ -204,95 +226,152 @@ def train_local() -> None:
     X = np.vstack(X_list).astype(np.float32)
     y = np.array(y_list, dtype=np.float32).reshape(-1, 1)
 
-    print(f"  ✓ Prepared dataset: {len(y)} samples ({int((y==1).sum())} positive, {int((y==0).sum())} negative)")
+    n_pos = int((y == 1).sum())
+    n_neg = int((y == 0).sum())
+    print(f"  Prepared dataset: {len(y)} samples  ({n_pos} positive / {n_neg} negative)")
+    if n_pos == 0 or n_neg == 0:
+        print("Error: no positive or no negative samples.")
+        return
+
+    # Stratified 80/20 train/val split
+    rng = np.random.default_rng(42)
+    pos_idx = np.where(y[:, 0] == 1)[0]
+    neg_idx = np.where(y[:, 0] == 0)[0]
+    rng.shuffle(pos_idx)
+    rng.shuffle(neg_idx)
+    pos_split = max(1, int(len(pos_idx) * 0.8))
+    neg_split = max(1, int(len(neg_idx) * 0.8))
+    train_idx = np.concatenate([pos_idx[:pos_split], neg_idx[:neg_split]])
+    val_idx   = np.concatenate([pos_idx[pos_split:], neg_idx[neg_split:]])
+    rng.shuffle(train_idx)
+    X_tr, y_tr   = X[train_idx], y[train_idx]
+    X_val, y_val = X[val_idx],   y[val_idx]
+    print(f"  Train: {len(train_idx)}  Val: {len(val_idx)}")
 
     class AlfredWakeNet(nn.Module):
         def __init__(self):
             super().__init__()
-            self.fc1 = nn.Linear(1536, 32)
-            self.norm1 = nn.LayerNorm(32)
+            self.fc1   = nn.Linear(1536, 64)
+            self.norm1 = nn.LayerNorm(64)
+            self.drop1 = nn.Dropout(0.3)
             self.relu1 = nn.ReLU()
-            self.fc2 = nn.Linear(32, 32)
+            self.fc2   = nn.Linear(64, 32)
             self.norm2 = nn.LayerNorm(32)
+            self.drop2 = nn.Dropout(0.2)
             self.relu2 = nn.ReLU()
-            self.fc3 = nn.Linear(32, 1)
-            self.sig = nn.Sigmoid()
+            self.fc3   = nn.Linear(32, 1)
+            self.sig   = nn.Sigmoid()
 
         def forward(self, x):
             x = x.reshape(x.shape[0], -1)
-            x = self.relu1(self.norm1(self.fc1(x)))
-            x = self.relu2(self.norm2(self.fc2(x)))
+            x = self.drop1(self.relu1(self.norm1(self.fc1(x))))
+            x = self.drop2(self.relu2(self.norm2(self.fc2(x))))
             return self.sig(self.fc3(x))
 
-    dataset = TensorDataset(torch.from_numpy(X), torch.from_numpy(y))
-    loader = DataLoader(dataset, batch_size=32, shuffle=True)
-    model = AlfredWakeNet()
-
-    # Transfer Learning: Initialize from base alfred.onnx weights if present
-    base_model_path = MODELS_DIR / "alfred.onnx"
-    if base_model_path.exists():
-        try:
-            import onnx
-            from onnx import numpy_helper
-            m_onnx = onnx.load(str(base_model_path))
-            inits = {init.name: numpy_helper.to_array(init) for init in m_onnx.graph.initializer}
-            if "const_fold_opt__20" in inits and "const_fold_opt__22" in inits and "const_fold_opt__23" in inits:
-                with torch.no_grad():
-                    model.fc1.weight.copy_(torch.from_numpy(inits["const_fold_opt__20"].T))
-                    model.fc2.weight.copy_(torch.from_numpy(inits["const_fold_opt__22"].T))
-                    model.fc3.weight.copy_(torch.from_numpy(inits["const_fold_opt__23"].T))
-                print("  ✓ Preloaded base 'alfred.onnx' weights for Transfer Learning (combining general + real voices)!")
-        except Exception as wex:
-            print(f"  Notice: Training from standard initialization ({wex})")
-
+    tr_ds  = TensorDataset(torch.from_numpy(X_tr),  torch.from_numpy(y_tr))
+    val_ds = TensorDataset(torch.from_numpy(X_val), torch.from_numpy(y_val))
+    loader     = DataLoader(tr_ds,  batch_size=32, shuffle=True)
+    val_loader = DataLoader(val_ds, batch_size=64, shuffle=False)
+    net = AlfredWakeNet()
     criterion = nn.BCELoss()
-    optimizer = optim.AdamW(model.parameters(), lr=5e-4, weight_decay=1e-4)
+    optimizer = optim.AdamW(net.parameters(), lr=3e-4, weight_decay=5e-4)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, factor=0.5)
 
-    print("\n⚙️ Fine-tuning neural network (25 epochs)...")
-    epochs = 25
-    for epoch in range(1, epochs + 1):
-        model.train()
-        total_loss, correct, total = 0.0, 0, 0
+    print("\nFine-tuning (up to 60 epochs, early stop on val loss)...")
+    best_val_loss, best_state, patience_left = float("inf"), None, 10
+    for epoch in range(1, 61):
+        net.train()
+        tr_loss = 0.0
         for bx, by in loader:
             optimizer.zero_grad()
-            preds = model(bx)
-            loss = criterion(preds, by)
+            loss = criterion(net(bx), by)
             loss.backward()
             optimizer.step()
-            total_loss += loss.item() * len(by)
-            correct += ((preds >= 0.5) == (by >= 0.5)).sum().item()
-            total += len(by)
-        if epoch % 5 == 0 or epoch == epochs:
-            print(f"  Epoch {epoch:02d}/{epochs:02d} - Loss: {total_loss/total:.4f} - Accuracy: {correct/total*100:.1f}%")
+            tr_loss += loss.item() * len(by)
+        tr_loss /= len(tr_ds)
+        net.eval()
+        val_loss, val_correct = 0.0, 0
+        with torch.no_grad():
+            for bx, by in val_loader:
+                preds = net(bx)
+                val_loss    += criterion(preds, by).item() * len(by)
+                val_correct += ((preds >= 0.5) == (by >= 0.5)).sum().item()
+        val_loss /= len(val_ds)
+        val_acc = val_correct / len(val_ds) * 100
+        scheduler.step(val_loss)
+        if epoch % 5 == 0 or epoch <= 5:
+            print(f"  Epoch {epoch:02d}/60 - tr={tr_loss:.4f}  val={val_loss:.4f}  val_acc={val_acc:.1f}%")
+        if val_loss < best_val_loss - 1e-5:
+            best_val_loss = val_loss
+            best_state = {k: v.clone() for k, v in net.state_dict().items()}
+            patience_left = 10
+        else:
+            patience_left -= 1
+            if patience_left == 0:
+                print(f"  Early stop at epoch {epoch}.")
+                break
+    if best_state:
+        net.load_state_dict(best_state)
 
-    # Export to models/alfred.onnx
-    model.eval()
-    dummy_input = torch.randn(1, 16, 96, dtype=torch.float32)
+    net.eval()
+    with torch.no_grad():
+        val_preds = net(torch.from_numpy(X_val)).numpy()
+    val_acc_final = float(((val_preds >= 0.5) == (y_val >= 0.5)).mean() * 100)
+
+    # Silence false-positive test
+    if hasattr(oww, "reset"):
+        oww.reset()
+    sil_feats = []
+    for _ in range(120):
+        oww.predict(np.zeros(step_size, dtype=np.int16))
+        feat = preprocessor.get_features(16)
+        if feat.shape == (1, 16, 96):
+            sil_feats.append(feat)
+    if sil_feats:
+        with torch.no_grad():
+            sil_scores = net(torch.from_numpy(np.vstack(sil_feats).astype(np.float32))).numpy()
+        fp_rate = float((sil_scores >= 0.5).mean() * 100)
+    else:
+        fp_rate = 0.0
+
+    print(f"\nDeployment safety check:")
+    print(f"  Val accuracy (held-out):  {val_acc_final:.1f}%  (required >= 85%)")
+    print(f"  Silence false-pos rate:   {fp_rate:.1f}%   (required <  5%)")
+
+    if val_acc_final < 85.0:
+        print(f"\nDEPLOY BLOCKED - val accuracy {val_acc_final:.1f}% < 85%.")
+        print("   Original alfred.onnx unchanged. Record more diverse clips and retry.")
+        return
+    if fp_rate >= 5.0:
+        print(f"\nDEPLOY BLOCKED - silence FP rate {fp_rate:.1f}% >= 5%.")
+        print("   This model fires on silence. Add more silence negatives and retry.")
+        return
+
     output_onnx = MODELS_DIR / "alfred.onnx"
-
-    # Backup original model if not backed up
-    backup_path = MODELS_DIR / "alfred.onnx.original"
-    if output_onnx.exists() and not backup_path.exists():
+    backup_dest = MODELS_DIR / "alfred.onnx.original"
+    if output_onnx.exists() and not backup_dest.exists():
         import shutil
-        shutil.copyfile(output_onnx, backup_path)
-        print(f"  ✓ Backed up original model to: {backup_path.name}")
-
+        shutil.copyfile(output_onnx, backup_dest)
+        print(f"  Backed up original to: {backup_dest.name}")
     torch.onnx.export(
-        model,
-        dummy_input,
-        str(output_onnx),
+        net, torch.randn(1, 16, 96, dtype=torch.float32), str(output_onnx),
         input_names=["serving_default_onnx_tf__tf_Flatten_0_eceb4355:0"],
         output_names=["PartitionedCall:0"],
         dynamic_axes={
             "serving_default_onnx_tf__tf_Flatten_0_eceb4355:0": {0: "batch"},
             "PartitionedCall:0": {0: "batch"},
         },
-        opset_version=14,
-        dynamo=False,
+        opset_version=14, dynamo=False,
     )
-    print(f"\n🎉 Successfully trained and exported '{output_onnx.name}'!")
-    print(f"Location: {output_onnx}")
-    print("ALFRED will now wake up specifically to your and your friend's voices!")
+    root_onnx = ROOT / "alfred.onnx"
+    if root_onnx.exists():
+        try:
+            import shutil
+            shutil.copyfile(output_onnx, root_onnx)
+        except Exception:
+            pass
+    print(f"\nDeployed '{output_onnx.name}'  val_acc={val_acc_final:.1f}%  silence_fp={fp_rate:.1f}%")
+    print(f"   Location: {output_onnx}")
 
 
 def main() -> None:

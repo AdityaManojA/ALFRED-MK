@@ -32,16 +32,38 @@ from ui import HudCanvas, FRAME_TIME_BUDGET_MS
 
 
 def run_benchmark():
-    print("=== Running ALFRED-MK-VIII Latency Profiling Benchmark ===")
+    print("=== Running ALFRED-MK-IX Latency Profiling Benchmark ===")
     profile = cProfile.Profile()
     profile.enable()
 
-    # 1. Wake word gate
+    # 1. Wake word gate & speaker verification
     detector = WakeWordDetector(on_detect=lambda: None)
     dummy_frame = np.zeros(AUDIO_BUFFER_SIZE, dtype=np.int16)
     t_feed = time.perf_counter()
     for _ in range(50):
         detector.feed(dummy_frame, timestamp=t_feed)
+
+    # End-to-end candidate speaker verification benchmark on 1.5s speech
+    try:
+        from core.speaker.types import WakeCandidateAudio
+        from core.speaker.verifier import SpeakerVerifier
+        from core.speaker.extractor import CampplusOnnxExtractor
+        if CampplusOnnxExtractor().is_available():
+            verifier = SpeakerVerifier()
+            t_speech = np.linspace(0, 1.5, 24000, endpoint=False)
+            speech_audio = (np.sin(2 * np.pi * 300 * t_speech) * 5000).astype(np.int16)
+            candidate = WakeCandidateAudio(
+                audio_pcm=speech_audio,
+                sample_rate=16000,
+                start_ts=10.0,
+                end_ts=11.5,
+                confidence=0.95,
+                source="acoustic",
+            )
+            for _ in range(10):
+                verifier.verify(candidate)
+    except Exception as e:
+        print(f"Notice: Speaker verification benchmark skipped ({e})")
 
     # 2. Intent router
     router = IntentRouter()

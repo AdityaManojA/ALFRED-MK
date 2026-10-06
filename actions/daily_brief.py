@@ -1,5 +1,5 @@
 """
-Daily Brief Action for ALFRED Mark-VIII.
+Daily Brief Action for ALFRED Mark-IX.
 Provides the ultimate morning and daily executive briefing:
   - Personalized time-of-day greeting (Morning, Afternoon, Evening)
   - Live local weather conditions & temperature

@@ -25,7 +25,7 @@ class TestHudReactivity(unittest.TestCase):
         cls.app = QApplication.instance() or QApplication([])
 
     def setUp(self) -> None:
-        self.hud = HudCanvas("", "ALFRED")
+        self.hud = HudCanvas("ALFRED")
         self.hud._tmr.stop()
 
     def tearDown(self) -> None:

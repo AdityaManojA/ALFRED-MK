@@ -30,6 +30,7 @@ else:
 from PyQt6.QtCore import (
     QEasingCurve, QEvent, QLineF, QMimeData, QObject, QParallelAnimationGroup, QPoint, QPointF,
     QPropertyAnimation, QRect, QRectF, QSize, Qt, QTimer, QUrl, pyqtSignal,
+    qInstallMessageHandler, QtMsgType,
 )
 from PyQt6.QtGui import (
     QBrush, QColor, QConicalGradient, QCursor, QDragEnterEvent, QDropEvent, QFont,
@@ -62,6 +63,35 @@ try:
 except Exception:
     _HAS_QT_MULTIMEDIA = False
     QVideoWidget = None  # type: ignore[assignment,misc]
+
+
+def _qt_message_handler(mode: QtMsgType, context, message: str) -> None:
+    # Filter benign QtMultimedia / QFFmpeg teardown notices and internal warnings
+    if any(pattern in message for pattern in (
+        "QFFmpeg",
+        "wildcard call disconnects",
+        "destroyed signal",
+        "mp3float",
+    )):
+        return
+
+    try:
+        if sys.stderr is not None:
+            if mode in (QtMsgType.QtCriticalMsg, QtMsgType.QtFatalMsg):
+                sys.stderr.write(f"[Qt Error] {message}\n")
+            elif mode == QtMsgType.QtWarningMsg:
+                sys.stderr.write(f"[Qt Warning] {message}\n")
+            elif mode == QtMsgType.QtInfoMsg:
+                sys.stderr.write(f"[Qt Info] {message}\n")
+            sys.stderr.flush()
+    except Exception:
+        pass
+
+
+try:
+    qInstallMessageHandler(_qt_message_handler)
+except Exception:
+    pass
 
 
 
@@ -754,8 +784,8 @@ def _read_full_config() -> dict:
 
 # Single source of truth for the release name — the window title, the header
 # badge and the readme must never disagree again.
-APP_VERSION  = "MARK-VIII"
-APP_PROTOCOL = "MARK-VIII"
+APP_VERSION  = "MARK-IX"
+APP_PROTOCOL = "MARK-IX"
 
 _DEFAULT_W, _DEFAULT_H = 1120, 720
 _MIN_W,     _MIN_H     = 920, 600
@@ -876,6 +906,7 @@ class C:
     PRI_GHO     = "#1a1d36"       # Phosphor ghost backdrop glow
     ACC         = "#ff7390"       # Tactical dossier alert red
     ACC2        = "#ffd166"       # Telemetry warning amber
+    WARN        = "#ffd166"       # Telemetry warning amber alias
     GREEN       = "#4ef2bb"       # Phosphor matrix emerald
     GREEN_D     = "#228562"       # Muted green bio-metric
     RED         = "#ff2a55"       # Threat assessment crimson
@@ -1546,7 +1577,14 @@ class HudCanvas(QWidget):
     _req_sentry_snapshot = pyqtSignal(object)
     _req_start_animations = pyqtSignal()
 
-    def __init__(self, face_path: str, assistant_name: str = "J.A.R.V.I.S", parent=None, is_orb_mode: bool = False):
+    def __init__(self, assistant_name: str = "Alfred", parent=None, is_orb_mode: bool = False, face_path: str = "", **kwargs):
+        # Gracefully handle legacy positional calls (e.g. HudCanvas("", "ALFRED") or HudCanvas("face.png", "Alfred"))
+        if isinstance(assistant_name, str) and (not assistant_name or any(assistant_name.endswith(ext) for ext in (".png", ".jpg", ".ico"))):
+            if isinstance(parent, str):
+                assistant_name = parent
+                parent = None
+            else:
+                assistant_name = "Alfred"
         super().__init__(parent)
         self.is_orb_mode = is_orb_mode
         if is_orb_mode:
@@ -2138,7 +2176,7 @@ class HudCanvas(QWidget):
             p.setFont(f_tele)
             p.setPen(QPen(blend(main, 0.40), 1))
             p.drawText(QRectF(cx - W / 2 + m + 6, cy - H / 2 + m, 120, 14),
-                       Qt.AlignmentFlag.AlignLeft, "MK-VIII // ARC-GEN")
+                       Qt.AlignmentFlag.AlignLeft, "MK-IX // ARC-GEN")
             p.drawText(QRectF(cx + W / 2 - m - 126, cy - H / 2 + m, 120, 14),
                        Qt.AlignmentFlag.AlignRight, "FREQ 142.8MHz")
             p.drawText(QRectF(cx - W / 2 + m + 6, cy + H / 2 - m - 14, 120, 14),
@@ -2798,7 +2836,7 @@ class HudCanvas(QWidget):
             txt = "⊘  SILENCE PROTOCOL ENGAGED // ACOUSTICS MUTED"
             bar_col = qcol(C.MUTED_C)
         elif self.speaking:
-            txt = "●  REACTIVE HUD // VOCAL SYNTHESIS ACTIVE // ALFRED MARK-VIII"
+            txt = "●  REACTIVE HUD // VOCAL SYNTHESIS ACTIVE // ALFRED MARK-IX"
             bar_col = main
         elif self.state in ("THINKING", "PROCESSING"):
             txt = "NEURAL INFERENCE ACTIVE // PROCESSING DIRECTIVE"
@@ -2889,10 +2927,10 @@ class HudCanvas(QWidget):
         f_badge = mono_font(6, QFont.Weight.Bold)
         lp.setFont(f_badge)
         lp.setPen(QPen(QColor(main.red(), main.green(), main.blue(), 160), 1))
-        lp.drawText(QRectF(m + 4, m + 2, 180, 12), Qt.AlignmentFlag.AlignLeft, "SUBJECT ALFRED.MK-VIII // VECTOR HUD")
+        lp.drawText(QRectF(m + 4, m + 2, 180, 12), Qt.AlignmentFlag.AlignLeft, "SUBJECT ALFRED.MK-IX // VECTOR HUD")
         lp.drawText(QRectF(W - m - 184, m + 2, 180, 12), Qt.AlignmentFlag.AlignRight, "ORBITAL MATRIX: 4 ACTIVE")
         lp.drawText(QRectF(m + 4, H - m - 14, 180, 12), Qt.AlignmentFlag.AlignLeft, "COORDS: 42°19'N 71°05'W")
-        lp.drawText(QRectF(W - m - 184, H - m - 14, 180, 12), Qt.AlignmentFlag.AlignRight, "WAYNE TECH PROTOCOL MK-VIII")
+        lp.drawText(QRectF(W - m - 184, H - m - 14, 180, 12), Qt.AlignmentFlag.AlignRight, "WAYNE TECH PROTOCOL MK-IX")
 
         # Subtle CRT scanlines every 3px
         scan_col = QColor(main.red(), main.green(), main.blue(), 12)
@@ -2985,7 +3023,33 @@ class HudCanvas(QWidget):
 
                 if getattr(self, "is_orb_mode", False):
                     # ── Orb Mode: Translucent Circular Cyber Bat Globe ─────────
-                    orb_r = min(W, H) * 0.46
+                    # Fill entire canvas with hit-testable alpha=1 background so mouse hover
+                    # is tracked across the whole padded window area (not just inside the circle)
+                    p.fillRect(self.rect(), QColor(0, 0, 0, 1))
+
+                    orb_r = min(W, H) * 0.40
+
+                    # Tactical hover range border: subtle dashed ring + corner brackets when hovered
+                    if getattr(self, "is_orb_hovered", False):
+                        hover_r = orb_r + 14
+                        p.setPen(self._get_pen(self._blend(main, 0.22), 1.0, Qt.PenStyle.DashLine))
+                        p.setBrush(QBrush(QColor(0, 240, 255, 6)))
+                        p.drawEllipse(QPointF(cx, cy), hover_r, hover_r)
+
+                        # Subtle tactical corner brackets showing the padded boundary
+                        p.setPen(self._get_pen(self._blend(main, 0.35), 1.2))
+                        p.setBrush(Qt.BrushStyle.NoBrush)
+                        blen = 9.0
+                        bm = 8.0
+                        p.drawLine(QPointF(bm, bm), QPointF(bm + blen, bm))
+                        p.drawLine(QPointF(bm, bm), QPointF(bm, bm + blen))
+                        p.drawLine(QPointF(W - bm, bm), QPointF(W - bm - blen, bm))
+                        p.drawLine(QPointF(W - bm, bm), QPointF(W - bm, bm + blen))
+                        p.drawLine(QPointF(bm, H - bm), QPointF(bm + blen, H - bm))
+                        p.drawLine(QPointF(bm, H - bm), QPointF(bm, H - bm - blen))
+                        p.drawLine(QPointF(W - bm, H - bm), QPointF(W - bm - blen, H - bm))
+                        p.drawLine(QPointF(W - bm, H - bm), QPointF(W - bm, H - bm - blen))
+
                     # 1. Translucent Cyber Radial Core Background
                     grad = QRadialGradient(cx, cy, orb_r)
                     grad.setColorAt(0.0, QColor(4, 16, 28, 235))
@@ -3316,7 +3380,7 @@ class SubjectDossierCard(QWidget):
     """
     Tactical Dossier Card Widget (Screenshot 1: Exact recreation of SUBJECT A-34 metadata dossier).
     """
-    def __init__(self, assistant_name="ALFRED.MK-VIII", parent=None):
+    def __init__(self, assistant_name="ALFRED.MK-IX", parent=None):
         super().__init__(parent)
         self.setFixedHeight(152)
         self._asst_name = assistant_name
@@ -4286,7 +4350,7 @@ class MinimizedHudOverlay(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, True)
         self.setFixedSize(420, 230)
         from core.ui.themes import ThemeChrome
-        self.setWindowTitle(f"ALFRED MARK-VIII // {ThemeChrome.chrome().window_title_suffix}")
+        self.setWindowTitle(f"ALFRED MARK-IX // {ThemeChrome.chrome().window_title_suffix}")
         self.setObjectName("minimizedHudOverlay")
         self._build_ui()
         self.set_assistant_name(assistant_name)
@@ -4606,43 +4670,46 @@ class BatGlobeOrb(QWidget):
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, False)
-        self.setFixedSize(240, 240)
+        self.setFixedSize(260, 260)
         self.setWindowTitle("ALFRED // BAT GLOBE ORB")
         self.setObjectName("batGlobeOrb")
+        self.setMouseTracking(True)
 
         lay = QVBoxLayout(self)
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(0)
 
         # Embedded HudCanvas operating in standalone orb mode
-        self.canvas = HudCanvas(main_window._face_path, assistant_name, parent=self, is_orb_mode=True)
+        self.canvas = HudCanvas(assistant_name=assistant_name, parent=self, is_orb_mode=True)
+        self.canvas.setMouseTracking(True)
         lay.addWidget(self.canvas)
 
         # Floating Mini Control Bar (visible on hover)
         self._controls_overlay = QWidget(self)
-        self._controls_overlay.setGeometry(0, 0, 240, 36)
+        self._controls_overlay.setGeometry(0, 4, 260, 36)
         self._controls_overlay.setStyleSheet("background: transparent;")
+        self._controls_overlay.setMouseTracking(True)
         c_lay = QHBoxLayout(self._controls_overlay)
-        c_lay.setContentsMargins(18, 8, 18, 0)
+        c_lay.setContentsMargins(18, 0, 18, 0)
         c_lay.setSpacing(6)
 
         # Close/Hide button
         self._close_btn = QPushButton("✕", self._controls_overlay)
-        self._close_btn.setFixedSize(20, 20)
+        self._close_btn.setFixedSize(24, 24)
         self._close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._close_btn.setToolTip("Hide Bat Globe Orb")
         self._close_btn.setStyleSheet("""
             QPushButton {
-                background: rgba(3, 14, 26, 0.85);
+                background: rgba(4, 16, 28, 0.92);
                 color: #8899aa;
-                border: 1px solid rgba(0, 240, 255, 0.25);
-                border-radius: 10px;
-                font-size: 10px;
+                border: 1px solid rgba(0, 240, 255, 0.35);
+                border-radius: 12px;
+                font-size: 11px;
                 font-weight: bold;
                 padding: 0;
             }
             QPushButton:hover {
-                background: rgba(255, 60, 80, 0.75);
+                background: rgba(255, 60, 80, 0.85);
                 color: #ffffff;
                 border: 1px solid #ff3c50;
             }
@@ -4654,21 +4721,21 @@ class BatGlobeOrb(QWidget):
 
         # Expand to full HUD button
         self._expand_btn = QPushButton("⤢", self._controls_overlay)
-        self._expand_btn.setFixedSize(20, 20)
+        self._expand_btn.setFixedSize(24, 24)
         self._expand_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._expand_btn.setToolTip("Expand to Full Tactical HUD (Double-click orb)")
         self._expand_btn.setStyleSheet("""
             QPushButton {
-                background: rgba(3, 14, 26, 0.85);
+                background: rgba(4, 16, 28, 0.92);
                 color: #00f0ff;
-                border: 1px solid rgba(0, 240, 255, 0.25);
-                border-radius: 10px;
-                font-size: 11px;
+                border: 1px solid rgba(0, 240, 255, 0.35);
+                border-radius: 12px;
+                font-size: 12px;
                 font-weight: bold;
                 padding: 0;
             }
             QPushButton:hover {
-                background: rgba(0, 240, 255, 0.55);
+                background: rgba(0, 240, 255, 0.65);
                 color: #ffffff;
                 border: 1px solid #00f0ff;
             }
@@ -4677,14 +4744,52 @@ class BatGlobeOrb(QWidget):
         c_lay.addWidget(self._expand_btn)
 
         self._controls_overlay.hide()
+        self._controls_overlay.installEventFilter(self)
+        self._close_btn.installEventFilter(self)
+        self._expand_btn.installEventFilter(self)
+
+        self._is_hovered = False
+        self._hide_timer = QTimer(self)
+        self._hide_timer.setSingleShot(True)
+        self._hide_timer.setInterval(400)
+        self._hide_timer.timeout.connect(self._do_hide_controls)
         self._load_position()
 
-    def enterEvent(self, e):
+    def _show_controls(self):
+        self._hide_timer.stop()
         self._controls_overlay.show()
+        self._controls_overlay.raise_()
+        self._is_hovered = True
+        if hasattr(self, "canvas") and self.canvas:
+            self.canvas.is_orb_hovered = True
+            self.canvas.update()
+
+    def _do_hide_controls(self):
+        try:
+            pos = self.mapFromGlobal(QCursor.pos())
+            if self.rect().adjusted(-16, -16, 16, 16).contains(pos):
+                return
+        except Exception:
+            pass
+        self._controls_overlay.hide()
+        self._is_hovered = False
+        if hasattr(self, "canvas") and self.canvas:
+            self.canvas.is_orb_hovered = False
+            self.canvas.update()
+
+    def eventFilter(self, watched, event):
+        if event.type() in (QEvent.Type.Enter, QEvent.Type.MouseMove):
+            self._show_controls()
+        elif event.type() == QEvent.Type.Leave:
+            self._hide_timer.start(400)
+        return super().eventFilter(watched, event)
+
+    def enterEvent(self, e):
+        self._show_controls()
         super().enterEvent(e)
 
     def leaveEvent(self, e):
-        self._controls_overlay.hide()
+        self._hide_timer.start(400)
         super().leaveEvent(e)
 
     def mousePressEvent(self, e: QMouseEvent):
@@ -4696,6 +4801,7 @@ class BatGlobeOrb(QWidget):
         super().mousePressEvent(e)
 
     def mouseMoveEvent(self, e: QMouseEvent):
+        self._show_controls()
         if e.buttons() & Qt.MouseButton.LeftButton and self._press_pos is not None:
             cur_pos = e.globalPosition().toPoint()
             if (cur_pos - self._press_pos).manhattanLength() > 4:
@@ -7171,7 +7277,7 @@ class MainWindow(QMainWindow):
     _toast_sig      = pyqtSignal(str)          # notification / barge-in toast message
     _set_app_icon_sig = pyqtSignal(str, bool)  # thread-safe marshalling of app icon update (resolved_path, notify)
 
-    def __init__(self, face_path: str):
+    def __init__(self, assistant_name: str = "Alfred", face_path: str = "", **kwargs):
         super().__init__()
         self._face_path = face_path
         self.on_clear_chat     = None
@@ -7184,8 +7290,8 @@ class MainWindow(QMainWindow):
 
         # Prewarm TTS engine capability on background worker to prevent main thread stalls
         try:
-            from core.tts.capability import prewarm_jarvis_capability_async
-            prewarm_jarvis_capability_async()
+            from core.tts.capability import prewarm_alfred_capability_async
+            prewarm_alfred_capability_async()
         except Exception:
             pass
 
@@ -7228,9 +7334,9 @@ class MainWindow(QMainWindow):
         self.on_voice_change   = None   # callable: () -> None — rebuild session with new voice
         self.on_audio_device_change = None  # callable: () -> None — reopen audio streams
         self._confirm_overlay  = None   # live ConfirmBanner, if one is on screen
-        self.get_plugins       = None   # callable: () -> list[dict], set by JarvisLive
-        self.get_plugin_settings = None # callable: () -> list[dict] settings schemas, set by JarvisLive
-        self.on_wake_toggle    = None   # callable: (enable: bool) -> str, set by JarvisLive
+        self.get_plugins       = None   # callable: () -> list[dict], set by AlfredLive
+        self.get_plugin_settings = None # callable: () -> list[dict] settings schemas, set by AlfredLive
+        self.on_wake_toggle    = None   # callable: (enable: bool) -> str, set by AlfredLive
         self.on_wake_manual    = None   # callable: () -> None — manual sleep/wake
         self.on_push_to_talk   = None   # callable: (enable: bool) -> str scope
         self.ptt_hold          = None   # callable: (held: bool) -> None — windowed chord
@@ -7276,7 +7382,7 @@ class MainWindow(QMainWindow):
         body.addWidget(self._left_panel, stretch=0)
 
         # Center column: HUD + resizable content panel via QSplitter
-        self.hud = HudCanvas(face_path, _display)
+        self.hud = HudCanvas(assistant_name=_display)
         self.hud.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self._content_panel = self._build_content_panel()
         self._quiz_panel = self._build_quiz_panel()
@@ -7632,7 +7738,7 @@ class MainWindow(QMainWindow):
     # Icon generation — arc-reactor style, rendered with Pillow
     # ------------------------------------------------------------------
     @staticmethod
-    def _build_jarvis_icon(out_path: Path) -> bool:
+    def _build_alfred_icon(out_path: Path) -> bool:
         """
         Render an ALFRED tactical icon at 4× resolution and downsample
         for crisp results at all sizes. Saves a multi-res .ico to out_path.
@@ -7917,7 +8023,7 @@ class MainWindow(QMainWindow):
         if not ico_path.exists():
             ico_path = Path(__file__).resolve().parent / "config" / "jarvis.ico"
         if not ico_path.exists():
-            self._build_jarvis_icon(ico_path)
+            self._build_alfred_icon(ico_path)
 
         try:
             _os = platform.system()
@@ -7997,10 +8103,11 @@ class MainWindow(QMainWindow):
                         png_path = ico_path  # fallback to .ico
 
                 icon_line = f"Icon={png_path}\n" if png_path.exists() else ""
-                desk = desktop / "J.A.R.V.I.S.desktop"
+                (desktop / "J.A.R.V.I.S.desktop").unlink(missing_ok=True)
+                desk = desktop / "A.L.F.R.E.D.desktop"
                 desk.write_text(
                     "[Desktop Entry]\n"
-                    "Name=J.A.R.V.I.S\n"
+                    "Name=A.L.F.R.E.D\n"
                     f"Exec={python} {script}\n"
                     f"Path={script.parent}\n"
                     "Type=Application\n"
@@ -8711,6 +8818,14 @@ class MainWindow(QMainWindow):
         self._wake_btn.setStyleSheet(_BTN_STYLE_DIM)
         self._wake_sleep_btn.hide()
 
+        self._voice_profile_btn = QPushButton()
+        self._voice_profile_btn.setFixedHeight(29)
+        self._voice_profile_btn.setFont(mono_font(8, letter_spacing=0.5))
+        self._voice_profile_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._voice_profile_btn.clicked.connect(self._open_voice_enroll)
+        attach_hover_help(self._voice_profile_btn, "Configure local speaker verification biometric voice profile.")
+        lay.addWidget(self._voice_profile_btn)
+
         self._ptt_btn = QPushButton()
         self._ptt_btn.setFixedHeight(29)
         self._ptt_btn.setFont(mono_font(8, letter_spacing=0.5))
@@ -9056,7 +9171,7 @@ class MainWindow(QMainWindow):
     # while translating the tag would mean a table per language, which is worse.
     # A shape carries it in every language, and shape plus colour still reads
     # for someone who cannot separate red from amber. What the marks mean
-    # arrives the way everything else does: JARVIS says it out loud.
+    # arrives the way everything else does: ALFRED says it out loud.
     _REVIEW_MARKS = {"serious": ("RED", "▲"), "caution": ("ACC2", "●"), "note": ("PRI_DIM", "·")}
 
     @staticmethod
@@ -9129,7 +9244,7 @@ class MainWindow(QMainWindow):
     # An interactive twin of the content panel. The plugin only ever hands over
     # questions; everything about asking, marking and reporting happens here,
     # and the finished result is pushed back into the conversation the same way
-    # a dropped file is — as a message JARVIS reads and responds to. That keeps
+    # a dropped file is — as a message ALFRED reads and responds to. That keeps
     # the tool call short (it returns the moment the board is up) and leaves the
     # talking to the assistant, in the user's own language.
 
@@ -9346,7 +9461,7 @@ class MainWindow(QMainWindow):
         elif verdict is False:
             mark, colour = "✕  " + str(q.get("answer", "")), C.RED
         else:
-            # Open answers and near-miss gap-fills are JARVIS's to judge. Saying
+            # Open answers and near-miss gap-fills are ALFRED's to judge. Saying
             # so is honest; marking it wrong here would be a guess.
             mark, colour = "…  noted — I'll go over this one with you", C.ACC2
         note = q.get("note") or ""
@@ -9381,7 +9496,7 @@ class MainWindow(QMainWindow):
 
         self._log.append_log(f"QUIZ: {topic or 'quiz'} — {right}/{total} correct")
 
-        # Hand it back to JARVIS as a message, not as a tool return: the tool
+        # Hand it back to ALFRED as a message, not as a tool return: the tool
         # call ended minutes ago. This is the same channel a dropped file uses.
         lines = [f"[QUIZ_DONE] topic={topic or 'general'} | "
                  f"auto-marked {right}/{total} correct"
@@ -9617,18 +9732,27 @@ class MainWindow(QMainWindow):
     # ── Wake word settings ───────────────────────────────────────────────────
 
     def _wake_state(self) -> dict:
-        """Combined state for the two wake-word buttons. Readiness is a cheap,
-        deterministic on-disk check now (see core.wake_word.is_ready), so there
-        is nothing to cache — the button never flickers to a stale value."""
+        """Combined state for the wake-word and speaker verification buttons."""
+        enrolled_user = ""
+        try:
+            from core.speaker.profile_store import get_default_profile_store
+            store = get_default_profile_store()
+            profiles = store.list_profiles()
+            if profiles:
+                enrolled_user = profiles[0].user_name
+        except Exception:
+            pass
+
         if self.wake_get_state:
             try:
                 s = self.wake_get_state()
                 return {"ready": bool(s.get("ready")),
                         "enabled": bool(s.get("enabled")),
-                        "awake": bool(s.get("awake"))}
+                        "awake": bool(s.get("awake")),
+                        "enrolled_user": enrolled_user}
             except Exception:
                 pass
-        # Before JarvisLive has wired its callback (drawer built at startup).
+        # Before AlfredLive has wired its callback (drawer built at startup).
         ready, enabled = False, False
         try:
             from core.wake_word import is_ready
@@ -9636,7 +9760,7 @@ class MainWindow(QMainWindow):
             ready, enabled = is_ready(), get_wake_word_enabled()
         except Exception:
             pass
-        return {"ready": ready, "enabled": enabled, "awake": True}
+        return {"ready": ready, "enabled": enabled, "awake": True, "enrolled_user": enrolled_user}
 
     def _refresh_wake_btns(self):
         if not hasattr(self, '_wake_btn'):
@@ -9671,6 +9795,19 @@ class MainWindow(QMainWindow):
             self._wake_sleep_btn.show()
             self._wake_sleep_btn.setText("[ ⊘ ]  MANUAL SLEEP" if st["awake"] else "[ ⚡ ]  MANUAL WAKE")
             self._wake_sleep_btn.setStyleSheet(_off)
+
+        if hasattr(self, '_voice_profile_btn'):
+            if st.get("enrolled_user"):
+                self._voice_profile_btn.setText(f"[ 👤 ]  VOICE BIOMETRICS : {st['enrolled_user'].upper()}")
+                self._voice_profile_btn.setStyleSheet(_on)
+            else:
+                self._voice_profile_btn.setText("[ ⚠ ]  VOICE BIOMETRICS : NOT ENROLLED")
+                self._voice_profile_btn.setStyleSheet(f"""
+                    QPushButton {{ background: rgba(255, 180, 0, 0.08); color: {C.WARN};
+                        border: 1px solid rgba(255, 180, 0, 0.45); border-radius: 2px;
+                        text-align: left; padding: 0 10px; font-weight: bold; }}
+                    QPushButton:hover {{ background: {C.WARN}; color: #05060a; border: 1px solid {C.WARN}; }}
+                    QPushButton:pressed {{ background: #cca000; color: #ffffff; }}""")
 
     def _refresh_talk_btns(self):
         """Repaint the push-to-talk row from the saved setting."""
@@ -9782,10 +9919,13 @@ class MainWindow(QMainWindow):
                 self._wake_dl_sig.emit(ok, msg)
             threading.Thread(target=_work, daemon=True).start()
             return
-        # Already downloaded → just flip enabled/disabled through JarvisLive.
+        # Already downloaded → just flip enabled/disabled through AlfredLive.
         if self.on_wake_toggle:
             try:
-                self.on_wake_toggle(not st["enabled"])
+                new_state = not st["enabled"]
+                self.on_wake_toggle(new_state)
+                if new_state and not st.get("enrolled_user"):
+                    self._log_sig.emit("SYS: Hands-free wake requires voice enrollment. Click [VOICE BIOMETRICS] to enroll.")
             except Exception:
                 pass
         self._refresh_wake_btns()
@@ -9800,6 +9940,19 @@ class MainWindow(QMainWindow):
                 self.on_wake_manual()
             except Exception:
                 pass
+        self._refresh_wake_btns()
+
+    def _open_voice_enroll(self):
+        try:
+            from core.ui.voice_enroll_modal import VoiceEnrollModal
+            cfg = _read_full_config() if callable(globals().get("_read_full_config")) else {}
+            user_name = cfg.get("user_name", "") or "Operator"
+            modal = VoiceEnrollModal(parent=self, default_user=user_name)
+            modal.profile_enrolled.connect(lambda _: self._refresh_wake_btns())
+            modal.profile_deleted.connect(lambda: self._refresh_wake_btns())
+            modal.exec()
+        except Exception as exc:
+            self._log_sig.emit(f"SYS: Voice enrollment error: {exc}")
         self._refresh_wake_btns()
 
     def _update_brief_btn(self, enabled: bool):
@@ -10145,7 +10298,7 @@ class MainWindow(QMainWindow):
 
                 self._current_icon_path = resolved_path
                 display_name = format_icon_display_name(Path(resolved_path).name)
-                # Update top header app icon next to MARK-VIII
+                # Update top header app icon next to MARK-IX
                 if hasattr(self, "_header_icon_lbl") and self._header_icon_lbl:
                     pm = _scaled_icon_pixmap(resolved_path, 22, 22)
                     if not pm.isNull():
@@ -11092,12 +11245,12 @@ class _RootShim:
         pass
 
 
-class JarvisUI:
-    def __init__(self, face_path: str, size=None):
+class AlfredUI:
+    def __init__(self, assistant_name: str = "Alfred", face_path: str = "", size=None, **kwargs):
         if sys.platform == "win32":
             try:
                 import ctypes
-                ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("alfred.wayne.batcomputer.mk4")
+                ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("alfred.wayne.batcomputer.mk9")
             except Exception:
                 pass
         self._app = QApplication.instance() or QApplication(sys.argv)
@@ -11309,7 +11462,7 @@ class JarvisUI:
 
     def push_visemes(self, frames, hop: float, at: float) -> None:
         """Thread-safe: post a schedule of (level, openness, width) mouth frames
-        for JARVIS's own speech. `at` is the wall-clock time the batch begins to
+        for ALFRED's own speech. `at` is the wall-clock time the batch begins to
         sound, not the time of the call. See HudCanvas.push_visemes()."""
         try:
             self._win.hud.push_visemes(frames, hop, at)
@@ -11384,7 +11537,7 @@ class JarvisUI:
 
         `grade(question, given)` decides each answer — the plugin supplies it so
         the marking rules live with the questions rather than being duplicated
-        here. Returning None from it means "JARVIS should judge this one", which
+        here. Returning None from it means "ALFRED should judge this one", which
         is how open answers and near-miss gap-fills are handled.
 
         Returns immediately: the user answers at their own pace and the finished
@@ -11505,3 +11658,8 @@ class JarvisUI:
         """Thread-safe toast notification dispatch."""
         if hasattr(self, "_win") and self._win is not None and hasattr(self._win, "show_toast"):
             self._win.show_toast(text)
+
+
+# Backward compatibility aliases
+JarvisUI = AlfredUI
+_build_jarvis_icon = MainWindow._build_alfred_icon

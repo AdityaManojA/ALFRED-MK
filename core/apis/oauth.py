@@ -67,7 +67,7 @@ class _OAuthRedirectHandler(http.server.BaseHTTPRequestHandler):
             self.wfile.write(b"""
                 <html>
                 <body style="font-family: monospace; background: #090a12; color: #4ef2bb; padding: 40px; text-align: center;">
-                    <h2>&#x25C8; ALFRED-MK-VIII // AUTHENTICATION SUCCESSFUL</h2>
+                    <h2>&#x25C8; ALFRED-MK-IX // AUTHENTICATION SUCCESSFUL</h2>
                     <p style="color: #8e9bff;">Authorization code received. You may now close this browser tab.</p>
                 </body>
                 </html>

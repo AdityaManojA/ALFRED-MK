@@ -154,3 +154,9 @@ def check_jarvis_capability(allow_cpu: bool = False, use_cache: bool = False) ->
     _CAPABILITY_CACHE = (allow_cpu, res)
     _CACHE_TIMESTAMP = now
     return res
+
+
+# Backward-compatible and thematic aliases for Alfred
+prewarm_alfred_capability_async = prewarm_jarvis_capability_async
+check_alfred_capability = check_jarvis_capability
+

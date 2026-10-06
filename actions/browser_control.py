@@ -535,7 +535,7 @@ class _BrowserSession:
 
         if engine_name == "firefox":
             profile = _firefox_profile_dir() or str(
-                Path.home() / ".jarvis_profiles" / "firefox"
+                Path.home() / ".alfred_profiles" / "firefox"
             )
             kwargs: dict = {
                 "headless":    False,
@@ -561,7 +561,7 @@ class _BrowserSession:
             return
 
         if engine_name == "webkit":
-            safari_profile = str(Path.home() / ".jarvis_profiles" / "safari")
+            safari_profile = str(Path.home() / ".alfred_profiles" / "safari")
             Path(safari_profile).mkdir(parents=True, exist_ok=True)
             kwargs = {
                 "headless":    False,

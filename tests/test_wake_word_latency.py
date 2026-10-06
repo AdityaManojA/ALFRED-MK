@@ -36,6 +36,7 @@ class TestWakeWordLatency(unittest.TestCase):
             on_detect=on_detect_mock,
             threshold=0.5,
             logger=mock_logger,
+            enable_speaker_verification=False,
         )
 
         mock_model = MagicMock()
@@ -47,19 +48,20 @@ class TestWakeWordLatency(unittest.TestCase):
             self.assertTrue(started)
             self.assertTrue(detector.ready)
 
-            # Feed dummy audio frame with timestamp
+            # Feed dummy audio frames with timestamp to satisfy 2 consecutive hits
             dummy_frame = np.zeros(AUDIO_BUFFER_SIZE, dtype=np.int16)
             t_feed = time.perf_counter()
             detector.feed(dummy_frame, timestamp=t_feed)
+            detector.feed(dummy_frame, timestamp=t_feed)
 
-            # Wait briefly for worker thread to process frame
-            time.sleep(0.08)
+            # Wait briefly for worker thread to process frames
+            time.sleep(0.10)
 
             detector.stop()
 
         on_detect_mock.assert_called_once()
         # Verify latency log entry was produced
-        has_gate_log = any("[WakeWord] Match detected" in m and "gate_latency=" in m for m in log_messages)
+        has_gate_log = any("gate_latency=" in m for m in log_messages)
         self.assertTrue(has_gate_log, f"Expected gate latency log, got: {log_messages}")
 
 

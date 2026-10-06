@@ -1,5 +1,5 @@
 """
-Comprehensive unit tests for ALFRED-MK-VIII Thematic HUD Overhaul.
+Comprehensive unit tests for ALFRED-MK-IX Thematic HUD Overhaul.
 Verifies:
 1. Theme schema definitions, 1:1 token completeness, and emoji-free display names.
 2. Registry uniqueness, id/hex lookups, legacy alias mapping, and safe fallback.
@@ -216,7 +216,7 @@ class TestThematicHUD(unittest.TestCase):
 
     def test_data_vs_presentation_truthfulness(self):
         """Verify that dossier cards and sentry indicators do not alter real factual data."""
-        card = ui.SubjectDossierCard("ALFRED.MK-VIII")
+        card = ui.SubjectDossierCard("ALFRED.MK-IX")
         try:
             # Under default theme
             apply_theme("dossier", notify_retheme=False)

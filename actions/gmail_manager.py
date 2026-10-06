@@ -1,5 +1,5 @@
 """
-Gmail Manager Action for ALFRED Mark-VIII.
+Gmail Manager Action for ALFRED Mark-IX.
 Provides full Gmail connectivity:
   - Reading unread / recent emails with intelligent body extraction
   - Executive summarization of inboxes and threads

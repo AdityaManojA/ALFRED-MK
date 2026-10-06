@@ -234,7 +234,7 @@ def save_jarvis_allow_cpu(enabled: bool) -> None:
 
 def get_wake_word_enabled() -> bool:
     """Whether local wake-word gating is on (assistant sleeps until 'Hey Alfred')."""
-    return load_api_keys().get("wake_word_enabled", False)
+    return load_api_keys().get("wake_word_enabled", True)
 
 
 def save_wake_word_enabled(enabled: bool) -> None:

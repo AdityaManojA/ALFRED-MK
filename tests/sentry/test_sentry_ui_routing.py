@@ -27,7 +27,7 @@ class TestSentryUIRoutingAndDisplay(unittest.TestCase):
     def setUp(self):
         SentryModeManager.reset_instance()
         self.mgr = SentryModeManager.instance()
-        self.hud = HudCanvas("", "ALFRED")
+        self.hud = HudCanvas("ALFRED")
         self.hud._tmr.stop()
 
     def tearDown(self):

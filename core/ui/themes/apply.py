@@ -1,5 +1,5 @@
 """
-Unified apply path and runtime ThemeChrome provider for ALFRED-MK-VIII.
+Unified apply path and runtime ThemeChrome provider for ALFRED-MK-IX.
 Manages live theme application, class C attribute updates, and widget notifications.
 """
 from __future__ import annotations

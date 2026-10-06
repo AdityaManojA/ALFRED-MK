@@ -60,8 +60,8 @@ class TestScreenProcessorWindowContext(unittest.TestCase):
 
     def test_format_window_context(self):
         """Verifies exact string formatting requirements."""
-        block = format_window_context("VS Code", "main.py - Alfred-Mark-VIII", 1)
-        expected = "[WINDOW_CONTEXT] App: VS Code | Title: main.py - Alfred-Mark-VIII | Monitor: 1"
+        block = format_window_context("VS Code", "main.py - Alfred-Mark-IX", 1)
+        expected = "[WINDOW_CONTEXT] App: VS Code | Title: main.py - Alfred-Mark-IX | Monitor: 1"
         self.assertEqual(block, expected)
 
         # Fallback handling
@@ -141,7 +141,7 @@ class TestScreenProcessorWindowContext(unittest.TestCase):
         Verification Requirement:
         Verify [WINDOW_CONTEXT] header contains VS Code and file title.
         """
-        simulated_title = "active_model.py - Alfred-Mark-VIII - Visual Studio Code"
+        simulated_title = "active_model.py - Alfred-Mark-IX - Visual Studio Code"
         with patch("actions.screen_processor._get_windows_window_info", return_value=("VS Code", simulated_title, 12345)):
             try:
                 payload = capture_screen(monitor=1)
@@ -161,7 +161,7 @@ class TestScreenProcessorWindowContext(unittest.TestCase):
             # Verify [WINDOW_CONTEXT] header contains VS Code and file title
             self.assertIn("[WINDOW_CONTEXT]", text_header)
             self.assertIn("App: VS Code", text_header)
-            self.assertIn("Title: active_model.py - Alfred-Mark-VIII - Visual Studio Code", text_header)
+            self.assertIn("Title: active_model.py - Alfred-Mark-IX - Visual Studio Code", text_header)
             print(f"\n[Verification Passed] Output stream payload header:\n{text_header[:120]}...")
 
 

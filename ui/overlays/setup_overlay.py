@@ -535,7 +535,7 @@ class SetupOverlay(QWidget):
                     "https://openrouter.ai/api/v1/auth/key",
                     headers={
                         "Authorization": f"Bearer {key}",
-                        "User-Agent": "ALFRED-Mark-VIII",
+                        "User-Agent": "ALFRED-Mark-IX",
                     }
                 )
                 with urllib.request.urlopen(req, timeout=5.0) as resp:
