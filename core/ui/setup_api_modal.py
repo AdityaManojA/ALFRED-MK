@@ -537,10 +537,22 @@ class SetupApiModal(QDialog):
             self._spot_secret.setText(spot_secret)
 
         # Gmail
-        if self.store.has("gmail.email"):
-            self._gmail_email.setText(self.store.get("gmail.email") or "")
-        if self.store.has("gmail.app_password"):
-            self._gmail_pw.setText(self.store.get("gmail.app_password") or "")
+        gmail_email = (self.store.get("gmail.email") or self.store.get("gmail.user") or "").strip()
+        gmail_pw = (self.store.get("gmail.app_password") or self.store.get("gmail.api_key") or "").strip()
+        if not gmail_email or not gmail_pw:
+            try:
+                from actions.gmail_manager import _CONFIG_PATH
+                if _CONFIG_PATH.exists():
+                    cfg = json.loads(_CONFIG_PATH.read_text(encoding="utf-8"))
+                    gmail_email = gmail_email or (cfg.get("gmail_user") or cfg.get("gmail_email") or cfg.get("email") or "").strip()
+                    gmail_pw = gmail_pw or (cfg.get("gmail_app_password") or cfg.get("gmail_passkey") or cfg.get("gmail_password") or cfg.get("app_password") or "").strip()
+            except Exception:
+                pass
+
+        if gmail_email:
+            self._gmail_email.setText(gmail_email)
+        if gmail_pw:
+            self._gmail_pw.setText(gmail_pw)
         if self.store.has("gmail.credentials_json"):
             self._gmail_json.setPlainText(self.store.get("gmail.credentials_json") or "")
             self._set_gmail_mode("oauth_json")
@@ -629,6 +641,23 @@ class SetupApiModal(QDialog):
                         if fields.get("client_secret"):
                             cfg["spotify_client_secret"] = fields["client_secret"]
                         API_CONFIG_PATH.write_text(json.dumps(cfg, indent=4), encoding="utf-8")
+                except Exception:
+                    pass
+            elif ok and bid == "gmail":
+                try:
+                    from actions.gmail_manager import _CONFIG_PATH
+                    if _CONFIG_PATH.exists():
+                        cfg = json.loads(_CONFIG_PATH.read_text(encoding="utf-8"))
+                        if fields.get("email"):
+                            cfg["gmail_user"] = fields["email"]
+                        if fields.get("app_password"):
+                            cfg["gmail_app_password"] = fields["app_password"].replace(" ", "").strip()
+                        _CONFIG_PATH.write_text(json.dumps(cfg, indent=4), encoding="utf-8")
+                except Exception:
+                    pass
+                try:
+                    if fields.get("email"):
+                        self.store.set("gmail.user", fields["email"])
                 except Exception:
                     pass
             backend = get_backend(bid)

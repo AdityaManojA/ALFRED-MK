@@ -33,28 +33,49 @@ def _load_gmail_creds() -> tuple[str, str]:
     try:
         from core.secrets.store import get_secret_store
         store = get_secret_store()
-        email_addr = (store.get("gmail.user") or "").strip()
-        app_pw = (store.get("gmail.app_password") or "").strip()
-        if not app_pw:
-            app_pw = (store.get("gmail.api_key") or "").strip()
+        email_addr = (store.get("gmail.email") or store.get("gmail.user") or "").strip()
+        app_pw = (store.get("gmail.app_password") or store.get("gmail.passkey") or store.get("gmail.api_key") or "").strip()
     except Exception:
         pass
 
     # Priority 2: Environment variables
     if not email_addr:
-        email_addr = os.environ.get("GMAIL_USER", "").strip()
+        email_addr = (os.environ.get("GMAIL_USER") or os.environ.get("GMAIL_EMAIL") or "").strip()
     if not app_pw:
-        app_pw = os.environ.get("GMAIL_APP_PASSWORD", "").strip()
+        app_pw = (os.environ.get("GMAIL_APP_PASSWORD") or os.environ.get("GMAIL_PASSKEY") or os.environ.get("GMAIL_PASSWORD") or "").strip()
 
-    # Priority 3: Legacy config/api_keys.json
+    # Priority 3: config/api_keys.json
     if not email_addr or not app_pw:
         if _CONFIG_PATH.exists():
             try:
                 data = json.loads(_CONFIG_PATH.read_text(encoding="utf-8"))
-                email_addr = email_addr or data.get("gmail_user", "").strip()
-                app_pw = app_pw or data.get("gmail_app_password", "").strip()
+                email_addr = email_addr or (
+                    data.get("gmail_user")
+                    or data.get("gmail_email")
+                    or data.get("email")
+                    or ""
+                ).strip()
+                app_pw = app_pw or (
+                    data.get("gmail_app_password")
+                    or data.get("gmail_passkey")
+                    or data.get("gmail_password")
+                    or data.get("app_password")
+                    or data.get("passkey")
+                    or ""
+                ).strip()
             except Exception:
                 pass
+
+    # Priority 4: Ambient user email configured in settings
+    if not email_addr and _CONFIG_PATH.exists():
+        try:
+            data = json.loads(_CONFIG_PATH.read_text(encoding="utf-8"))
+            candidate = str(data.get("user_email") or "").strip()
+            if "@" in candidate:
+                email_addr = candidate
+        except Exception:
+            pass
+
     # Google App Passwords often have 4-character grouping spaces ('abcd efgh ijkl mnop')
     clean_pw = app_pw.replace(" ", "").strip()
     return email_addr, clean_pw
@@ -208,18 +229,64 @@ def gmail_manager(
     subject = parameters.get("subject", "")
     body = parameters.get("body", "")
 
+    # 0. CONFIGURATION / CREDENTIAL SAVE MODE
+    if mode in ("configure", "setup", "save_credentials") or any(k in parameters for k in ("app_password", "passkey", "gmail_app_password")):
+        new_email = str(parameters.get("user") or parameters.get("email") or parameters.get("gmail_user") or "").strip()
+        new_pw = str(parameters.get("app_password") or parameters.get("passkey") or parameters.get("gmail_app_password") or "").strip()
+        if new_pw or new_email:
+            clean_new_pw = new_pw.replace(" ", "").strip() if new_pw else ""
+            # Save to SecretStore
+            try:
+                from core.secrets.store import get_secret_store
+                st = get_secret_store()
+                if new_email:
+                    st.set("gmail.email", new_email)
+                    st.set("gmail.user", new_email)
+                if clean_new_pw:
+                    st.set("gmail.app_password", clean_new_pw)
+            except Exception:
+                pass
+            # Save to config/api_keys.json
+            try:
+                if _CONFIG_PATH.exists():
+                    cfg = json.loads(_CONFIG_PATH.read_text(encoding="utf-8"))
+                    if new_email:
+                        cfg["gmail_user"] = new_email
+                    if clean_new_pw:
+                        cfg["gmail_app_password"] = clean_new_pw
+                    _CONFIG_PATH.write_text(json.dumps(cfg, indent=4), encoding="utf-8")
+            except Exception:
+                pass
+            saved_items = []
+            if new_email:
+                saved_items.append(f"email '{new_email}'")
+            if clean_new_pw:
+                saved_items.append("16-character App Password")
+            return f"Gmail configuration updated ({', '.join(saved_items)} saved to configuration), sir."
+
     user, pw = _load_gmail_creds()
     has_creds = bool(user and pw)
 
     if not has_creds:
-        setup_notice = (
-            "Sir, Gmail integration is ready but requires your Google App Password. "
-            "Please add 'gmail_user' and 'gmail_app_password' to your config or settings. "
-            "In the meantime, your email channel is standing by."
-        )
+        if pw and not user:
+            setup_notice = (
+                "Sir, your 16-character Google App Password is recognized, but I require your Gmail address. "
+                "Please configure 'gmail_user' via Tactical Controls -> Setup API Backends or in config/api_keys.json."
+            )
+        elif user and not pw:
+            setup_notice = (
+                f"Sir, your Gmail account ({user}) is configured, but requires your 16-character Google App Password. "
+                "Please add 'gmail_app_password' via Tactical Controls -> Setup API Backends or in config/api_keys.json."
+            )
+        else:
+            setup_notice = (
+                "Sir, Gmail integration is ready but requires your Google account credentials. "
+                "Please add 'gmail_user' and 'gmail_app_password' (your 16-character Google App Password) "
+                "in Tactical Controls -> Setup API Backends or in config/api_keys.json."
+            )
         if player:
             try:
-                player.write_log(f"ALFRED: [Gmail] Setup needed: specify gmail_user & gmail_app_password in config/api_keys.json")
+                player.write_log("ALFRED: [Gmail] Setup needed: specify gmail_user & gmail_app_password in config/api_keys.json")
             except Exception:
                 pass
         return setup_notice
@@ -269,15 +336,24 @@ TOOL = {
     "name": "gmail_manager",
     "description": (
         "Manages Gmail: checks unread emails, summarizes inbox status, searches messages, "
-        "and sends emails. Trigger when user asks about emails, messages in inbox, unread mail, "
-        "or to compose/send an email."
+        "sends emails, or configures credentials (user email & 16-character Google App Password). "
+        "Trigger when user asks about emails, messages in inbox, unread mail, to compose/send an email, "
+        "or to configure/update Gmail credentials."
     ),
     "parameters": {
         "type": "OBJECT",
         "properties": {
             "mode": {
                 "type": "STRING",
-                "description": "Operation mode: 'summarize' (briefing), 'unread' (list recent), 'search' (find query), or 'send' (send email)."
+                "description": "Operation mode: 'summarize' (briefing), 'unread' (list recent), 'search' (find query), 'send' (send email), or 'configure' (save credentials)."
+            },
+            "user": {
+                "type": "STRING",
+                "description": "Gmail account email address (for 'configure' mode)."
+            },
+            "app_password": {
+                "type": "STRING",
+                "description": "16-character Google App Password (for 'configure' mode)."
             },
             "query": {
                 "type": "STRING",
