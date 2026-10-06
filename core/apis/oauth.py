@@ -193,6 +193,24 @@ class GoogleOAuthFlow:
                 self.store.set("google_workspace.access_token", access_token)
                 self.store.set("google_workspace.token_saved_at", str(time.time()))
 
+            # Persist to config/api_keys.json for seamless local storage fallback
+            try:
+                from pathlib import Path
+                cfg_path = Path(__file__).resolve().parent.parent.parent / "config" / "api_keys.json"
+                if cfg_path.exists():
+                    cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+                    if refresh_token:
+                        cfg["google_workspace_refresh_token"] = refresh_token
+                    if access_token:
+                        cfg["google_workspace_access_token"] = access_token
+                    if self.client_id:
+                        cfg["google_workspace_client_id"] = self.client_id
+                    if self.client_secret:
+                        cfg["google_workspace_client_secret"] = self.client_secret
+                    cfg_path.write_text(json.dumps(cfg, indent=4), encoding="utf-8")
+            except Exception as cfg_err:
+                logger.debug(f"Failed to persist Google Workspace tokens to api_keys.json: {cfg_err}")
+
             return True, OAuthError.NONE, "Google Workspace successfully authenticated."
 
         except Exception as exc:

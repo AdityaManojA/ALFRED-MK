@@ -83,6 +83,42 @@ class TestApiSetupUI(unittest.TestCase):
         self.assertEqual(len(saved_signal_emitted), 0)
         self.assertIn("Spotify Client ID must be exactly 32 alphanumeric characters", modal._footer_status.text())
 
+    def test_submit_google_workspace_valid_and_sync(self):
+        import json
+        self.temp_config_file.write_text("{}", encoding="utf-8")
+        modal = SetupApiModal(store=self.store)
+        valid_cid = "12345678901234567890.apps.googleusercontent.com"
+        valid_secret = "GOCSPX-12345678901234"
+        modal._gw_id_input.setText(valid_cid)
+        modal._gw_secret_input.setText(valid_secret)
+
+        saved_signal_emitted = []
+        modal.config_saved.connect(lambda name: saved_signal_emitted.append(name))
+
+        modal._submit_gw()
+        QApplication.processEvents()
+
+        self.assertIn("Google Workspace", saved_signal_emitted)
+        self.assertEqual(self.store.get("google_workspace.client_id"), valid_cid)
+        self.assertEqual(self.store.get("google_workspace.client_secret"), valid_secret)
+
+        # Check sync to config file
+        cfg = json.loads(self.temp_config_file.read_text(encoding="utf-8"))
+        self.assertEqual(cfg.get("google_workspace_client_id"), valid_cid)
+        self.assertEqual(cfg.get("google_workspace_client_secret"), valid_secret)
+
+    def test_google_workspace_fallback_load_from_config(self):
+        import json
+        cfg_data = {
+            "google_workspace_client_id": "99999999999999999999.apps.googleusercontent.com",
+            "google_workspace_client_secret": "GOCSPX-testingsecret"
+        }
+        self.temp_config_file.write_text(json.dumps(cfg_data), encoding="utf-8")
+        # Empty store
+        modal = SetupApiModal(store=self.store)
+        self.assertEqual(modal._gw_cid.text(), "99999999999999999999.apps.googleusercontent.com")
+        self.assertEqual(modal._gw_secret.text(), "GOCSPX-testingsecret")
+
     def test_customize_overlay_has_services_setup_button(self):
         from ui import CustomizeOverlay
         from PyQt6.QtWidgets import QPushButton

@@ -1239,21 +1239,43 @@ class AlfredLive:
             except Exception:
                 pass
 
-        # Play farewell speech immediately
-        loop = asyncio.get_running_loop()
+        # Wait for the original ALFRED voice from the live app session to speak the farewell
+        start_iters = int(VOICE_SLEEP_WAIT_TTS_START_MAX_S / VOICE_SLEEP_WAIT_TTS_POLL_INTERVAL_S)
+        received_live_audio = False
+        for _ in range(start_iters):
+            if getattr(self, "_is_speaking", False) or (
+                hasattr(self, "audio_in_queue") and not self.audio_in_queue.empty()
+            ):
+                received_live_audio = True
+                break
+            await asyncio.sleep(VOICE_SLEEP_WAIT_TTS_POLL_INTERVAL_S)
 
-        def _play_farewell():
-            self.set_speaking(True)
-            try:
-                from core.tts import get_engine
-                engine = get_engine()
-                engine.speak(farewell_phrase)
-            except Exception as exc:
-                print(f"[Shutdown] TTS error: {exc}")
-            finally:
-                self.set_speaking(False)
+        # If live audio is playing in the app, wait for it to finish completely
+        if received_live_audio:
+            finish_iters = int(VOICE_SLEEP_WAIT_TTS_FINISH_MAX_S / VOICE_SLEEP_WAIT_TTS_FINISH_POLL_INTERVAL_S)
+            for _ in range(finish_iters):
+                if not getattr(self, "_is_speaking", False) and (
+                    not hasattr(self, "audio_in_queue") or self.audio_in_queue.empty()
+                ):
+                    break
+                await asyncio.sleep(VOICE_SLEEP_WAIT_TTS_FINISH_POLL_INTERVAL_S)
+            await asyncio.sleep(VOICE_SLEEP_DRAIN_SETTLE_S)
+        else:
+            # Fallback only when Gemini Live session is absent or offline
+            loop = asyncio.get_running_loop()
 
-        await loop.run_in_executor(None, _play_farewell)
+            def _play_fallback_farewell():
+                self.set_speaking(True)
+                try:
+                    from core.tts import get_engine
+                    engine = get_engine()
+                    engine.speak(farewell_phrase)
+                except Exception as exc:
+                    print(f"[Shutdown] TTS fallback error: {exc}")
+                finally:
+                    self.set_speaking(False)
+
+            await loop.run_in_executor(None, _play_fallback_farewell)
 
         # Save session summary if possible
         try:

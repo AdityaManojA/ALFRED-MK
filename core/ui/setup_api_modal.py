@@ -96,6 +96,16 @@ class SetupApiModal(QDialog):
         self._switch_tab(1)
         self._on_submit_current_tab(sync=sync)
 
+    def _submit_gw(self, sync: bool = True) -> None:
+        """Alias for programmatic submission in tests."""
+        self._switch_tab(0)
+        self._on_submit_current_tab(sync=sync)
+
+    def _submit_gmail(self, sync: bool = True) -> None:
+        """Alias for programmatic submission in tests."""
+        self._switch_tab(2)
+        self._on_submit_current_tab(sync=sync)
+
     def _init_ui(self) -> None:
         pal = ThemeChrome.get_active().palette
 
@@ -509,11 +519,25 @@ class SetupApiModal(QDialog):
 
     def _load_current_values(self) -> None:
         """Load masked credentials from SecretStore with fallback to config/api_keys.json."""
-        # Google
-        if self.store.has("google_workspace.client_id"):
-            self._gw_cid.setText(self.store.get("google_workspace.client_id") or "")
-        if self.store.has("google_workspace.client_secret"):
-            self._gw_secret.setText(self.store.get("google_workspace.client_secret") or "")
+        # Google Workspace
+        gw_cid = (self.store.get("google_workspace.client_id") or "").strip()
+        gw_secret = (self.store.get("google_workspace.client_secret") or "").strip()
+        if not gw_cid or not gw_secret:
+            try:
+                from actions.spotify_control import API_CONFIG_PATH
+                if API_CONFIG_PATH.exists():
+                    cfg = json.loads(API_CONFIG_PATH.read_text(encoding="utf-8"))
+                    if not gw_cid:
+                        gw_cid = (cfg.get("google_workspace_client_id") or "").strip()
+                    if not gw_secret:
+                        gw_secret = (cfg.get("google_workspace_client_secret") or "").strip()
+            except Exception:
+                pass
+
+        if gw_cid:
+            self._gw_cid.setText(gw_cid)
+        if gw_secret:
+            self._gw_secret.setText(gw_secret)
 
         # Spotify
         from actions.spotify_control import _is_placeholder, API_CONFIG_PATH
@@ -569,6 +593,21 @@ class SetupApiModal(QDialog):
         self._status_lbl.setStyleSheet(f"color: {ThemeChrome.get_active().palette.cyan};")
 
         def worker():
+            if cid:
+                self.store.set("google_workspace.client_id", cid)
+            if csecret:
+                self.store.set("google_workspace.client_secret", csecret)
+            try:
+                from actions.spotify_control import API_CONFIG_PATH
+                if API_CONFIG_PATH.exists():
+                    cfg = json.loads(API_CONFIG_PATH.read_text(encoding="utf-8"))
+                    if cid:
+                        cfg["google_workspace_client_id"] = cid
+                    if csecret:
+                        cfg["google_workspace_client_secret"] = csecret
+                    API_CONFIG_PATH.write_text(json.dumps(cfg, indent=4), encoding="utf-8")
+            except Exception:
+                pass
             from core.apis.oauth import GoogleOAuthFlow
             flow = GoogleOAuthFlow(cid, csecret, store=self.store)
             ok, err_type, msg = flow.execute()
@@ -631,7 +670,19 @@ class SetupApiModal(QDialog):
 
         def worker():
             ok, msg = save_backend_credentials(bid, fields, store=self.store)
-            if ok and bid == "spotify":
+            if ok and bid == "google_workspace":
+                try:
+                    from actions.spotify_control import API_CONFIG_PATH
+                    if API_CONFIG_PATH.exists():
+                        cfg = json.loads(API_CONFIG_PATH.read_text(encoding="utf-8"))
+                        if fields.get("client_id"):
+                            cfg["google_workspace_client_id"] = fields["client_id"]
+                        if fields.get("client_secret"):
+                            cfg["google_workspace_client_secret"] = fields["client_secret"]
+                        API_CONFIG_PATH.write_text(json.dumps(cfg, indent=4), encoding="utf-8")
+                except Exception:
+                    pass
+            elif ok and bid == "spotify":
                 try:
                     from actions.spotify_control import API_CONFIG_PATH
                     if API_CONFIG_PATH.exists():
