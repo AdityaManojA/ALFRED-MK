@@ -204,9 +204,9 @@
     "semantic_hash": "e8db5f5ff95246fc94c67379d160264e"
   },
   "core/wake_word.py": {
-    "mtime": 1791266862.5318038,
-    "seen": 1791266978.6078753,
-    "ast_hash": "0f5ecacdbbc7f8b182ff3e009b228965",
+    "mtime": 1791267613.8296182,
+    "seen": 1791267879.231633,
+    "ast_hash": "bc000076551b0ba75a91611b29e9f01c",
     "semantic_hash": ""
   },
   "dashboard/__init__.py": {
@@ -270,9 +270,9 @@
     "semantic_hash": ""
   },
   "ui.py": {
-    "mtime": 1791266456.0046377,
-    "seen": 1791266599.4802165,
-    "ast_hash": "8e3766c64d46ed3a86b9622818ebca17",
+    "mtime": 1791267634.8766253,
+    "seen": 1791267879.2319024,
+    "ast_hash": "32a7a898140e3dec09ac5dc37be52dcf",
     "semantic_hash": ""
   },
   ".agents/rules/graphify.md": {
@@ -3894,9 +3894,9 @@
     "semantic_hash": ""
   },
   "core/speaker/enrollment.py": {
-    "mtime": 1791264368.4704087,
-    "seen": 1791264573.5142539,
-    "ast_hash": "02609dcdbcd4ca4d899f23bd2b796233",
+    "mtime": 1791267579.4203532,
+    "seen": 1791267879.2315784,
+    "ast_hash": "bf453a6e7060604a1e6acb356d9a1b97",
     "semantic_hash": ""
   },
   "core/speaker/extractor.py": {
@@ -3924,9 +3924,9 @@
     "semantic_hash": ""
   },
   "core/speaker/verifier.py": {
-    "mtime": 1791230580.7479596,
-    "seen": 1791231100.5237916,
-    "ast_hash": "8300c46e11355e77c935fea5096ec915",
+    "mtime": 1791267512.7778518,
+    "seen": 1791267879.2315881,
+    "ast_hash": "4e0059b28bfd4881baec758dbd2587eb",
     "semantic_hash": ""
   },
   "core/ui/voice_enroll_modal.py": {
@@ -3960,9 +3960,9 @@
     "semantic_hash": ""
   },
   "tests/test_speaker_verification_matrix.py": {
-    "mtime": 1791230616.6382265,
-    "seen": 1791231100.5240557,
-    "ast_hash": "934fc0b92528bc2ac71e18a2ed370394",
+    "mtime": 1791267791.6417356,
+    "seen": 1791267879.2318513,
+    "ast_hash": "666769800e822e776a82419dc18b5174",
     "semantic_hash": ""
   },
   "tests/test_voice_enroll_modal.py": {
@@ -3972,9 +3972,9 @@
     "semantic_hash": ""
   },
   "tools/enroll_voice.py": {
-    "mtime": 1791230312.086872,
-    "seen": 1791231100.5240936,
-    "ast_hash": "3b714b76bdc6d821d9269644f8f65e46",
+    "mtime": 1791267758.0121205,
+    "seen": 1791267879.2318912,
+    "ast_hash": "d42fc9b7d32c84dc7786fb923227ff12",
     "semantic_hash": ""
   },
   "data/wakeword_samples/negative/neg_1791227780_01.wav": {
