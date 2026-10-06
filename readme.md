@@ -346,7 +346,7 @@ Many maximise model hype and under-ship the glue. MARK-IX invests in the glue th
 
 ### 🎙️ Custom Wake-Word Neural Network & Multi-Speaker Training Pipeline
 * **OpenWakeWord ONNX Fine-Tuning**: Complete offline acoustic model training pipeline allowing operators to train custom `alfred.onnx` models specialized to their voice, secondary operators (e.g., friend/family), and ambient room noise.
-* **Hybrid Google Colab & Local IDE Notebook**: Shipped [`train_alfred_colab.ipynb`](train_alfred_colab.ipynb) for cloud GPU/CPU training with automated active-kernel package management, audio augmentation, and transfer learning from baseline weights.
+* **Hybrid Google Colab & Local IDE Notebook**: Shipped [`training/train_alfred_colab.ipynb`](training/train_alfred_colab.ipynb) for cloud GPU/CPU training with automated active-kernel package management, audio augmentation, and transfer learning from baseline weights.
 * **Multi-Speaker Dataset Recorder & Packager (`tools/record_training_samples.py`)**: Interactive CLI tool for recording positive utterances per speaker, negative room noise/speech, auto-zipping datasets (`--zip`), and direct local PyTorch-to-ONNX compilation (`--train-local`).
 * **Neural Speaker Verification Engine (`core/speaker/`)**: Dual-gate biometric speaker verification using pre-trained CAM++ embeddings (`models/speaker_verifier.onnx`). Bounded 5s ring buffer extracts time-aligned wake audio, matching against locally stored, versioned voice profiles (`~/.alfred/voice_profiles/`) with calibrated cosine thresholds. Hands-free wake is restricted strictly to enrolled users, while post-wake dialogue remains open to all conversation participants.
 * **Dual-Phrase Gating & Real-Time Acoustic HUD (`tools/test_wake_model.py`)**: Dual-phrase architecture ("Hey Alfred" >= 0.70, "Alfred" >= 0.85) with `GATE_TTS` acoustic shielding, 1500 ms refractory suppression, and live console VU meter testing.
@@ -795,17 +795,17 @@ py tools/record_training_samples.py --zip
 > [!TIP]
 > When recording positive clips, vary your tone slightly across attempts: normal conversational voice, quiet/whispered, enthusiastic, and from varying distances (1–3 meters from the microphone).
 
-### ☁️ Option A: Train via Google Colab (`train_alfred_colab.ipynb`)
+### ☁️ Option A: Train via Google Colab (`training/train_alfred_colab.ipynb`)
 
 For users who prefer cloud GPU/CPU execution with zero local environment setup:
 
-1. **Launch Notebook**: Open [`train_alfred_colab.ipynb`](train_alfred_colab.ipynb) in [Google Colab](https://colab.research.google.com/).
+1. **Launch Notebook**: Open [`training/train_alfred_colab.ipynb`](training/train_alfred_colab.ipynb) in [Google Colab](https://colab.research.google.com/).
 2. **Execute Step 1 (Environment Setup)**: Automatically configures dependencies (`openwakeword`, `onnx`, `onnxruntime`, `torch`, `torchaudio`, `audiomentations`) into Colab's active runtime.
 3. **Upload Dataset**: Run Step 2 and upload `alfred_training_data.zip`.
 4. **Augmentation & Feature Extraction**: Extracts 96-dimensional acoustic embeddings (16 frames = 1536 features) across your positive and negative clips.
 5. **Transfer Learning Training**: Initializes `AlfredWakeNet` (`1536 → 32 → 32 → 1`) from baseline `alfred.onnx` weights and trains for 25 epochs.
 6. **Download Model**: Automatically triggers the download of the newly compiled `alfred.onnx` directly to your computer.
-7. **Deploy**: Drop `alfred.onnx` into `models/alfred.onnx` (the original model is backed up automatically).
+7. **Deploy**: Drop `alfred.onnx` into `models/alfred.onnx` or `training/alfred.onnx` (the original model is backed up automatically).
 
 ### 💻 Option B: Direct 100% Local Machine Training
 
@@ -820,6 +820,15 @@ py tools/record_training_samples.py --train-local
 * **Transfer Learning Initialization**: Automatically harvests base weights from `models/alfred.onnx` for instant convergence and broad generalization.
 * **Synthetic Calibration**: Automatically synthesizes Gaussian white noise and ambient calibration clips if the negative training pool is under 30 clips.
 * **Direct ONNX Export**: Compiles PyTorch weights into ONNX Opset 14 with dynamic batching matching OpenWakeWord's exact runtime signature (`PartitionedCall:0`).
+
+### 🌐 Option C: Community & External OpenWakeWord Models (e.g., openwakeword.com/library)
+
+ALFRED natively supports loading pre-trained community models from the [OpenWakeWord Model Library](https://openwakeword.com/library) (such as `Hey_Alfred_rung2_half_20260911_155005.onnx`):
+
+1. **Drop Model into `models/` or `training/`**: Place any external ONNX model containing `alfred` in its filename into `models/` or `training/`.
+2. **Zero-Overhead Multi-Head Ensemble**: On startup, ALFRED automatically discovers all active wake-word models. OpenWakeWord executes the shared feature extractor (`melspectrogram.onnx` + `embedding_model.onnx`) once per audio frame, evaluating both the baseline model and community models in parallel with near-zero added latency (<0.2ms).
+3. **Trigger Evaluation**: ALFRED wakes up if *either* model fires with high confidence, providing the broad generalization of large synthetic community datasets alongside the microphone specialization of local training.
+4. **Live Verification**: Run `py tools/test_wake_model.py` to inspect live scores and see which model triggers.
 
 ### 🎧 Step 3: Live Microphone Acoustic Verification & VU Meter
 
@@ -1183,7 +1192,11 @@ ALFRED-MK-IX/
 │   ├── train_wakeword.py       # Baseline ONNX integrity verifier & downloader
 │   ├── benchmark_latency_pipeline.py # End-to-end pipeline benchmark
 │   └── profile_alfred_ui.py    # UI frame timing & rendering profiler
-├── train_alfred_colab.ipynb    # Google Colab / Local IDE neural network training notebook
+├── training/                   # Wake-word neural training, notebooks, & community models
+│   ├── train_alfred_colab.ipynb # Google Colab / Local IDE training notebook
+│   ├── content.md              # Personalized Hey Siri research reference
+│   ├── alfred.onnx             # Baseline training model
+│   └── Hey_Alfred_*.onnx       # OpenWakeWord community trained models
 ├── plugins/
 │   ├── _template.py
 │   ├── calendar_sync.py

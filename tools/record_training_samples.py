@@ -125,7 +125,7 @@ def package_zip() -> None:
     print(f"  • Positive clips: {len(pos_files)}")
     print(f"  • Negative clips: {len(neg_files)}")
     print(f"  • Size: {ZIP_PATH.stat().st_size / 1024:.1f} KB")
-    print("\n🚀 Ready to upload to Google Colab (`train_alfred_colab.ipynb`)!")
+    print("\n🚀 Ready to upload to Google Colab (`training/train_alfred_colab.ipynb`)!")
 
 
 def train_local() -> None:
@@ -172,8 +172,14 @@ def train_local() -> None:
     # Always prefer the backup so a corrupted alfred.onnx can't poison features.
     from core.wake_word import _ensure_openwakeword, _MODEL_INIT_LOCK
     backup_path = MODELS_DIR / "alfred.onnx.original"
-    feature_model_path = backup_path if backup_path.exists() else MODELS_DIR / "alfred.onnx"
-    print(f"  \u2022 Feature extractor: {feature_model_path.name}")
+    training_path = ROOT / "training" / "alfred.onnx"
+    if backup_path.exists():
+        feature_model_path = backup_path
+    elif training_path.exists():
+        feature_model_path = training_path
+    else:
+        feature_model_path = MODELS_DIR / "alfred.onnx"
+    print(f"  • Feature extractor: {feature_model_path.name}")
     with _MODEL_INIT_LOCK:
         _ensure_openwakeword()
         from openwakeword.model import Model
@@ -363,6 +369,13 @@ def train_local() -> None:
         },
         opset_version=14, dynamo=False,
     )
+    training_onnx = ROOT / "training" / "alfred.onnx"
+    if training_onnx.parent.exists():
+        try:
+            import shutil
+            shutil.copyfile(output_onnx, training_onnx)
+        except Exception:
+            pass
     root_onnx = ROOT / "alfred.onnx"
     if root_onnx.exists():
         try:

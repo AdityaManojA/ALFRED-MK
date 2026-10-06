@@ -27,22 +27,33 @@ THRESHOLD = 0.038  # Standard ALFRED wake threshold
 
 
 def main():
-    if not MODEL_PATH.exists():
-        print(f"❌ Error: Model not found at {MODEL_PATH}")
-        sys.exit(1)
+    import argparse
+    parser = argparse.ArgumentParser(description="Live Microphone Test for ALFRED Wake-Word Model (Universal / General Usage)")
+    parser.add_argument("--model", type=str, default="", help="Path to specific ONNX model, or leave empty for full ensemble")
+    args = parser.parse_args()
+
+    from core.wake_word import get_wake_model_paths, _is_alfred_wake_phrase, _get_whisper_verifier
+
+    if args.model:
+        chosen = Path(args.model)
+        if not chosen.exists():
+            print(f"❌ Error: Model not found at {chosen}")
+            sys.exit(1)
+        model_paths = [str(chosen)]
+    else:
+        model_paths = get_wake_model_paths()
 
     print("=" * 60)
     print("🎙️ ALFRED Unified Wake-Word Live Microphone Test")
     print("   Open to all voices — no speaker restrictions")
     print("=" * 60)
-    print(f"• Model:     {MODEL_PATH}")
+    print(f"• Models:    {', '.join(Path(p).name for p in model_paths)}")
     print(f"• Threshold: {THRESHOLD:.3f}")
     print("\n🎧 Initializing OpenWakeWord acoustic engine...")
 
     from openwakeword.model import Model
-    from core.wake_word import _is_alfred_wake_phrase, _get_whisper_verifier
 
-    model = Model(wakeword_models=[str(MODEL_PATH)], inference_framework="onnx")
+    model = Model(wakeword_models=model_paths, inference_framework="onnx")
     whisper_model = _get_whisper_verifier()
 
     print("✅ Ready! Listening live... Speak 'Hey Alfred' or 'Alfred'.")
@@ -69,12 +80,14 @@ def main():
 
                     # 1. Acoustic Model Inference
                     preds = model.predict(arr)
-                    score = max(float(v) for v in preds.values()) if preds else 0.0
+                    matches = {str(k): float(v) for k, v in preds.items() if "alfred" in str(k).lower()}
+                    top_name = max(matches, key=matches.get) if matches else (list(preds.keys())[0] if preds else "alfred")
+                    score = matches[top_name] if matches else (max(float(v) for v in preds.values()) if preds else 0.0)
                     rms = float(np.sqrt(np.mean(arr.astype(np.float32) ** 2)))
 
                     # Fast Acoustic Trigger
                     if score >= THRESHOLD:
-                        print(f"\n🎯 [WAKE DETECTED] Acoustic Trigger! Score={score:.3f} (Threshold={THRESHOLD:.3f})\n")
+                        print(f"\n🎯 [WAKE DETECTED] Acoustic Trigger via [{top_name}]! Score={score:.3f} (Threshold={THRESHOLD:.3f})\n")
                         time.sleep(1.2)
                         in_burst = False
                         burst_frames.clear()

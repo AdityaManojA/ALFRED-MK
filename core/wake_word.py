@@ -148,13 +148,49 @@ def _ensure_openwakeword():
         return None
 
 
-def _make_model():
-    """Create a fresh, independent OpenWakeWord Model instance."""
+def get_wake_model_paths() -> list[str]:
+    """Discover all active Alfred wake models (baseline + community/custom models)."""
+    model_paths: list[str] = []
+    seen_names: set[str] = set()
+
+    # 1. Primary baseline / fine-tuned model
+    if WAKE_MODEL_PATH.is_file():
+        model_paths.append(str(WAKE_MODEL_PATH))
+        seen_names.add(WAKE_MODEL_PATH.name.lower())
+
+    # 2. Check for additional custom / community models in models/ and training/
+    search_dirs = [WAKE_MODEL_PATH.parent, WAKE_MODEL_PATH.parent.parent / "training"]
+    for sdir in search_dirs:
+        if not sdir.is_dir():
+            continue
+        for p in sorted(sdir.glob("*.onnx")):
+            low = p.name.lower()
+            if (
+                low in seen_names
+                or "speaker" in low
+                or "melspectrogram" in low
+                or "embedding" in low
+                or "quant" in low
+                or "original" in low
+                or "download" in low
+                or "tmp" in low
+            ):
+                continue
+            if "alfred" in low:
+                model_paths.append(str(p))
+                seen_names.add(low)
+
+    return model_paths or [str(WAKE_MODEL_PATH)]
+
+
+def _make_model(custom_model_paths: list[str] | None = None):
+    """Create a fresh, independent OpenWakeWord Model instance with ensemble heads."""
     with _MODEL_INIT_LOCK:
         _ensure_openwakeword()
         from openwakeword.model import Model
+        models = custom_model_paths or get_wake_model_paths()
         return Model(
-            wakeword_models=[str(WAKEWORD_MODEL_PATH)],
+            wakeword_models=models,
             inference_framework="onnx",
         )
 
@@ -163,11 +199,22 @@ get_shared_model = _make_model
 
 
 def _prediction_score(scores: object) -> float:
-    """Return the Alfred score while tolerating backend-specific key suffixes."""
+    """Return the Alfred score while tolerating backend-specific key suffixes and ensembles."""
     if not isinstance(scores, dict) or not scores:
         return 0.0
-    matches = [float(v) for k, v in scores.items() if WAKE_MODEL in str(k).lower()]
+    matches = [float(v) for k, v in scores.items() if "alfred" in str(k).lower()]
     return max(matches) if matches else max(float(v) for v in scores.values())
+
+
+def _top_prediction(scores: object) -> tuple[str, float]:
+    """Return the top matching model name and score among Alfred wake models."""
+    if not isinstance(scores, dict) or not scores:
+        return "alfred", 0.0
+    matches = {str(k): float(v) for k, v in scores.items() if "alfred" in str(k).lower()}
+    if not matches:
+        return "alfred", max(float(v) for v in scores.values()) if scores else 0.0
+    top_name = max(matches, key=matches.get)
+    return top_name, matches[top_name]
 
 
 def is_installed() -> bool:
@@ -269,8 +316,14 @@ def ensure_models_downloaded(logger: Callable[[str], None] = print,
 
         # 2. Classifier model check (models/alfred.onnx)
         root_alfred = WAKE_MODEL_PATH.parent.parent / "alfred.onnx"
+        training_alfred = WAKE_MODEL_PATH.parent.parent / "training" / "alfred.onnx"
         if not WAKE_MODEL_PATH.is_file() or WAKE_MODEL_PATH.stat().st_size < 1000:
-            if root_alfred.is_file() and root_alfred.stat().st_size >= 1000:
+            if training_alfred.is_file() and training_alfred.stat().st_size >= 1000:
+                WAKE_MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
+                import shutil
+                shutil.copy2(training_alfred, WAKE_MODEL_PATH)
+                logger("Wake word: synchronized alfred.onnx from training directory.")
+            elif root_alfred.is_file() and root_alfred.stat().st_size >= 1000:
                 WAKE_MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
                 import shutil
                 shutil.copy2(root_alfred, WAKE_MODEL_PATH)
@@ -296,11 +349,12 @@ def ensure_models_downloaded(logger: Callable[[str], None] = print,
             _download_file(SPEAKER_MODEL_URL, temp_path)
             temp_path.replace(SPEAKER_MODEL_PATH)
 
-        # Keep root alfred.onnx in sync if missing
-        if WAKE_MODEL_PATH.is_file() and not root_alfred.is_file():
+        # Keep training alfred.onnx in sync if missing
+        if WAKE_MODEL_PATH.is_file() and not training_alfred.is_file():
             try:
+                training_alfred.parent.mkdir(parents=True, exist_ok=True)
                 import shutil
-                shutil.copy2(WAKE_MODEL_PATH, root_alfred)
+                shutil.copy2(WAKE_MODEL_PATH, training_alfred)
             except Exception:
                 pass
 
@@ -461,7 +515,8 @@ class WakeWordDetector:
             target=_prewarm_whisper_background, daemon=True, name="WakeWordPrewarm"
         ).start()
 
-        self._logger(f"Wake word: listening for '{WAKE_PHRASE}'.")
+        active_stems = [Path(p).stem for p in get_wake_model_paths()]
+        self._logger(f"Wake word: listening for '{WAKE_PHRASE}' (models: {', '.join(active_stems)}).")
         return True
 
     def stop(self) -> None:
@@ -785,8 +840,9 @@ class WakeWordDetector:
                         rms_window.clear()
 
                     if score >= 0.5:
+                        top_model, _ = _top_prediction(scores)
                         self._logger(
-                            f"[WakeWord] candidate score={score:.3f} "
+                            f"[WakeWord] candidate score={score:.3f} [{top_model}] "
                             f"(threshold={self._threshold:.3f})"
                         )
 
@@ -802,8 +858,9 @@ class WakeWordDetector:
 
                     if consecutive_hits >= 2:
                         gate_latency_ms = (time.monotonic() - feed_ts) * 1000.0
+                        top_model, _ = _top_prediction(scores)
                         self._logger(
-                            f"[WakeWord] Acoustic candidate detected (score={score:.2f}) "
+                            f"[WakeWord] Acoustic candidate detected via [{top_model}] (score={score:.2f}) "
                             f"gate_latency={gate_latency_ms:.1f}ms"
                         )
                         consecutive_hits = 0
