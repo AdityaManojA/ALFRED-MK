@@ -299,15 +299,7 @@ def ensure_models_downloaded(logger: Callable[[str], None] = print,
             logger("Wake word: downloading feature extractor models…")
             _tell("Wake word: downloading feature extractor models…")
 
-            # Try built-in downloader if present
-            try:
-                import openwakeword.utils as _u
-                if hasattr(_u, "download_models"):
-                    _u.download_models([])
-            except Exception as e:
-                logger(f"Wake word: built-in fetch note: {e}")
-
-            # Fallback direct download if models are still missing
+            # Fetch only the exact feature models required by Alfred (melspectrogram + embedding)
             for filename, url in FEATURE_MODEL_URLS.items():
                 target = models_dir / filename
                 if not target.is_file() or target.stat().st_size < 1000:

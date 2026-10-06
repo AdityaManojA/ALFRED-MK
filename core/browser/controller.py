@@ -70,6 +70,34 @@ class BrowserController:
             return MSG_NO_BROWSER_FRONTMOST
         return MSG_TAB_CLOSE_FAILED
 
+    def close_tab_matching(self, query: str, browser: Optional[str] = None) -> str:
+        """Close a tab matching a search query/title/URL in a browser."""
+        if not query or not query.strip():
+            return self.close_active_tab()
+
+        clean_q = query.strip()
+        target_name = (
+            browser.title() if browser else (self.get_frontmost_browser() or "browser")
+        )
+        ok = self._driver.close_tab_matching(clean_q, browser=browser)
+        if ok:
+            _LOGGER.info(
+                "[BrowserController] Closed tab matching '%s' in %s.",
+                clean_q,
+                target_name,
+            )
+            try:
+                from core.registry import get
+
+                player = get("main_player") or get("hud_controller") or get("ui")
+                if player and hasattr(player, "show_toast"):
+                    player.show_toast(f"[Browser] Closed tab: {clean_q}")
+            except Exception:
+                pass
+            return f"Closed the {clean_q} tab in {target_name}, sir."
+
+        return f"No open tab matching '{clean_q}' was found in {target_name}, sir."
+
     def new_tab(self, url: Optional[str] = None) -> str:
         """Open a new tab in the active browser or default browser."""
         ok = self._driver.new_tab(url=url)
@@ -113,6 +141,11 @@ def get_browser_controller() -> BrowserController:
 def close_active_tab() -> str:
     """Module-level shortcut to close the active tab."""
     return get_browser_controller().close_active_tab()
+
+
+def close_tab_matching(query: str, browser: Optional[str] = None) -> str:
+    """Module-level shortcut to close a matching tab."""
+    return get_browser_controller().close_tab_matching(query, browser=browser)
 
 
 def new_tab(url: Optional[str] = None) -> str:

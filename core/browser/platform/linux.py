@@ -8,7 +8,12 @@ import os
 import subprocess
 from typing import Optional
 
-from core.browser.platform.base import BaseBrowserPlatformDriver, DEFAULT_TIMEOUT_S
+from core.browser.platform.base import (
+    BaseBrowserPlatformDriver,
+    DEFAULT_TIMEOUT_S,
+    normalize_tab_query,
+    tab_matches_query,
+)
 
 # ── Named Constants ──────────────────────────────────────────────────────────
 KNOWN_LINUX_BROWSERS: dict[str, str] = {
@@ -78,6 +83,36 @@ class LinuxBrowserDriver(BaseBrowserPlatformDriver):
             _LOGGER.debug("[LinuxBrowserDriver] Frontmost window is not a recognized browser.")
             return False
         return self._send_xdotool_key("ctrl+w")
+
+    def close_tab_matching(self, query: str, browser: Optional[str] = None) -> bool:
+        """Find and close a tab matching query in specified or frontmost browser on Linux."""
+        candidates = normalize_tab_query(query)
+        if not candidates:
+            return False
+
+        try:
+            res = subprocess.run(
+                ["wmctrl", "-l"],
+                capture_output=True,
+                text=True,
+                timeout=DEFAULT_TIMEOUT_S,
+            )
+            if res.returncode == 0:
+                for line in res.stdout.splitlines():
+                    parts = line.split(None, 3)
+                    if len(parts) >= 4:
+                        wid_hex, _, _, title = parts
+                        if tab_matches_query(title, candidates):
+                            subprocess.run(
+                                ["wmctrl", "-i", "-a", wid_hex],
+                                check=False,
+                                timeout=DEFAULT_TIMEOUT_S,
+                            )
+                            return self._send_xdotool_key("ctrl+w")
+        except Exception as exc:
+            _LOGGER.debug("[LinuxBrowserDriver] wmctrl tab match failed: %s", exc)
+
+        return False
 
     def new_tab(self, url: Optional[str] = None) -> bool:
         if url:

@@ -34,6 +34,10 @@ class MockDriver(BaseBrowserPlatformDriver):
         self.calls.append("close_active_tab")
         return self._succeed
 
+    def close_tab_matching(self, query: str, browser=None) -> bool:
+        self.calls.append(("close_tab_matching", query, browser))
+        return self._succeed
+
     def new_tab(self, url=None) -> bool:
         self.calls.append(("new_tab", url))
         return self._succeed
@@ -84,6 +88,20 @@ class TestBrowserController(unittest.TestCase):
         self.assertEqual(res, MSG_WINDOW_CLOSED)
         self.assertIn("close_window", driver.calls)
 
+    def test_close_tab_matching_success(self):
+        driver = MockDriver(frontmost="Brave", succeed=True)
+        controller = BrowserController(driver=driver)
+        res = controller.close_tab_matching("youtube.com", browser="brave")
+        self.assertIn("Closed the youtube.com tab in Brave", res)
+        self.assertIn(("close_tab_matching", "youtube.com", "brave"), driver.calls)
+
+    def test_close_tab_matching_not_found(self):
+        driver = MockDriver(frontmost="Brave", succeed=False)
+        controller = BrowserController(driver=driver)
+        res = controller.close_tab_matching("youtube.com", browser="brave")
+        self.assertIn("No open tab matching 'youtube.com' was found in Brave", res)
+        self.assertNotIn("close_active_tab", driver.calls)
+
 
 class TestPlatformDrivers(unittest.TestCase):
     @patch("subprocess.run")
@@ -133,10 +151,29 @@ class TestPlatformDrivers(unittest.TestCase):
         self.assertIn("brave.exe", driver.KNOWN_WIN_BROWSERS)
         self.assertIn("firefox.exe", driver.KNOWN_WIN_BROWSERS)
 
+    def test_query_normalization_and_matching(self):
+        from core.browser.platform.base import normalize_tab_query, tab_matches_query
+
+        candidates = normalize_tab_query("https://www.youtube.com/watch?v=123")
+        self.assertIn("youtube", candidates)
+        self.assertTrue(tab_matches_query("Rick Astley - YouTube - Brave", candidates))
+        self.assertFalse(tab_matches_query("GitHub - Alfred-Mark-VIII", candidates))
+
+        candidates_domain = normalize_tab_query("youtube.com")
+        self.assertIn("youtube", candidates_domain)
+        self.assertTrue(tab_matches_query("YouTube Music", candidates_domain))
+        self.assertFalse(tab_matches_query("Tavily API Platform", candidates_domain))
+
 
 class TestIntentRoutingAndAliases(unittest.TestCase):
     def test_close_tab_aliases(self):
-        for phrase in ["close tab", "close this tab", "shut this tab", "kill tab", "close active tab"]:
+        for phrase in [
+            "close tab",
+            "close this tab",
+            "shut this tab",
+            "kill tab",
+            "close active tab",
+        ]:
             match = _detect_action(phrase)
             self.assertEqual(
                 match.get("action"),
@@ -154,11 +191,34 @@ class TestIntentRoutingAndAliases(unittest.TestCase):
             )
 
     @patch("core.browser.controller.close_active_tab")
-    def test_browser_control_action_close_tab_no_playwright_spawn(self, mock_close_tab):
+    def test_browser_control_action_close_tab_no_playwright_spawn(
+        self, mock_close_tab
+    ):
         mock_close_tab.return_value = MSG_TAB_CLOSED
         res = browser_control(parameters={"action": "close_tab"})
         self.assertEqual(res, MSG_TAB_CLOSED)
         mock_close_tab.assert_called_once()
+
+    @patch("core.browser.controller.close_tab_matching")
+    @patch("core.browser.controller.close_active_tab")
+    def test_browser_control_action_close_tab_with_query_delegates_to_matching(
+        self, mock_close_active, mock_close_matching
+    ):
+        mock_close_matching.return_value = (
+            "Closed the youtube.com tab in Brave, sir."
+        )
+        res = browser_control(
+            parameters={
+                "action": "close_tab",
+                "query": "youtube.com",
+                "browser": "brave",
+            }
+        )
+        self.assertEqual(res, "Closed the youtube.com tab in Brave, sir.")
+        mock_close_matching.assert_called_once_with(
+            query="youtube.com", browser="brave"
+        )
+        mock_close_active.assert_not_called()
 
     def test_intent_router_close_this_tab_fast_path(self):
         from core.intents.router import IntentRouter

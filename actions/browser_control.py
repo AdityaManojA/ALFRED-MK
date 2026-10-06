@@ -985,12 +985,23 @@ def browser_control(
 
         from core.browser.controller import (
             close_active_tab,
+            close_tab_matching,
             switch_tab,
             reopen_closed_tab,
             close_window,
         )
         if action == "close_tab":
-            result = close_active_tab()
+            query = (
+                params.get("query")
+                or params.get("target")
+                or params.get("title")
+                or params.get("url")
+                or ""
+            )
+            if query.strip():
+                result = close_tab_matching(query=query.strip(), browser=browser)
+            else:
+                result = close_active_tab()
         elif action == "switch_tab":
             result = switch_tab(direction=params.get("direction", "next"))
         elif action == "reopen_closed_tab":

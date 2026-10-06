@@ -149,6 +149,11 @@ VOICE_SLEEP_WAIT_TTS_FINISH_MAX_S: float = 8.0
 VOICE_SLEEP_WAIT_TTS_FINISH_POLL_INTERVAL_S: float = 0.1
 VOICE_SLEEP_DRAIN_SETTLE_S: float = 0.5
 
+# Audio streaming buffer & jitter tolerance constants
+PREBUFFER_CUSHION_BYTES: int = 7200    # ~150 ms at 24 kHz / 16-bit mono for underrun immunity
+PREBUFFER_MAX_WAIT_S: float = 0.12     # Maximum pre-buffer wait window (120 ms)
+AUDIO_OUTPUT_LATENCY: float = 0.08     # 80 ms PortAudio ring buffer cushion against GIL jitter
+
 _SLEEP_DIRECTIVE_PATTERN = re.compile(
     r"^(?:alfred\s*[,.]?\s*)?"
     r"(?:please\s+)?"
@@ -1219,27 +1224,6 @@ class AlfredLive:
             except Exception:
                 pass
 
-        # Save session summary if possible
-        try:
-            await self._save_session_summary()
-        except Exception as e:
-            print(f"[Shutdown] Error saving session summary: {e}")
-
-        # Disconnect cloud session to avoid conflicting audio
-        if self.session:
-            try:
-                self.session = None
-            except Exception:
-                pass
-
-        # Drain any residual cloud audio playback
-        if hasattr(self, "audio_in_queue") and self.audio_in_queue:
-            while not self.audio_in_queue.empty():
-                try:
-                    self.audio_in_queue.get_nowait()
-                except Exception:
-                    break
-
         user_name = resolve_shutdown_username()
         farewell_phrase = f"I am alfred your loyal butler , Hoping to be of service again {user_name} , shutting down."
 
@@ -1255,6 +1239,7 @@ class AlfredLive:
             except Exception:
                 pass
 
+        # Play farewell speech immediately
         loop = asyncio.get_running_loop()
 
         def _play_farewell():
@@ -1269,6 +1254,21 @@ class AlfredLive:
                 self.set_speaking(False)
 
         await loop.run_in_executor(None, _play_farewell)
+
+        # Save session summary if possible
+        try:
+            await self._save_session_summary()
+        except Exception as e:
+            print(f"[Shutdown] Error saving session summary: {e}")
+
+        # Drain any residual live audio playback
+        if hasattr(self, "audio_in_queue") and self.audio_in_queue:
+            while not self.audio_in_queue.empty():
+                try:
+                    self.audio_in_queue.get_nowait()
+                except Exception:
+                    break
+
         await asyncio.sleep(0.3)
         import os as _os
         _os._exit(0)
@@ -2620,7 +2620,11 @@ class AlfredLive:
 
         try:
             while True:
+                if getattr(self, "_is_shutting_down", False) or self.session is None:
+                    return
                 async for response in self.session.receive():
+                    if getattr(self, "_is_shutting_down", False):
+                        return
 
                     # â”€â”€ Session resumption â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                     # The server sends this periodically. `resumable` goes false
@@ -2824,6 +2828,8 @@ class AlfredLive:
                         )
                         await self._flush_pending_vision()
         except Exception as e:
+            if getattr(self, "_is_shutting_down", False):
+                return
             _tlog("ALFRED", "error", f"Recv: {e}", self._dashboard)
             traceback.print_exc()
             raise
@@ -2843,7 +2849,7 @@ class AlfredLive:
                 dtype="int16",
                 blocksize=0,
                 device=dev,
-                latency="low",
+                latency=AUDIO_OUTPUT_LATENCY,
             )
             st.start()
             return st
@@ -2907,8 +2913,8 @@ class AlfredLive:
                 # Pre-buffering jitter cushion for fresh utterance to prevent buffer underrun crackle
                 if not self._is_speaking and not self._interrupted:
                     t_pre = time.monotonic()
-                    # Buffer up to ~100 ms (4800 bytes) or max 80 ms wait before starting speech
-                    while len(batch) < 4800 and (time.monotonic() - t_pre) < 0.08:
+                    # Buffer up to ~150 ms (7200 bytes) or max 120 ms wait before starting speech
+                    while len(batch) < PREBUFFER_CUSHION_BYTES and (time.monotonic() - t_pre) < PREBUFFER_MAX_WAIT_S:
                         if self._interrupted:
                             break
                         if self._turn_done_event and self._turn_done_event.is_set():
@@ -3957,6 +3963,8 @@ class AlfredLive:
             except SystemExit:
                 raise
             except BaseException as e:
+                if getattr(self, "_is_shutting_down", False):
+                    break
                 # Catches both Exception and BaseExceptionGroup (Python 3.11+
                 # TaskGroup raises BaseExceptionGroup when tasks are cancelled
                 # externally, which `except Exception` would miss, letting the

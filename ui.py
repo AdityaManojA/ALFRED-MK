@@ -41,7 +41,7 @@ from core.sentry.mode_manager import get_sentry_mode_manager, SentrySnapshot
 from core.sentry.focus.card import FloatingFocusCard
 from core.logger import install_timestamped_logging
 install_timestamped_logging()
-from core.gui_thread import assert_gui_thread, is_gui_thread
+from core.gui_thread import assert_gui_thread, is_gui_thread, run_on_gui_thread
 from PyQt6.QtWidgets import (
     QMenu,
     QApplication, QComboBox, QFileDialog, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit,
@@ -1688,6 +1688,27 @@ class HudCanvas(QWidget):
         self._globe_mer_unit_cache: dict[tuple[int, int], list] = {}
         self._globe_orb_unit_cache: dict[int, list] = {}
         self._emblem_alpha_cache: dict[tuple, QPixmap] = {}
+        self._emblem_path: str | None = None
+        self._cached_skin_theme_id: str | None = None
+        self._cached_skin = None
+        self._waveform_ticks_key: tuple | None = None
+        self._waveform_ticks: list[QLineF] = []
+        try:
+            cfg_dir = Path(__file__).resolve().parent / "config"
+            for cand in (cfg_dir / "batman_logo.png", cfg_dir / "alfred_bg.png"):
+                if cand.exists():
+                    self._emblem_path = str(cand)
+                    break
+        except Exception:
+            pass
+        try:
+            from core.ui.themes import ThemeChrome
+            from core.hud.visuals.central import get_central_skin
+            active_id = ThemeChrome.get_active().id
+            self._cached_skin = get_central_skin(active_id)
+            self._cached_skin_theme_id = active_id
+        except Exception:
+            pass
         self._tmr = QTimer(self)
         self._tmr.timeout.connect(self._step)
         self._tmr.start(int(FRAME_TIME_BUDGET_MS))
@@ -2479,9 +2500,28 @@ class HudCanvas(QWidget):
         main, acc = self._core_colours()
         bg = qcol(C.BG)
 
-        from core.hud.visuals.central import get_central_skin
-        from core.ui.themes import ThemeChrome
-        skin = get_central_skin(ThemeChrome.get_active().id)
+        active_id = "dossier"
+        try:
+            from core.ui.themes import ThemeChrome
+            active_id = ThemeChrome.get_active().id
+        except Exception:
+            pass
+
+        if getattr(self, "_cached_skin_theme_id", None) != active_id or getattr(self, "_cached_skin", None) is None:
+            try:
+                from core.hud.visuals.central import get_central_skin
+                self._cached_skin = get_central_skin(active_id)
+            except Exception:
+                self._cached_skin = None
+            self._cached_skin_theme_id = active_id
+        skin = self._cached_skin
+        if skin is None:
+            class _FallbackSkin:
+                ring_count = 4
+                meridian_count = 6
+                orbit_tilt_deg = 25.0
+                orbit_nodes = ("01", "02", "03", "04")
+            skin = _FallbackSkin()
 
         t = self._core_phase
         yaw = (t * 0.30) % (math.pi * 2)
@@ -2664,9 +2704,12 @@ class HudCanvas(QWidget):
         # Guideline with calibration tick marks
         p.setPen(self._get_pen(self._blend(main, 0.22), 1.0))
         p.drawLine(QLineF(vx0, cy, vx1, cy))
-        ticks = [QLineF(vx0 + step, cy - 3, vx0 + step, cy + 3) for step in range(0, int(vw), 20)]
+        tick_key = (round(vx0, 1), round(cy, 1), int(vw))
+        if getattr(self, "_waveform_ticks_key", None) != tick_key:
+            self._waveform_ticks = [QLineF(vx0 + step, cy - 3, vx0 + step, cy + 3) for step in range(0, int(vw), 20)]
+            self._waveform_ticks_key = tick_key
         p.setPen(self._get_pen(self._blend(main, 0.35), 1.0))
-        p.drawLines(ticks)
+        p.drawLines(self._waveform_ticks)
 
         # Telemetry Labels above the baseline
         f_tele = mono_font(7, QFont.Weight.Bold)
@@ -2947,46 +2990,43 @@ class HudCanvas(QWidget):
 
     def _draw_custom_emblem(self, p: QPainter, cx: float, cy: float, max_w: float, max_h: float) -> bool:
         """Always draw the authentic Wayne Crest watermark behind the Batcomputer UI."""
-        cfg_dir = Path(__file__).resolve().parent / "config"
-        # The background watermark is always the Wayne Crest (batman_logo.png / alfred_bg.png)
-        candidates = [cfg_dir / "batman_logo.png", cfg_dir / "alfred_bg.png"]
+        fp_str = getattr(self, "_emblem_path", None)
+        if fp_str is None:
+            try:
+                cfg_dir = Path(__file__).resolve().parent / "config"
+                for cand in (cfg_dir / "batman_logo.png", cfg_dir / "alfred_bg.png"):
+                    if cand.exists():
+                        fp_str = str(cand)
+                        self._emblem_path = fp_str
+                        break
+            except Exception:
+                pass
+        if not fp_str:
+            return False
 
-        for fp in candidates:
-            if fp.exists():
-                try:
-                    key = (str(fp), max(1, int(max_w)), max(1, int(max_h)))
-                    if self._emblem_cache_key != key or self._emblem_cache is None:
-                        source = QPixmap(str(fp))
-                        self._emblem_cache = source.scaled(
-                            key[1], key[2],
-                            Qt.AspectRatioMode.KeepAspectRatio,
-                            Qt.TransformationMode.SmoothTransformation,
-                        )
-                        self._emblem_cache_key = key
-                    pm = self._emblem_cache
-                    if not pm.isNull():
-                        nw = pm.width()
-                        nh = pm.height()
-                        if nw > 0 and nh > 0:
-                            op = round(0.35 + 0.10 * math.sin(self._tick * 0.05), 2)
-                            if not hasattr(self, "_emblem_alpha_cache"):
-                                self._emblem_alpha_cache = {}
-                            cached_pm = self._emblem_alpha_cache.get((key, op))
-                            if cached_pm is None:
-                                cached_pm = QPixmap(nw, nh)
-                                cached_pm.fill(Qt.GlobalColor.transparent)
-                                op_p = QPainter(cached_pm)
-                                op_p.setOpacity(op)
-                                op_p.drawPixmap(0, 0, pm)
-                                op_p.end()
-                                if len(self._emblem_alpha_cache) > 24:
-                                    self._emblem_alpha_cache.clear()
-                                self._emblem_alpha_cache[(key, op)] = cached_pm
-                            p.drawPixmap(int(cx - nw / 2), int(cy - nh / 2), cached_pm)
-                            return True
-                except Exception:
-                    pass
-                break
+        try:
+            key = (fp_str, max(1, int(max_w)), max(1, int(max_h)))
+            if self._emblem_cache_key != key or self._emblem_cache is None:
+                source = QPixmap(fp_str)
+                self._emblem_cache = source.scaled(
+                    key[1], key[2],
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+                self._emblem_cache_key = key
+            pm = self._emblem_cache
+            if pm is not None and not pm.isNull():
+                nw = pm.width()
+                nh = pm.height()
+                if nw > 0 and nh > 0:
+                    op = round(0.35 + 0.10 * math.sin(self._tick * 0.05), 2)
+                    p.save()
+                    p.setOpacity(op)
+                    p.drawPixmap(int(cx - nw / 2), int(cy - nh / 2), pm)
+                    p.restore()
+                    return True
+        except Exception:
+            pass
         return False
 
 
@@ -3187,8 +3227,8 @@ class HudCanvas(QWidget):
                     sz = pt['size'] * _sz_boost
                     p.drawEllipse(QPointF(px, py), sz, sz)
 
-                # Micro links (batched drawLines, skipped in SLEEPING state)
-                if not _is_sleeping:
+                # Micro links (batched drawLines, skipped in SLEEPING and SPEAKING states to prioritize audio/UI threads)
+                if not _is_sleeping and not self.speaking:
                     p.setBrush(Qt.BrushStyle.NoBrush)
                     link_lines = []
                     for i in range(len(pts_coords)):
@@ -10977,9 +11017,6 @@ class MainWindow(QMainWindow):
             try:
                 if hasattr(self.hud, "_blend_cache"):
                     self.hud._blend_cache.clear()
-                if hasattr(self.hud, "_static_layers"):
-                    self.hud._static_layers.clear()
-                self.hud._emblem_cache = None
                 from core.memory_trimmer import trim_process_memory
                 trim_process_memory()
             except Exception:
@@ -10998,6 +11035,9 @@ class MainWindow(QMainWindow):
         self._on_media_state_changed(arbiter.state)
 
     def _on_media_state_changed(self, state) -> None:
+        if not is_gui_thread():
+            run_on_gui_thread(self._on_media_state_changed, state)
+            return
         if hasattr(self, "_bg_music") and self._bg_music:
             self._bg_music.set_ducked(bool(state.tts_ducking))
         if hasattr(self, "_hud_video_controller") and self._hud_video_controller is not None:

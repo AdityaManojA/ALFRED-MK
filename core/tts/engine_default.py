@@ -105,29 +105,64 @@ def _play_np(samples, sample_rate: int) -> None:
 
 
 def _play_audio_bytes(audio_bytes: bytes) -> None:
-    """Decode MP3/WAV/OGG bytes and play via sounddevice (uses miniaudio)."""
-    import miniaudio
+    """Decode MP3/WAV/OGG bytes and play via sounddevice (uses soundfile / miniaudio / av)."""
+    samples = None
+    sample_rate = 24000
+
+    # 1. Try soundfile (standard libsndfile with built-in MP3 support)
     try:
-        decoded = miniaudio.decode(
-            audio_bytes,
-            output_format=miniaudio.SampleFormat.FLOAT32,
-            nchannels=1,
-        )
-    except Exception as e:
-        print(f"[TTS] [ERROR] Audio decoding failed ({len(audio_bytes)} bytes): {e}")
+        import io
+        import soundfile as sf
+        samples, sample_rate = sf.read(io.BytesIO(audio_bytes), dtype="float32")
+        if samples.ndim > 1:
+            samples = samples.mean(axis=1)  # convert to mono
+    except Exception:
+        samples = None
+
+    # 2. Fallback to miniaudio if available
+    if samples is None:
+        try:
+            import miniaudio
+            decoded = miniaudio.decode(
+                audio_bytes,
+                output_format=miniaudio.SampleFormat.FLOAT32,
+                nchannels=1,
+            )
+            samples = np.array(decoded.samples, dtype=np.float32)
+            sample_rate = decoded.sample_rate
+        except Exception:
+            samples = None
+
+    # 3. Fallback to PyAV (av)
+    if samples is None:
+        try:
+            import av
+            import io
+            container = av.open(io.BytesIO(audio_bytes))
+            chunks = []
+            for frame in container.decode(audio=0):
+                chunks.append(frame.to_ndarray())
+            if chunks:
+                raw_np = np.concatenate(chunks, axis=1)
+                samples = raw_np.mean(axis=0).astype(np.float32)
+                sample_rate = container.streams.audio[0].rate
+        except Exception:
+            samples = None
+
+    if samples is None:
+        print(f"[TTS] [ERROR] Audio decoding failed ({len(audio_bytes)} bytes): no supported decoder available")
         return
 
-    samples = np.array(decoded.samples, dtype=np.float32)
     dev_idx = _get_output_device_idx()
     try:
-        sd.play(samples, decoded.sample_rate, device=dev_idx)
+        sd.play(samples, sample_rate, device=dev_idx)
         sd.wait()
     except Exception as e:
         print(f"[TTS] [ERROR] Audio playback failed on device {dev_idx}: {e}")
         if dev_idx is not None:
             try:
                 print("[TTS] [INFO] Retrying playback on system default output device...")
-                sd.play(samples, decoded.sample_rate, device=None)
+                sd.play(samples, sample_rate, device=None)
                 sd.wait()
             except Exception as e2:
                 print(f"[TTS] [ERROR] Default output retry also failed: {e2}")
