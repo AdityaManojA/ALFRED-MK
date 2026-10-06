@@ -1014,6 +1014,7 @@ class AlfredLive:
         self.ui.on_clear_chat     = self._on_gui_clear_chat
         self.ui.on_screen_monitor_toggle = self._ui_screen_monitor_toggle
         self.ui.on_shutdown_requested = self._trigger_ui_shutdown
+        self.ui.on_mute_toggle    = self._on_mute_toggle
         self._reconnect_event: asyncio.Event | None = None
         self._reconnect_keep = True   # False â†’ next rebuild drops the resumption handle
 
@@ -1616,6 +1617,21 @@ class AlfredLive:
         """Called when phone/dashboard sends a clear-chat directive."""
         self._session_log.clear()
         self.ui.clear_chat()
+
+    def _on_mute_toggle(self, muted: bool) -> None:
+        """Called when UI mute state changes. Flushes mic queue immediately on mute."""
+        if muted:
+            if getattr(self, "out_queue", None):
+                try:
+                    while not self.out_queue.empty():
+                        self.out_queue.get_nowait()
+                except Exception:
+                    pass
+            if hasattr(self, "ui") and self.ui and hasattr(self.ui, "set_audio_level"):
+                try:
+                    self.ui.set_audio_level(0.0)
+                except Exception:
+                    pass
 
     def _tail_active(self) -> bool:
         """True while the speakers may still be finishing our last sentence."""
@@ -2476,7 +2492,13 @@ class AlfredLive:
         loop = asyncio.get_event_loop()
 
         def callback(indata, frames, time_info, status):
-            # â”€â”€ Wake-word gate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            # ── Silence Protocol / UI Mute Gate ─────────────────────────
+            # When muted, drop audio frames immediately. Mic audio never
+            # feeds wake detector, VAD, or Gemini.
+            if getattr(self, "ui", None) and getattr(self.ui, "muted", False):
+                return
+
+            # ── Wake-word gate ─────────────────────────────────────────────
             # While asleep, the mic audio NEVER goes to Gemini (nothing is
             # streamed, so ALFRED can't respond to speech not addressed to it and
             # nothing leaves the machine). Frames are instead handed to the local

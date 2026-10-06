@@ -1,0 +1,136 @@
+{
+  "netflix": {
+    "login": {
+      "primary": "a[href*='/login']",
+      "fallbacks": [
+        "a[data-uia='header-login-link']",
+        "button:has-text('Sign In')",
+        ".authLinks",
+        "text='Sign In'"
+      ]
+    },
+    "profiles": {
+      "container": {
+        "primary": ".profile-gate-container",
+        "fallbacks": [".list-profiles", "ul.choose-profile", "[data-uia='profile-gate-container']"]
+      },
+      "card": {
+        "primary": "li.profile",
+        "fallbacks": [".profile-link", "a[data-uia*='action-select-profile']", "[data-uia='profile-item']"]
+      },
+      "name": {
+        "primary": ".profile-name",
+        "fallbacks": ["span[data-uia='profile-name']", ".profile-link span"]
+      },
+      "pin_modal": {
+        "primary": ".pin-input-container",
+        "fallbacks": [".pin-dialog", "input[type='password'][data-uia*='pin']", "text='Enter your PIN'"]
+      }
+    },
+    "home": {
+      "primary": "header.primary-navigation",
+      "fallbacks": [".browse", "a[href='/browse']", ".navigation-tab", "div[data-uia='nmhp-card-hero']"]
+    },
+    "search": {
+      "input": {
+        "primary": "input[data-uia='search-box-input']",
+        "fallbacks": ["input[name='search']", ".searchInput input", "input.search-input"]
+      },
+      "results_container": {
+        "primary": ".galleryLockups",
+        "fallbacks": [".search-container", ".gallery", "[data-uia='search-results']"]
+      },
+      "card": {
+        "primary": ".slider-item",
+        "fallbacks": [".title-card", "div[data-uia='card-medium']", "a[href*='/watch/']"]
+      },
+      "title_text": {
+        "primary": ".fallback-text",
+        "fallbacks": [".title-card-title", "p[data-uia='title-card-title']", "a[aria-label]"]
+      }
+    },
+    "player": {
+      "video_container": {
+        "primary": ".watch-video",
+        "fallbacks": ["div[data-uia='video-canvas']", "video", ".nf-player-container"]
+      },
+      "skip_intro": {
+        "primary": "button[data-uia='player-skip-intro']",
+        "fallbacks": ["button:has-text('Skip Intro')", ".skip-credits button"]
+      },
+      "back_to_browse": {
+        "primary": "button[data-uia='nested-back-to-browse']",
+        "fallbacks": ["button[data-uia='back-to-browse']", "button[aria-label='Back to Browse']"]
+      }
+    }
+  },
+  "crunchyroll": {
+    "login": {
+      "primary": "a[href*='/login']",
+      "fallbacks": [
+        "a[data-t='header-login-button']",
+        ".header-actions .user-menu--not-logged-in",
+        "button:has-text('Log In')",
+        "text='LOG IN'"
+      ]
+    },
+    "profiles": {
+      "container": {
+        "primary": "div[data-t='profile-list']",
+        "fallbacks": [".select-profile-container", ".profile-selection", "section[data-t='profiles']"]
+      },
+      "card": {
+        "primary": "div[data-t='profile-item']",
+        "fallbacks": [".profile-card", "a[href*='/profiles/']", "button[data-t='profile-card']"]
+      },
+      "name": {
+        "primary": "span[data-t='profile-name']",
+        "fallbacks": [".profile-name", "h3.profile-item-title"]
+      },
+      "pin_modal": {
+        "primary": "div[data-t='pin-dialog']",
+        "fallbacks": [".pin-modal", "input[name='pin']", "text='Enter PIN'"]
+      }
+    },
+    "home": {
+      "primary": "nav[data-t='header-nav']",
+      "fallbacks": [".erc-browse-collection", ".home-page", "a[data-t='header-logo']"]
+    },
+    "search": {
+      "input": {
+        "primary": "input[data-t='search-input']",
+        "fallbacks": ["input[type='search']", "input.search-bar__input", "input[name='q']"]
+      },
+      "results_container": {
+        "primary": "div[data-t='search-results-list']",
+        "fallbacks": [".search-results", ".browse-card-grid", "div.erc-browse-cards-collection"]
+      },
+      "card": {
+        "primary": "div[data-t='search-result-card']",
+        "fallbacks": [".browse-card", "a.browse-card-link", "div.erc-browse-card"]
+      },
+      "title_text": {
+        "primary": "h4[data-t='search-result-title']",
+        "fallbacks": [".browse-card-title", "h3.title", "a[data-t='browse-card-title']"]
+      }
+    },
+    "player": {
+      "video_container": {
+        "primary": "video#vilos-video",
+        "fallbacks": ["div.velocity-player-container", "div#velocity-player-package", "video"]
+      },
+      "skip_intro": {
+        "primary": "button[data-t='skip-intro-button']",
+        "fallbacks": ["button:has-text('Skip Intro')", "div[data-t='skip-button']", ".vilos-skip-button"]
+      },
+      "next_episode": {
+        "primary": "button[data-t='next-episode-button']",
+        "fallbacks": ["button[aria-label='Next Episode']", ".next-episode-btn"]
+      },
+      "premium_badge": {
+        "primary": "span[data-t='premium-only-badge']",
+        "fallbacks": [".premium-crown", "svg.svg-crown", "text='Premium'"]
+      }
+    }
+  }
+}

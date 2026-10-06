@@ -228,9 +228,9 @@
     "semantic_hash": "d9c6de0df2bf028d93924aff92487904"
   },
   "main.py": {
-    "mtime": 1791289522.132612,
-    "seen": 1791289604.5652585,
-    "ast_hash": "22ca40c6cadefc21fdbd5b06b9c61d8d",
+    "mtime": 1791298888.0172403,
+    "seen": 1791299636.5360007,
+    "ast_hash": "d31b94fb58edbde6d112d425f4bdb798",
     "semantic_hash": ""
   },
   "memory/__init__.py": {
@@ -324,9 +324,9 @@
     "semantic_hash": ""
   },
   "actions/gmail_manager.py": {
-    "mtime": 1791262445.1332018,
-    "seen": 1791262692.7882876,
-    "ast_hash": "5fced86b9158d76aa04f7a3f1abb2bee",
+    "mtime": 1791298546.871583,
+    "seen": 1791299636.535558,
+    "ast_hash": "2e8184f2568b90a32d2568d931d0c7b4",
     "semantic_hash": ""
   },
   "plugins/calendar_sync.py": {
@@ -426,8 +426,8 @@
     "semantic_hash": ""
   },
   "config/music_playlist.json": {
-    "mtime": 1791294816.2377172,
-    "seen": 1791294844.6474187,
+    "mtime": 1791298914.1204288,
+    "seen": 1791299636.5356367,
     "ast_hash": "5e902c918db6e9ea5e750fa4d66dec82",
     "semantic_hash": ""
   },
@@ -1242,9 +1242,9 @@
     "semantic_hash": ""
   },
   "core/tts/engine_default.py": {
-    "mtime": 1791288211.6346312,
-    "seen": 1791288391.8367033,
-    "ast_hash": "75ca6da8bb48185a1bdbffb1c185820d",
+    "mtime": 1791298849.4509006,
+    "seen": 1791299636.5359654,
+    "ast_hash": "af2c1c15808ecc7b1d1b6c06d75b93a9",
     "semantic_hash": ""
   },
   "core/tts/jarvis_assets.py": {
@@ -2328,9 +2328,9 @@
     "semantic_hash": ""
   },
   "core/apis/oauth.py": {
-    "mtime": 1791262445.11685,
-    "seen": 1791262692.7884965,
-    "ast_hash": "030771eba0d5c41556f3fab846f0d577",
+    "mtime": 1791299460.6953783,
+    "seen": 1791299636.5356448,
+    "ast_hash": "4b4902cc45f852c9a4c489568e8d6e1c",
     "semantic_hash": ""
   },
   "core/apis/registry.py": {
@@ -2358,9 +2358,9 @@
     "semantic_hash": ""
   },
   "core/ui/setup_api_modal.py": {
-    "mtime": 1790882440.1270518,
-    "seen": 1790882914.2435644,
-    "ast_hash": "7ac048d99fb9ba266e83f5c3589b877b",
+    "mtime": 1791299528.8272128,
+    "seen": 1791299636.535971,
+    "ast_hash": "ff15a1b2194c54339ef3419f5056bc66",
     "semantic_hash": ""
   },
   "tests/test_api_registry.py": {
@@ -2370,9 +2370,9 @@
     "semantic_hash": ""
   },
   "tests/test_api_setup_ui.py": {
-    "mtime": 1790882500.118258,
-    "seen": 1790882914.2435644,
-    "ast_hash": "5c001cdf717637c6a9a650e024794b9c",
+    "mtime": 1791299565.2217946,
+    "seen": 1791299636.5361273,
+    "ast_hash": "42599e6d6f3cf46fe04c30044b3246a6",
     "semantic_hash": ""
   },
   "tests/test_secret_store.py": {
@@ -4419,6 +4419,18 @@
     "mtime": 1791293831.7247107,
     "seen": 1791294381.0973227,
     "ast_hash": "b7b1e62bf2b5bb147d403d925e5411b9",
+    "semantic_hash": ""
+  },
+  "tests/test_gmail_credentials.py": {
+    "mtime": 1791298565.4628088,
+    "seen": 1791299636.5361676,
+    "ast_hash": "e19bdd6729d65bf71ffee9ca4bfa9a6d",
+    "semantic_hash": ""
+  },
+  "docs/linux_compat/PHASE_0_NOTES.md": {
+    "mtime": 1791295841.8857932,
+    "seen": 1791299636.5364826,
+    "ast_hash": "12bb4fb3e1aa9054ddcaca1f62bf4585",
     "semantic_hash": ""
   }
 }

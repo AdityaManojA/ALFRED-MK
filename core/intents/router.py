@@ -59,12 +59,25 @@ class IntentRouter:
         (re.compile(r"^(mute me|mute my mic|mute( the)? microphone)\b", re.I), "mute_me", "mute_system_microphone"),
         (re.compile(r"^(mute|silence|quiet)\b", re.I), "mute", "media_control"),
         (re.compile(r"^(unmute|speak)\b", re.I), "unmute", "media_control"),
-        (re.compile(r"^(pause|stop playback)\b", re.I), "pause", "media_control"),
-        (re.compile(r"^(resume|play|unpause)\b", re.I), "resume", "media_control"),
         (re.compile(r"^(close( this| active)? tab|shut this tab|kill tab)\b", re.I), "close_tab", "browser_control"),
-        (re.compile(r"^open netflix\b", re.I), "open_netflix", "netflix_pilot"),
-        (re.compile(r"^search netflix for\s+(?P<query>.+)", re.I), "search_netflix", "netflix_pilot"),
-        (re.compile(r"^play\s+(?P<query>.+)\s+on netflix\b", re.I), "play_netflix", "netflix_pilot"),
+
+        # ── 1. Explicit Streaming Provider ──────────────────────────────────
+        (re.compile(r"^(open|launch)\s+netflix\b", re.I), "open_streaming", "streaming_pilot"),
+        (re.compile(r"^search\s+netflix\s+for\s+(?P<query>.+)", re.I), "search_streaming", "streaming_pilot"),
+        (re.compile(r"^(play|watch)\s+(?P<query>.+)\s+on\s+netflix\b", re.I), "play_streaming", "streaming_pilot"),
+        (re.compile(r"^(open|launch)\s+crunchyroll\b", re.I), "open_streaming", "streaming_pilot"),
+        (re.compile(r"^search\s+crunchyroll\s+for\s+(?P<query>.+)", re.I), "search_streaming", "streaming_pilot"),
+        (re.compile(r"^(play|watch)\s+(?P<query>.+)\s+on\s+crunchyroll\b", re.I), "play_streaming", "streaming_pilot"),
+
+        # ── 4. YouTube / Browser ────────────────────────────────────────────
+        (re.compile(r"^(play|search)\s+(?P<query>.+)\s+on\s+youtube\b", re.I), "play_youtube", "browser_control"),
+        (re.compile(r"^(open|launch)\s+youtube\b", re.I), "open_youtube", "browser_control"),
+
+        # ── 5. Spotify ──────────────────────────────────────────────────────
+        (re.compile(r"^play\s+(?P<query>.+)\s+on\s+spotify\b", re.I), "play_spotify", "spotify_control"),
+        (re.compile(r"^play\s+(music|a song|some music)\b", re.I), "play_music", "spotify_control"),
+
+        # ── System / Computer Controls ──────────────────────────────────────
         (re.compile(r"^(open|launch)\s+(?P<app>[a-zA-Z0-9_\- ]+)\b", re.I), "open_app", "computer_control"),
         (re.compile(r"^(turn (on|off) dark mode|toggle dark mode)\b", re.I), "toggle_dark_mode", "computer_settings"),
     ]
@@ -78,21 +91,53 @@ class IntentRouter:
         """Register a callback for signal emission."""
         self._listeners.append(callback)
 
-    def route(self, utterance: str) -> Optional[IntentMatch]:
-        """Route an utterance with sub-millisecond fast-path and full latency breakdown."""
+    def route(self, utterance: str, context: Optional[dict] = None) -> Optional[IntentMatch]:
+        """
+        Route an utterance with sub-millisecond fast-path and full 6-level precedence:
+        1. Explicit provider (Netflix / Crunchyroll)
+        2. Visual HUD transport (if HUD video playing)
+        3. Provider-internal transport (if provider playing)
+        4. YouTube / browser
+        5. Spotify (readiness-gated)
+        6. Ambiguous 'play X' (clarification ask, never guess)
+        """
         t_entry = time.perf_counter()
         metrics = IntentMetrics()
         cleaned = utterance.strip().lower()
+        ctx = context or {}
 
-        # Check LRU cache first
-        if cleaned in self._cache:
+        # ── Precedence Rule 2 & 3: Transport Overrides ───────────────────────
+        is_transport_word = bool(re.search(r"^(pause|resume|unpause|next episode|skip intro|full screen)\b", cleaned))
+        if is_transport_word:
+            # Rule 2: Visual HUD transport takes priority if HUD video is playing
+            if ctx.get("is_hud_video_playing"):
+                action = "pause" if "pause" in cleaned else "resume"
+                return IntentMatch(intent_name="hud_transport", action_name="hud_video", entities={"action": action}, confidence=1.0)
+
+            # Rule 3: Provider-internal transport if provider is active / playing
+            if ctx.get("streaming_state") == "PLAYING" or ctx.get("active_streaming_provider"):
+                act = "pause" if "pause" in cleaned else ("skip_intro" if "skip intro" in cleaned else ("next_episode" if "next episode" in cleaned else "resume"))
+                prov = ctx.get("active_streaming_provider", "streaming")
+                return IntentMatch(
+                    intent_name="streaming_transport",
+                    action_name="streaming_pilot",
+                    entities={"action": act, "provider": prov},
+                    confidence=1.0,
+                )
+
+            # General media control fallback
+            act = "pause" if "pause" in cleaned else "resume"
+            return IntentMatch(intent_name="media_transport", action_name="media_control", entities={"action": act}, confidence=1.0)
+
+        # Check LRU cache next
+        if cleaned in self._cache and not ctx:
             match = self._cache[cleaned]
             self._cache.move_to_end(cleaned)
             metrics.total_ms = (time.perf_counter() - t_entry) * 1000.0
             match.metrics = metrics
             return match
 
-        # 1. Fast-path pattern matching
+        # ── Rule 1, 4, 5: Fast-path pattern matching ─────────────────────────
         t_match_start = time.perf_counter()
         matched_tuple = None
         match_obj = None
@@ -106,23 +151,53 @@ class IntentRouter:
 
         metrics.phrase_matching_ms = (time.perf_counter() - t_match_start) * 1000.0
 
+        # ── Rule 6: Ambiguous "play X" ───────────────────────────────────────
         if not matched_tuple:
-            # No fast-path match; fall through to caller's LLM fallback
+            m_play = re.match(r"^play\s+(?P<query>.+)$", cleaned)
+            if m_play:
+                q = m_play.group("query").strip()
+                conv_ctx = ctx.get("conversation_context")
+                if conv_ctx == "music":
+                    matched_tuple = ("play_spotify", "spotify_control")
+                    match_obj = m_play
+                elif conv_ctx in ("video", "movie", "anime"):
+                    matched_tuple = ("play_streaming", "streaming_pilot")
+                    match_obj = m_play
+                else:
+                    # Genuinely ambiguous: ask "Music or video, sir?" Never guess.
+                    return IntentMatch(
+                        intent_name="ambiguous_play",
+                        action_name="ask_clarification",
+                        entities={"query": q, "question": "Music or video, sir?"},
+                        confidence=1.0,
+                    )
+
+        if not matched_tuple:
             metrics.total_ms = (time.perf_counter() - t_entry) * 1000.0
             return None
 
         intent_name, action_name = matched_tuple
 
+        # ── Rule 5: Spotify Readiness Gate ───────────────────────────────────
+        if action_name == "spotify_control" and ctx.get("is_spotify_ready") is False:
+            return IntentMatch(
+                intent_name="spotify_unready",
+                action_name="spotify_not_configured",
+                entities={"reason": "Spotify is not configured or authenticated, sir."},
+                confidence=1.0,
+            )
+
         # 2. Entity extraction
         t_entity_start = time.perf_counter()
         entities = match_obj.groupdict() if match_obj else {}
+        if "netflix" in cleaned:
+            entities["provider"] = "netflix"
+        elif "crunchyroll" in cleaned:
+            entities["provider"] = "crunchyroll"
         metrics.entity_extraction_ms = (time.perf_counter() - t_entity_start) * 1000.0
 
         # 3. Tool lookup
-        t_lookup_start = time.perf_counter()
-        # Fast path maps directly to verified action name
         resolved_action = action_name
-        metrics.tool_lookup_ms = (time.perf_counter() - t_lookup_start) * 1000.0
 
         # 4. Signal emission
         t_signal_start = time.perf_counter()

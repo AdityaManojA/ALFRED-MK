@@ -237,6 +237,8 @@ class LocalPipelineCoordinator:
 
     def _audio_callback(self, audio_bytes: bytes):
         """Callback for audio from STT manager."""
+        if self._ui_muted():
+            return
         if self.is_running and not self.is_speaking:
             self.audio_queue.put(audio_bytes)
 
@@ -247,6 +249,11 @@ class LocalPipelineCoordinator:
         max_silence_chunks = self.config.get("stt_min_silence_chunks", 10)
 
         while self.is_running:
+            if self._ui_muted():
+                audio_buffer = bytearray()
+                silence_counter = 0
+                await asyncio.sleep(PIPELINE_POLL_INTERVAL_S)
+                continue
             try:
                 # Non-blocking audio chunk retrieval to avoid blocking asyncio event loop
                 try:

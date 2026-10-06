@@ -29,6 +29,7 @@ class TestAudioMute(unittest.TestCase):
     def test_mute_system_microphone_windows(self, mock_sys):
         mock_mic = MagicMock()
         mock_vol = MagicMock()
+        mock_vol.QueryInterface.return_value = mock_vol
         mock_mic.Activate.return_value = mock_vol
 
         with patch("pycaw.pycaw.AudioUtilities.GetMicrophone", return_value=mock_mic):
@@ -40,6 +41,7 @@ class TestAudioMute(unittest.TestCase):
     def test_unmute_system_microphone_windows(self, mock_sys):
         mock_mic = MagicMock()
         mock_vol = MagicMock()
+        mock_vol.QueryInterface.return_value = mock_vol
         mock_mic.Activate.return_value = mock_vol
 
         with patch("pycaw.pycaw.AudioUtilities.GetMicrophone", return_value=mock_mic):
@@ -91,6 +93,39 @@ class TestAudioMute(unittest.TestCase):
         for phrase in ["mute me", "mute my mic", "mute microphone", "mute mic"]:
             act = _detect_action(phrase)
             self.assertIn(act.get("action"), ("mute_mic", "mute_me", "mute_microphone"))
+
+    def test_ui_mute_logic_preserves_user_intent(self):
+        """Verify MainWindow mute toggle logic, callbacks, and hardware sync preservation."""
+        from ui import MainWindow
+        mock_win = MagicMock(spec=MainWindow)
+        mock_win._muted = False
+        mock_win._user_muted = False
+        mock_win._hardware_muted = False
+        mock_win.hud = MagicMock()
+        mock_win._style_mute_btn = MagicMock()
+        mock_win._apply_state = MagicMock()
+        mock_win._log = MagicMock()
+        mock_win.on_mute_toggle = MagicMock()
+
+        with patch("core.audio.mute.mute_system_microphone"), \
+             patch("core.audio.mute.unmute_system_microphone"):
+            # 1. User toggles MUTE ON
+            MainWindow._toggle_mute(mock_win)
+            self.assertTrue(mock_win._user_muted)
+            self.assertTrue(mock_win._muted)
+            mock_win.on_mute_toggle.assert_called_with(True)
+
+            # 2. Background monitor checks hardware and reports unmuted (False)
+            # Should NOT override user_muted
+            MainWindow.set_hardware_mic_muted(mock_win, False)
+            self.assertTrue(mock_win._muted)
+            self.assertTrue(mock_win._user_muted)
+
+            # 3. User toggles MUTE OFF
+            MainWindow._toggle_mute(mock_win)
+            self.assertFalse(mock_win._user_muted)
+            self.assertFalse(mock_win._muted)
+            mock_win.on_mute_toggle.assert_called_with(False)
 
 
 if __name__ == "__main__":

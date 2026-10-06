@@ -7329,6 +7329,7 @@ class MainWindow(QMainWindow):
     _req_show_task_board = pyqtSignal()        # thread-safe marshalling of task board presentation
     _toast_sig      = pyqtSignal(str)          # notification / barge-in toast message
     _set_app_icon_sig = pyqtSignal(str, bool)  # thread-safe marshalling of app icon update (resolved_path, notify)
+    _streaming_status_sig = pyqtSignal(str, str, str)  # (provider, surface, state) status line
 
     def __init__(self, assistant_name: str = "Alfred", face_path: str = "", **kwargs):
         super().__init__()
@@ -7394,7 +7395,10 @@ class MainWindow(QMainWindow):
         self.on_push_to_talk   = None   # callable: (enable: bool) -> str scope
         self.ptt_hold          = None   # callable: (held: bool) -> None — windowed chord
         self.wake_get_state    = None   # callable: () -> dict {enabled, awake, ready}
+        self.on_mute_toggle    = None   # callable: (muted: bool) -> None
         self._muted            = False
+        self._user_muted       = False
+        self._hardware_muted   = False
         self._current_file: str | None = None
         self._remote_overlay: RemoteKeyOverlay | None = None
         self._customize_overlay: CustomizeOverlay | None = None
@@ -7560,6 +7564,7 @@ class MainWindow(QMainWindow):
         self._req_show_task_board.connect(self._do_show_task_board)
         self._toast_sig.connect(self._show_toast)
         self._set_app_icon_sig.connect(self._apply_app_icon_ui)
+        self._streaming_status_sig.connect(self._apply_streaming_status)
         self._cam_stop = threading.Event()
 
         # Camera preview overlay (child of central widget, positioned in resizeEvent)
@@ -9607,6 +9612,10 @@ class MainWindow(QMainWindow):
 
         lay.addWidget(_fl("CONTROL YOUR DATA · PROTECT YOUR PRIVACY · WAYNE TACTICAL OS"))
         lay.addStretch()
+        self._streaming_status_pill = _fl("", C.PRI)
+        self._streaming_status_pill.setVisible(False)
+        lay.addWidget(self._streaming_status_pill)
+        lay.addSpacing(16)
         self._audio_status_pill = _fl("AUDIO: INITIALISING...", C.ACC2)
         lay.addWidget(self._audio_status_pill)
         lay.addSpacing(16)
@@ -10570,6 +10579,27 @@ class MainWindow(QMainWindow):
                 self._audio_status_pill.setText(f"AUDIO: {st}")
                 self._audio_status_pill.setStyleSheet(f"color: {C.ACC2}; background: transparent;")
 
+    def set_streaming_status(self, provider: str, surface: str, state: str) -> None:
+        """Update streaming status indicator on tactical HUD status bar in a thread-safe way."""
+        self._streaming_status_sig.emit(provider, surface, state)
+
+    def _apply_streaming_status(self, provider: str, surface: str, state: str) -> None:
+        if not hasattr(self, "_streaming_status_pill") or self._streaming_status_pill is None:
+            return
+        p_str = (provider or "").strip()
+        s_str = (surface or "").strip()
+        st_str = (state or "").strip()
+        if not p_str or not st_str or st_str.upper() in ("HOME", "IDLE", "NONE", ""):
+            self._streaming_status_pill.setVisible(False)
+            return
+        text = f"{p_str.upper()} · {s_str.lower() or 'web'} · {st_str.upper()}"
+        self._streaming_status_pill.setText(text)
+        if "PLAYING" in st_str.upper():
+            self._streaming_status_pill.setStyleSheet(f"color: {C.GREEN}; background: transparent;")
+        else:
+            self._streaming_status_pill.setStyleSheet(f"color: {C.PRI}; background: transparent;")
+        self._streaming_status_pill.setVisible(True)
+
     def _start_animations(self) -> None:
         if hasattr(self, "hud") and hasattr(self.hud, "_start_animations"):
             self.hud._start_animations()
@@ -10768,26 +10798,57 @@ class MainWindow(QMainWindow):
             self.on_interrupt()
 
     def _toggle_mute(self):
-        self._muted = not self._muted
+        should_mute = not self._muted
+        self._user_muted = should_mute
+        self._muted = self._user_muted or self._hardware_muted
         self.hud.muted = self._muted
         self._style_mute_btn()
-        if self._muted:
+
+        if self._user_muted:
             self._apply_state("MUTED")
             self._log.append_log("SYS: Silence protocol engaged. Cowl acoustic sensors offline.")
+            def _async_hw_mute():
+                try:
+                    from core.audio.mute import mute_system_microphone
+                    mute_system_microphone()
+                except Exception:
+                    pass
+            threading.Thread(target=_async_hw_mute, daemon=True).start()
         else:
-            self._apply_state("LISTENING")
-            self._log.append_log("SYS: Cowl acoustic sensors online. Batcomputer listening.")
+            self._apply_state("MUTED" if self._hardware_muted else "LISTENING")
+            if not self._hardware_muted:
+                self._log.append_log("SYS: Cowl acoustic sensors online. Batcomputer listening.")
+            def _async_hw_unmute():
+                try:
+                    from core.audio.mute import unmute_system_microphone
+                    unmute_system_microphone()
+                except Exception:
+                    pass
+            threading.Thread(target=_async_hw_unmute, daemon=True).start()
+
+        if callable(getattr(self, "on_mute_toggle", None)):
+            try:
+                self.on_mute_toggle(self._muted)
+            except Exception:
+                pass
 
     def set_hardware_mic_muted(self, muted: bool):
-        """Set explicit hardware microphone mute visual state without toggling."""
-        if self._muted != muted:
-            self._muted = muted
-            self.hud.muted = muted
+        """Set explicit hardware microphone mute visual state without overriding user mute."""
+        self._hardware_muted = muted
+        new_muted = getattr(self, "_user_muted", False) or self._hardware_muted
+        if self._muted != new_muted:
+            self._muted = new_muted
+            self.hud.muted = new_muted
             self._style_mute_btn()
-            if muted:
+            if new_muted:
                 self._apply_state("MUTED")
             else:
                 self._apply_state("LISTENING")
+            if callable(getattr(self, "on_mute_toggle", None)):
+                try:
+                    self.on_mute_toggle(self._muted)
+                except Exception:
+                    pass
 
     def _style_mute_btn(self):
         if self._muted:
@@ -11439,6 +11500,14 @@ class AlfredUI:
         """Toggle audio mute state."""
         self._win._toggle_mute()
 
+    @property
+    def on_mute_toggle(self):
+        return getattr(self._win, "on_mute_toggle", None)
+
+    @on_mute_toggle.setter
+    def on_mute_toggle(self, cb):
+        self._win.on_mute_toggle = cb
+
     def set_hardware_mic_muted(self, muted: bool) -> None:
         """Update HUD visual indicators to reflect system microphone mute level."""
         self._win.set_hardware_mic_muted(muted)
@@ -11872,6 +11941,11 @@ class AlfredUI:
         """Thread-safe toast notification dispatch."""
         if hasattr(self, "_win") and self._win is not None and hasattr(self._win, "show_toast"):
             self._win.show_toast(text)
+
+    def set_streaming_status(self, provider: str, surface: str, state: str) -> None:
+        """Thread-safe streaming status dispatch."""
+        if hasattr(self, "_win") and self._win is not None and hasattr(self._win, "set_streaming_status"):
+            self._win.set_streaming_status(provider, surface, state)
 
 
 # Backward compatibility aliases
