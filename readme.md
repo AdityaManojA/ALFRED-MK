@@ -16,6 +16,18 @@
   <img src="Screenies/Default_theme.png" alt="ALFRED MARK-IX Tactical HUD Interface" width="92%">
 </p>
 
+### 🎬 Live Demonstrations
+
+<p align="center">
+  <b>Multimodal Video/Audio Execution & Media Playback (Dune Trailer)</b><br>
+  <img src="Readme%20files/DuneTrailer.gif" alt="ALFRED Multimodal Interception Demo - Dune Trailer" width="92%">
+</p>
+
+<p align="center">
+  <b>Autonomous Workspace Intelligence & Email Triage</b><br>
+  <img src="Readme%20files/EmailSummary.gif" alt="ALFRED Autonomous Email Summary Demo" width="92%">
+</p>
+
 ---
 
 ## 📑 Table of Contents

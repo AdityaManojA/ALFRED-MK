@@ -228,9 +228,9 @@
     "semantic_hash": "d9c6de0df2bf028d93924aff92487904"
   },
   "main.py": {
-    "mtime": 1791308699.5113142,
-    "seen": 1791308951.6635542,
-    "ast_hash": "3afb29788d1fad232e685e3a3bbe919a",
+    "mtime": 1791316438.4852414,
+    "seen": 1791316485.228431,
+    "ast_hash": "94ba86218c5f15464530b16253302f3c",
     "semantic_hash": ""
   },
   "memory/__init__.py": {
@@ -2334,9 +2334,9 @@
     "semantic_hash": ""
   },
   "core/apis/registry.py": {
-    "mtime": 1790709469.897949,
-    "seen": 1790709696.8816597,
-    "ast_hash": "63807c75b896309a2c017b700067b258",
+    "mtime": 1791314806.142683,
+    "seen": 1791316485.2280545,
+    "ast_hash": "e1dd9fe4af601d8f1d337bc122efbd98",
     "semantic_hash": ""
   },
   "core/hud/visuals/slots/riddler.py": {
@@ -2358,9 +2358,9 @@
     "semantic_hash": ""
   },
   "core/ui/setup_api_modal.py": {
-    "mtime": 1791299528.8272128,
-    "seen": 1791299636.535971,
-    "ast_hash": "ff15a1b2194c54339ef3419f5056bc66",
+    "mtime": 1791315520.4400215,
+    "seen": 1791316485.2283983,
+    "ast_hash": "4212161da4b64ca49b3634f2db3e7d15",
     "semantic_hash": ""
   },
   "tests/test_api_registry.py": {
@@ -2370,9 +2370,9 @@
     "semantic_hash": ""
   },
   "tests/test_api_setup_ui.py": {
-    "mtime": 1791299565.2217946,
-    "seen": 1791299636.5361273,
-    "ast_hash": "42599e6d6f3cf46fe04c30044b3246a6",
+    "mtime": 1791315219.6450036,
+    "seen": 1791316485.2285633,
+    "ast_hash": "dc2f7a89adbdab324de22a66eb0a92f9",
     "semantic_hash": ""
   },
   "tests/test_secret_store.py": {
@@ -4617,6 +4617,252 @@
     "mtime": 1791313846.5514197,
     "seen": 1791313881.2595348,
     "ast_hash": "e4721bc49d0da890787be336e1263838",
+    "semantic_hash": ""
+  },
+  "core/integrations/alexa/__init__.py": {
+    "mtime": 1791316075.1221335,
+    "seen": 1791316485.2282043,
+    "ast_hash": "1faef92e98f48ad500f834d7a361cea8",
+    "semantic_hash": ""
+  },
+  "core/integrations/alexa/account_link.py": {
+    "mtime": 1791314549.9357002,
+    "seen": 1791316485.2282064,
+    "ast_hash": "67b737c764ed5bfa59e0af6d8eb6f4c2",
+    "semantic_hash": ""
+  },
+  "core/integrations/alexa/client.py": {
+    "mtime": 1791314572.5370579,
+    "seen": 1791316485.2282078,
+    "ast_hash": "167e2b0078b865146f2d555ede4ab430",
+    "semantic_hash": ""
+  },
+  "core/integrations/alexa/config.py": {
+    "mtime": 1791314477.7058997,
+    "seen": 1791316485.2282095,
+    "ast_hash": "10b6e7a15b1d40f3c7cf04d4d2f59046",
+    "semantic_hash": ""
+  },
+  "core/integrations/alexa/dispatcher.py": {
+    "mtime": 1791316152.1247568,
+    "seen": 1791316485.2282107,
+    "ast_hash": "56cc26da9f60d9ea03d45584e2150bbe",
+    "semantic_hash": ""
+  },
+  "core/integrations/alexa/policy.py": {
+    "mtime": 1791314539.7096965,
+    "seen": 1791316485.228212,
+    "ast_hash": "23719eab646a26ad06544160a9b2a2fb",
+    "semantic_hash": ""
+  },
+  "core/integrations/alexa/protocol.py": {
+    "mtime": 1791314521.388075,
+    "seen": 1791316485.2282138,
+    "ast_hash": "4d04887202786875b43a6fd9d1a7baaf",
+    "semantic_hash": ""
+  },
+  "core/integrations/alexa/skill_model.py": {
+    "mtime": 1791315693.239547,
+    "seen": 1791316485.2282152,
+    "ast_hash": "0a55ff02fd9759963c94debc178ea667",
+    "semantic_hash": ""
+  },
+  "core/integrations/alexa/state.py": {
+    "mtime": 1791314491.3652294,
+    "seen": 1791316485.2282166,
+    "ast_hash": "ca8f9130cc576b893b32c9c53f8f0d23",
+    "semantic_hash": ""
+  },
+  "core/ui/alexa_permissions_dialog.py": {
+    "mtime": 1791315365.6503594,
+    "seen": 1791316485.228395,
+    "ast_hash": "c62bd345a6c756e8dfcbd72e925cdcb2",
+    "semantic_hash": ""
+  },
+  "server/alexa/__init__.py": {
+    "mtime": 1791314655.2896755,
+    "seen": 1791316485.228447,
+    "ast_hash": "96909efc542a71feff7e3be35355d1a9",
+    "semantic_hash": ""
+  },
+  "server/alexa/endpoint.py": {
+    "mtime": 1791315886.8084426,
+    "seen": 1791316485.2284486,
+    "ast_hash": "6633d9e57fe24037f629df4301a903e3",
+    "semantic_hash": ""
+  },
+  "server/alexa/relay.py": {
+    "mtime": 1791315870.986264,
+    "seen": 1791316485.2284498,
+    "ast_hash": "e7ecd93c7b25585bd5e5a19a5beb363b",
+    "semantic_hash": ""
+  },
+  "server/alexa/verification.py": {
+    "mtime": 1791315809.4602616,
+    "seen": 1791316485.2284513,
+    "ast_hash": "9b8f713826b99c77162ab3eb605b29f2",
+    "semantic_hash": ""
+  },
+  "tests/render_alexa_tab_screenshot.py": {
+    "mtime": 1791315614.8283713,
+    "seen": 1791316485.2285295,
+    "ast_hash": "54236f5d73c9e3eb8c3dc663e7ec3ae2",
+    "semantic_hash": ""
+  },
+  "tests/test_alexa_account_linking.py": {
+    "mtime": 1791315908.16637,
+    "seen": 1791316485.2285502,
+    "ast_hash": "5f2b218d27645a26415b564aab91fb61",
+    "semantic_hash": ""
+  },
+  "tests/test_alexa_dispatcher.py": {
+    "mtime": 1791316091.2435799,
+    "seen": 1791316485.2285516,
+    "ast_hash": "3dbfa3433ef06de57d8d5f8696db5b48",
+    "semantic_hash": ""
+  },
+  "tests/test_alexa_permissions_dialog.py": {
+    "mtime": 1791316263.5938163,
+    "seen": 1791316485.2285533,
+    "ast_hash": "590507a2f3a83298af1579c1040e4998",
+    "semantic_hash": ""
+  },
+  "tests/test_alexa_policy.py": {
+    "mtime": 1791314741.7037418,
+    "seen": 1791316485.2285547,
+    "ast_hash": "62c0f484cd1ddf3bb1f6f17a71b804ba",
+    "semantic_hash": ""
+  },
+  "tests/test_alexa_privacy.py": {
+    "mtime": 1791316329.0289607,
+    "seen": 1791316485.228556,
+    "ast_hash": "d310bc9e0b08ca724d8eef52d955f2b6",
+    "semantic_hash": ""
+  },
+  "tests/test_alexa_skill_model.py": {
+    "mtime": 1791315708.2140906,
+    "seen": 1791316485.2285573,
+    "ast_hash": "34ffa2421f7c8f2d6c2394787f7cfbcc",
+    "semantic_hash": ""
+  },
+  "tests/test_alexa_state.py": {
+    "mtime": 1791314640.0647695,
+    "seen": 1791316485.2285585,
+    "ast_hash": "124d656a621b90b09f83cafdcd1c9f0e",
+    "semantic_hash": ""
+  },
+  "tests/test_alexa_verification.py": {
+    "mtime": 1791315833.6449459,
+    "seen": 1791316485.22856,
+    "ast_hash": "91ced2181d171efc036362f82c8e414b",
+    "semantic_hash": ""
+  },
+  "docs/alexa/DEVELOPER_SETUP.md": {
+    "mtime": 1791316413.798654,
+    "seen": 1791316485.228783,
+    "ast_hash": "3fe4c34cc0c517303392489e2b48095e",
+    "semantic_hash": ""
+  },
+  "docs/alexa/PHASE_0_NOTES.md": {
+    "mtime": 1791314452.4567175,
+    "seen": 1791316485.2287843,
+    "ast_hash": "d166be63c8b821c2aac2fb7fe9d4e038",
+    "semantic_hash": ""
+  },
+  "docs/alexa/PHASE_10_NOTES.md": {
+    "mtime": 1791316290.766495,
+    "seen": 1791316485.228786,
+    "ast_hash": "bde2283abbbb73180d7d8e7163a1a7f5",
+    "semantic_hash": ""
+  },
+  "docs/alexa/PHASE_11_NOTES.md": {
+    "mtime": 1791316377.2382946,
+    "seen": 1791316485.2287872,
+    "ast_hash": "5af8ab7dada170d7ad6edb6665876dbb",
+    "semantic_hash": ""
+  },
+  "docs/alexa/PHASE_12_NOTES.md": {
+    "mtime": 1791316447.4032357,
+    "seen": 1791316485.2287889,
+    "ast_hash": "b6cb0b4cf8721f29990e12e9eb3fac61",
+    "semantic_hash": ""
+  },
+  "docs/alexa/PHASE_1_NOTES.md": {
+    "mtime": 1791314762.5235486,
+    "seen": 1791316485.2287903,
+    "ast_hash": "34bb256bb3839bfacc6822e86dbc3c74",
+    "semantic_hash": ""
+  },
+  "docs/alexa/PHASE_2_NOTES.md": {
+    "mtime": 1791315671.6162882,
+    "seen": 1791316485.2287915,
+    "ast_hash": "8ba5a537aae8f8b513bdab43726a47cd",
+    "semantic_hash": ""
+  },
+  "docs/alexa/PHASE_3_NOTES.md": {
+    "mtime": 1791315756.0698805,
+    "seen": 1791316485.2287931,
+    "ast_hash": "df33d135a21d2289c055953e8dff2c64",
+    "semantic_hash": ""
+  },
+  "docs/alexa/PHASE_4_NOTES.md": {
+    "mtime": 1791315846.4010098,
+    "seen": 1791316485.2287946,
+    "ast_hash": "f8feaf542436e2397edb3ac5df2572ec",
+    "semantic_hash": ""
+  },
+  "docs/alexa/PHASE_5_NOTES.md": {
+    "mtime": 1791315922.5181236,
+    "seen": 1791316485.228796,
+    "ast_hash": "edeef6668b9bfa23c6ce388cb1788ac7",
+    "semantic_hash": ""
+  },
+  "docs/alexa/PHASE_6_NOTES.md": {
+    "mtime": 1791316169.3981035,
+    "seen": 1791316485.2287972,
+    "ast_hash": "21c7882d60ffa049124492da7dae883e",
+    "semantic_hash": ""
+  },
+  "docs/alexa/PHASE_7_NOTES.md": {
+    "mtime": 1791316186.1272414,
+    "seen": 1791316485.2287986,
+    "ast_hash": "8a1b10a5eccd522033bd1ca5c280ae5e",
+    "semantic_hash": ""
+  },
+  "docs/alexa/PHASE_8_NOTES.md": {
+    "mtime": 1791316195.3617387,
+    "seen": 1791316485.2288,
+    "ast_hash": "d3970d9a88fff2e3b41bd98fce0bcadb",
+    "semantic_hash": ""
+  },
+  "docs/alexa/PHASE_9_NOTES.md": {
+    "mtime": 1791316279.0138545,
+    "seen": 1791316485.2288013,
+    "ast_hash": "74c2dfd13e83787caf8f16f02ec15b09",
+    "semantic_hash": ""
+  },
+  "docs/alexa/README.md": {
+    "mtime": 1791316389.6900015,
+    "seen": 1791316485.2288024,
+    "ast_hash": "c652f2d03f2a59fbf93cef5f79c54e3b",
+    "semantic_hash": ""
+  },
+  "docs/alexa/SECURITY.md": {
+    "mtime": 1791316425.9644237,
+    "seen": 1791316485.2288039,
+    "ast_hash": "0faf71dee065ce18f8d12354ace6add0",
+    "semantic_hash": ""
+  },
+  "docs/alexa/USER_SETUP.md": {
+    "mtime": 1791316399.9949262,
+    "seen": 1791316485.2288053,
+    "ast_hash": "4147d5b9ac2c6b6caa4df8a35190d3b6",
+    "semantic_hash": ""
+  },
+  "docs/alexa/VERIFY.md": {
+    "mtime": 1791316365.9967835,
+    "seen": 1791316485.2288067,
+    "ast_hash": "4ac764e5639034ab95e3d8df04343662",
     "semantic_hash": ""
   }
 }

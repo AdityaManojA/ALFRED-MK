@@ -101,6 +101,34 @@ def _validate_gmail(fields: dict[str, str]) -> tuple[bool, str]:
         return True, ""
 
 
+def _validate_alexa(fields: dict[str, str]) -> tuple[bool, str]:
+    """Validate Alexa Skill and Relay configuration."""
+    skill_id = fields.get("skill_id", "").strip()
+    relay_https = fields.get("relay_https_url", "").strip()
+    relay_ws = fields.get("relay_ws_url", "").strip()
+
+    if not skill_id:
+        return False, "Alexa Skill ID is required."
+    if not (skill_id.startswith("amzn1.ask.skill.") or len(skill_id) >= 10):
+        return False, "Skill ID format should be an Amazon Skill ID (e.g. amzn1.ask.skill...)."
+
+    if relay_https and not (
+        relay_https.startswith("https://")
+        or relay_https.startswith("http://localhost")
+        or relay_https.startswith("http://127.0.0.1")
+    ):
+        return False, "Relay HTTPS URL must use HTTPS (or localhost for dev)."
+
+    if relay_ws and not (
+        relay_ws.startswith("wss://")
+        or relay_ws.startswith("ws://localhost")
+        or relay_ws.startswith("ws://127.0.0.1")
+    ):
+        return False, "Relay WebSocket URL must use WSS (or ws:// for localhost dev)."
+
+    return True, ""
+
+
 # ── Registry Definition ───────────────────────────────────────────────────────
 
 _BACKENDS: dict[str, APIBackend] = {
@@ -130,6 +158,23 @@ _BACKENDS: dict[str, APIBackend] = {
         required_fields=("email", "app_password"),
         optional_fields=("credentials_json", "auth_mode"),
         validator_fn=_validate_gmail,
+    ),
+    "alexa": APIBackend(
+        id="alexa",
+        name="Alexa Connection",
+        icon="🎙",
+        description="Connect Echo devices to ALFRED via Amazon Skills Kit Custom Skill & authenticated relay.",
+        required_fields=("skill_id",),
+        optional_fields=(
+            "skill_store_url",
+            "relay_https_url",
+            "relay_ws_url",
+            "oauth_client_id",
+            "oauth_client_secret",
+            "oauth_redirect_url",
+            "vendor_id",
+        ),
+        validator_fn=_validate_alexa,
     ),
 }
 

@@ -39,8 +39,26 @@ from core.apis.registry import (
     save_backend_credentials,
     validate_backend_fields,
 )
+from core.integrations.alexa.account_link import AccountLinkingManager
+from core.integrations.alexa.config import (
+    AlexaConfig,
+    load_alexa_config_from_store,
+    save_alexa_config_to_store,
+)
+from core.integrations.alexa.policy import AlexaActionPolicy
+from core.integrations.alexa.state import AlexaConnectionStatus, AlexaStateManager
 from core.secrets.store import SecretStore, get_secret_store
+from core.ui.alexa_permissions_dialog import (
+    CAPABILITY_DEFINITIONS,
+    PROHIBITED_CAPABILITIES,
+    AlexaPermissionsDialog,
+)
 from core.ui.themes import ThemeChrome
+
+COLOR_CYAN = "#00f0ff"
+COLOR_YELLOW = "#ffaa00"
+COLOR_GREEN = "#00ff66"
+COLOR_RED = "#ff2a55"
 
 
 class _TabsProxy:
@@ -62,8 +80,8 @@ class SetupApiModal(QDialog):
     config_saved = pyqtSignal(str)   # backend_id / name
     _async_validation_done = pyqtSignal(str, bool, str)  # (backend_id_or_name, is_valid, message)
 
-    _MODAL_W = 600
-    _MODAL_H = 580
+    _MODAL_W = 640
+    _MODAL_H = 620
 
     def __init__(self, parent=None, store: Optional[SecretStore] = None):
         super().__init__(parent)
@@ -74,9 +92,13 @@ class SetupApiModal(QDialog):
         import core.secrets.store
         self.store = store or core.secrets.store.get_secret_store()
         self._active_tab_idx = 0
-        self._backend_ids = ["google_workspace", "spotify", "gmail"]
+        self._backend_ids = ["google_workspace", "spotify", "gmail", "alexa"]
         self._tab_buttons: list[QPushButton] = []
-        self._tabs = _TabsProxy(["GOOGLE WORKSPACE", "SPOTIFY", "GMAIL API"])
+        self._tabs = _TabsProxy(["GOOGLE WORKSPACE", "SPOTIFY", "GMAIL API", "ALEXA"])
+
+        self._alexa_policy = AlexaActionPolicy()
+        self._alexa_linking_mgr = AccountLinkingManager()
+        self._alexa_state_mgr = AlexaStateManager()
 
         self._async_validation_done.connect(self._on_validation_result)
 
@@ -89,6 +111,8 @@ class SetupApiModal(QDialog):
         self._gw_id_input = self._gw_cid
         self._gw_secret_input = self._gw_secret
         self._gmail_key_input = self._gmail_pw
+        self._alexa_id_input = self._alexa_skill_id
+        self._alexa_secret_input = self._alexa_oauth_csecret
         self._footer_status = self._status_lbl
 
     def _submit_spotify(self, sync: bool = True) -> None:
@@ -104,6 +128,11 @@ class SetupApiModal(QDialog):
     def _submit_gmail(self, sync: bool = True) -> None:
         """Alias for programmatic submission in tests."""
         self._switch_tab(2)
+        self._on_submit_current_tab(sync=sync)
+
+    def _submit_alexa(self, sync: bool = True) -> None:
+        """Alias for programmatic submission in tests."""
+        self._switch_tab(3)
         self._on_submit_current_tab(sync=sync)
 
     def _init_ui(self) -> None:
@@ -173,6 +202,7 @@ class SetupApiModal(QDialog):
             ("google_workspace", "🌐  GOOGLE WORKSPACE"),
             ("spotify", "🎵  SPOTIFY API"),
             ("gmail", "✉  GMAIL API"),
+            ("alexa", "🎙  ALEXA"),
         ]
 
         for idx, (bid, title) in enumerate(tab_defs):
@@ -198,6 +228,9 @@ class SetupApiModal(QDialog):
 
         # 3. Gmail Page
         self._stack.addWidget(self._build_gmail_page())
+
+        # 4. Alexa Page
+        self._stack.addWidget(self._build_alexa_page())
 
         root.addWidget(self._stack, stretch=1)
 
@@ -282,6 +315,7 @@ class SetupApiModal(QDialog):
                 padding: 4px 8px;
                 font-family: 'Consolas', monospace;
                 font-size: 11px;
+                min-height: 20px;
             }}
             QLineEdit:focus, QTextEdit:focus {{
                 border: 1px solid {pal.pri};
@@ -485,6 +519,698 @@ class SetupApiModal(QDialog):
             self._gmail_mode_oauth.setStyleSheet(active_ss)
             self._gmail_stack.setCurrentIndex(1)
 
+    # ── Alexa Page ───────────────────────────────────────────────────────────
+    def _build_alexa_page(self) -> QWidget:
+        self._alexa_stack = QStackedWidget()
+        self._alexa_overview_widget = self._build_alexa_overview()
+        self._alexa_perms_widget = self._build_alexa_permissions_widget()
+        self._alexa_stack.addWidget(self._alexa_overview_widget)
+        self._alexa_stack.addWidget(self._alexa_perms_widget)
+        return self._alexa_stack
+
+    def _build_alexa_overview(self) -> QWidget:
+        pal = ThemeChrome.get_active().palette
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setStyleSheet("""
+            QScrollArea {
+                background: transparent;
+                border: none;
+            }
+            QScrollBar:vertical {
+                width: 6px;
+                background: transparent;
+            }
+            QScrollBar::handle:vertical {
+                background: rgba(142, 155, 255, 0.25);
+                border-radius: 3px;
+                min-height: 20px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background: #8e9bff;
+            }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0px;
+            }
+        """)
+
+        w = QWidget()
+        w.setStyleSheet("background: transparent;")
+        lay = QVBoxLayout(w)
+        lay.setContentsMargins(4, 4, 10, 8)
+        lay.setSpacing(10)
+
+        desc = QLabel("Connect your Amazon Echo or Alexa app to ALFRED via the Alexa Custom Skill.")
+        desc.setFont(QFont("Consolas", 7))
+        desc.setStyleSheet(f"color: {pal.text_med};")
+        lay.addWidget(desc)
+
+        # ── User Mode Panel ──────────────────────────────────────────────────
+        user_card = QFrame()
+        user_card.setStyleSheet(f"""
+            QFrame {{
+                background-color: {pal.panel2};
+                border: 1px solid {pal.border_a};
+                border-radius: 4px;
+            }}
+        """)
+        user_lay = QVBoxLayout(user_card)
+        user_lay.setContentsMargins(12, 12, 12, 12)
+        user_lay.setSpacing(10)
+
+        # Status row
+        status_row = QHBoxLayout()
+        st_title = QLabel("CONNECTION STATUS:")
+        st_title.setFont(QFont("Consolas", 8, QFont.Weight.Bold))
+        st_title.setStyleSheet(f"color: {pal.text_bright}; border: none; background: transparent;")
+        status_row.addWidget(st_title)
+
+        self._alexa_status_badge = QLabel("NOT CONFIGURED")
+        self._alexa_status_badge.setFont(QFont("Consolas", 8, QFont.Weight.Bold))
+        self._alexa_status_badge.setStyleSheet(f"color: {COLOR_YELLOW}; border: none; background: transparent;")
+        status_row.addWidget(self._alexa_status_badge)
+        status_row.addStretch()
+        user_lay.addLayout(status_row)
+
+        # Connect / Disconnect Buttons row
+        action_row = QHBoxLayout()
+        self._alexa_connect_btn = QPushButton("◈  CONNECT ALEXA")
+        self._alexa_connect_btn.setFixedHeight(30)
+        self._alexa_connect_btn.setFont(QFont("Consolas", 8, QFont.Weight.Bold))
+        self._alexa_connect_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._alexa_connect_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: rgba(0, 240, 255, 0.15);
+                color: {COLOR_CYAN};
+                border: 1px solid {COLOR_CYAN};
+                border-radius: 2px;
+                padding: 0 14px;
+            }}
+            QPushButton:hover {{
+                background: {COLOR_CYAN};
+                color: {pal.dark};
+            }}
+        """)
+        self._alexa_connect_btn.clicked.connect(self._start_alexa_linking)
+        action_row.addWidget(self._alexa_connect_btn)
+
+        self._alexa_disconnect_btn = QPushButton("DISCONNECT")
+        self._alexa_disconnect_btn.setFixedHeight(30)
+        self._alexa_disconnect_btn.setFont(QFont("Consolas", 8))
+        self._alexa_disconnect_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._alexa_disconnect_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: {pal.panel};
+                color: {pal.text_med};
+                border: 1px solid {pal.border_a};
+                border-radius: 2px;
+                padding: 0 10px;
+            }}
+            QPushButton:hover {{
+                border-color: {pal.red};
+                color: {pal.red};
+            }}
+        """)
+        self._alexa_disconnect_btn.clicked.connect(self._on_alexa_disconnect)
+        action_row.addWidget(self._alexa_disconnect_btn)
+        action_row.addStretch()
+        user_lay.addLayout(action_row)
+
+        # Permissions row
+        perms_row = QHBoxLayout()
+        self._alexa_allowed_count_lbl = QLabel(f"ALLOWED COMMANDS: {self._alexa_policy.count_allowed_intents()}")
+        self._alexa_allowed_count_lbl.setFont(QFont("Consolas", 8))
+        self._alexa_allowed_count_lbl.setStyleSheet(f"color: {pal.text_med}; border: none; background: transparent;")
+        perms_row.addWidget(self._alexa_allowed_count_lbl)
+
+        self._alexa_perms_btn = QPushButton("⚙  MANAGE PERMISSIONS")
+        self._alexa_perms_btn.setFixedHeight(24)
+        self._alexa_perms_btn.setFont(QFont("Consolas", 7, QFont.Weight.Bold))
+        self._alexa_perms_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._alexa_perms_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: transparent;
+                color: {pal.pri};
+                border: 1px solid {pal.pri};
+                border-radius: 2px;
+                padding: 0 8px;
+            }}
+            QPushButton:hover {{
+                background: {pal.pri};
+                color: {pal.dark};
+            }}
+        """)
+        self._alexa_perms_btn.clicked.connect(self._open_alexa_permissions)
+        perms_row.addWidget(self._alexa_perms_btn)
+        perms_row.addStretch()
+        user_lay.addLayout(perms_row)
+
+        # Dynamic Linking Container (hidden by default)
+        self._alexa_link_container = QWidget()
+        link_lay = QVBoxLayout(self._alexa_link_container)
+        link_lay.setContentsMargins(0, 4, 0, 0)
+        link_lay.setSpacing(6)
+
+        self._alexa_link_instruct = QLabel("“Enable the ALFRED skill in the Alexa app, then link your account, sir.”")
+        self._alexa_link_instruct.setFont(QFont("Consolas", 7, QFont.Weight.Medium))
+        self._alexa_link_instruct.setStyleSheet(f"color: {COLOR_CYAN}; border: none; background: transparent;")
+        link_lay.addWidget(self._alexa_link_instruct)
+
+        qr_box = QHBoxLayout()
+        self._alexa_qr_label = QLabel()
+        self._alexa_qr_label.setFixedSize(96, 96)
+        self._alexa_qr_label.setStyleSheet(f"border: 1px solid {pal.border_a}; background: #02060b;")
+        self._alexa_qr_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        qr_box.addWidget(self._alexa_qr_label)
+
+        self._alexa_link_url_input = QLineEdit()
+        self._alexa_link_url_input.setReadOnly(True)
+        self._alexa_link_url_input.setFixedHeight(28)
+        self._alexa_link_url_input.setStyleSheet(self._field_style())
+        qr_box.addWidget(self._alexa_link_url_input, stretch=1)
+        link_lay.addLayout(qr_box)
+
+        self._alexa_link_container.setVisible(False)
+        user_lay.addWidget(self._alexa_link_container)
+
+        lay.addWidget(user_card)
+
+        # ── Developer Configuration Section ──────────────────────────────────
+        dev_toggle_row = QHBoxLayout()
+        self._alexa_dev_toggle_btn = QPushButton("▸  DEVELOPER CONFIGURATION")
+        self._alexa_dev_toggle_btn.setFont(QFont("Consolas", 8, QFont.Weight.Bold))
+        self._alexa_dev_toggle_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._alexa_dev_toggle_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: transparent;
+                color: {pal.text_dim};
+                border: none;
+                text-align: left;
+                padding: 4px 0;
+            }}
+            QPushButton:hover {{
+                color: {pal.pri};
+            }}
+        """)
+        self._alexa_dev_toggle_btn.clicked.connect(self._toggle_alexa_dev_panel)
+        dev_toggle_row.addWidget(self._alexa_dev_toggle_btn)
+        dev_toggle_row.addStretch()
+        lay.addLayout(dev_toggle_row)
+
+        self._alexa_dev_widget = QFrame()
+        self._alexa_dev_widget.setObjectName("alexa_dev_card")
+        self._alexa_dev_widget.setStyleSheet(f"""
+            QFrame#alexa_dev_card {{
+                background-color: {pal.panel2};
+                border: 1px solid {pal.border_a};
+                border-radius: 4px;
+            }}
+        """)
+        dev_lay = QVBoxLayout(self._alexa_dev_widget)
+        dev_lay.setContentsMargins(12, 12, 12, 12)
+        dev_lay.setSpacing(6)
+
+        dev_lay.addWidget(self._lbl("SKILL ID"))
+        self._alexa_skill_id = QLineEdit()
+        self._alexa_skill_id.setFixedHeight(28)
+        self._alexa_skill_id.setPlaceholderText("amzn1.ask.skill.xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx")
+        self._alexa_skill_id.setStyleSheet(self._field_style())
+        dev_lay.addWidget(self._alexa_skill_id)
+
+        dev_lay.addWidget(self._lbl("RELAY HTTPS URL"))
+        self._alexa_relay_https = QLineEdit()
+        self._alexa_relay_https.setFixedHeight(28)
+        self._alexa_relay_https.setPlaceholderText("https://relay.yourdomain.com")
+        self._alexa_relay_https.setStyleSheet(self._field_style())
+        dev_lay.addWidget(self._alexa_relay_https)
+
+        dev_lay.addWidget(self._lbl("RELAY WEBSOCKET URL"))
+        self._alexa_relay_ws = QLineEdit()
+        self._alexa_relay_ws.setFixedHeight(28)
+        self._alexa_relay_ws.setPlaceholderText("wss://relay.yourdomain.com/ws/desktop")
+        self._alexa_relay_ws.setStyleSheet(self._field_style())
+        dev_lay.addWidget(self._alexa_relay_ws)
+
+        dev_lay.addWidget(self._lbl("SKILL STORE / ACCOUNT LINKING URL"))
+        self._alexa_store_url = QLineEdit()
+        self._alexa_store_url.setFixedHeight(28)
+        self._alexa_store_url.setPlaceholderText("https://alexa-skills.amazon.com/...")
+        self._alexa_store_url.setStyleSheet(self._field_style())
+        dev_lay.addWidget(self._alexa_store_url)
+
+        dev_lay.addWidget(self._lbl("OAUTH CLIENT ID"))
+        self._alexa_oauth_cid = QLineEdit()
+        self._alexa_oauth_cid.setFixedHeight(28)
+        self._alexa_oauth_cid.setPlaceholderText("alfred_alexa_client")
+        self._alexa_oauth_cid.setStyleSheet(self._field_style())
+        dev_lay.addWidget(self._alexa_oauth_cid)
+
+        dev_lay.addWidget(self._lbl("OAUTH CLIENT SECRET"))
+        self._alexa_oauth_csecret = QLineEdit()
+        self._alexa_oauth_csecret.setFixedHeight(28)
+        self._alexa_oauth_csecret.setEchoMode(QLineEdit.EchoMode.Password)
+        self._alexa_oauth_csecret.setPlaceholderText("Client secret (masked)")
+        self._alexa_oauth_csecret.setStyleSheet(self._field_style())
+        dev_lay.addWidget(self._alexa_oauth_csecret)
+
+        dev_lay.addWidget(self._lbl("OAUTH REDIRECT URL"))
+        self._alexa_redirect_url = QLineEdit()
+        self._alexa_redirect_url.setFixedHeight(28)
+        self._alexa_redirect_url.setPlaceholderText("https://pitangui.amazon.com/api/skill/link/...")
+        self._alexa_redirect_url.setStyleSheet(self._field_style())
+        dev_lay.addWidget(self._alexa_redirect_url)
+
+        dev_btn_row = QHBoxLayout()
+        self._alexa_validate_btn = QPushButton("VALIDATE CONFIGURATION")
+        self._alexa_validate_btn.setFixedHeight(28)
+        self._alexa_validate_btn.setFont(QFont("Consolas", 8, QFont.Weight.Bold))
+        self._alexa_validate_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._alexa_validate_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: {pal.panel2};
+                color: {COLOR_YELLOW};
+                border: 1px solid {COLOR_YELLOW};
+                border-radius: 2px;
+                padding: 0 12px;
+            }}
+            QPushButton:hover {{
+                background: {COLOR_YELLOW};
+                color: {pal.dark};
+            }}
+        """)
+        self._alexa_validate_btn.clicked.connect(self._validate_alexa_dev_config)
+        dev_btn_row.addWidget(self._alexa_validate_btn)
+
+        self._alexa_save_dev_btn = QPushButton("SAVE CONFIGURATION")
+        self._alexa_save_dev_btn.setFixedHeight(28)
+        self._alexa_save_dev_btn.setFont(QFont("Consolas", 8, QFont.Weight.Bold))
+        self._alexa_save_dev_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._alexa_save_dev_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: {pal.panel2};
+                color: {pal.green};
+                border: 1px solid {pal.green};
+                border-radius: 2px;
+                padding: 0 12px;
+            }}
+            QPushButton:hover {{
+                background: {pal.green};
+                color: {pal.dark};
+            }}
+        """)
+        self._alexa_save_dev_btn.clicked.connect(self._save_alexa_dev_config)
+        dev_btn_row.addWidget(self._alexa_save_dev_btn)
+        dev_btn_row.addStretch()
+        dev_lay.addLayout(dev_btn_row)
+
+        self._alexa_dev_widget.setVisible(False)
+        lay.addWidget(self._alexa_dev_widget)
+
+        lay.addStretch()
+        scroll.setWidget(w)
+        return scroll
+
+    def _build_alexa_permissions_widget(self) -> QWidget:
+        """Dedicated permissions manager embedded directly inside the Alexa tab."""
+        w = QWidget()
+        lay = QVBoxLayout(w)
+        lay.setContentsMargins(4, 4, 4, 4)
+        lay.setSpacing(8)
+
+        pal = ThemeChrome.get_active().palette
+
+        # ── Top Navigation Bar ───────────────────────────────────────────────
+        top_row = QHBoxLayout()
+        top_row.setSpacing(10)
+
+        back_btn = QPushButton("❮  BACK TO OVERVIEW")
+        back_btn.setFixedHeight(26)
+        back_btn.setFont(QFont("Consolas", 8, QFont.Weight.Bold))
+        back_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        back_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: rgba(0, 240, 255, 0.12);
+                color: {COLOR_CYAN};
+                border: 1px solid {COLOR_CYAN};
+                border-radius: 2px;
+                padding: 0 10px;
+            }}
+            QPushButton:hover {{
+                background: {COLOR_CYAN};
+                color: {pal.dark};
+            }}
+        """)
+        back_btn.clicked.connect(self._close_alexa_permissions)
+        top_row.addWidget(back_btn)
+
+        title_box = QVBoxLayout()
+        title_box.setSpacing(1)
+        title_lbl = QLabel("◈  ALEXA CAPABILITY PERMISSIONS")
+        title_lbl.setFont(QFont("Consolas", 9, QFont.Weight.Bold))
+        title_lbl.setStyleSheet(f"color: {pal.pri}; border: none; background: transparent;")
+        title_box.addWidget(title_lbl)
+
+        sub_lbl = QLabel("CONFIGURE APPROVED VOICE DIRECTIVES // ZERO SHELL OR CODE EGRESS")
+        sub_lbl.setFont(QFont("Consolas", 7))
+        sub_lbl.setStyleSheet(f"color: {pal.text_dim}; border: none; background: transparent;")
+        title_box.addWidget(sub_lbl)
+        top_row.addLayout(title_box)
+        top_row.addStretch()
+        lay.addLayout(top_row)
+
+        # ── Scroll Area for Directives ───────────────────────────────────────
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setStyleSheet("""
+            QScrollArea {
+                background: transparent;
+                border: none;
+            }
+            QScrollBar:vertical {
+                width: 6px;
+                background: transparent;
+            }
+            QScrollBar::handle:vertical {
+                background: #1f364d;
+                border-radius: 3px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background: #00f0ff;
+            }
+        """)
+
+        content = QWidget()
+        c_lay = QVBoxLayout(content)
+        c_lay.setContentsMargins(0, 0, 4, 0)
+        c_lay.setSpacing(8)
+
+        # Approved Capabilities Card
+        app_card = QFrame()
+        app_card.setStyleSheet(f"""
+            QFrame {{
+                background-color: {pal.panel2};
+                border: 1px solid {pal.border_a};
+                border-radius: 4px;
+            }}
+        """)
+        app_lay = QVBoxLayout(app_card)
+        app_lay.setContentsMargins(12, 10, 12, 10)
+        app_lay.setSpacing(8)
+
+        app_title = QLabel("APPROVED VOICE DIRECTIVES")
+        app_title.setFont(QFont("Consolas", 8, QFont.Weight.Bold))
+        app_title.setStyleSheet(f"color: {COLOR_CYAN}; border: none; background: transparent;")
+        app_lay.addWidget(app_title)
+
+        self._alexa_perms_checkboxes = {}
+        for cap_id, cap_title, cap_desc, default_val in CAPABILITY_DEFINITIONS:
+            item_box = QVBoxLayout()
+            item_box.setSpacing(2)
+
+            cb = QCheckBox(f"✓  {cap_title}")
+            cb.setFont(QFont("Consolas", 8, QFont.Weight.Bold))
+            cb.setStyleSheet(f"""
+                QCheckBox {{
+                    color: {pal.text_bright};
+                    spacing: 8px;
+                    background: transparent;
+                    border: none;
+                }}
+                QCheckBox::indicator {{
+                    width: 14px;
+                    height: 14px;
+                    border: 1px solid {pal.pri};
+                    background: {pal.panel};
+                    border-radius: 2px;
+                }}
+                QCheckBox::indicator:hover {{
+                    border-color: #ffffff;
+                }}
+                QCheckBox::indicator:checked {{
+                    background: {pal.pri};
+                }}
+            """)
+            cb.setChecked(default_val)
+            self._alexa_perms_checkboxes[cap_id] = cb
+            item_box.addWidget(cb)
+
+            desc_lbl = QLabel(cap_desc)
+            desc_lbl.setFont(QFont("Consolas", 7))
+            desc_lbl.setStyleSheet(f"color: {pal.text_med}; margin-left: 22px; border: none; background: transparent;")
+            item_box.addWidget(desc_lbl)
+
+            app_lay.addLayout(item_box)
+
+        c_lay.addWidget(app_card)
+
+        # Prohibited Capabilities Card
+        den_card = QFrame()
+        den_card.setStyleSheet(f"""
+            QFrame {{
+                background-color: rgba(255, 42, 85, 0.05);
+                border: 1px solid rgba(255, 42, 85, 0.35);
+                border-radius: 4px;
+            }}
+        """)
+        den_lay = QVBoxLayout(den_card)
+        den_lay.setContentsMargins(12, 8, 12, 8)
+        den_lay.setSpacing(4)
+
+        den_title = QLabel("PROHIBITED CAPABILITIES (ALWAYS DENIED BY SECURITY POLICY)")
+        den_title.setFont(QFont("Consolas", 7, QFont.Weight.Bold))
+        den_title.setStyleSheet(f"color: {pal.red}; border: none; background: transparent;")
+        den_lay.addWidget(den_title)
+
+        for d_title, d_desc in PROHIBITED_CAPABILITIES:
+            d_row = QHBoxLayout()
+            d_lbl = QLabel(f"✕  {d_title}")
+            d_lbl.setFont(QFont("Consolas", 7))
+            d_lbl.setStyleSheet(f"color: {pal.text_dim}; border: none; background: transparent;")
+            d_row.addWidget(d_lbl)
+            d_row.addStretch()
+
+            tag = QLabel("[RESTRICTED]")
+            tag.setFont(QFont("Consolas", 7, QFont.Weight.Bold))
+            tag.setStyleSheet(f"color: {pal.red}; border: none; background: transparent;")
+            d_row.addWidget(tag)
+            den_lay.addLayout(d_row)
+
+        c_lay.addWidget(den_card)
+        scroll.setWidget(content)
+        lay.addWidget(scroll, stretch=1)
+
+        # ── Footer Actions ───────────────────────────────────────────────────
+        foot = QHBoxLayout()
+        reset_btn = QPushButton("↺  RESET DEFAULTS")
+        reset_btn.setFont(QFont("Consolas", 7, QFont.Weight.Bold))
+        reset_btn.setFixedSize(130, 28)
+        reset_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        reset_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: {pal.panel2};
+                color: {pal.text_med};
+                border: 1px solid {pal.border_a};
+                border-radius: 2px;
+            }}
+            QPushButton:hover {{ color: #ffffff; border-color: {COLOR_YELLOW}; }}
+        """)
+        reset_btn.clicked.connect(self._reset_alexa_perms_defaults)
+        foot.addWidget(reset_btn)
+
+        foot.addStretch()
+
+        save_btn = QPushButton("✓  SAVE & APPLY PERMISSIONS")
+        save_btn.setFont(QFont("Consolas", 8, QFont.Weight.Bold))
+        save_btn.setFixedSize(190, 28)
+        save_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        save_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: rgba(0, 240, 255, 0.2);
+                color: {COLOR_CYAN};
+                border: 1px solid {COLOR_CYAN};
+                border-radius: 2px;
+            }}
+            QPushButton:hover {{
+                background: {COLOR_CYAN};
+                color: {pal.dark};
+            }}
+        """)
+        save_btn.clicked.connect(lambda: self._save_alexa_perms(and_return=True))
+        foot.addWidget(save_btn)
+
+        lay.addLayout(foot)
+        return w
+
+    def _refresh_alexa_ui_state(self) -> None:
+        """Update Alexa status badge and allowed commands count."""
+        pal = ThemeChrome.get_active().palette
+        snap = self._alexa_state_mgr.get_snapshot()
+
+        status_map = {
+            AlexaConnectionStatus.NOT_CONFIGURED: ("NOT CONFIGURED", COLOR_YELLOW),
+            AlexaConnectionStatus.READY_TO_LINK: ("READY TO LINK", COLOR_CYAN),
+            AlexaConnectionStatus.LINK_PENDING: ("LINKING IN PROGRESS...", COLOR_CYAN),
+            AlexaConnectionStatus.CONNECTED: ("CONNECTED", pal.green),
+            AlexaConnectionStatus.OFFLINE: ("OFFLINE", pal.red),
+            AlexaConnectionStatus.ERROR: ("ERROR", pal.red),
+        }
+        text, color = status_map.get(snap.status, ("UNKNOWN", pal.text_med))
+        if hasattr(self, "_alexa_status_badge"):
+            self._alexa_status_badge.setText(text)
+            self._alexa_status_badge.setStyleSheet(f"color: {color}; border: none; background: transparent;")
+
+        if hasattr(self, "_alexa_allowed_count_lbl"):
+            cnt = self._alexa_policy.count_allowed_intents()
+            self._alexa_allowed_count_lbl.setText(f"ALLOWED COMMANDS: {cnt}")
+
+    def _start_alexa_linking(self) -> None:
+        """Initiate short-lived account linking state and display instructions/QR code."""
+        cfg = load_alexa_config_from_store(self.store)
+        if not cfg.is_configured() and not self._alexa_skill_id.text().strip():
+            self._status_lbl.setText("⚠ Please configure Alexa Skill ID and Relay URL first.")
+            self._status_lbl.setStyleSheet("color: #ffaa00;")
+            self._alexa_dev_widget.setVisible(True)
+            self._alexa_dev_toggle_btn.setText("▾  DEVELOPER CONFIGURATION")
+            return
+
+        token = self._alexa_linking_mgr.create_linking_state("desktop_main")
+        base_url = cfg.relay_https_url or "http://localhost:8000"
+        link_url = f"{base_url.rstrip('/')}/api/alexa/link?state={token}"
+
+        self._alexa_link_url_input.setText(link_url)
+        self._render_qr_code(link_url)
+        self._alexa_link_container.setVisible(True)
+        self._alexa_state_mgr.set_linking_pending()
+        self._refresh_alexa_ui_state()
+
+        self._status_lbl.setText("Account linking initiated. Enable the skill and link your Echo account.")
+        self._status_lbl.setStyleSheet(f"color: {ThemeChrome.get_active().palette.cyan};")
+
+        import webbrowser
+        try:
+            webbrowser.open(link_url)
+        except Exception:
+            pass
+
+    def _render_qr_code(self, data: str) -> None:
+        """Render QR code pixmap for linking URL."""
+        try:
+            import io
+            import qrcode
+            from PyQt6.QtGui import QImage, QPixmap
+            qr = qrcode.QRCode(box_size=3, border=1)
+            qr.add_data(data)
+            qr.make(fit=True)
+            img = qr.make_image(fill_color="white", back_color="black")
+            buf = io.BytesIO()
+            img.save(buf, format="PNG")
+            buf.seek(0)
+            qimg = QImage.fromData(buf.getvalue())
+            pix = QPixmap.fromImage(qimg)
+            self._alexa_qr_label.setPixmap(pix.scaled(96, 96, Qt.AspectRatioMode.KeepAspectRatio))
+        except Exception:
+            self._alexa_qr_label.setText("[QR Code]")
+
+    def _on_alexa_disconnect(self) -> None:
+        """Revoke Alexa linking state and tokens without touching other integrations."""
+        self.store.delete("alexa.oauth_access_token")
+        self.store.delete("alexa.oauth_refresh_token")
+        self._alexa_state_mgr.set_linked(False)
+        self._alexa_link_container.setVisible(False)
+        self._refresh_alexa_ui_state()
+        self._status_lbl.setText("Alexa connection unlinked and local tokens revoked.")
+        self._status_lbl.setStyleSheet(f"color: {ThemeChrome.get_active().palette.yellow};")
+
+    def _toggle_alexa_dev_panel(self) -> None:
+        """Toggle collapsed developer panel."""
+        is_vis = not self._alexa_dev_widget.isVisible()
+        self._alexa_dev_widget.setVisible(is_vis)
+        self._alexa_dev_toggle_btn.setText("▾  DEVELOPER CONFIGURATION" if is_vis else "▸  DEVELOPER CONFIGURATION")
+
+    def _open_alexa_permissions(self) -> None:
+        """Switch to capability permissions view inside the Alexa tab."""
+        self._load_alexa_perms_values()
+        self._alexa_stack.setCurrentIndex(1)
+
+    def _close_alexa_permissions(self) -> None:
+        """Return from permissions view to Alexa overview view."""
+        self._alexa_stack.setCurrentIndex(0)
+
+    def _load_alexa_perms_values(self) -> None:
+        """Load stored permission values into checkboxes."""
+        for cap_id, cb in getattr(self, "_alexa_perms_checkboxes", {}).items():
+            stored = self.store.get(f"alexa.perm.{cap_id}")
+            if stored is not None:
+                cb.setChecked(stored.strip().lower() == "true")
+            else:
+                cb.setChecked(self._alexa_policy.is_capability_enabled(cap_id))
+
+    def _reset_alexa_perms_defaults(self) -> None:
+        """Reset permissions checkboxes to safe defaults."""
+        for cap_id, cap_title, cap_desc, default_val in CAPABILITY_DEFINITIONS:
+            if cap_id in getattr(self, "_alexa_perms_checkboxes", {}):
+                self._alexa_perms_checkboxes[cap_id].setChecked(default_val)
+
+    def _save_alexa_perms(self, and_return: bool = True) -> None:
+        """Save permissions to SecretStore and AlexaActionPolicy."""
+        for cap_id, cb in getattr(self, "_alexa_perms_checkboxes", {}).items():
+            enabled = cb.isChecked()
+            self._alexa_policy.set_capability_enabled(cap_id, enabled)
+            self.store.set(f"alexa.perm.{cap_id}", str(enabled).lower())
+        self._alexa_allowed_count_lbl.setText(f"ALLOWED COMMANDS: {self._alexa_policy.count_allowed_intents()}")
+        self._status_lbl.setText("✓ Alexa permissions saved and active.")
+        self._status_lbl.setStyleSheet(f"color: {ThemeChrome.get_active().palette.green};")
+        if and_return:
+            self._alexa_stack.setCurrentIndex(0)
+
+    def _validate_alexa_dev_config(self) -> None:
+        """Validate developer parameters non-blockingly."""
+        fields = {
+            "skill_id": self._alexa_skill_id.text().strip(),
+            "relay_https_url": self._alexa_relay_https.text().strip(),
+            "relay_ws_url": self._alexa_relay_ws.text().strip(),
+            "oauth_redirect_url": self._alexa_redirect_url.text().strip(),
+        }
+        ok, err = validate_backend_fields("alexa", fields)
+        pal = ThemeChrome.get_active().palette
+        if not ok:
+            self._status_lbl.setText(f"✕ {err}")
+            self._status_lbl.setStyleSheet(f"color: {pal.red};")
+            return
+
+        self._status_lbl.setText("✓ Alexa configuration format is valid.")
+        self._status_lbl.setStyleSheet(f"color: {pal.green};")
+
+    def _save_alexa_dev_config(self) -> None:
+        """Explicit save for Alexa configuration."""
+        self._switch_tab(3)
+        self._on_submit_current_tab(sync=False)
+
+    def _load_alexa_values(self) -> None:
+        """Load stored Alexa parameters into fields."""
+        cfg = load_alexa_config_from_store(self.store)
+        if cfg.skill_id:
+            self._alexa_skill_id.setText(cfg.skill_id)
+        if cfg.relay_https_url:
+            self._alexa_relay_https.setText(cfg.relay_https_url)
+        if cfg.relay_ws_url:
+            self._alexa_relay_ws.setText(cfg.relay_ws_url)
+        if cfg.skill_store_url:
+            self._alexa_store_url.setText(cfg.skill_store_url)
+        if cfg.oauth_client_id:
+            self._alexa_oauth_cid.setText(cfg.oauth_client_id)
+        if cfg.oauth_client_secret:
+            self._alexa_oauth_csecret.setText(cfg.oauth_client_secret)
+        if cfg.oauth_redirect_url:
+            self._alexa_redirect_url.setText(cfg.oauth_redirect_url)
+
+        is_conf = bool(cfg.skill_id)
+        self._alexa_state_mgr.set_configured(is_conf)
+        self._refresh_alexa_ui_state()
+
     def _switch_tab(self, idx: int) -> None:
         self._active_tab_idx = max(0, min(len(self._backend_ids) - 1, idx))
         self._stack.setCurrentIndex(self._active_tab_idx)
@@ -581,6 +1307,9 @@ class SetupApiModal(QDialog):
             self._gmail_json.setPlainText(self.store.get("gmail.credentials_json") or "")
             self._set_gmail_mode("oauth_json")
 
+        # Alexa
+        self._load_alexa_values()
+
     def _start_google_oauth(self) -> None:
         cid = self._gw_cid.text().strip()
         csecret = self._gw_secret.text().strip()
@@ -590,7 +1319,7 @@ class SetupApiModal(QDialog):
             return
 
         self._status_lbl.setText("Opening browser for Google authorization...")
-        self._status_lbl.setStyleSheet(f"color: {ThemeChrome.get_active().palette.cyan};")
+        self._status_lbl.setStyleSheet(f"color: {COLOR_CYAN};")
 
         def worker():
             if cid:
@@ -624,8 +1353,7 @@ class SetupApiModal(QDialog):
             return
 
         self._status_lbl.setText("Opening browser for Spotify authorization...")
-        pal = ThemeChrome.get_active().palette
-        self._status_lbl.setStyleSheet(f"color: {pal.cyan};")
+        self._status_lbl.setStyleSheet(f"color: {COLOR_CYAN};")
 
         def worker():
             from actions.spotify_control import authorize_user, get_spotify_client
@@ -667,6 +1395,16 @@ class SetupApiModal(QDialog):
                     "email": self._gmail_email.text().strip(),
                     "app_password": self._gmail_pw.text().strip(),
                 }
+        elif bid == "alexa":
+            fields = {
+                "skill_id": self._alexa_skill_id.text().strip(),
+                "relay_https_url": self._alexa_relay_https.text().strip(),
+                "relay_ws_url": self._alexa_relay_ws.text().strip(),
+                "skill_store_url": self._alexa_store_url.text().strip(),
+                "oauth_client_id": self._alexa_oauth_cid.text().strip(),
+                "oauth_client_secret": self._alexa_oauth_csecret.text().strip(),
+                "oauth_redirect_url": self._alexa_redirect_url.text().strip(),
+            }
 
         def worker():
             ok, msg = save_backend_credentials(bid, fields, store=self.store)
@@ -711,6 +1449,9 @@ class SetupApiModal(QDialog):
                         self.store.set("gmail.user", fields["email"])
                 except Exception:
                     pass
+            elif ok and bid == "alexa":
+                self._alexa_state_mgr.set_configured(bool(fields.get("skill_id")))
+                self._refresh_alexa_ui_state()
             backend = get_backend(bid)
             name = "Spotify" if bid == "spotify" else (backend.name if backend else bid)
             self._async_validation_done.emit(name, ok, msg)

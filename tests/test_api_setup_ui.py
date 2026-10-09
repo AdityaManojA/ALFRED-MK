@@ -38,10 +38,11 @@ class TestApiSetupUI(unittest.TestCase):
 
     def test_modal_initialization_and_tabs(self):
         modal = SetupApiModal(store=self.store)
-        self.assertEqual(modal._tabs.count(), 3)
+        self.assertEqual(modal._tabs.count(), 4)
         self.assertEqual(modal._tabs.tabText(0), "GOOGLE WORKSPACE")
         self.assertEqual(modal._tabs.tabText(1), "SPOTIFY")
         self.assertEqual(modal._tabs.tabText(2), "GMAIL API")
+        self.assertEqual(modal._tabs.tabText(3), "ALEXA")
 
     def test_masked_inputs(self):
         modal = SetupApiModal(store=self.store)
@@ -51,6 +52,24 @@ class TestApiSetupUI(unittest.TestCase):
         self.assertEqual(modal._gw_id_input.echoMode(), QLineEdit.EchoMode.Password)
         self.assertEqual(modal._gw_secret_input.echoMode(), QLineEdit.EchoMode.Password)
         self.assertEqual(modal._gmail_key_input.echoMode(), QLineEdit.EchoMode.Password)
+        self.assertEqual(modal._alexa_secret_input.echoMode(), QLineEdit.EchoMode.Password)
+
+    def test_submit_alexa_valid(self):
+        modal = SetupApiModal(store=self.store)
+        valid_skill_id = "amzn1.ask.skill.12345678-1234-1234-1234-123456789012"
+        valid_relay_url = "https://relay.example.com"
+        modal._alexa_id_input.setText(valid_skill_id)
+        modal._alexa_relay_https.setText(valid_relay_url)
+
+        saved_signal_emitted = []
+        modal.config_saved.connect(lambda name: saved_signal_emitted.append(name))
+
+        modal._submit_alexa()
+        QApplication.processEvents()
+
+        self.assertIn("Alexa Connection", saved_signal_emitted)
+        self.assertEqual(self.store.get("alexa.skill_id"), valid_skill_id)
+        self.assertEqual(self.store.get("alexa.relay_https_url"), valid_relay_url)
 
     def test_submit_spotify_valid(self):
         modal = SetupApiModal(store=self.store)

@@ -2099,7 +2099,15 @@ class AlfredLive:
             "2. D: DRIVE AND E: DRIVE ARE SAFE: D: drive and E: drive are designated safe zones for user files and operations, EXCEPT D:\\Projects\\Personal-Assistant which remains permanently locked under the Heavenly Restriction.\n\n"
         )
 
-        parts = [time_ctx, identity_ctx, heavenly_ctx]
+        alexa_ctx = (
+            "[REMOTE CHANNEL — ALEXA INTEGRATION]\n"
+            "Alexa is an optional remote command surface. Only approved actions (focus mode, media playback, "
+            "telemetry status, reminders, and speed tests) are accepted over Alexa. "
+            "ALFRED never asks users to speak API keys or passwords. "
+            "Sensitive or destructive requests originating from Alexa are strictly denied.\n\n"
+        )
+
+        parts = [time_ctx, identity_ctx, heavenly_ctx, alexa_ctx]
         if mem_str:
             parts.append(mem_str)
         parts.append(sys_prompt)
