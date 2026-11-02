@@ -20,7 +20,8 @@
 
 <p align="center">
   <b>Multimodal Video/Audio Execution & Media Playback (Dune Trailer)</b><br>
-  <img src="Readme%20files/DuneTrailer.gif" alt="ALFRED Multimodal Interception Demo - Dune Trailer" width="92%">
+  <a href="Readme%20files/DuneTrailer.mp4"><img src="Readme%20files/DuneTrailer_preview.gif" alt="ALFRED Multimodal Interception Demo - Dune Trailer" width="92%"></a><br>
+  <sub>Preview. <a href="Readme%20files/DuneTrailer.mp4">Full-quality 1080p MP4</a></sub>
 </p>
 
 <p align="center">
