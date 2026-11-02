@@ -1341,8 +1341,15 @@ def retheme_all_widgets(old: dict[str, str], new: dict[str, str]) -> None:
             pass
 
 
-def qcol(h: str, a: int = 255) -> QColor:
+@functools.lru_cache(maxsize=1024)
+def _qcol_cached(h: str, a: int) -> QColor:
     c = QColor(h); c.setAlpha(a); return c
+
+
+def qcol(h: str, a: int = 255) -> QColor:
+    # The HUD calls this ~50 times a frame with the same few hex strings, so the
+    # parse is cached. Callers may mutate the result (setAlpha), so hand out a copy.
+    return QColor(_qcol_cached(h, a))
 
 
 # ── Windows GPU via NVML DLL (no subprocess, no console window) ──────────────
@@ -4288,7 +4295,7 @@ class LogWidget(QTextEdit):
                 height: 0; border: none;
             }}
         """)
-        self._queue: list[str] = []
+        self._queue: deque[str] = deque()
         self._typing  = False
         self._text    = ""
         self._pos     = 0
@@ -4315,7 +4322,7 @@ class LogWidget(QTextEdit):
             self._typing = False
             return
         self._typing = True
-        self._text   = self._queue.pop(0)
+        self._text   = self._queue.popleft()
         self._pos    = 0
         tl = self._text.lower()
         _ai_pfx = f"{self._ai_name_lc}:"

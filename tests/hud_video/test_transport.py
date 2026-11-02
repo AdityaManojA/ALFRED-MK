@@ -20,11 +20,15 @@ import unittest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 from PyQt6.QtCore import QCoreApplication
+from PyQt6.QtWidgets import QApplication
 
-# Ensure QCoreApplication exists for signals/slots in headless tests
+# A full QApplication, not a bare QCoreApplication: the LocalUrlBackend test
+# builds a QVideoWidget, and constructing any QWidget without a QApplication is
+# a Qt fatal error that aborts the whole pytest process (on Windows it can sit
+# behind a crash dialog, which looks like a hang).
 _app = QCoreApplication.instance()
 if _app is None:
-    _app = QCoreApplication([])
+    _app = QApplication([])
 
 from core.hud_video.controller import HudVideoController
 from core.hud_video.resolve import PlayableRef
@@ -284,6 +288,8 @@ class TestTransportCore(unittest.TestCase):
 
     def test_local_url_backend_dual_stream_audio_support(self):
         """LocalUrlBackend handles separate audio_uri for adaptive streams."""
+        if not isinstance(QCoreApplication.instance(), QApplication):
+            self.skipTest("needs a QApplication; another module created a QCoreApplication first")
         from PyQt6.QtMultimediaWidgets import QVideoWidget
         from core.hud_video.backends.local_url import LocalUrlBackend
         widget = QVideoWidget()
@@ -295,10 +301,17 @@ class TestTransportCore(unittest.TestCase):
             title="Dual Stream Video",
             audio_uri="http://127.0.0.1:8000/audio_only.m4a",
         )
-        backend.load(dual_ref)
-        self.assertTrue(backend._has_dual_stream)
-        self.assertFalse(backend._muted)
-        self.assertEqual(backend._volume, 0.75)
+        try:
+            backend.load(dual_ref)
+            self.assertTrue(backend._has_dual_stream)
+            self.assertFalse(backend._muted)
+            self.assertEqual(backend._volume, 0.75)
+        finally:
+            # Release the decoders explicitly. Leaving two QMediaPlayers that are
+            # mid-way through opening network sources to be torn down by garbage
+            # collection could block the whole pytest process indefinitely.
+            backend.stop()
+            widget.deleteLater()
 
 
 if __name__ == "__main__":

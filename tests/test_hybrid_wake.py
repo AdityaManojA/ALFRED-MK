@@ -28,9 +28,13 @@ class HybridWakeDetectionTests(unittest.TestCase):
         import os
         os.environ["TESTING"] = "1"
         os.environ["DISABLE_SPEAKER_VERIFICATION"] = "1"
-        # Generate test audio clips
-        cls.alfred_us = asyncio.run(_generate_audio("Alfred", "en-US-GuyNeural"))
-        cls.hey_alfred_in = asyncio.run(_generate_audio("Hey Alfred", "en-IN-PrabhatNeural"))
+        # Generate test audio clips. This calls Microsoft's online TTS, so skip
+        # (rather than error) when the service is unreachable or refuses us.
+        try:
+            cls.alfred_us = asyncio.run(_generate_audio("Alfred", "en-US-GuyNeural"))
+            cls.hey_alfred_in = asyncio.run(_generate_audio("Hey Alfred", "en-IN-PrabhatNeural"))
+        except Exception as e:
+            raise unittest.SkipTest(f"edge-tts unavailable, cannot synthesise test audio: {e!r}"[:200])
 
     def test_acoustic_trigger_on_clean_alfred(self):
         detected = []

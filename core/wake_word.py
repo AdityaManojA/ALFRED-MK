@@ -126,22 +126,40 @@ def _prewarm_whisper_background() -> None:
         pass
 
 
-# Prewarm openwakeword modules at import to prevent circular import races across worker threads
-try:
-    import openwakeword
-    import openwakeword.utils
-    from openwakeword.model import Model
-except Exception:
-    pass
-
 _MODEL_INIT_LOCK = threading.Lock()
+
+# openwakeword pulls in scikit-learn, SciPy and pandas (~2.4 s). Importing it at
+# module load put all of that on ALFRED's startup path. It is now imported once,
+# under this lock, so concurrent worker threads still never see a half-imported
+# module (the race the old import-time prewarm guarded against). The first
+# wake-model load, which already runs off the GUI thread, pays the cost instead.
+_OWW_IMPORT_LOCK = threading.Lock()
+
+
+def _import_openwakeword():
+    with _OWW_IMPORT_LOCK:
+        import openwakeword
+        import openwakeword.utils
+        from openwakeword.model import Model  # noqa: F401
+        return openwakeword
+
+
+def _openwakeword_package_dir() -> Path | None:
+    """Locate the installed openwakeword package without importing it."""
+    import importlib.util
+    try:
+        spec = importlib.util.find_spec("openwakeword")
+    except (ImportError, ValueError):
+        return None
+    if spec is None or not spec.origin:
+        return None
+    return Path(spec.origin).resolve().parent
 
 
 def _ensure_openwakeword():
     """Ensure openwakeword is completely initialized and attribute-populated."""
     try:
-        import openwakeword
-        import openwakeword.utils
+        openwakeword = _import_openwakeword()
         if not hasattr(openwakeword, "get_pretrained_model_paths"):
             models = getattr(openwakeword, "MODELS", {})
             def get_pretrained_model_paths(inference_framework="tflite"):
@@ -238,20 +256,21 @@ def is_ready() -> bool:
     if not is_installed():
         return False
     try:
-        with _MODEL_INIT_LOCK:
-            ow = _ensure_openwakeword()
-            if ow is None:
-                return False
-            models_dir = Path(ow.__file__).resolve().parent / "resources" / "models"
-            if not models_dir.is_dir():
-                return False
-            has_wake = WAKE_MODEL_PATH.is_file()
-            has_mel  = (any(models_dir.glob("melspectrogram*.onnx"))
-                        or any(models_dir.glob("melspectrogram*.tflite")))
-            has_emb  = (any(models_dir.glob("embedding_model*.onnx"))
-                        or any(models_dir.glob("embedding_model*.tflite")))
-            has_spk  = SPEAKER_MODEL_PATH.is_file() and SPEAKER_MODEL_PATH.stat().st_size > 1000000
-            return bool(has_wake and has_mel and has_emb and has_spk)
+        # Only file checks: find the package on disk instead of importing it,
+        # so this stays cheap when called from the GUI thread.
+        pkg_dir = _openwakeword_package_dir()
+        if pkg_dir is None:
+            return False
+        models_dir = pkg_dir / "resources" / "models"
+        if not models_dir.is_dir():
+            return False
+        has_wake = WAKE_MODEL_PATH.is_file()
+        has_mel  = (any(models_dir.glob("melspectrogram*.onnx"))
+                    or any(models_dir.glob("melspectrogram*.tflite")))
+        has_emb  = (any(models_dir.glob("embedding_model*.onnx"))
+                    or any(models_dir.glob("embedding_model*.tflite")))
+        has_spk  = SPEAKER_MODEL_PATH.is_file() and SPEAKER_MODEL_PATH.stat().st_size > 1000000
+        return bool(has_wake and has_mel and has_emb and has_spk)
     except Exception:
         return False
 

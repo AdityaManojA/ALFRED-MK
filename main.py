@@ -487,7 +487,12 @@ def _render_prompt(template: str, values: dict) -> str:
     hand, and a stray brace in someone's own wording must never take the app
     down at startup.
     """
-    out = template or ""
+    # Editor notes ("# ..." lines) are for whoever edits prompt.txt; strip them
+    # so they are not sent, and paid for, on every session.
+    out = "\n".join(
+        line for line in (template or "").splitlines()
+        if not (line.startswith("# ") or line == "#")
+    )
     for key, val in values.items():
         out = out.replace("{" + key + "}", str(val))
     return out

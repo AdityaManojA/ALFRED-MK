@@ -48,11 +48,26 @@ class ProbeLog:
             self._file.close()
 
 
+_PROCESS = None
+
+
+def _probe_process():
+    """One psutil.Process for the whole run.
+
+    cpu_percent(interval=None) measures since the previous call on the same
+    object, so a fresh Process per sample always reported ~0% CPU.
+    """
+    global _PROCESS
+    if _PROCESS is None:
+        import psutil
+        _PROCESS = psutil.Process()
+        _PROCESS.cpu_percent(interval=None)  # prime the interval
+    return _PROCESS
+
+
 def _runtime_snapshot() -> str:
     try:
-        import psutil
-
-        process = psutil.Process()
+        process = _probe_process()
         return (
             f"cpu={process.cpu_percent(interval=None):.1f}% "
             f"rss={process.memory_info().rss / (1024 * 1024):.1f}MB "
