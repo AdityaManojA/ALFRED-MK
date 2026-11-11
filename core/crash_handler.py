@@ -22,6 +22,7 @@ def _print(message):
 
 
 def format_crash_report(exc_type, exc_value, exc_tb, *, limit=None):
+    """Build a plain-text crash report with timestamp, Python/OS info, memory usage and traceback."""
     try:
         import psutil
         memory = f"{psutil.Process().memory_info().rss / 1024 / 1024:.1f} MB"
@@ -37,6 +38,7 @@ def format_crash_report(exc_type, exc_value, exc_tb, *, limit=None):
 
 
 def log_crash(crash_report):
+    """Append the crash report to the crash log file."""
     try:
         CRASH_LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
         with CRASH_LOG_FILE.open("a", encoding="utf-8") as stream:
@@ -46,6 +48,9 @@ def log_crash(crash_report):
 
 
 def show_crash_dialog(crash_report):
+    """Show a Qt crash dialog on the GUI thread; return True if the user chose to report it.
+    Falls back to printing the report when no display or GUI thread is available.
+    """
     try:
         # Avoid Qt's process-level abort when no Linux display is available.
         if sys.platform.startswith("linux") and not (
@@ -80,6 +85,7 @@ def show_crash_dialog(crash_report):
 
 
 def open_email_client(crash_report):
+    """Open a mailto: link to the developer with the (length-capped) crash report; return True on success."""
     body = (
         "Hi Aditya,\n\nALFRED crashed. Here are the details:\n\n"
         + crash_report
@@ -114,11 +120,15 @@ def open_email_client(crash_report):
 
 
 def _show_and_report(report: str):
+    """Show the crash dialog and open the email client if the user chose to report."""
     if show_crash_dialog(report):
         open_email_client(report)
 
 
 def _handle_exception(exc_type, exc_value, exc_tb):
+    """Excepthook: log the crash, show the report dialog (deferred to the GUI thread if needed), then exit.
+    KeyboardInterrupt and SystemExit go to the default hook.
+    """
     if issubclass(exc_type, (KeyboardInterrupt, SystemExit)):
         sys.__excepthook__(exc_type, exc_value, exc_tb)
         return
@@ -145,6 +155,7 @@ def _handle_exception(exc_type, exc_value, exc_tb):
 
 
 def install_crash_handler():
+    """Install the crash handler as sys.excepthook and threading.excepthook."""
     sys.excepthook = _handle_exception
     import threading
     threading.excepthook = lambda args: _handle_exception(args.exc_type, args.exc_value, args.exc_traceback)

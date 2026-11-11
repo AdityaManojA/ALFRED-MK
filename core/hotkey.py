@@ -76,6 +76,7 @@ class PushToTalk:
     """
 
     def __init__(self, on_change: Callable[[bool], None], chord=DEFAULT_CHORD):
+        """Store the change callback and key chord; the watcher thread starts later."""
         self._on_change = on_change
         self._chord = tuple(chord)
         self._thread: threading.Thread | None = None
@@ -87,6 +88,7 @@ class PushToTalk:
 
     @property
     def held(self) -> bool:
+        """Whether the chord is currently considered held down."""
         return self._held
 
     @property
@@ -96,6 +98,7 @@ class PushToTalk:
 
     @property
     def label(self) -> str:
+        """Human-readable chord name, e.g. "Ctrl+Space"."""
         return chord_label(self._chord)
 
     # ── lifecycle ───────────────────────────────────────────────────────────
@@ -114,6 +117,7 @@ class PushToTalk:
         return self._scope
 
     def stop(self) -> None:
+        """Stop the polling thread (if any) and report a release if the chord was held."""
         self._stop.set()
         t, self._thread = self._thread, None
         if t is not None and t.is_alive():
@@ -129,6 +133,7 @@ class PushToTalk:
     # ── internals ───────────────────────────────────────────────────────────
 
     def _can_poll(self) -> bool:
+        """Return True if GetAsyncKeyState is available and every chord key has a virtual-key code."""
         try:
             import ctypes
             ctypes.windll.user32.GetAsyncKeyState  # noqa: B018 — presence check
@@ -137,6 +142,7 @@ class PushToTalk:
             return False
 
     def _set_held(self, held: bool) -> None:
+        """Update the held state and notify the listener on change, ignoring listener errors."""
         if held == self._held:
             return
         self._held = held
@@ -146,6 +152,9 @@ class PushToTalk:
             pass          # a listener fault must never kill the watcher
 
     def _poll_loop(self) -> None:
+        """Poll the chord's key states until stopped, reporting debounced held/released changes.
+        On exit releases the hold and reverts the scope to "window".
+        """
         import ctypes
         user32 = ctypes.windll.user32
         codes = [_VK[k] for k in self._chord]

@@ -327,6 +327,7 @@ class PlayDestinationManager:
     """Coordinates conversational destination prompting with single-flight guard."""
 
     def __init__(self) -> None:
+        """Initialise the lock and prompt-tracking state."""
         self._lock = threading.Lock()
         self._is_prompting: bool = False
         self._active_target: str = ""
@@ -334,6 +335,7 @@ class PlayDestinationManager:
 
     @property
     def is_prompting(self) -> bool:
+        """Return whether a destination prompt is currently active (thread-safe)."""
         with self._lock:
             return self._is_prompting
 

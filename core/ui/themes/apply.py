@@ -23,16 +23,19 @@ class ThemeChrome:
 
     @classmethod
     def get_active(cls) -> ThemeDefinition:
+        """Return the currently active ThemeDefinition."""
         with cls._lock:
             return cls._active_theme
 
     @classmethod
     def identity(cls) -> IdentityDefinition:
+        """Return the identity strings of the active theme."""
         with cls._lock:
             return cls._active_theme.identity
 
     @classmethod
     def chrome(cls) -> ChromeDefinition:
+        """Return the chrome copy of the active theme."""
         with cls._lock:
             return cls._active_theme.chrome
 
@@ -52,6 +55,7 @@ class ThemeChrome:
 
     @classmethod
     def _notify_listeners(cls, theme: ThemeDefinition) -> None:
+        """Call every registered theme listener with the theme, printing any listener errors."""
         with cls._lock:
             listeners = list(cls._listeners)
         for cb in listeners:
@@ -62,6 +66,7 @@ class ThemeChrome:
 
     @classmethod
     def set_active(cls, theme: ThemeDefinition) -> None:
+        """Make `theme` active and notify all registered listeners."""
         with cls._lock:
             cls._active_theme = theme
         cls._notify_listeners(theme)

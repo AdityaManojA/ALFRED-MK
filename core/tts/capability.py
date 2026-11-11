@@ -85,6 +85,7 @@ def prewarm_jarvis_capability_async() -> None:
     _PREWARM_THREAD_ACTIVE = True
 
     def _worker():
+        """Run GPU-only then CPU-allowed capability checks uncached, then clear the prewarm-active flag."""
         global _PREWARM_THREAD_ACTIVE
         try:
             check_jarvis_capability(allow_cpu=False, use_cache=False)

@@ -53,6 +53,7 @@ class FocusEngine:
 
     @classmethod
     def instance(cls) -> FocusEngine:
+        """Return the process-wide FocusEngine singleton, creating it on first use."""
         with cls._instance_lock:
             if cls._instance is None:
                 cls._instance = cls()
@@ -69,6 +70,7 @@ class FocusEngine:
         loop_provider: Callable[[], asyncio.AbstractEventLoop | None] | None = None,
         ledger: FocusLedger | None = None,
     ) -> None:
+        """Set up the focus engine with its platform reader, callbacks, ledger and answer window, and reset session state."""
         self._reader = reader or get_platform_reader()
         self._speak_fn = speak_fn
         self._un_gate_fn = un_gate_fn
@@ -126,24 +128,29 @@ class FocusEngine:
 
     @property
     def is_active(self) -> bool:
+        """Whether a focus session is currently active."""
         with self._lock:
             return self._active
 
     @property
     def is_paused(self) -> bool:
+        """Whether the active focus session is paused."""
         with self._lock:
             return self._paused
 
     @property
     def is_drill_sergeant(self) -> bool:
+        """Whether drill-sergeant mode is enabled."""
         with self._lock:
             return self._drill_sergeant
 
     @property
     def is_waiting_for_answer(self) -> bool:
+        """Whether the engine's answer window is currently waiting for a spoken reply."""
         return self.answer_window.is_active
 
     def set_reader(self, reader: BasePlatformReader) -> None:
+        """Replace the platform reader used to detect the frontmost surface."""
         with self._lock:
             self._reader = reader
 
@@ -155,6 +162,7 @@ class FocusEngine:
         on_drift: Callable[[SurfaceIdentity, int], None] | None = None,
         loop_provider: Callable[[], asyncio.AbstractEventLoop | None] | None = None,
     ) -> None:
+        """Update any non-None callbacks and re-bind the answer window's speak and un-gate hooks."""
         with self._lock:
             if speak_fn is not None:
                 self._speak_fn = speak_fn
@@ -174,11 +182,13 @@ class FocusEngine:
 
     @property
     def cadence(self) -> Cadence:
+        """Effective cadence: DRILL_SERGEANT when drill-sergeant mode is on, otherwise the configured cadence."""
         if self._drill_sergeant:
             return Cadence.DRILL_SERGEANT
         return self._cadence
 
     def set_cadence(self, cadence: Cadence | str) -> None:
+        """Set the nag cadence from a Cadence or string, updating the drill-sergeant flag; unknown strings fall back to NORMAL."""
         with self._lock:
             if isinstance(cadence, Cadence):
                 self._cadence = cadence
@@ -195,6 +205,7 @@ class FocusEngine:
                     self._drill_sergeant = False
 
     def set_drill_sergeant(self, enabled: bool) -> bool:
+        """Enable or disable drill-sergeant mode, adjusting the cadence to match; returns the new flag."""
         with self._lock:
             self._drill_sergeant = bool(enabled)
             if self._drill_sergeant:
@@ -204,6 +215,7 @@ class FocusEngine:
             return self._drill_sergeant
 
     def _speak(self, text: str) -> None:
+        """Speak text through the configured speak callback, logging any error."""
         with self._lock:
             fn = self._speak_fn
         if fn and text:
@@ -213,6 +225,7 @@ class FocusEngine:
                 _LOGGER.warning("Speak error: %s", exc)
 
     def _un_gate(self, active: bool) -> None:
+        """Forward a mic un-gate request to the configured callback, logging any error."""
         with self._lock:
             fn = self._un_gate_fn
         if fn:
@@ -222,6 +235,7 @@ class FocusEngine:
                 _LOGGER.debug("Un-gate error: %s", exc)
 
     def submit_answer(self, text: str) -> bool:
+        """Submit a spoken answer to the engine's answer window; returns whether it was accepted."""
         return self.answer_window.submit_answer(text)
 
     # ── Session Lifecycle ─────────────────────────────────────────────────────
@@ -235,6 +249,10 @@ class FocusEngine:
         from_card: bool = False,
         prompt_intent: bool = True,
     ) -> dict[str, Any]:
+        """Start a focus session of the given length (clamped to 1..MAX_SESSION_MIN minutes) and reset its counters.
+        Locks the frontmost app/tab immediately when requested, otherwise defers the lock; starts the tick thread if needed.
+        May launch the spoken intent prompt; returns a dict with the session's planned time and lock flags.
+        """
         mins = max(1, min(duration_minutes, MAX_SESSION_MIN))
         planned_s = mins * 60
 
@@ -300,6 +318,7 @@ class FocusEngine:
         }
 
     def _spawn_deferred_prompt_flow(self) -> None:
+        """Run the deferred intent prompt on the provided running event loop, or on a new daemon thread otherwise."""
         loop = None
         if self._loop_provider:
             try:
@@ -317,6 +336,7 @@ class FocusEngine:
             ).start()
 
     async def _async_deferred_prompt_flow(self) -> None:
+        """Ask for the session intent through the answer window and, if answered, store it and confirm aloud."""
         answer = await self.answer_window.request_answer(
             prompt_speech=DEFERRED_PROMPT,
             timeout_s=ANSWER_WINDOW_S,
@@ -328,6 +348,7 @@ class FocusEngine:
             self._speak(NOTED_SPEECH)
 
     def pause(self) -> None:
+        """Pause the active focus session and sync the mode manager."""
         with self._lock:
             if not self._active:
                 return
@@ -335,6 +356,7 @@ class FocusEngine:
         self._sync_mode_manager()
 
     def resume(self) -> None:
+        """Resume a paused focus session and sync the mode manager."""
         with self._lock:
             if not self._active:
                 return
@@ -342,6 +364,7 @@ class FocusEngine:
         self._sync_mode_manager()
 
     def extend(self, minutes: int = 10) -> int:
+        """Add minutes to the active session; returns the new remaining seconds, or 0 if no session is active."""
         add_s = max(1, minutes) * 60
         with self._lock:
             if not self._active:
@@ -353,6 +376,7 @@ class FocusEngine:
         return remaining
 
     def abort(self, reason: str = "Aborted by user.") -> dict[str, Any]:
+        """Cancel any pending answer, end the session and clear drift state; returns an inactive status dict with the reason."""
         self.answer_window.cancel()
         with self._lock:
             if not self._active:
@@ -371,6 +395,7 @@ class FocusEngine:
         return {"active": False, "reason": reason}
 
     def snooze(self, seconds: int = SNOOZE_DEFAULT_S) -> float:
+        """Suppress drift nags for the given number of seconds (0 clears); returns the snooze-until timestamp."""
         until = (time.time() + seconds) if seconds > 0 else 0.0
         with self._lock:
             self._snoozed_until_s = until
@@ -378,6 +403,7 @@ class FocusEngine:
         return until
 
     def excuse(self, reason: str = "Research") -> None:
+        """Mark the current drift as excused and reset drift tracking."""
         with self._lock:
             self._excused = True
             self._current_drift_s = 0
@@ -385,6 +411,7 @@ class FocusEngine:
         self._sync_mode_manager()
 
     def set_nag_interval(self, seconds: int) -> int:
+        """Set the nag interval clamped to NAG_MIN_S..NAG_MAX_S; returns the applied value."""
         cadence = max(NAG_MIN_S, min(seconds, NAG_MAX_S))
         with self._lock:
             self._nag_interval_s = cadence
@@ -444,6 +471,7 @@ class FocusEngine:
         return msg
 
     def lock_surface(self, app_id: str, tab_host_hash: str = "") -> None:
+        """Lock the session to the given app id and optional tab host hash, ending the deferred lock."""
         with self._lock:
             self._target_app_id = (app_id or "").strip().lower()
             self._target_tab_host_hash = (tab_host_hash or "").strip()
@@ -458,6 +486,7 @@ class FocusEngine:
     # ── State Whitelist Query ─────────────────────────────────────────────────
 
     def get_state(self) -> FocusState:
+        """Return a FocusState snapshot of the current session."""
         with self._lock:
             return FocusState(
                 active=self._active,
@@ -482,6 +511,7 @@ class FocusEngine:
     # ── 1 Hz Engine Loop ──────────────────────────────────────────────────────
 
     def _session_loop(self) -> None:
+        """Background loop: sleep each tick interval and call tick() while a session is active and not paused."""
         while True:
             time.sleep(TICK_INTERVAL_S)
             with self._lock:
@@ -650,6 +680,7 @@ class FocusEngine:
                 _LOGGER.debug("Drift callback error: %s", exc)
 
     def _sync_mode_manager_locked(self) -> None:
+        """Push the current session state to the Sentry mode manager; caller must hold the lock."""
         mgr = get_sentry_mode_manager()
         mgr.update_focus_state(
             active=self._active,
@@ -672,9 +703,11 @@ class FocusEngine:
         )
 
     def _sync_mode_manager(self) -> None:
+        """Acquire the lock and push the current session state to the Sentry mode manager."""
         with self._lock:
             self._sync_mode_manager_locked()
 
 
 def get_focus_engine() -> FocusEngine:
+    """Return the shared FocusEngine singleton."""
     return FocusEngine.instance()

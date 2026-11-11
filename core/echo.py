@@ -122,6 +122,7 @@ class EchoGuard:
     """
 
     def __init__(self) -> None:
+        """Initialise the output history and the learned gain and residual estimates."""
         self._hist: list[tuple[float, np.ndarray, float]] = []   # (t, bands, level)
         self._gain = 0.6          # mic level per unit of output level; learned
         self._seen = 0            # how many echo blocks the estimate has seen
@@ -136,6 +137,7 @@ class EchoGuard:
 
     @property
     def gain(self) -> float:
+        """Learned mic level per unit of output level."""
         return self._gain
 
     @property
@@ -293,11 +295,14 @@ try:
     from core.audio_ducker import duck_media_apps, unduck_media_apps, is_ducked
 except Exception:
     def duck_media_apps(volume_factor: float = 0.3, targets=None, sync: bool = False):
+        """Fallback when core.audio_ducker is unavailable: ducks nothing."""
         return {}
 
     def unduck_media_apps(targets=None, sync: bool = False):
+        """Fallback when core.audio_ducker is unavailable: restores nothing."""
         return {}
 
     def is_ducked() -> bool:
+        """Fallback when core.audio_ducker is unavailable: never ducked."""
         return False
 

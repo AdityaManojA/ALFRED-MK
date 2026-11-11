@@ -29,6 +29,7 @@ logger = logging.getLogger("core.speech.stt")
 class LatencyReport:
     """Detailed latency measurement breakdown for STT."""
     def __init__(self):
+        """Initialise all latency timestamps to zero."""
         self.upload_start: float = 0.0
         self.api_received: float = 0.0
         self.inference_end: float = 0.0
@@ -36,18 +37,22 @@ class LatencyReport:
 
     @property
     def network_latency_ms(self) -> float:
+        """Milliseconds between upload start and API receipt."""
         return max(0.0, (self.api_received - self.upload_start) * 1000.0)
 
     @property
     def inference_latency_ms(self) -> float:
+        """Milliseconds between API receipt and inference end."""
         return max(0.0, (self.inference_end - self.api_received) * 1000.0)
 
     @property
     def unpack_latency_ms(self) -> float:
+        """Milliseconds between inference end and unpacking end."""
         return max(0.0, (self.unpacking_end - self.inference_end) * 1000.0)
 
     @property
     def total_latency_ms(self) -> float:
+        """Milliseconds between upload start and unpacking end."""
         return max(0.0, (self.unpacking_end - self.upload_start) * 1000.0)
 
 
@@ -61,6 +66,7 @@ class InstrumentedSTT:
         streaming: bool = STT_STREAMING_ENABLED,
         max_retries: int = STT_RETRY_MAX_ATTEMPTS,
     ):
+        """Store provider, timeout, streaming and retry settings; the engine is created lazily."""
         self.provider = provider
         self.timeout_s = timeout_s
         self.streaming = streaming
@@ -68,6 +74,7 @@ class InstrumentedSTT:
         self._engine = None
 
     def _ensure_engine(self):
+        """Create (once) and return the Vosk or Whisper STT engine based on the provider."""
         if self._engine is not None:
             return self._engine
         from core.stt import WhisperSTT, VoskSTT

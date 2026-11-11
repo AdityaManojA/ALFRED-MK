@@ -27,6 +27,7 @@ class ProactiveEngine:
         min_silence_secs: int = 900,
         check_cooldown:   int = 1200,
     ):
+        """Store silence and cooldown thresholds and reset trigger and rotation state."""
         self.min_silence_secs = min_silence_secs
         self.check_cooldown   = check_cooldown
         self._last_triggered  = 0.0
@@ -35,6 +36,7 @@ class ProactiveEngine:
     # ── Trigger gate ───────────────────────────────────────────────────────────
 
     def should_trigger(self, last_user_speech: float) -> bool:
+        """Return True when the user has been silent for ``min_silence_secs`` and the cooldown since the last trigger has elapsed."""
         now = time.monotonic()
         return (
             (now - last_user_speech) >= self.min_silence_secs
@@ -42,6 +44,7 @@ class ProactiveEngine:
         )
 
     def mark_triggered(self) -> None:
+        """Record that a proactive message fired now and advance the context-focus rotation."""
         self._last_triggered = time.monotonic()
         self._rotation      += 1
 

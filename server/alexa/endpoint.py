@@ -40,6 +40,7 @@ def create_alexa_app(
 
     @app.get("/health")
     async def health_check():
+        """Liveness probe for the relay server."""
         return {"status": "ok", "service": "alfred-alexa-relay"}
 
     @app.post("/api/alexa/link")

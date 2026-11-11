@@ -16,7 +16,10 @@ from core.ui.themes.schema import PaletteDefinition
 
 
 class ArkhamFloorplanVisual(SlotVisual):
+    """Slot 1: 2x3 cell-block floorplan with a vertical light line sweeping left to right."""
+
     def __init__(self) -> None:
+        """Initialise pens, font and geometry placeholders for this slot."""
         super().__init__()
         self.sweep_x: float = 0.0
         self.pen_wall = QPen()
@@ -27,6 +30,7 @@ class ArkhamFloorplanVisual(SlotVisual):
         self.cells = [QRectF() for _ in range(6)]
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build pens from the palette and lay out the 2x3 cell grid inside the panel."""
         c_pri = QColor(palette.pri)
         c_acc = QColor(palette.acc)
         self.pen_wall = QPen(c_pri, 1.2)
@@ -40,11 +44,13 @@ class ArkhamFloorplanVisual(SlotVisual):
                 self.cells[row * 3 + col].setRect(bx + col * (cw + 4.0), by + row * (ch + 4.0), cw, ch)
 
     def tick(self, dt: float, signals: HudSignals) -> None:
+        """Advance the horizontal light sweep across the floorplan."""
         self.sweep_x = (self.sweep_x + dt * 0.4) % 1.0
         lx = self.rect_inner.x() + self.sweep_x * self.rect_inner.width()
         self.sweep_line.setLine(lx, self.rect_inner.y(), lx, self.rect_inner.bottom())
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
+        """Draw the floorplan header, cell rectangles and sweep line."""
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_wall)
         painter.drawText(QRectF(rect.x() + 8, rect.y() + 4, rect.width() - 16, 14),
@@ -56,7 +62,10 @@ class ArkhamFloorplanVisual(SlotVisual):
 
 
 class ArkhamEEGVisual(SlotVisual):
+    """Slot 2: 48-sample EEG trace whose phase speed rises with alert_level."""
+
     def __init__(self) -> None:
+        """Initialise pens, font and geometry placeholders for this slot."""
         super().__init__()
         self.wave = WaveTrace(sample_count=48)
         self.t: float = 0.0
@@ -65,6 +74,7 @@ class ArkhamEEGVisual(SlotVisual):
         self.rect_inner = QRectF()
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build the EEG pen and lay out the wave trace inside the panel."""
         c_pri = QColor(palette.pri)
         self.pen_eeg = QPen(c_pri, 1.2)
         bx, by, bw, bh = rect.x() + 8.0, rect.y() + 20.0, rect.width() - 16.0, rect.height() - 28.0
@@ -72,11 +82,13 @@ class ArkhamEEGVisual(SlotVisual):
         self.wave.layout(bx + 4.0, by + bh / 2.0, bw - 8.0, height_amp=bh * 0.35)
 
     def tick(self, dt: float, signals: HudSignals) -> None:
+        """Advance the phase (faster with alert level) and recompute the two-sine EEG samples."""
         self.t = (self.t + dt * (4.0 + signals.alert_level * 3.0)) % (2.0 * math.pi)
         samples = [fast_sin(i * 0.5 + self.t) * 0.6 + fast_sin(i * 1.8 - self.t * 2.0) * 0.4 for i in range(48)]
         self.wave.update_samples(samples)
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
+        """Draw the EEG header and wave trace."""
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_eeg)
         painter.drawText(QRectF(rect.x() + 8, rect.y() + 4, rect.width() - 16, 12),
@@ -85,7 +97,10 @@ class ArkhamEEGVisual(SlotVisual):
 
 
 class ArkhamVitalsVisual(SlotVisual):
+    """Slot 3: pulse ring centred in the panel whose radius cycles from 6 to 24 px."""
+
     def __init__(self) -> None:
+        """Initialise pens, font and geometry placeholders for this slot."""
         super().__init__()
         self.pulse: float = 0.0
         self.pen_vital = QPen()
@@ -93,15 +108,18 @@ class ArkhamVitalsVisual(SlotVisual):
         self.rect_inner = QRectF()
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build the vitals pen and compute the inner panel rect."""
         c_pri = QColor(palette.pri)
         self.pen_vital = QPen(c_pri, 1.4)
         bx, by, bw, bh = rect.x() + 8.0, rect.y() + 18.0, rect.width() - 16.0, rect.height() - 24.0
         self.rect_inner = QRectF(bx, by, bw, bh)
 
     def tick(self, dt: float, signals: HudSignals) -> None:
+        """Advance the pulse phase."""
         self.pulse = (self.pulse + dt * 2.0) % 1.0
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
+        """Draw the vitals header and a pulsing circle at the panel centre."""
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_vital)
         painter.drawText(QRectF(rect.x() + 8, rect.y() + 3, rect.width() - 16, 12),

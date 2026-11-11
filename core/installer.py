@@ -66,6 +66,7 @@ def _available(module: str) -> bool:
 
 
 def _pip(package: str, log: Callable | None = None) -> bool:
+    """pip-install ``package`` quietly with the current interpreter; return True on success."""
     if log:
         log(f"SYS: pip install {package} …")
     result = subprocess.run(

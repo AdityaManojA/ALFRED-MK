@@ -29,13 +29,19 @@ class AlexaCommandEnvelope:
     timestamp: float = field(default_factory=time.time)
 
     def to_dict(self) -> dict[str, Any]:
+        """Return the envelope as a plain dict."""
         return asdict(self)
 
     def to_json(self) -> str:
+        """Serialise the envelope to a JSON string."""
         return json.dumps(self.to_dict())
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> AlexaCommandEnvelope:
+        """Validate a command payload dict and build an envelope from it.
+
+        Raises ValueError on wrong version/type or missing request_id/intent.
+        """
         if not isinstance(data, dict):
             raise ValueError("Payload must be a dictionary.")
         if data.get("version") != PROTOCOL_VERSION:
@@ -75,12 +81,14 @@ class AlexaResultEnvelope:
     error: Optional[str] = None
 
     def to_dict(self) -> dict[str, Any]:
+        """Return the envelope as a dict, omitting ``error`` when it is None."""
         res = asdict(self)
         if self.error is None:
             res.pop("error", None)
         return res
 
     def to_json(self) -> str:
+        """Serialise to JSON with ``speech`` truncated to the max response length."""
         # Enforce MAX_RESPONSE_CHARS limit
         speech_truncated = self.speech[:ALEXA_MAX_RESPONSE_CHARS] if self.speech else ""
         d = self.to_dict()
@@ -89,6 +97,10 @@ class AlexaResultEnvelope:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> AlexaResultEnvelope:
+        """Validate a result payload dict and build an envelope, truncating speech.
+
+        Raises ValueError on wrong version/type or missing request_id.
+        """
         if not isinstance(data, dict):
             raise ValueError("Payload must be a dictionary.")
         if data.get("version") != PROTOCOL_VERSION:

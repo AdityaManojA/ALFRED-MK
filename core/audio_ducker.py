@@ -80,6 +80,7 @@ _watchdog_lock = threading.Lock()
 
 
 def _cancel_auto_unduck_watchdog() -> None:
+    """Cancel and clear the pending auto-unduck watchdog timer, if any."""
     global _watchdog_timer
     with _watchdog_lock:
         if _watchdog_timer:
@@ -88,6 +89,7 @@ def _cancel_auto_unduck_watchdog() -> None:
 
 
 def _schedule_auto_unduck_watchdog(timeout_s: float = 30.0) -> None:
+    """(Re)start a daemon timer that auto-restores media volumes after ``timeout_s`` seconds."""
     global _watchdog_timer
     with _watchdog_lock:
         if _watchdog_timer:
@@ -98,6 +100,7 @@ def _schedule_auto_unduck_watchdog(timeout_s: float = 30.0) -> None:
 
 
 def _on_watchdog_timeout() -> None:
+    """Log a warning and synchronously restore ducked media app volumes."""
     logger.warning("Audio ducker watchdog timeout: auto-restoring external media app volume levels.")
     unduck_media_apps(sync=True)
 
@@ -461,6 +464,7 @@ def duck_media_apps(
     target_names = {t.lower() for t in (targets or DEFAULT_MEDIA_PROCESSES)}
 
     def _worker():
+        """Duck media apps under the duck lock using the current platform's implementation."""
         with _duck_lock:
             sys_name = platform.system()
             if sys_name == "Windows":
@@ -492,6 +496,7 @@ def unduck_media_apps(
     target_names = {t.lower() for t in (targets or DEFAULT_MEDIA_PROCESSES)}
 
     def _worker():
+        """Restore media app volumes under the duck lock using the current platform's implementation."""
         with _duck_lock:
             sys_name = platform.system()
             if sys_name == "Windows":
@@ -525,15 +530,18 @@ class AudioDuckContext:
         targets: Optional[set[str]] = None,
         sync: bool = False,
     ):
+        """Store the duck volume factor, target app names and sync flag."""
         self.volume_factor = volume_factor
         self.targets = targets
         self.sync = sync
 
     def __enter__(self):
+        """Duck media app volumes and return the context manager."""
         duck_media_apps(volume_factor=self.volume_factor, targets=self.targets, sync=self.sync)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        """Restore media app volumes; never suppresses exceptions."""
         unduck_media_apps(targets=self.targets, sync=self.sync)
         return False
 

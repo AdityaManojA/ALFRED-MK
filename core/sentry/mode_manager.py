@@ -73,6 +73,7 @@ class SentrySnapshot:
     timestamp: float = 0.0
 
     def to_dict(self) -> dict[str, Any]:
+        """Return the snapshot as a plain dict."""
         return asdict(self)
 
 
@@ -87,6 +88,7 @@ class SentryModeManager(QObject):
     _instance_lock = threading.Lock()
 
     def __init__(self, parent: QObject | None = None) -> None:
+        """Initialise default monitor/focus states and empty external mode-driver handlers."""
         super().__init__(parent)
         self._lock = threading.Lock()
         self._monitor_state = MonitorState()
@@ -101,6 +103,7 @@ class SentryModeManager(QObject):
 
     @classmethod
     def instance(cls) -> SentryModeManager:
+        """Return the process-wide SentryModeManager singleton, creating it on first use."""
         with cls._instance_lock:
             if cls._instance is None:
                 cls._instance = SentryModeManager()
@@ -116,11 +119,13 @@ class SentryModeManager(QObject):
 
     @property
     def monitor_state(self) -> MonitorState:
+        """Current monitor-mode state."""
         with self._lock:
             return self._monitor_state
 
     @property
     def focus_state(self) -> FocusState:
+        """Current focus-mode state."""
         with self._lock:
             return self._focus_state
 
@@ -130,6 +135,7 @@ class SentryModeManager(QObject):
             return bool(self._monitor_state.waiting_for_answer)
 
     def get_snapshot(self) -> SentrySnapshot:
+        """Return a timestamped snapshot of the monitor and focus states."""
         with self._lock:
             return SentrySnapshot(
                 monitor=self._monitor_state,

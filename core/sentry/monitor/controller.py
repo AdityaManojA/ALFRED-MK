@@ -32,6 +32,7 @@ class MonitorController:
 
     @classmethod
     def instance(cls) -> MonitorController:
+        """Return the process-wide MonitorController singleton, creating it on first use."""
         with cls._instance_lock:
             if cls._instance is None:
                 cls._instance = cls()
@@ -44,6 +45,7 @@ class MonitorController:
         status_fn: Callable[[str], None] | None = None,
         loop_provider: Callable[[], asyncio.AbstractEventLoop | None] | None = None,
     ) -> None:
+        """Store callbacks and create the answer window and monitor scheduler wired to this controller."""
         self._speak_fn = speak_fn
         self._un_gate_fn = un_gate_fn
         self._status_fn = status_fn
@@ -63,6 +65,7 @@ class MonitorController:
 
     @property
     def is_waiting_for_answer(self) -> bool:
+        """Whether the answer window is currently waiting for a spoken reply."""
         return self.answer_window.is_active
 
     def set_callbacks(
@@ -72,6 +75,7 @@ class MonitorController:
         status_fn: Callable[[str], None] | None = None,
         loop_provider: Callable[[], asyncio.AbstractEventLoop | None] | None = None,
     ) -> None:
+        """Update any non-None callbacks and re-bind the answer window's speak and un-gate hooks."""
         with self._lock:
             if speak_fn is not None:
                 self._speak_fn = speak_fn
@@ -90,6 +94,7 @@ class MonitorController:
     # ── Spoken and Audio I/O ──────────────────────────────────────────────────
 
     def _speak(self, text: str) -> None:
+        """Speak text through the configured speak callback, logging any error."""
         with self._lock:
             fn = self._speak_fn
         if fn:
@@ -99,6 +104,7 @@ class MonitorController:
                 _LOGGER.warning("Error speaking monitor message: %s", exc)
 
     def _un_gate(self, active: bool) -> None:
+        """Forward a mic un-gate request to the configured callback, logging any error."""
         with self._lock:
             fn = self._un_gate_fn
         if fn:
@@ -108,6 +114,7 @@ class MonitorController:
                 _LOGGER.debug("Error un-gating mic: %s", exc)
 
     def _update_status(self, text: str) -> None:
+        """Send a status line to the configured status callback, ignoring errors."""
         with self._lock:
             fn = self._status_fn
         if fn:
@@ -196,9 +203,13 @@ class MonitorController:
     # ── Spoken Voice Controls ─────────────────────────────────────────────────
 
     def what_are_you_monitoring(self) -> str:
+        """Return a spoken description of the active monitor targets."""
         return self.scheduler.describe_active()
 
     def remove_target(self, target_name: str) -> str:
+        """Remove a target by id or name (empty name stops all monitoring) and return a spoken result.
+        Updates the mode manager and stops the scheduler when no targets remain.
+        """
         if not target_name:
             self.stop("Stopped by command.")
             return "Monitoring stopped, sir."
@@ -217,12 +228,14 @@ class MonitorController:
         return f"Could not find target '{target_name}', sir."
 
     def quieter(self) -> str:
+        """Increase the alert cooldown, post a status update and return the spoken message."""
         new_cd = self.scheduler.quieter()
         msg = f"Alert cooldown increased to {new_cd:g} seconds, sir."
         self._update_status(msg)
         return msg
 
     def louder(self) -> str:
+        """Decrease the alert cooldown, post a status update and return the spoken message."""
         new_cd = self.scheduler.louder()
         msg = f"Alert cooldown decreased to {new_cd:g} seconds, sir."
         self._update_status(msg)
@@ -231,6 +244,7 @@ class MonitorController:
     # ── Background Flows ──────────────────────────────────────────────────────
 
     def _spawn_prompt_flow(self, interval_seconds: float) -> None:
+        """Run the what-to-monitor prompt on the provided running event loop, or on a new daemon thread otherwise."""
         loop = None
         if self._loop_provider:
             try:
@@ -248,6 +262,9 @@ class MonitorController:
             ).start()
 
     async def _async_prompt_flow(self, interval_seconds: float) -> None:
+        """Ask what to monitor, parse the answer into targets at the given interval and start the scheduler.
+        Stops and announces cancellation if no answer is given.
+        """
         self._update_status("Asking what to monitor...")
         answer = await self.answer_window.request_answer(
             prompt_speech=DEFAULT_PROMPT,
@@ -277,6 +294,7 @@ class MonitorController:
         self._speak(f"Understood, sir. Monitoring {desc}.")
 
     def _spawn_follow_up_flow(self) -> None:
+        """Run the follow-up prompt on the provided running event loop, or on a new daemon thread otherwise."""
         loop = None
         if self._loop_provider:
             try:
@@ -294,6 +312,7 @@ class MonitorController:
             ).start()
 
     async def _async_follow_up_flow(self) -> None:
+        """Ask whether to keep monitoring after targets finish; stop on a negative or empty reply, otherwise add the new targets."""
         self._update_status("Task completed. Following up...")
         answer = await self.answer_window.request_answer(
             prompt_speech=FOLLOW_UP_PROMPT,
@@ -317,16 +336,20 @@ class MonitorController:
     # ── Scheduler Callbacks ───────────────────────────────────────────────────
 
     def _on_scheduler_alert(self, message: str) -> None:
+        """Speak a scheduler alert with the alert prefix and show it as status."""
         spoken = f"{ALERT_PREFIX}{message}"
         self._speak(spoken)
         self._update_status(f"Alert: {message}")
 
     def _on_scheduler_status(self, text: str) -> None:
+        """Relay a scheduler status message to the status callback."""
         self._update_status(text)
 
     def _on_scheduler_follow_up(self) -> None:
+        """Start the follow-up prompt when the scheduler reports all targets finished."""
         self._spawn_follow_up_flow()
 
 
 def get_monitor_controller() -> MonitorController:
+    """Return the shared MonitorController singleton."""
     return MonitorController.instance()

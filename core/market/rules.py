@@ -17,6 +17,7 @@ ALERT_COOLDOWN_S: float = 1800.0   # 30-minute cooldown for percentage delta ale
 
 
 class RuleType(str, Enum):
+    """Kinds of market alert rules."""
     THRESHOLD_ABOVE = "threshold_above"
     THRESHOLD_BELOW = "threshold_below"
     PCT_DELTA = "pct_delta"

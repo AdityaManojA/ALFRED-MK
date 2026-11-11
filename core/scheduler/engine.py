@@ -16,7 +16,10 @@ WARNING_S = 10
 
 
 class SchedulerEngine:
+    """Polls the ledger for due tasks, runs reminders/macros and reschedules daily ones."""
+
     def __init__(self, speak: Callable[[str], None] | None = None, notify: Callable[[dict], None] | None = None, ledger: Ledger | None = None) -> None:
+        """Set up the engine with a task ledger and speak/notify callbacks (no-ops by default)."""
         self.ledger = ledger or Ledger()
         self.speak = speak or (lambda _text: None)
         self.notify = notify or (lambda _task: None)
@@ -26,10 +29,12 @@ class SchedulerEngine:
 
     @property
     def paused(self) -> bool:
+        """Whether ticks are currently suppressed."""
         with self._lock:
             return self._paused
 
     def start(self) -> None:
+        """Start the background polling thread unless one is already running."""
         with self._lock:
             if self._thread and self._thread.is_alive():
                 return
@@ -38,16 +43,20 @@ class SchedulerEngine:
             self._thread.start()
 
     def stop(self) -> None:
+        """Signal the polling thread to exit after its current wait."""
         self._stop_event.set()
 
     def set_paused(self, paused: bool) -> None:
+        """Pause or resume task execution."""
         with self._lock:
             self._paused = bool(paused)
 
     def list_tasks(self) -> list[dict[str, Any]]:
+        """Return all persisted tasks."""
         return self.ledger.load()
 
     def add(self, name: str, action_type: str, payload: dict[str, Any], trigger_time: str, recurrence: str = "once") -> dict[str, Any]:
+        """Persist a new pending task (recurrence is "daily" or "once") and notify listeners."""
         task = {"id": uuid.uuid4().hex, "name": str(name), "trigger_time": str(trigger_time), "recurrence": recurrence if recurrence == "daily" else "once", "action_type": action_type, "payload": dict(payload), "status": "pending", "warned": False, "acknowledged": False}
         with self._lock:
             tasks = self.ledger.load(); tasks.append(task); self.ledger.save(tasks)
@@ -55,6 +64,9 @@ class SchedulerEngine:
         return task
 
     def _change(self, task_id: str, mutate: Callable[[dict[str, Any]], None]) -> bool:
+        """Apply mutate to the task with task_id, save the ledger and notify.
+        Returns False if no such task exists.
+        """
         with self._lock:
             tasks = self.ledger.load(); task = next((item for item in tasks if item.get("id") == task_id), None)
             if task is None:
@@ -64,9 +76,11 @@ class SchedulerEngine:
         return True
 
     def cancel(self, task_id: str) -> bool:
+        """Mark a task cancelled; False if the id is unknown."""
         return self._change(task_id, lambda task: task.update(status="cancelled"))
 
     def delete(self, task_id: str) -> bool:
+        """Remove a task from the ledger; False if the id is unknown."""
         with self._lock:
             tasks = self.ledger.load(); kept = [task for task in tasks if task.get("id") != task_id]
             if len(kept) == len(tasks):
@@ -76,16 +90,20 @@ class SchedulerEngine:
         return True
 
     def acknowledge(self, task_id: str) -> bool:
+        """Flag a task as acknowledged by the user; False if the id is unknown."""
         return self._change(task_id, lambda task: task.update(acknowledged=True))
 
     def trigger_now(self, task_id: str) -> bool:
+        """Reset a task to pending and due immediately, skipping the macro warning."""
         return self._change(task_id, lambda task: task.update(trigger_time=datetime.now().isoformat(), status="pending", warned=True))
 
     def _loop(self) -> None:
+        """Background loop: tick, then wait for the computed delay until stopped."""
         while not self._stop_event.is_set():
             self.tick(); self._stop_event.wait(self._delay())
 
     def _delay(self) -> int:
+        """Return NEAR_TICK_S if a pending task triggers within 60 seconds, else IDLE_TICK_S."""
         now = datetime.now()
         for task in self.ledger.load():
             if task.get("status") != "pending":
@@ -98,6 +116,9 @@ class SchedulerEngine:
         return IDLE_TICK_S
 
     def _execute(self, task: dict[str, Any]) -> str:
+        """Run a task's action (speak a reminder or run a macro).
+        Returns 'done' or 'failed', recording an error on the task when it fails.
+        """
         if task.get("action_type") in {"speak", "reminder"}:
             self.speak(f"Reminder, sir: {task.get('payload', {}).get('message', '')}")
             return "done"
@@ -112,6 +133,7 @@ class SchedulerEngine:
         return "failed"
 
     def tick(self, now: datetime | None = None) -> None:
+        """Run one pass: warn for imminent macros, execute due tasks, persist and notify changes."""
         if self.paused:
             return
         now = now or datetime.now()

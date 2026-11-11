@@ -15,7 +15,10 @@ from core.ui.themes.schema import PaletteDefinition
 
 
 class RiddlerCipherVisual(SlotVisual):
+    """Slot 1: framed 2x4 glyph matrix whose glyphs cycle at a CPU-scaled rate."""
+
     def __init__(self) -> None:
+        """Initialise phase, pens, fonts, inner rect and the cipher glyph set."""
         super().__init__()
         self.t: float = 0.0
         self.pen_cipher = QPen()
@@ -26,6 +29,7 @@ class RiddlerCipherVisual(SlotVisual):
         self.glyphs = ["?", "§", "¿", "¶", "≠", "ø", "λ", "?"]
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build cipher and dim pens and compute the inner panel rect."""
         c_pri = QColor(palette.pri)
         c_acc = QColor(palette.acc)
         self.pen_cipher = QPen(c_pri, 1.2)
@@ -34,9 +38,11 @@ class RiddlerCipherVisual(SlotVisual):
         self.rect_inner = QRectF(bx, by, bw, bh)
 
     def tick(self, dt: float, signals: HudSignals) -> None:
+        """Advance the phase (faster with CPU)."""
         self.t = (self.t + dt * (1.5 + signals.cpu_pct * 0.02)) % (2.0 * math.pi)
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
+        """Draw the header, panel border and a 4x2 grid of glyphs that cycles with the phase."""
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_cipher)
         painter.drawText(QRectF(rect.x() + 8, rect.y() + 4, rect.width() - 16, 14),
@@ -60,7 +66,10 @@ class RiddlerCipherVisual(SlotVisual):
 
 
 class RiddlerLogicGatesVisual(SlotVisual):
+    """Slot 2: static logic-gate tree (two inputs merging into one output line)."""
+
     def __init__(self) -> None:
+        """Initialise pens, font and geometry placeholders for this slot."""
         super().__init__()
         self.t: float = 0.0
         self.pen_gate = QPen()
@@ -70,6 +79,7 @@ class RiddlerLogicGatesVisual(SlotVisual):
         self.lines = [QLineF() for _ in range(6)]
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build gate and pulse pens and lay out the logic gate tree lines."""
         c_pri = QColor(palette.pri)
         c_acc = QColor(palette.acc)
         self.pen_gate = QPen(c_pri, 1.2)
@@ -87,9 +97,11 @@ class RiddlerLogicGatesVisual(SlotVisual):
         self.lines[5].setLine(cx + 18, cy, bx + bw - 8, cy)
 
     def tick(self, dt: float, signals: HudSignals) -> None:
+        """Advance the phase."""
         self.t = (self.t + dt * 4.0) % (2.0 * math.pi)
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
+        """Draw the header and logic gate lines."""
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_gate)
         painter.drawText(QRectF(rect.x() + 8, rect.y() + 4, rect.width() - 16, 12),
@@ -98,7 +110,10 @@ class RiddlerLogicGatesVisual(SlotVisual):
 
 
 class RiddlerMazeVisual(SlotVisual):
+    """Slot 3: nested maze brackets with an accent dot orbiting the centre."""
+
     def __init__(self) -> None:
+        """Initialise pens, font and geometry placeholders for this slot."""
         super().__init__()
         self.t: float = 0.0
         self.pen_maze = QPen()
@@ -110,6 +125,7 @@ class RiddlerMazeVisual(SlotVisual):
         self.dot_pos = QPointF()
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build maze and dot pens/brush and lay out the labyrinth bracket lines."""
         c_pri = QColor(palette.pri)
         c_acc = QColor(palette.acc)
         self.pen_maze = QPen(c_pri, 1.2)
@@ -131,6 +147,7 @@ class RiddlerMazeVisual(SlotVisual):
         self.maze_lines[7].setLine(cx - 12, cy + 6, cx + 12, cy + 6)
 
     def tick(self, dt: float, signals: HudSignals) -> None:
+        """Move the traversal dot along a figure-eight path around the panel centre."""
         self.t = (self.t + dt * 2.0) % (2.0 * math.pi)
         cx = self.rect_inner.x() + self.rect_inner.width() / 2.0
         cy = self.rect_inner.y() + self.rect_inner.height() / 2.0
@@ -140,6 +157,7 @@ class RiddlerMazeVisual(SlotVisual):
         self.dot_pos.setY(dy)
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
+        """Draw the header, maze lines and traversal dot."""
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_maze)
         painter.drawText(QRectF(rect.x() + 8, rect.y() + 3, rect.width() - 16, 12),

@@ -40,6 +40,7 @@ from ui import (
     mono_font,
     qcol,
     tech_font,
+    ui_font,
 )
 
 
@@ -57,6 +58,7 @@ class HueWheel(QWidget):
     _RING = 16   # ring thickness (px)
 
     def __init__(self, initial_hex: str = DEFAULT_UI_COLOR, parent=None):
+        """Create the fixed-size hue wheel and set its initial colour."""
         super().__init__(parent)
         self.setFixedSize(148, 148)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -66,9 +68,11 @@ class HueWheel(QWidget):
 
     # ── API ──────────────────────────────────────────────────────────────────
     def color(self) -> str:
+        """Return the selected hue as a fully saturated, full-value '#rrggbb' string."""
         return QColor.fromHsvF(self._hue, 1.0, 1.0).name()
 
     def set_color(self, hex_str: str):
+        """Adopt the hue of hex_str; invalid or achromatic colours are ignored."""
         c = QColor((hex_str or "").strip())
         if c.isValid() and c.hsvHueF() >= 0:
             self._hue = c.hsvHueF()
@@ -76,10 +80,12 @@ class HueWheel(QWidget):
 
     # ── geometry helpers ─────────────────────────────────────────────────────
     def _ring_rect(self) -> QRectF:
+        """Return the widget rect inset to the centre line of the hue ring."""
         m = self._RING / 2 + 3
         return QRectF(self.rect()).adjusted(m, m, -m, -m)
 
     def _hue_from_pos(self, pos: QPointF) -> float:
+        """Return the hue (0 to 1) for the angle of a point around the widget centre."""
         c = QRectF(self.rect()).center()
         dx = pos.x() - c.x()
         dy = c.y() - pos.y()          # screen y goes down — flip to math axis
@@ -88,6 +94,7 @@ class HueWheel(QWidget):
 
     # ── drawing ──────────────────────────────────────────────────────────────
     def paintEvent(self, _):
+        """Draw the conical hue ring and the white drag handle at the current hue."""
         p = QPainter(self)
         if not p.isActive():
             return
@@ -118,18 +125,21 @@ class HueWheel(QWidget):
 
     # ── mouse events ─────────────────────────────────────────────────────────
     def mousePressEvent(self, e):
+        """Start a drag, jump the hue to the pressed angle and emit hue_picked."""
         self._drag = True
         self._hue = self._hue_from_pos(e.position())
         self.update()
         self.hue_picked.emit(self.color())
 
     def mouseMoveEvent(self, e):
+        """While dragging, track the hue under the cursor and emit hue_picked."""
         if self._drag:
             self._hue = self._hue_from_pos(e.position())
             self.update()
             self.hue_picked.emit(self.color())
 
     def mouseReleaseEvent(self, e):
+        """End a drag and emit hue_committed with the final colour."""
         if self._drag:
             self._drag = False
             self.hue_committed.emit(self.color())
@@ -147,6 +157,7 @@ class CustomizeOverlay(QWidget):
 
     def __init__(self, assistant_name="Alfred", user_name="",
                  ui_color=DEFAULT_UI_COLOR, voice="", current_icon="", voice_engine=None, parent=None):
+        """Build the customization overlay: persona names, voice and voice-engine pickers, colour controls and icon cards."""
         super().__init__(parent)
         self._current_icon = (current_icon or "").strip()
         self._initial_icon = self._current_icon
@@ -155,9 +166,9 @@ class CustomizeOverlay(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.setStyleSheet(f"""
             CustomizeOverlay {{
-                background: rgba(4, 12, 22, 0.96);
-                border: 1px solid rgba(0, 240, 255, 0.35);
-                border-radius: 16px;
+                background: {C.PANEL};
+                border: 1px solid {C.BORDER_A};
+                border-radius: 8px;
             }}
         """)
         outer_lay = QVBoxLayout(self)
@@ -167,13 +178,13 @@ class CustomizeOverlay(QWidget):
         # Header with Title and Close Button
         hdr_row = QHBoxLayout()
         hdr_box = QVBoxLayout(); hdr_box.setSpacing(2)
-        title = QLabel("⚙  RECONFIGURE BATCOMPUTER MATRIX")
-        title.setFont(tech_font(11, QFont.Weight.Bold, letter_spacing=1.8))
-        title.setStyleSheet(f"color: {C.PRI}; background: transparent;")
+        title = QLabel("Settings")
+        title.setFont(ui_font(12, QFont.Weight.DemiBold))
+        title.setStyleSheet(f"color: {C.TEXT}; background: transparent;")
         hdr_box.addWidget(title)
 
-        sub = QLabel("PERSONA PROFILES // NEURAL VOCAL SYNTHESIS // CHROMATICS")
-        sub.setFont(tech_font(7, QFont.Weight.Medium, letter_spacing=1.0))
+        sub = QLabel("Persona, voice and theme")
+        sub.setFont(ui_font(8))
         sub.setStyleSheet(f"color: {C.TEXT_DIM}; background: transparent;")
         hdr_box.addWidget(sub)
         hdr_row.addLayout(hdr_box)
@@ -181,19 +192,18 @@ class CustomizeOverlay(QWidget):
 
         close_btn = QPushButton("✕")
         close_btn.setFixedSize(28, 28)
-        close_btn.setFont(tech_font(10, QFont.Weight.Bold))
+        close_btn.setFont(ui_font(9))
         close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         close_btn.setStyleSheet(f"""
             QPushButton {{
-                background: rgba(255, 255, 255, 0.05);
-                color: {C.TEXT_MED};
-                border: 1px solid rgba(255, 255, 255, 0.12);
-                border-radius: 14px;
+                background: transparent;
+                color: {C.TEXT_DIM};
+                border: none;
+                border-radius: 4px;
             }}
             QPushButton:hover {{
-                background: rgba(255, 42, 85, 0.25);
-                color: #ffffff;
-                border-color: #ff2a55;
+                background: {C.PANEL2};
+                color: {C.TEXT_BRIGHT};
             }}
         """)
         close_btn.clicked.connect(self._cancel)
@@ -202,7 +212,7 @@ class CustomizeOverlay(QWidget):
         outer_lay.addLayout(hdr_row)
 
         sep = QFrame(); sep.setFrameShape(QFrame.Shape.HLine)
-        sep.setStyleSheet("color: rgba(0, 240, 255, 0.16); margin: 2px 0;")
+        sep.setStyleSheet(f"color: {C.BORDER_A}; margin: 2px 0;")
         outer_lay.addWidget(sep)
 
         # Scrollable container for all settings so it never overflows or clips
@@ -213,18 +223,18 @@ class CustomizeOverlay(QWidget):
         scroll.setStyleSheet("""
             QScrollArea { background: transparent; border: none; }
             QScrollBar:vertical {
-                background: rgba(0, 0, 0, 0.2);
+                background: transparent;
                 width: 6px;
                 border-radius: 3px;
                 margin: 0px;
             }
             QScrollBar::handle:vertical {
-                background: rgba(0, 240, 255, 0.35);
+                background: rgba(255, 255, 255, 0.14);
                 min-height: 24px;
                 border-radius: 3px;
             }
             QScrollBar::handle:vertical:hover {
-                background: rgba(0, 240, 255, 0.65);
+                background: rgba(255, 255, 255, 0.28);
             }
             QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
                 height: 0px;
@@ -234,47 +244,46 @@ class CustomizeOverlay(QWidget):
         body_widget = QWidget()
         body_widget.setStyleSheet("background: transparent;")
         lay = QVBoxLayout(body_widget)
-        lay.setContentsMargins(4, 4, 10, 4)
-        lay.setSpacing(10)
+        lay.setContentsMargins(4, 6, 12, 6)
+        lay.setSpacing(8)
 
         def _lbl(txt, fs=8, bold=False, color=C.PRI, align=Qt.AlignmentFlag.AlignLeft):
+            """Return a transparent label with the given text, font size, weight, colour and alignment."""
             w = QLabel(txt); w.setAlignment(align)
-            w.setFont(tech_font(fs,
-                                QFont.Weight.Bold if bold else QFont.Weight.Medium,
-                                letter_spacing=0.8 if bold else 0.3))
+            w.setFont(ui_font(fs + 1, QFont.Weight.Medium))
             w.setStyleSheet(f"color: {color}; background: transparent;")
             return w
 
         _fs = (f"QLineEdit {{ background: {C.PANEL2}; color: {C.WHITE}; "
-               f"border: 1px solid {C.BORDER_A}; border-radius: 2px; padding: 6px 12px; font-size: 13px; }}"
-               f"QLineEdit:focus {{ border: 1px solid {C.PRI}; background: rgba(142, 155, 255, 0.08); }}")
+               f"border: 1px solid {C.BORDER_A}; border-radius: 4px; padding: 6px 10px; font-size: 13px; }}"
+               f"QLineEdit:focus {{ border: 1px solid {C.PRI}; }}")
 
         # ── Codename & Designation ───────────────────────────────────────
-        lbl_codename = _lbl("ASSISTANT CODENAME", 8, bold=True, color=C.TEXT_DIM)
+        lbl_codename = _lbl("Assistant name", 8, bold=True, color=C.TEXT_DIM)
         lay.addWidget(lbl_codename)
         self._name_input = QLineEdit(assistant_name)
-        self._name_input.setFont(mono_font(10, QFont.Weight.DemiBold, letter_spacing=0.5))
+        self._name_input.setFont(ui_font(10))
         self._name_input.setFixedHeight(34)
         self._name_input.setStyleSheet(_fs)
         attach_hover_help(self._name_input, "The codename ALFRED uses when speaking and displaying system status headers.", lbl_codename)
         lay.addWidget(self._name_input)
 
-        lbl_designation = _lbl("COMMANDER DESIGNATION  (e.g. Master Wayne, Sir)", 8,
+        lbl_designation = _lbl("How you are addressed", 8,
                                bold=True, color=C.TEXT_DIM)
         lay.addWidget(lbl_designation)
         self._user_input = QLineEdit(user_name)
-        self._user_input.setPlaceholderText("e.g.  Master Wayne   (leave blank for default)")
-        self._user_input.setFont(mono_font(10, letter_spacing=0.3))
+        self._user_input.setPlaceholderText("Master Wayne")
+        self._user_input.setFont(ui_font(10))
         self._user_input.setFixedHeight(34)
         self._user_input.setStyleSheet(_fs)
         attach_hover_help(self._user_input, "How the assistant addresses you during conversations and briefings (e.g. Master Wayne, Sir).", lbl_designation)
         lay.addWidget(self._user_input)
 
         # ── Tactical Bat-Insignia & Application Icon ─────────────────────
-        lbl_insignia = _lbl("TACTICAL BAT-INSIGNIA & APPLICATION ICON", 8, bold=True, color=C.TEXT_DIM)
+        lbl_insignia = _lbl("Insignia", 8, bold=True, color=C.TEXT_DIM)
         lay.addWidget(lbl_insignia)
-        icon_sub = QLabel("SELECT CHASSIS BADGE // SYSTEM TRAY & TASKBAR ICON // REALTIME UPLINK")
-        icon_sub.setFont(tech_font(7, QFont.Weight.Medium, letter_spacing=0.8))
+        icon_sub = QLabel("Shown in the header, taskbar and tray")
+        icon_sub.setFont(ui_font(8))
         icon_sub.setStyleSheet(f"color: {C.TEXT_MUTED}; background: transparent; margin-bottom: 2px;")
         lay.addWidget(icon_sub)
 
@@ -293,7 +302,7 @@ class CustomizeOverlay(QWidget):
             col = idx % cols
 
             btn = QPushButton()
-            btn.setFixedHeight(58)
+            btn.setFixedHeight(50)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
 
             btn_lay = QHBoxLayout(btn)
@@ -314,14 +323,9 @@ class CustomizeOverlay(QWidget):
             txt_box.setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
             name_lbl = QLabel(ic["name"])
-            name_lbl.setFont(mono_font(8, QFont.Weight.Bold, letter_spacing=0.4))
-            name_lbl.setStyleSheet("color: #ffffff; background: transparent;")
+            name_lbl.setFont(ui_font(9, QFont.Weight.Medium))
+            name_lbl.setStyleSheet(f"color: {C.TEXT}; background: transparent;")
             txt_box.addWidget(name_lbl)
-
-            file_lbl = QLabel(ic["filename"][:22])
-            file_lbl.setFont(tech_font(6, letter_spacing=0.2))
-            file_lbl.setStyleSheet(f"color: {C.TEXT_MUTED}; background: transparent;")
-            txt_box.addWidget(file_lbl)
 
             btn_lay.addLayout(txt_box)
             btn_lay.addStretch()
@@ -336,7 +340,7 @@ class CustomizeOverlay(QWidget):
 
         # ── Assistant voice — Gemini prebuilt voices ─────────────────────
         from memory.config_manager import AVAILABLE_VOICES, DEFAULT_VOICE
-        lbl_voice = _lbl("VOCAL SYNTHESIS PROFILE", 8, bold=True, color=C.TEXT_DIM)
+        lbl_voice = _lbl("Voice", 8, bold=True, color=C.TEXT_DIM)
         lay.addWidget(lbl_voice)
         self._sel_voice = (voice or DEFAULT_VOICE)
         if self._sel_voice not in AVAILABLE_VOICES:
@@ -347,7 +351,7 @@ class CustomizeOverlay(QWidget):
             b = QPushButton(_v)
             b.setCheckable(True)
             b.setFixedHeight(29)
-            b.setFont(mono_font(8, QFont.Weight.Bold, letter_spacing=0.4))
+            b.setFont(ui_font(9, QFont.Weight.Medium))
             b.setCursor(Qt.CursorShape.PointingHandCursor)
             b.clicked.connect(lambda _=False, name=_v: self._on_voice_pick(name))
             attach_hover_help(b, f"Use the neural vocal profile '{_v}' for spoken responses.", lbl_voice)
@@ -363,7 +367,7 @@ class CustomizeOverlay(QWidget):
         )
         from core.tts.capability import check_jarvis_capability, Capability
 
-        lbl_engine = _lbl("TTS SYNTHESIS ENGINE", 8, bold=True, color=C.TEXT_DIM)
+        lbl_engine = _lbl("Voice engine", 8, bold=True, color=C.TEXT_DIM)
         lay.addWidget(lbl_engine)
 
         self._sel_voice_engine = (voice_engine or get_voice_engine() or "default").lower()
@@ -374,14 +378,14 @@ class CustomizeOverlay(QWidget):
         engine_row = QHBoxLayout()
         engine_row.setSpacing(6)
         engines = [
-            ("default", "STANDARD / DEFAULT"),
-            ("jarvis", "JARVIS (VOXCPM2 LORA)"),
+            ("default", "Standard"),
+            ("jarvis", "Jarvis (VoxCPM2)"),
         ]
         for eng_id, eng_label in engines:
             eb = QPushButton(eng_label)
             eb.setCheckable(True)
             eb.setFixedHeight(29)
-            eb.setFont(mono_font(8, QFont.Weight.Bold, letter_spacing=0.4))
+            eb.setFont(ui_font(9, QFont.Weight.Medium))
             eb.setCursor(Qt.CursorShape.PointingHandCursor)
             eb.clicked.connect(lambda _=False, eid=eng_id: self._on_engine_pick(eid))
             attach_hover_help(eb, f"Select '{eng_label}' backend architecture for local vocal synthesis.", lbl_engine)
@@ -393,27 +397,27 @@ class CustomizeOverlay(QWidget):
         status_row = QHBoxLayout()
         status_row.setSpacing(8)
         self._lbl_engine_status = QLabel("")
-        self._lbl_engine_status.setFont(tech_font(7, QFont.Weight.Medium, letter_spacing=0.3))
+        self._lbl_engine_status.setFont(ui_font(8))
         self._lbl_engine_status.setStyleSheet(f"color: {C.TEXT_MED}; background: transparent;")
         self._lbl_engine_status.setWordWrap(True)
         status_row.addWidget(self._lbl_engine_status, stretch=3)
 
-        self._btn_preview_voice = QPushButton("▶ PREVIEW VOICE")
+        self._btn_preview_voice = QPushButton("Preview voice")
         self._btn_preview_voice.setFixedHeight(26)
-        self._btn_preview_voice.setFont(mono_font(7, QFont.Weight.Bold, letter_spacing=0.5))
+        self._btn_preview_voice.setFont(ui_font(8, QFont.Weight.Medium))
         self._btn_preview_voice.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_preview_voice.setStyleSheet(f"""
             QPushButton {{
                 background: {C.PANEL2};
                 color: {C.PRI};
                 border: 1px solid {C.BORDER_A};
-                border-radius: 2px;
+                border-radius: 4px;
                 padding: 0 8px;
             }}
             QPushButton:hover {{
-                background: rgba(0, 240, 255, 0.15);
+                background: {C.PRI_GHO};
                 border-color: {C.PRI};
-                color: #ffffff;
+                color: {C.TEXT_BRIGHT};
             }}
         """)
         self._btn_preview_voice.clicked.connect(self._preview_voice)
@@ -425,7 +429,7 @@ class CustomizeOverlay(QWidget):
 
         # ── Single Authentic CRT Themes Selector // Chromatics ─────────────
         from core.ui.themes import ThemeRegistry
-        lbl_theme = _lbl("AUTHENTIC CRT THEMES // CHROMATICS", 8, bold=True, color=C.TEXT_DIM)
+        lbl_theme = _lbl("Theme", 8, bold=True, color=C.TEXT_DIM)
         lay.addWidget(lbl_theme)
         swatch_grid = QGridLayout()
         swatch_grid.setSpacing(6)
@@ -438,7 +442,7 @@ class CustomizeOverlay(QWidget):
             c = idx % 2
             sb = QPushButton(th.display_name)
             sb.setFixedHeight(30)
-            sb.setFont(mono_font(7, QFont.Weight.Bold, letter_spacing=0.5))
+            sb.setFont(ui_font(8, QFont.Weight.DemiBold, letter_spacing=0.6))
             sb.setCursor(Qt.CursorShape.PointingHandCursor)
             sb.clicked.connect(lambda _, h=th.hex: self._set_color(h, update_wheel=True, preview=True))
             attach_hover_help(sb, f"{th.display_name} ({th.hex}) — {th.tagline}", lbl_theme)
@@ -460,37 +464,40 @@ class CustomizeOverlay(QWidget):
         attach_hover_help(self._wheel, "Drag the color wheel to interactively tune custom HUD accent colors in real time.")
 
         self._hex_input = QLineEdit(self._sel_color)
-        self._hex_input.setPlaceholderText("#ff0037   (custom hex colour)")
+        self._hex_input.setPlaceholderText("#5cc8ff")
         self._hex_input.setFont(mono_font(10))
         self._hex_input.setFixedHeight(30)
         self._hex_input.setStyleSheet(_fs)
         self._hex_input.textEdited.connect(self._on_hex_edited)
         attach_hover_help(self._hex_input, "Enter a custom 6-digit hex color code (e.g. #8e9bff, #00f0ff) for HUD styling.")
         lay.addWidget(self._hex_input)
+        # Style the theme buttons now so they are legible before the first colour change.
+        self._refresh_theme_buttons()
 
         lay.addSpacing(8)
-        lbl_api = _lbl("BACKEND SERVICES & API INTEGRATIONS", 8, bold=True, color=C.TEXT_DIM)
+        lbl_api = _lbl("Connections", 8, bold=True, color=C.TEXT_DIM)
         lay.addWidget(lbl_api)
 
         # 1. External API Services (Spotify, Gmail, Google Workspace)
-        self._services_api_btn = QPushButton("[ ◈ ]  SETUP SPOTIFY, GMAIL & WORKSPACE")
-        self._services_api_btn.setFixedHeight(32)
-        self._services_api_btn.setFont(mono_font(8, QFont.Weight.Bold, letter_spacing=0.8))
-        self._services_api_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._services_api_btn.setStyleSheet(f"""
+        _link_style = f"""
             QPushButton {{
                 background: {C.PANEL2};
-                color: {C.PRI};
-                border: 1px solid {C.PRI};
-                border-radius: 2px;
+                color: {C.TEXT};
+                border: 1px solid {C.BORDER_A};
+                border-radius: 4px;
                 padding: 0 12px;
-                font-weight: bold;
+                text-align: left;
             }}
             QPushButton:hover {{
-                background: {C.PRI};
-                color: {C.DARK};
+                border-color: {C.PRI};
+                color: {C.TEXT_BRIGHT};
             }}
-        """)
+        """
+        self._services_api_btn = QPushButton("Spotify, Gmail and Workspace")
+        self._services_api_btn.setFixedHeight(32)
+        self._services_api_btn.setFont(ui_font(9, QFont.Weight.Medium))
+        self._services_api_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._services_api_btn.setStyleSheet(_link_style)
         self._services_api_btn.clicked.connect(lambda: self.setup_api_requested.emit())
         attach_hover_help(self._services_api_btn, "Configure encrypted credentials and OAuth tokens for Spotify, Gmail, and Google Workspace.", lbl_api)
         lay.addWidget(self._services_api_btn)
@@ -498,24 +505,11 @@ class CustomizeOverlay(QWidget):
 
         lay.addSpacing(4)
         # 2. Neural LLM Backend (Gemini, OpenRouter, Local Models)
-        neural_btn = QPushButton("◈  CONFIGURE NEURAL LLM PROVIDERS")
-        neural_btn.setFixedHeight(28)
-        neural_btn.setFont(mono_font(7, QFont.Weight.Bold, letter_spacing=0.6))
+        neural_btn = QPushButton("Model providers")
+        neural_btn.setFixedHeight(32)
+        neural_btn.setFont(ui_font(9, QFont.Weight.Medium))
         neural_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        neural_btn.setStyleSheet(f"""
-            QPushButton {{
-                background: rgba(255, 255, 255, 0.04);
-                color: {C.TEXT_MED};
-                border: 1px solid {C.BORDER_A};
-                border-radius: 2px;
-                padding: 0 12px;
-            }}
-            QPushButton:hover {{
-                background: {C.PANEL2};
-                color: {C.WHITE};
-                border-color: {C.PRI};
-            }}
-        """)
+        neural_btn.setStyleSheet(_link_style)
         neural_btn.clicked.connect(lambda: self.setup_neural_requested.emit())
         attach_hover_help(neural_btn, "Open the neural engine setup window to configure Gemini, OpenRouter, Groq, or local LLM credentials.", lbl_api)
         lay.addWidget(neural_btn)
@@ -529,16 +523,16 @@ class CustomizeOverlay(QWidget):
         outer_lay.addWidget(sep_bottom)
 
         btn_row = QHBoxLayout(); btn_row.setSpacing(10)
-        save_btn = QPushButton("▸  COMMIT DIRECTIVE")
-        save_btn.setFixedHeight(36)
-        save_btn.setFont(mono_font(8, QFont.Weight.Bold, letter_spacing=1.0))
+        save_btn = QPushButton("Save changes")
+        save_btn.setFixedHeight(34)
+        save_btn.setFont(ui_font(9, QFont.Weight.DemiBold))
         save_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         save_btn.setStyleSheet(f"""
             QPushButton {{
                 background: {C.PRI};
                 color: {C.DARK};
                 border: 1px solid {C.PRI};
-                border-radius: 2px;
+                border-radius: 4px;
             }}
             QPushButton:hover {{
                 background: {C.TEXT_BRIGHT};
@@ -553,19 +547,19 @@ class CustomizeOverlay(QWidget):
         attach_hover_help(save_btn, "Save and apply all persona, voice, insignia, and theme changes to your configuration.")
         btn_row.addWidget(save_btn, stretch=2)
 
-        cancel_btn = QPushButton("DISCARD")
-        cancel_btn.setFixedHeight(36)
-        cancel_btn.setFont(mono_font(8, letter_spacing=0.8))
+        cancel_btn = QPushButton("Discard")
+        cancel_btn.setFixedHeight(34)
+        cancel_btn.setFont(ui_font(9, QFont.Weight.Medium))
         cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         cancel_btn.setStyleSheet(f"""
             QPushButton {{
                 background: {C.PANEL2};
                 color: {C.TEXT_MED};
                 border: 1px solid {C.BORDER_A};
-                border-radius: 2px;
+                border-radius: 4px;
             }}
-            QPushButton:hover {{ color: #ffffff; border-color: {C.PRI}; background: rgba(142, 155, 255, 0.12); }}
-            QPushButton:pressed {{ background: rgba(142, 155, 255, 0.05); }}
+            QPushButton:hover {{ color: #ffffff; border-color: {C.PRI}; background: {C.PRI_GHO}; }}
+            QPushButton:pressed {{ background: {C.PRI_GHO}; }}
         """)
         cancel_btn.clicked.connect(self._cancel)
         attach_hover_help(cancel_btn, "Discard all unsaved changes and close the reconfiguration window.")
@@ -573,6 +567,7 @@ class CustomizeOverlay(QWidget):
         outer_lay.addLayout(btn_row)
 
     def _apply_preset(self, name: str, user: str, color: str, voice: str):
+        """Fill the name, user, voice and colour controls from a preset and preview the colour."""
         self._name_input.setText(name)
         self._user_input.setText(user)
         self._sel_voice = voice
@@ -600,17 +595,19 @@ class CustomizeOverlay(QWidget):
         self._refresh_services_btn()
 
     def _refresh_services_btn(self) -> None:
+        """Update the services button text with the configured backend count, if the button exists."""
         if not hasattr(self, "_services_api_btn") or self._services_api_btn is None:
             return
         try:
             from core.apis.registry import get_configured_backends_count
             configured, total = get_configured_backends_count()
-            self._services_api_btn.setText(f"[ ◈ ]  SETUP SPOTIFY, GMAIL & WORKSPACE ({configured}/{total})")
+            self._services_api_btn.setText(f"Spotify, Gmail and Workspace ({configured}/{total})")
         except Exception:
-            self._services_api_btn.setText("[ ◈ ]  SETUP SPOTIFY, GMAIL & WORKSPACE")
+            self._services_api_btn.setText("Spotify, Gmail and Workspace")
 
     # ── voice selection ──────────────────────────────────────────────────────
     def _on_voice_pick(self, name: str):
+        """Select the given voice and refresh the voice buttons."""
         self._sel_voice = name
         self._refresh_voice_btns()
 
@@ -622,17 +619,18 @@ class CustomizeOverlay(QWidget):
             if on:
                 b.setStyleSheet(f"""
                     QPushButton {{ background: {C.PRI}; color: {C.DARK};
-                        border: 1px solid {C.PRI}; border-radius: 2px; font-weight: bold; }}
+                        border: 1px solid {C.PRI}; border-radius: 4px; font-weight: bold; }}
                 """)
             else:
                 b.setStyleSheet(f"""
                     QPushButton {{ background: {C.PANEL2}; color: {C.TEXT_MED};
-                        border: 1px solid {C.BORDER_A}; border-radius: 2px; }}
-                    QPushButton:hover {{ color: #ffffff; border-color: {C.PRI}; background: rgba(142, 155, 255, 0.10); }}
+                        border: 1px solid {C.BORDER_A}; border-radius: 4px; }}
+                    QPushButton:hover {{ color: #ffffff; border-color: {C.PRI}; background: {C.PRI_GHO}; }}
                 """)
 
     # ── voice engine selection & verification ────────────────────────────────
     def _on_engine_pick(self, eid: str):
+        """Select a voice engine; if Jarvis is chosen but unusable, fall back to default and show a warning."""
         from core.tts.capability import check_jarvis_capability, Capability
         from memory.config_manager import get_jarvis_allow_cpu
 
@@ -647,6 +645,7 @@ class CustomizeOverlay(QWidget):
         self._refresh_engine_ui()
 
     def _refresh_engine_ui(self, warning_reason: str | None = None):
+        """Restyle the engine buttons and update the engine status label with Jarvis capability or a warning."""
         from core.tts.capability import check_jarvis_capability, Capability
         from memory.config_manager import get_jarvis_allow_cpu
 
@@ -656,13 +655,13 @@ class CustomizeOverlay(QWidget):
             if on:
                 b.setStyleSheet(f"""
                     QPushButton {{ background: {C.PRI}; color: {C.DARK};
-                        border: 1px solid {C.PRI}; border-radius: 2px; font-weight: bold; }}
+                        border: 1px solid {C.PRI}; border-radius: 4px; font-weight: bold; }}
                 """)
             else:
                 b.setStyleSheet(f"""
                     QPushButton {{ background: {C.PANEL2}; color: {C.TEXT_MED};
-                        border: 1px solid {C.BORDER_A}; border-radius: 2px; }}
-                    QPushButton:hover {{ color: #ffffff; border-color: {C.PRI}; background: rgba(142, 155, 255, 0.10); }}
+                        border: 1px solid {C.BORDER_A}; border-radius: 4px; }}
+                    QPushButton:hover {{ color: #ffffff; border-color: {C.PRI}; background: {C.PRI_GHO}; }}
                 """)
 
         allow_cpu = get_jarvis_allow_cpu()
@@ -680,6 +679,7 @@ class CustomizeOverlay(QWidget):
             self._lbl_engine_status.setStyleSheet(f"color: {C.TEXT_MED}; background: transparent;")
 
     def _preview_voice(self):
+        """Preview the selected voice engine via the custom handler if set, otherwise speak a test line on a background thread."""
         eng = self._sel_voice_engine
         if getattr(self, "on_preview_voice", None):
             try:
@@ -689,6 +689,7 @@ class CustomizeOverlay(QWidget):
                 print(f"[Voice Preview] Custom handler error: {e}")
 
         def _worker():
+            """Speak a test line with the selected TTS engine, printing any synthesis error."""
             try:
                 from core.tts import get_engine
                 engine = get_engine(eng)
@@ -722,13 +723,17 @@ class CustomizeOverlay(QWidget):
             is_active = (theme.id == cur_theme.id) or (self._sel_color.lower() == theme.hex.lower())
             accent_hex = theme.hex
             bg_hex = theme.palette.panel2
+
+            def _tint(alpha: float, _h: str = accent_hex) -> str:
+                # Qt reads 8-digit hex as #AARRGGBB, so build translucent accents explicitly.
+                return f"rgba({int(_h[1:3], 16)}, {int(_h[3:5], 16)}, {int(_h[5:7], 16)}, {alpha})"
             if is_active:
                 btn.setStyleSheet(f"""
                     QPushButton {{
-                        background: {accent_hex}33;
+                        background: {_tint(0.20)};
                         color: #ffffff;
                         border: 1.5px solid {accent_hex};
-                        border-radius: 2px;
+                        border-radius: 4px;
                         padding: 0 10px;
                         font-weight: bold;
                     }}
@@ -738,27 +743,30 @@ class CustomizeOverlay(QWidget):
                     QPushButton {{
                         background: {bg_hex};
                         color: {accent_hex};
-                        border: 1px solid {accent_hex}55;
-                        border-radius: 2px;
+                        border: 1px solid {_tint(0.33)};
+                        border-radius: 4px;
                         padding: 0 10px;
                     }}
                     QPushButton:hover {{
-                        background: {accent_hex}22;
+                        background: {_tint(0.13)};
                         border-color: {accent_hex};
                         color: #ffffff;
                     }}
                 """)
 
     def _on_wheel_pick(self, hx: str):
+        """Record the colour picked on the wheel and mirror it into the hex field without triggering edits."""
         self._sel_color = hx
         self._hex_input.blockSignals(True)
         self._hex_input.setText(hx)
         self._hex_input.blockSignals(False)
 
     def _on_wheel_commit(self, hx: str):
+        """Apply the committed wheel colour without moving the wheel."""
         self._set_color(hx, update_wheel=False)
 
     def _on_hex_edited(self, text: str):
+        """Apply a typed hex colour once it is a valid #rrggbb value."""
         t = text.strip().lower()
         if t.startswith("#") and len(t) == 7:
             try:
@@ -768,6 +776,7 @@ class CustomizeOverlay(QWidget):
             self._set_color(t, update_wheel=True, preview=True)
 
     def _refresh_icon_cards(self):
+        """Restyle the icon cards to highlight the current icon, skipping work if nothing changed."""
         norm_cur = Path(self._current_icon).name.lower() if self._current_icon else ""
         style_key = (norm_cur, C.PRI, C.PANEL2, C.BORDER_A)
         if getattr(self, "_icon_style_key", None) == style_key:
@@ -777,7 +786,7 @@ class CustomizeOverlay(QWidget):
             if is_active:
                 btn.setStyleSheet(f"""
                     QPushButton {{
-                        background: rgba(0, 240, 255, 0.16);
+                        background: {C.PRI_GHO};
                         border: 1.5px solid {C.PRI};
                         border-radius: 4px;
                         text-align: left;
@@ -792,13 +801,14 @@ class CustomizeOverlay(QWidget):
                         text-align: left;
                     }}
                     QPushButton:hover {{
-                        background: rgba(142, 155, 255, 0.12);
+                        background: {C.PRI_GHO};
                         border-color: {C.PRI};
                     }}
                 """)
         self._icon_style_key = style_key
 
     def _on_icon_picked(self, path: str):
+        """Select the picked icon, refresh the cards and apply it live through on_icon_change."""
         self._current_icon = path
         self._refresh_icon_cards()
         if self.on_icon_change:
@@ -808,6 +818,7 @@ class CustomizeOverlay(QWidget):
                 print(f"[Icon] Realtime change error: {e}")
 
     def _cancel(self):
+        """Revert any previewed colour and icon changes and hide the overlay."""
         TacticalHoverHelpManager.instance().dismiss()
         if self.on_preview and self._sel_color != self._initial_color:
             self.on_preview(self._initial_color)
@@ -816,6 +827,7 @@ class CustomizeOverlay(QWidget):
         self.hide()
 
     def _save(self):
+        """Save the voice engine, emit saved with the chosen settings, apply the icon and hide the overlay."""
         TacticalHoverHelpManager.instance().dismiss()
         name = self._name_input.text().strip() or "Alfred"
         user = self._user_input.text().strip()
@@ -827,5 +839,6 @@ class CustomizeOverlay(QWidget):
         self.hide()
 
     def hideEvent(self, event):
+        """Dismiss any open hover-help tooltip when the overlay hides."""
         TacticalHoverHelpManager.instance().dismiss()
         super().hideEvent(event)

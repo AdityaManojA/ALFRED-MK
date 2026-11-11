@@ -16,7 +16,10 @@ from core.ui.themes.schema import PaletteDefinition
 
 
 class CatwomanSonarVisual(SlotVisual):
+    """Slot 1: rooftop wire grid with a horizontal laser band whose scan speed rises with drift."""
+
     def __init__(self) -> None:
+        """Initialise pens, font and geometry placeholders for this slot."""
         super().__init__()
         self.scan_y: float = 0.0
         self.pen_grid = QPen()
@@ -29,6 +32,7 @@ class CatwomanSonarVisual(SlotVisual):
         self.grid_lines: list[QLineF] = []
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build pens and brush and lay out the scan line, scan band and rooftop grid lines."""
         c_pri = QColor(palette.pri)
         c_acc = QColor(palette.acc)
         self.pen_grid = QPen(QColor(c_pri.red(), c_pri.green(), c_pri.blue(), 60), 1.0)
@@ -49,12 +53,14 @@ class CatwomanSonarVisual(SlotVisual):
             self.grid_lines.append(QLineF(bx, by + y, bx + bw, by + y))
 
     def tick(self, dt: float, signals: HudSignals) -> None:
+        """Advance the vertical laser scan position (faster with drift)."""
         self.scan_y = (self.scan_y + dt * (0.8 + signals.drift * 2.0)) % 1.0
         ly = self.rect_inner.y() + self.scan_y * self.rect_inner.height()
         self.scan_line.setLine(self.rect_inner.x(), ly, self.rect_inner.right(), ly)
         self.scan_rect.setRect(self.rect_inner.x(), max(self.rect_inner.y(), ly - 4.0), self.rect_inner.width(), 8.0)
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
+        """Draw the panel border, grid, header and laser scan band."""
         painter.setPen(self.pen_grid)
         painter.drawRect(self.rect_inner)
         painter.drawLines(self.grid_lines)
@@ -71,7 +77,10 @@ class CatwomanSonarVisual(SlotVisual):
 
 
 class CatwomanLockpickVisual(SlotVisual):
+    """Slot 2: four cycling tumbler pins over a shear line plus a mic-scaled vibration trace."""
+
     def __init__(self) -> None:
+        """Initialise pens, font and geometry placeholders for this slot."""
         super().__init__()
         self.wave = WaveTrace(sample_count=32)
         self.pins = [0.2, 0.5, 0.8, 0.4]
@@ -83,6 +92,7 @@ class CatwomanLockpickVisual(SlotVisual):
         self.rect_inner = QRectF()
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build pin, shear and wave pens and lay out the vibration wave trace."""
         c_pri = QColor(palette.pri)
         c_acc = QColor(palette.acc)
         self.pen_pin = QPen(c_pri, 2.0)
@@ -94,6 +104,7 @@ class CatwomanLockpickVisual(SlotVisual):
         self.wave.layout(bx + 4.0, by + bh * 0.75, bw - 8.0, height_amp=10.0)
 
     def tick(self, dt: float, signals: HudSignals) -> None:
+        """Update the mic-scaled vibration wave and animate the four pin heights."""
         t = (dt * 4.0)
         samples = [fast_sin(i * 0.6 + t) * (0.2 + signals.mic_level * 0.8) for i in range(32)]
         self.wave.update_samples(samples)
@@ -107,6 +118,7 @@ class CatwomanLockpickVisual(SlotVisual):
             self.pin_lines[i].setLine(px, shear_y - pin_h, px, shear_y + 4.0)
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
+        """Draw the header, shear line, pins and vibration wave."""
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_wave)
         painter.drawText(QRectF(rect.x() + 8, rect.y() + 4, rect.width() - 16, 12),
@@ -127,7 +139,10 @@ class CatwomanLockpickVisual(SlotVisual):
 
 
 class CatwomanAcrobatVisual(SlotVisual):
+    """Slot 3: six-segment feline wireframe moving along a looping jump arc."""
+
     def __init__(self) -> None:
+        """Initialise pens, font and geometry placeholders for this slot."""
         super().__init__()
         self.phase: float = 0.0
         self.pen_body = QPen()
@@ -137,6 +152,7 @@ class CatwomanAcrobatVisual(SlotVisual):
         self.body_lines = [QLineF() for _ in range(6)]
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build body and vector pens and compute the inner panel rect."""
         c_pri = QColor(palette.pri)
         c_acc = QColor(palette.acc)
         self.pen_body = QPen(c_pri, 1.6)
@@ -146,6 +162,7 @@ class CatwomanAcrobatVisual(SlotVisual):
         self.rect_inner = QRectF(bx, by, bw, bh)
 
     def tick(self, dt: float, signals: HudSignals) -> None:
+        """Advance the phase and recompute the moving feline wireframe pose lines."""
         self.phase = (self.phase + dt * 1.6) % (2.0 * math.pi)
         cx = self.rect_inner.x() + self.rect_inner.width() * (0.3 + 0.4 * fast_sin(self.phase))
         cy = self.rect_inner.y() + self.rect_inner.height() * (0.5 - 0.3 * abs(fast_cos(self.phase)))
@@ -159,6 +176,7 @@ class CatwomanAcrobatVisual(SlotVisual):
         self.body_lines[5].setLine(cx - 8, cy - 14, cx - 14, cy - 18)  # tail
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
+        """Draw the header and wireframe pose lines."""
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_body)
         painter.drawText(QRectF(rect.x() + 8, rect.y() + 3, rect.width() - 16, 12),

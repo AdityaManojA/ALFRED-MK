@@ -161,6 +161,7 @@ class ClipboardManager:
     _lock = threading.Lock()
 
     def __init__(self):
+        """Initialise empty listener state and load persisted clipboard history."""
         self._history: List[Dict[str, Any]] = []
         self._listener_thread: Optional[threading.Thread] = None
         self._running = False
@@ -170,6 +171,7 @@ class ClipboardManager:
 
     @classmethod
     def get_instance(cls) -> ClipboardManager:
+        """Return the process-wide ClipboardManager singleton, creating it on first use."""
         with cls._lock:
             if cls._instance is None:
                 cls._instance = cls()
@@ -404,30 +406,36 @@ class ClipboardManager:
 
 # Global module functions for direct access
 def get_recent_clipboards(count: int = 3) -> List[Dict[str, Any]]:
+    """Return the most recent clipboard entries from the singleton manager."""
     return ClipboardManager.get_instance().get_recent_clipboards(count)
 
 
 def search_clipboard(query: str, limit: int = 5) -> List[Dict[str, Any]]:
+    """Search clipboard history for the query via the singleton manager."""
     return ClipboardManager.get_instance().search_clipboard(query, limit)
 
 
 def paste_clipboard_item(index_or_id: Union[int, str]) -> Optional[Dict[str, Any]]:
+    """Paste a clipboard history item by index or id via the singleton manager."""
     return ClipboardManager.get_instance().paste_clipboard_item(index_or_id)
 
 
 def add_clipboard_item(
     text: str, source_app: Optional[str] = None, bypass_toggle: bool = False
 ) -> Optional[Dict[str, Any]]:
+    """Add text to the clipboard history via the singleton manager."""
     return ClipboardManager.get_instance().add_clipboard_item(
         text, source_app, bypass_toggle=bypass_toggle
     )
 
 
 def start_clipboard_listener() -> None:
+    """Start the background clipboard listener on the singleton manager."""
     ClipboardManager.get_instance().start_listener()
 
 
 def stop_clipboard_listener() -> None:
+    """Stop the background clipboard listener on the singleton manager."""
     ClipboardManager.get_instance().stop_listener()
 
 

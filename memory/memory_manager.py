@@ -7,6 +7,7 @@ import sys
 
 
 def get_base_dir() -> Path:
+    """Return the app root: the executable's folder when frozen, else the repo root."""
     if getattr(sys, "frozen", False):
         return Path(sys.executable).parent
     return Path(__file__).resolve().parent.parent
@@ -45,6 +46,7 @@ PROMPT_INDEX_CHARS = 420
 PROMPT_MAX_PER_CATEGORY = 6
 
 def _empty_memory() -> dict:
+    """Return a fresh memory dict with every standard category empty."""
     return {
         "identity":      {},
         "preferences":   {},
@@ -55,6 +57,9 @@ def _empty_memory() -> dict:
     }
 
 def load_memory() -> dict:
+    """Load long-term memory from disk, filling in missing categories.
+    Returns an empty memory if the file is missing, invalid, or unreadable.
+    """
     if not MEMORY_PATH.exists():
         return _empty_memory()
     with _lock:
@@ -72,6 +77,7 @@ def load_memory() -> dict:
             return _empty_memory()
 
 def _all_entries(memory: dict) -> list[tuple]:
+    """Return (category, key, entry) tuples for every valid memory entry."""
     entries = []
     for cat, items in memory.items():
         if not isinstance(items, dict):
@@ -94,6 +100,10 @@ def set_trim_notifier(fn) -> None:
 
 
 def _trim_to_limit(memory: dict) -> dict:
+    """Drop the oldest entries until the serialized memory fits MEMORY_MAX_CHARS.
+    Logs dropped entries and notifies the trim notifier if one is set. Mutates and
+    returns the memory dict.
+    """
     raw = json.dumps(memory, ensure_ascii=False)
     current_size = len(raw)
     if current_size <= MEMORY_MAX_CHARS:
@@ -145,6 +155,7 @@ def _trim_to_limit(memory: dict) -> dict:
     return memory
 
 def save_memory(memory: dict) -> None:
+    """Trim the memory to its size limit and write it to long_term.json."""
     if not isinstance(memory, dict):
         return
     memory = _trim_to_limit(memory)
@@ -157,12 +168,16 @@ def save_memory(memory: dict) -> None:
 
 
 def _truncate_value(val: str) -> str:
+    """Truncate a string longer than MAX_VALUE_LENGTH, appending an ellipsis."""
     if isinstance(val, str) and len(val) > MAX_VALUE_LENGTH:
         return val[:MAX_VALUE_LENGTH].rstrip() + "…"
     return val
 
 
 def _recursive_update(target: dict, updates: dict) -> bool:
+    """Merge updates into target, stamping leaf values with today's date.
+    Skips None and blank values; returns True if anything changed.
+    """
     changed = False
     for key, value in updates.items():
         if value is None:
@@ -186,6 +201,9 @@ def _recursive_update(target: dict, updates: dict) -> bool:
 
 
 def update_memory(memory_update: dict) -> dict:
+    """Merge an update into stored memory, saving only if something changed.
+    Returns the resulting memory dict.
+    """
     if not isinstance(memory_update, dict) or not memory_update:
         return load_memory()
     memory = load_memory()
@@ -203,6 +221,7 @@ def _entry_value(entry) -> str:
 
 
 def _pretty(key: str) -> str:
+    """Return the key with underscores replaced by spaces."""
     return key.replace("_", " ").strip()
 
 
@@ -431,6 +450,9 @@ def all_entries_for_ui() -> list[dict]:
     return rows
 
 def remember(key: str, value: str, category: str = "notes") -> str:
+    """Store a value under category/key (unknown categories become 'notes').
+    Returns a confirmation message.
+    """
     valid = {"identity", "preferences", "projects", "relationships", "wishes", "notes"}
     if category not in valid:
         category = "notes"
@@ -439,6 +461,7 @@ def remember(key: str, value: str, category: str = "notes") -> str:
 
 
 def forget(key: str, category: str = "notes") -> str:
+    """Delete category/key from memory and return a status message."""
     memory = load_memory()
     cat    = memory.get(category, {})
     if key in cat:

@@ -83,11 +83,13 @@ class MarketProvider:
 
     @classmethod
     def instance(cls) -> MarketProvider:
+        """Return the shared provider instance, creating it on first use."""
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance
 
     def __init__(self) -> None:
+        """Initialise the quote cache, backoff state and OK status."""
         self._cache: dict[str, tuple[float, Quote]] = {}
         self._backoff_until: float = 0.0
         self._backoff_step: int = 0
@@ -95,6 +97,7 @@ class MarketProvider:
 
     @property
     def status(self) -> str:
+        """Current provider status: OK, DEGRADED or RATE_LIMITED."""
         return self._status
 
     @staticmethod

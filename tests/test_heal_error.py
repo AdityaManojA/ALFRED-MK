@@ -10,7 +10,7 @@ from actions.dev_agent import heal_execution_error, apply_heal_patch
 from core.path_guard import is_heavenly_restricted
 
 
-def main():
+def test_heal_execution_error_loop():
     print("=== Testing Automated Diagnostic & Self-Repair Loop (heal_execution_error) ===")
     
     # 1. Test Restricted Path Refusal
@@ -101,4 +101,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    test_heal_execution_error_loop()

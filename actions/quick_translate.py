@@ -80,7 +80,7 @@ def _translate_via_googletrans(text: str, target_lang: str) -> Optional[str]:
     """Fallback: use deep-translator if installed."""
     try:
         from deep_translator import GoogleTranslator  # type: ignore[import]
-        translated = GoogleTranslator(source="auto", target=target_lang[:2].lower()).translate(text)
+        translated = GoogleTranslator(source="auto", target=target_lang.lower()).translate(text)
         return translated
     except Exception:
         return None
@@ -89,6 +89,7 @@ def _translate_via_googletrans(text: str, target_lang: str) -> Optional[str]:
 # ── Action handler ────────────────────────────────────────────────────────────
 
 def quick_translate_action(parameters: dict, **kwargs) -> str:
+    """Translate ``text`` to ``target_lang`` via the LLM client, falling back to deep-translator; returns the result or an error message."""
     text = str(parameters.get("text", "")).strip()
     if not text:
         return "Please provide the text to translate."

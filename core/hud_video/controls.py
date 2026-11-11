@@ -58,6 +58,7 @@ class VideoTimeline(QWidget):
         controller: HudVideoController,
         parent: Optional[QWidget] = None,
     ) -> None:
+        """Set up the timeline widget's sizing, playback/interaction state, and palette caches."""
         super().__init__(parent)
         self._controller = controller
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
@@ -121,6 +122,7 @@ class VideoTimeline(QWidget):
 
     @property
     def display_position_s(self) -> float:
+        """Return the scrub position while scrubbing, otherwise the playback position."""
         return self._scrub_pos_s if self._scrubbing else self._position_s
 
     # ------------------------------------------------------------------
@@ -128,12 +130,14 @@ class VideoTimeline(QWidget):
     # ------------------------------------------------------------------
 
     def _x_to_seconds(self, x: float) -> float:
+        """Map an x coordinate on the track to a time in seconds."""
         w = max(1.0, float(self.width() - THUMB_RADIUS * 2))
         pos_x = max(0.0, min(x - THUMB_RADIUS, w))
         pct = pos_x / w
         return pct * max(0.0, self._duration_s)
 
     def enterEvent(self, event) -> None:
+        """Mark hovered and show a pointer cursor when seekable and not live."""
         self._hovered = True
         if self._seekable and not self._is_live:
             self.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -141,12 +145,14 @@ class VideoTimeline(QWidget):
         super().enterEvent(event)
 
     def leaveEvent(self, event) -> None:
+        """Clear hover state and restore the arrow cursor."""
         self._hovered = False
         self.setCursor(Qt.CursorShape.ArrowCursor)
         self.update()
         super().leaveEvent(event)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
+        """Begin scrubbing on left click when seekable and update the parent's time readout."""
         if event.button() == Qt.MouseButton.LeftButton and self._seekable and not self._is_live:
             self._scrubbing = True
             self._scrub_pos_s = self._x_to_seconds(event.position().x())
@@ -158,6 +164,7 @@ class VideoTimeline(QWidget):
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
+        """Update the scrub position while dragging and refresh the parent's time readout."""
         if self._scrubbing and self._seekable and not self._is_live:
             self._scrub_pos_s = self._x_to_seconds(event.position().x())
             self.update()
@@ -167,6 +174,7 @@ class VideoTimeline(QWidget):
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        """End scrubbing and commit the seek to the controller on left-button release."""
         if event.button() == Qt.MouseButton.LeftButton and self._scrubbing:
             self._scrubbing = False
             # Commit seek to player on release only!
@@ -183,6 +191,7 @@ class VideoTimeline(QWidget):
     # ------------------------------------------------------------------
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
+        """Handle Space (toggle), Left/Right (skip), and Home (seek to start) shortcuts."""
         k = event.key()
         if k == Qt.Key.Key_Space:
             self._controller.toggle()
@@ -207,6 +216,7 @@ class VideoTimeline(QWidget):
     # ------------------------------------------------------------------
 
     def paintEvent(self, _) -> None:
+        """Paint the track, progress fill, and scrubber thumb (or a live/unseekable bar)."""
         p = QPainter(self)
         if not p.isActive():
             return
@@ -265,6 +275,7 @@ class CyberTransportButton(QPushButton):
     """Square tactical button with hover glow and vector icon."""
 
     def __init__(self, mode: str = "play", parent: Optional[QWidget] = None) -> None:
+        """Set up the transport button's mode, interaction state, palette, and cached geometry."""
         super().__init__(parent)
         self._mode = mode  # "play", "pause", "replay"
         self._highlighted = False
@@ -328,6 +339,7 @@ class CyberTransportButton(QPushButton):
             self.update()
 
     def _update_geometry_cache(self) -> None:
+        """Precompute the play triangle, pause bars, and replay arc/arrow geometry."""
         cx = BTN_SIZE / 2.0
         cy = BTN_SIZE / 2.0
         r = 4.5
@@ -350,38 +362,45 @@ class CyberTransportButton(QPushButton):
         self._arrow_p3 = QPointF(cx + 2.0, cy - 2.5)
 
     def set_mode(self, mode: str) -> None:
+        """Set the icon mode (play, pause or replay) and repaint if it changed."""
         if self._mode != mode:
             self._mode = mode
             self.update()
 
     def set_highlighted(self, hl: bool) -> None:
+        """Set the highlighted state and repaint if it changed."""
         if self._highlighted != hl:
             self._highlighted = hl
             self.update()
 
     def enterEvent(self, event) -> None:
+        """Mark the button hovered and repaint."""
         self._hovered = True
         self.update()
         super().enterEvent(event)
 
     def leaveEvent(self, event) -> None:
+        """Clear hover and pressed state and repaint."""
         self._hovered = False
         self._pressed = False
         self.update()
         super().leaveEvent(event)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
+        """Mark the button pressed on left click and repaint."""
         if event.button() == Qt.MouseButton.LeftButton:
             self._pressed = True
             self.update()
         super().mousePressEvent(event)
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        """Clear the pressed state and repaint."""
         self._pressed = False
         self.update()
         super().mouseReleaseEvent(event)
 
     def paintEvent(self, _) -> None:
+        """Paint the button background, border, and play/pause/replay icon for the current state."""
         p = QPainter(self)
         if not p.isActive():
             return
@@ -449,6 +468,7 @@ class HudVideoControlsStrip(QWidget):
         controller: HudVideoController,
         parent: Optional[QWidget] = None,
     ) -> None:
+        """Build the controls strip UI and connect controller signals."""
         super().__init__(parent)
         self._controller = controller
         self.setFixedHeight(STRIP_HEIGHT)
@@ -458,6 +478,7 @@ class HudVideoControlsStrip(QWidget):
         self._connect_signals()
 
     def _build_ui(self) -> None:
+        """Create the play/pause and replay buttons, timeline scrubber, and time readout label."""
         self.setStyleSheet("""
             HudVideoControlsStrip {
                 background: #090a12;
@@ -496,6 +517,7 @@ class HudVideoControlsStrip(QWidget):
         lay.addWidget(self._time_lbl)
 
     def _connect_signals(self) -> None:
+        """Connect the controller's video_state_changed signal to the strip's handler."""
         self._controller.video_state_changed.connect(self._on_video_state_changed)
 
     def _on_video_state_changed(self, state: VideoState) -> None:
@@ -526,6 +548,7 @@ class HudVideoControlsStrip(QWidget):
         duration_s: float,
         status: VideoStatus = VideoStatus.PLAYING,
     ) -> None:
+        """Show position / duration, or a LIVE / placeholder label when the duration is unknown."""
         if duration_s <= 0.0:
             if status == VideoStatus.PLAYING:
                 self._time_lbl.setText("● LIVE")

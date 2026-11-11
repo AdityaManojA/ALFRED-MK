@@ -30,6 +30,7 @@ except ImportError:
     _PYPERCLIP = False
 
 def _base_dir() -> Path:
+    """Return the app base directory (executable folder when frozen, else repo root)."""
     if getattr(sys, "frozen", False):
         return Path(sys.executable).parent
     return Path(__file__).resolve().parent.parent
@@ -43,24 +44,31 @@ SCREENSHOT_FORMAT: str = "png"
 SCREENSHOT_MAX_MB: float = 10.0
 
 def _load_config() -> dict:
+    """Load config/api_keys.json as a dict, returning {} on any error."""
     try:
         return json.loads(_CONFIG_PATH.read_text(encoding="utf-8"))
     except Exception:
         return {}
 
 def _platform_os() -> str:
+    """Map platform.system() to windows, mac or linux (default linux)."""
     return {"Windows": "windows", "Darwin": "mac", "Linux": "linux"}.get(
         platform.system(), "linux"
     )
 
 def _get_os() -> str:
+    """Return the configured os_system override, or the detected platform name."""
     return _load_config().get("os_system", _platform_os()).lower()
 
 
 def _get_api_key() -> str:
+    """Return the Gemini API key from config, or an empty string."""
     return _load_config().get("gemini_api_key", "")
 
 def _safe_screenshot_path(requested: str | None) -> Path:
+    """Return a screenshot path the path guard allows, else Desktop/alfred_screenshot.
+    Creates the parent directory of an accepted requested path.
+    """
     fallback = Path.home() / "Desktop" / f"alfred_screenshot.{SCREENSHOT_FORMAT}"
     if not requested:
         return fallback
@@ -76,6 +84,7 @@ def _safe_screenshot_path(requested: str | None) -> Path:
     return fallback
 
 def _require_pyautogui():
+    """Raise RuntimeError if PyAutoGUI is not installed."""
     if not _PYAUTOGUI:
         raise RuntimeError("PyAutoGUI not installed. Run: pip install pyautogui")
 
@@ -91,6 +100,7 @@ _DOMAINS = ["gmail.com", "yahoo.com", "outlook.com", "proton.me", "mail.com"]
 
 
 def _random_data(data_type: str) -> str:
+    """Generate a random fake value (name, email, password, phone, etc.) for a data type."""
     dt = data_type.lower().strip()
 
     if dt == "first_name":
@@ -155,6 +165,7 @@ def _user_profile() -> dict:
     return {}
 
 def _type(text: str, interval: float = 0.03) -> str:
+    """Type text at the cursor with PyAutoGUI after a short delay and return a summary."""
     _require_pyautogui()
     time.sleep(0.3)
     pyautogui.typewrite(text, interval=interval)
@@ -162,6 +173,7 @@ def _type(text: str, interval: float = 0.03) -> str:
 
 
 def _smart_type(text: str, clear_first: bool = True) -> str:
+    """Optionally clear the field, then type text (pasting via clipboard if long)."""
     _require_pyautogui()
     if clear_first:
         _clear_field()
@@ -179,6 +191,7 @@ def _smart_type(text: str, clear_first: bool = True) -> str:
 
 
 def _click(x=None, y=None, button: str = "left", clicks: int = 1) -> str:
+    """Click at (x, y) or the current position with the given button and click count."""
     _require_pyautogui()
     if x is not None and y is not None:
         pyautogui.click(x, y, button=button, clicks=clicks)
@@ -188,18 +201,21 @@ def _click(x=None, y=None, button: str = "left", clicks: int = 1) -> str:
 
 
 def _hotkey(*keys) -> str:
+    """Press a key combination with PyAutoGUI and return a summary."""
     _require_pyautogui()
     pyautogui.hotkey(*keys)
     return f"Hotkey: {'+'.join(keys)}"
 
 
 def _press(key: str) -> str:
+    """Press a single key with PyAutoGUI and return a summary."""
     _require_pyautogui()
     pyautogui.press(key)
     return f"Pressed: {key}"
 
 
 def _scroll(direction: str = "down", amount: int = 3) -> str:
+    """Scroll vertically or horizontally by amount in the given direction."""
     _require_pyautogui()
     vertical   = direction in ("up", "down")
     clicks     = amount if direction in ("up", "right") else -amount
@@ -208,12 +224,14 @@ def _scroll(direction: str = "down", amount: int = 3) -> str:
 
 
 def _move(x: int, y: int, duration: float = 0.3) -> str:
+    """Move the mouse to (x, y) over the given duration."""
     _require_pyautogui()
     pyautogui.moveTo(x, y, duration=duration)
     return f"Mouse → ({x}, {y})"
 
 
 def _drag(x1: int, y1: int, x2: int, y2: int, duration: float = 0.5) -> str:
+    """Drag with the left button from (x1, y1) to (x2, y2)."""
     _require_pyautogui()
     pyautogui.moveTo(x1, y1, duration=0.2)
     pyautogui.dragTo(x2, y2, duration=duration, button="left")
@@ -221,6 +239,7 @@ def _drag(x1: int, y1: int, x2: int, y2: int, duration: float = 0.5) -> str:
 
 
 def _clipboard_get() -> str:
+    """Return clipboard text via pyperclip, or send Ctrl+C and a placeholder if absent."""
     if _PYPERCLIP:
         return pyperclip.paste()
     _hotkey("ctrl", "c")
@@ -229,6 +248,7 @@ def _clipboard_get() -> str:
 
 
 def _clipboard_paste(text: str) -> str:
+    """Copy text to the clipboard and paste it with Ctrl/Cmd+V."""
     if _PYPERCLIP:
         pyperclip.copy(text)
         time.sleep(0.1)
@@ -240,6 +260,9 @@ def _clipboard_paste(text: str) -> str:
 
 
 def _screenshot(save_path: str | None = None) -> str:
+    """Capture the screen to Desktop (or a safe requested path) and the dashboard uploads.
+    Falls back to PyAutoGUI if screen_processor capture fails; enforces a size limit.
+    """
     ts = int(time.time())
     desktop_dir = Path.home() / "Desktop"
     desktop_path = desktop_dir / f"alfred_screenshot_{ts}.{SCREENSHOT_FORMAT}"
@@ -270,6 +293,7 @@ def _screenshot(save_path: str | None = None) -> str:
 
 
 def _clear_field() -> str:
+    """Clear the focused input with select-all followed by Delete."""
     _require_pyautogui()
     select_key = "command" if _get_os() == "mac" else "ctrl"
     pyautogui.hotkey(select_key, "a")
@@ -278,6 +302,7 @@ def _clear_field() -> str:
     return "Field cleared"
 
 def _focus_window(title: str) -> str:
+    """Bring a window whose title matches to the foreground using per-OS tools."""
     os_name = _get_os()
 
     if os_name == "windows":
@@ -333,6 +358,9 @@ def _focus_window(title: str) -> str:
     return f"focus_window: unknown OS '{os_name}'"
 
 def _screen_find(description: str) -> tuple[int, int] | None:
+    """Locate a described on-screen element and return pixel coordinates, or None.
+    Normalised 0-1 coordinates from find_element are scaled to the screen size.
+    """
     try:
         from actions.screen_find import find_element
         coords = find_element(description)

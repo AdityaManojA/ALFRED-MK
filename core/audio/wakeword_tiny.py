@@ -55,6 +55,7 @@ class DualWakeWordDetector:
         bare_threshold: float = WAKEWORD_CONFIDENCE_BARE,
         refractory_ms: int = REFRACTORY_WINDOW_MS,
     ) -> None:
+        """Store detection callback, model path, thresholds and refractory window; model loads lazily."""
         self.on_detect = on_detect
         self.model_path = Path(model_path) if model_path else DEFAULT_MODEL_PATH
         self.hey_threshold = hey_threshold
@@ -72,9 +73,13 @@ class DualWakeWordDetector:
 
     @property
     def ready(self) -> bool:
+        """Return True once the model has loaded or loading has failed (fail-open)."""
         return self._ready or self._model_failed
 
     def _ensure_model(self) -> None:
+        """Lazily load the openwakeword model and, if present, the pickled personal voice verifier.
+        Marks the model as failed (fail-open) when the file is missing or loading errors.
+        """
         if self._ready or self._model_failed:
             return
         with self._lock:

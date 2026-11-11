@@ -16,15 +16,18 @@ class ScreenRegionTarget(MonitorTarget):
         goal: str = "",
         interval_s: float = 5.0,
     ) -> None:
+        """Store the monitor index and goal description for the screen region watch."""
         super().__init__(target_id, name, interval_s)
         self.monitor_id = monitor_id
         self.goal = goal
         self._last_hash = None
 
     def describe(self) -> str:
+        """Describe the watched monitor and goal."""
         return f"screen monitor {self.monitor_id} for '{self.goal or self.name}'"
 
     def poll(self) -> TargetStatus:
+        """Capture the monitor and alert when the first 1 KB of image bytes changes."""
         self.last_poll_t = time.time()
         try:
             from actions.screen_processor import capture_screen

@@ -7,6 +7,7 @@ from pathlib import Path
 
 
 def get_base_dir():
+    """Return the app root: the executable's folder when frozen, otherwise the repository root."""
     if getattr(sys, "frozen", False):
         return Path(sys.executable).parent
     return Path(__file__).resolve().parent.parent
@@ -22,6 +23,7 @@ from core import gemini
 
 
 def _get_api_key() -> str:
+    """Read the Gemini API key from the API config file."""
     with open(API_CONFIG_PATH, "r", encoding="utf-8") as f:
         return json.load(f)["gemini_api_key"]
 
@@ -30,7 +32,9 @@ def _get_gemini(tier: str = gemini.SMART):
     """Writing and fixing code is the reasoning tier; a 60s deadline because a
     whole file can come back."""
     class _W:
+        """Thin wrapper exposing generate_content over the shared Gemini model ladder."""
         def generate_content(self, contents):
+            """Call Gemini at the bound tier with a 60s deadline; raise if every model fails."""
             resp = gemini.call(contents, tier=tier, timeout_ms=60000)
             if resp is None:
                 raise RuntimeError("every Gemini model on the ladder failed")
@@ -40,6 +44,7 @@ def _get_gemini(tier: str = gemini.SMART):
 
 
 def _clean_code(text: str) -> str:
+    """Strip surrounding whitespace and Markdown code fences from model output."""
     text = text.strip()
     text = re.sub(r"^```[a-zA-Z]*\n?", "", text)
     text = re.sub(r"\n?```$", "", text)
@@ -47,6 +52,10 @@ def _clean_code(text: str) -> str:
 
 
 def _resolve_save_path(output_path: str, language: str) -> Path:
+    """Resolve where to save generated code.
+    Uses output_path (relative paths go under the Desktop) or alfred_code with an
+    extension chosen from the language.
+    """
     ext_map = {
         "python": ".py", "py": ".py",
         "javascript": ".js", "js": ".js",
@@ -64,6 +73,7 @@ def _resolve_save_path(output_path: str, language: str) -> Path:
 
 
 def _read_file(file_path: str) -> tuple[str, str]:
+    """Read a UTF-8 text file; return (content, error_message) with one of them empty."""
     if not file_path:
         return "", "No file path provided."
     p = Path(file_path)
@@ -76,6 +86,7 @@ def _read_file(file_path: str) -> tuple[str, str]:
 
 
 def _save_file(path: Path, content: str) -> str:
+    """Write content to path, creating parent folders; return a status message."""
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content, encoding="utf-8")
@@ -85,6 +96,7 @@ def _save_file(path: Path, content: str) -> str:
 
 
 def _preview(code: str, lines: int = 10) -> str:
+    """Return the first few lines of code with a note of how many lines were omitted."""
     all_lines = code.splitlines()
     preview   = "\n".join(all_lines[:lines])
     suffix    = f"\n... ({len(all_lines) - lines} more lines)" if len(all_lines) > lines else ""
@@ -92,12 +104,14 @@ def _preview(code: str, lines: int = 10) -> str:
 
 
 def _has_error(output: str) -> bool:
+    """Return True if run output contains common error keywords."""
     error_signals = ["error", "exception", "traceback", "syntaxerror",
                      "nameerror", "typeerror", "stderr", "failed", "crash"]
     return any(s in output.lower() for s in error_signals)
 
 
 def _take_screenshot() -> Path | None:
+    """Save a full-screen screenshot to the Desktop and return its path, or None on failure."""
     try:
         import pyautogui
         screenshot_path = Path.home() / "Desktop" / f"alfred_debug_{int(time.time())}.png"
@@ -111,6 +125,7 @@ def _take_screenshot() -> Path | None:
 
 
 def _image_to_base64(path: Path) -> str:
+    """Return the file's bytes encoded as a base64 string."""
     import base64
     return base64.b64encode(path.read_bytes()).decode("utf-8")
 
@@ -165,6 +180,9 @@ def _detect_intent(description: str, file_path: str, code: str) -> str:
     return "write"
 
 def _write(description: str, language: str, output_path: str, player=None) -> tuple[str, Path]:
+    """Generate code for a description with Gemini and save it to disk.
+    Returns (code, saved_path).
+    """
     lang  = language or "python"
     model = _get_gemini()
 
@@ -189,6 +207,7 @@ Code:"""
 
 
 def _fix_code(code: str, error_output: str, description: str) -> str:
+    """Ask Gemini to fix code given its error output and original goal; return the fixed code."""
     model  = _get_gemini()
     prompt = f"""You are an expert debugger.
 The code below failed with the following error. Fix it.
@@ -209,6 +228,9 @@ Fixed code:"""
 
 
 def _run_file(path: Path, args: list, timeout: int) -> str:
+    """Run a script with the interpreter matching its extension and capture its output.
+    Returns combined stdout/stderr text, or a message on timeout or missing interpreter.
+    """
     interpreters = {
         ".py":  [sys.executable],
         ".js":  ["node"],
@@ -245,6 +267,9 @@ def _run_file(path: Path, args: list, timeout: int) -> str:
 
 
 def _build(description, language, output_path, args, timeout, speak=None, player=None) -> str:
+    """Write code for a description, then run it and auto-fix it until it runs cleanly.
+    Retries up to MAX_BUILD_ATTEMPTS times; speaks and returns the outcome.
+    """
     if not description:
         return "Please describe what you want me to build, sir."
 
@@ -298,6 +323,7 @@ def _build(description, language, output_path, args, timeout, speak=None, player
     return f"{msg}\n\nLast code saved to: {path}"
 
 def _write_action(description, language, output_path, player) -> str:
+    """Handle the write action: generate and save code, returning the path and a preview."""
     if not description:
         return "Please describe what you want me to write, sir."
     if player:
@@ -311,6 +337,7 @@ def _write_action(description, language, output_path, player) -> str:
 
 
 def _edit_action(file_path, instruction, player) -> str:
+    """Apply a natural-language change to a file with Gemini and save the result in place."""
     if not file_path:
         return "Please provide a file path to edit, sir."
     if not instruction:
@@ -347,6 +374,7 @@ Updated code:"""
 
 
 def _explain_action(file_path, code, player) -> str:
+    """Return a short Gemini explanation of the given code or file."""
     if file_path and not code:
         code, err = _read_file(file_path)
         if err:
@@ -375,6 +403,7 @@ Explanation:"""
 
 
 def _run_action(file_path, args, timeout, player) -> str:
+    """Handle the run action: execute an existing file and return its output."""
     if not file_path:
         return "Please provide a file path to run, sir."
     p = Path(file_path)
@@ -386,6 +415,10 @@ def _run_action(file_path, args, timeout, player) -> str:
 
 
 def _optimize_action(file_path, code, language, output_path, player) -> str:
+    """Optimize code or a file with Gemini and save the result.
+    Saves over file_path when given, otherwise to a resolved path; returns a line-count
+    summary and preview.
+    """
 
     if file_path and not code:
         code, err = _read_file(file_path)
@@ -442,6 +475,10 @@ Optimized code:"""
 
 
 def _screen_debug_action(description, file_path, player, speak=None) -> str:
+    """Screenshot the screen and ask Gemini to diagnose the visible problem.
+    If a file is given and the answer contains a code block, saves it over that file;
+    returns the analysis text. The screenshot is deleted afterwards.
+    """
 
     if player:
         player.write_log("[Code] Taking screenshot for analysis...")

@@ -25,6 +25,7 @@ class Wireframe3D:
     """
 
     def __init__(self, vertices: list[tuple[float, float, float]], edges: list[tuple[int, int]]):
+        """Store the model's vertices and edges and preallocate projected points, edge lines and transform state."""
         self.raw_vertices = tuple(vertices)
         self.edges = tuple(edges)
         self.transformed_points = [QPointF(0.0, 0.0) for _ in self.raw_vertices]
@@ -37,6 +38,7 @@ class Wireframe3D:
         self.cy: float = 0.0
 
     def update_geometry(self, cx: float, cy: float, scale: float, yaw: float, pitch: float, roll: float = 0.0) -> None:
+        """Rotate vertices (yaw, pitch, roll), weak-perspective project around (cx, cy), and refresh edge lines in place."""
         self.cx = cx
         self.cy = cy
         self.scale = scale
@@ -77,6 +79,7 @@ class Wireframe3D:
             self.edge_lines[idx].setLine(p1.x(), p1.y(), p2.x(), p2.y())
 
     def draw(self, painter: QPainter, pen: QPen) -> None:
+        """Draw the precomputed edge lines with the given pen."""
         painter.setPen(pen)
         painter.drawLines(self.edge_lines)
 
@@ -87,6 +90,7 @@ class RadarSweep:
     """
 
     def __init__(self, max_blips: int = 12):
+        """Preallocate the sweep line and per-blip position, alpha and size arrays."""
         self.angle: float = 0.0
         self.sweep_line = QLineF(0.0, 0.0, 0.0, 0.0)
         self.blip_x = [0.0] * max_blips
@@ -96,12 +100,14 @@ class RadarSweep:
         self.max_blips = max_blips
 
     def tick(self, dt: float, speed_rad_per_s: float = 1.8) -> None:
+        """Advance the sweep angle (wrapped to 2*pi) and fade blip alpha by 0.8 per second."""
         self.angle = (self.angle + speed_rad_per_s * dt) % (2.0 * math.pi)
         for i in range(self.max_blips):
             if self.blip_alpha[i] > 0.0:
                 self.blip_alpha[i] = max(0.0, self.blip_alpha[i] - dt * 0.8)
 
     def trigger_blip(self, idx: int, x: float, y: float, size: float = 3.0, alpha: float = 1.0) -> None:
+        """Place blip `idx` at (x, y) with the given size and alpha; out-of-range indices are ignored."""
         if 0 <= idx < self.max_blips:
             self.blip_x[idx] = x
             self.blip_y[idx] = y
@@ -109,6 +115,7 @@ class RadarSweep:
             self.blip_alpha[idx] = alpha
 
     def update_sweep_line(self, cx: float, cy: float, radius: float) -> None:
+        """Point the sweep line from (cx, cy) out to `radius` at the current angle."""
         sa = fast_sin(self.angle)
         ca = fast_cos(self.angle)
         self.sweep_line.setLine(cx, cy, cx + ca * radius, cy + sa * radius)
@@ -120,6 +127,7 @@ class BarArray:
     """
 
     def __init__(self, count: int = 16, peak_decay_per_s: float = 1.4):
+        """Preallocate bar values, decaying peaks, bar rects and peak lines for `count` bars."""
         self.count = count
         self.values = [0.0] * count
         self.peaks = [0.0] * count
@@ -128,6 +136,7 @@ class BarArray:
         self.peak_lines = [QLineF(0, 0, 0, 0) for _ in range(count)]
 
     def tick(self, dt: float, new_values: list[float] | tuple[float, ...]) -> None:
+        """Ease values toward targets clamped to [0, 1]; raise peaks instantly, otherwise decay them."""
         for i in range(min(self.count, len(new_values))):
             target = max(0.0, min(1.0, float(new_values[i])))
             # Smooth follow
@@ -138,6 +147,7 @@ class BarArray:
                 self.peaks[i] = max(0.0, self.peaks[i] - self.peak_decay_per_s * dt)
 
     def layout(self, x0: float, y0: float, width: float, height: float, gap: float = 2.0) -> None:
+        """Recompute bottom-anchored bar rects and peak lines from current values (min 1px wide/high)."""
         total_gaps = gap * (self.count - 1)
         bar_w = max(1.0, (width - total_gaps) / self.count)
         for i in range(self.count):
@@ -155,17 +165,20 @@ class WaveTrace:
     """
 
     def __init__(self, sample_count: int = 64):
+        """Preallocate sample values, points and connecting lines for `sample_count` samples."""
         self.sample_count = sample_count
         self.samples = [0.0] * sample_count
         self.points = [QPointF(0.0, 0.0) for _ in range(sample_count)]
         self.lines = [QLineF(0.0, 0.0, 0.0, 0.0) for _ in range(sample_count - 1)]
 
     def update_samples(self, new_samples: list[float] | tuple[float, ...]) -> None:
+        """Copy up to sample_count values into the buffer; does not re-layout points."""
         n = min(self.sample_count, len(new_samples))
         for i in range(n):
             self.samples[i] = float(new_samples[i])
 
     def layout(self, x0: float, cy: float, width: float, height_amp: float) -> None:
+        """Map samples to evenly spaced points around baseline cy and rebuild the connecting lines."""
         step_x = width / max(1, self.sample_count - 1)
         for i in range(self.sample_count):
             px = x0 + i * step_x

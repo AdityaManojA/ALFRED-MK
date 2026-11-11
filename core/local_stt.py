@@ -35,6 +35,7 @@ class LocalSTTManager:
     """Manages local speech-to-text transcription with streaming capabilities."""
 
     def __init__(self, config: dict):
+        """Create the Whisper or Vosk engine from config and initialise buffering, silence and transcript state."""
         engine = config.get("stt_engine", "whisper").lower()
         model = config.get("stt_model", "base")
         language = config.get("stt_language")
@@ -100,6 +101,7 @@ class LocalSTTManager:
         import sounddevice as sd
 
         def audio_callback_wrapper(indata, frames, time_info, status):
+            """Sounddevice callback: downmix to mono int16 bytes, forward to the audio callback and process for transcription."""
             if not self.is_listening:
                 return
 

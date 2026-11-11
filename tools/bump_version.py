@@ -40,6 +40,7 @@ ROMAN_VALS = [
 
 
 def int_to_roman(n: int) -> str:
+    """Convert a positive integer to a Roman numeral string."""
     result = []
     for val, roman in ROMAN_VALS:
         while n >= val:
@@ -49,6 +50,7 @@ def int_to_roman(n: int) -> str:
 
 
 def roman_to_int(s: str) -> int:
+    """Convert a Roman numeral (case-insensitive) to an integer; unknown chars count as 0."""
     roman_map = {"I": 1, "V": 5, "X": 10, "L": 50, "C": 100, "D": 500, "M": 1000}
     total = 0
     prev = 0
@@ -63,6 +65,7 @@ def roman_to_int(s: str) -> int:
 
 
 class VersionInfo(NamedTuple):
+    """All textual spellings of one version number used across the codebase."""
     num: int
     roman: str
     full_hyphen: str          # e.g. "Mark-VIII"
@@ -202,6 +205,10 @@ def apply_version_bump(
     target: VersionInfo,
     dry_run: bool = False
 ) -> Dict[str, int]:
+    """Replace the current version's spellings with *target* in every REGISTERED_FILES entry.
+
+    Returns {relative_path: replacement_count}; files are left untouched when dry_run is True.
+    """
     curr = detect_current_version(root)
     print(f"\n==================================================")
     print(f"  [ALFRED] VERSION BUMP CONTROLLER")
@@ -260,6 +267,8 @@ def apply_version_bump(
 
 
 def main():
+    """CLI entry point: parse the target version, apply the bump, and optionally run
+    tests / update the graph after a live change."""
     parser = argparse.ArgumentParser(
         description="Automated version bumper for ALFRED Mark-VIII+ codebase."
     )

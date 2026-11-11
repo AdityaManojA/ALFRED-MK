@@ -16,7 +16,10 @@ from core.ui.themes.schema import PaletteDefinition
 
 
 class BanePressureChamberVisual(SlotVisual):
+    """Slot 1: 48-sample pressure waveform with a central systolic spike; speed scales with CPU."""
+
     def __init__(self) -> None:
+        """Initialise pens, font and geometry placeholders for this slot."""
         super().__init__()
         self.wave = WaveTrace(sample_count=48)
         self.t: float = 0.0
@@ -26,6 +29,7 @@ class BanePressureChamberVisual(SlotVisual):
         self.rect_inner = QRectF()
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build wave and border pens and lay out the wave trace inside the panel."""
         c_pri = QColor(palette.pri)
         c_acc = QColor(palette.acc)
         self.pen_wave = QPen(c_pri, 1.5)
@@ -35,6 +39,7 @@ class BanePressureChamberVisual(SlotVisual):
         self.wave.layout(bx + 4.0, by + bh / 2.0, bw - 8.0, height_amp=bh * 0.38)
 
     def tick(self, dt: float, signals: HudSignals) -> None:
+        """Advance the phase (scaled by CPU) and recompute the venom pressure waveform samples."""
         self.t = (self.t + dt * (3.0 + signals.cpu_pct * 0.04)) % (2.0 * math.pi)
         samples = []
         for i in range(48):
@@ -44,6 +49,7 @@ class BanePressureChamberVisual(SlotVisual):
         self.wave.update_samples(samples)
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
+        """Draw the panel border, header and pressure waveform."""
         painter.setPen(self.pen_border)
         painter.drawRect(self.rect_inner)
         painter.setFont(self.font_hdr)
@@ -54,7 +60,10 @@ class BanePressureChamberVisual(SlotVisual):
 
 
 class BaneDosageRegulatorVisual(SlotVisual):
+    """Slot 2: two pressure columns whose target levels track CPU and memory percentages."""
+
     def __init__(self) -> None:
+        """Initialise pens, font and geometry placeholders for this slot."""
         super().__init__()
         self.bars = BarArray(count=2, peak_decay_per_s=0.8)
         self.pen_col = QPen()
@@ -63,6 +72,7 @@ class BaneDosageRegulatorVisual(SlotVisual):
         self.rect_inner = QRectF()
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build pen and brush and lay out the two dosage bars."""
         c_pri = QColor(palette.pri)
         c_acc = QColor(palette.acc)
         self.pen_col = QPen(c_pri, 1.4)
@@ -72,11 +82,13 @@ class BaneDosageRegulatorVisual(SlotVisual):
         self.bars.layout(bx + bw * 0.25, by + 4.0, bw * 0.5, bh - 8.0, gap=16.0)
 
     def tick(self, dt: float, signals: HudSignals) -> None:
+        """Feed CPU and memory percentages into the two bars."""
         v1 = min(1.0, signals.cpu_pct / 100.0 + 0.1)
         v2 = min(1.0, signals.mem_pct / 100.0 + 0.1)
         self.bars.tick(dt, [v1, v2])
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
+        """Draw the regulator header, filled bars and peak lines."""
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_col)
         painter.drawText(QRectF(rect.x() + 8, rect.y() + 4, rect.width() - 16, 12),
@@ -88,7 +100,10 @@ class BaneDosageRegulatorVisual(SlotVisual):
 
 
 class BaneMaskSchematicVisual(SlotVisual):
+    """Slot 3: static mask tubing schematic (8 line segments) with a cycling pulse phase."""
+
     def __init__(self) -> None:
+        """Initialise pens, font and geometry placeholders for this slot."""
         super().__init__()
         self.pulse: float = 0.0
         self.pen_tube = QPen()
@@ -97,6 +112,7 @@ class BaneMaskSchematicVisual(SlotVisual):
         self.tubes = [QLineF() for _ in range(8)]
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build the tube pen and lay out the eight mask tubing line segments."""
         c_pri = QColor(palette.pri)
         self.pen_tube = QPen(c_pri, 1.8)
         bx, by, bw, bh = rect.x() + 8.0, rect.y() + 18.0, rect.width() - 16.0, rect.height() - 24.0
@@ -114,9 +130,11 @@ class BaneMaskSchematicVisual(SlotVisual):
         self.tubes[7].setLine(cx + 18, cy + 8, cx + 8, cy + 18)
 
     def tick(self, dt: float, signals: HudSignals) -> None:
+        """Advance the pulse phase."""
         self.pulse = (self.pulse + dt * 4.0) % (2.0 * math.pi)
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
+        """Draw the mask flow header and tubing lines."""
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_tube)
         painter.drawText(QRectF(rect.x() + 8, rect.y() + 3, rect.width() - 16, 12),

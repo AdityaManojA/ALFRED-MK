@@ -39,6 +39,7 @@ def _normalize_url(url: str) -> str:
 
 
 def _user_agent() -> str:
+    """Return a desktop Chrome 124 user-agent string matching the host OS."""
     if _OS == "Windows":
         return (
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -59,6 +60,10 @@ def _user_agent() -> str:
 
 
 def _real_profile_dir(browser: str) -> str:
+    """Return the user's real profile directory for a Chromium-family browser.
+    Falls back to a per-browser folder under ~/.alfred_profiles (or a legacy
+    ~/.jarvis_profiles one), creating it if needed.
+    """
     home  = Path.home()
     local = os.environ.get("LOCALAPPDATA", "")
     roam  = os.environ.get("APPDATA", "")
@@ -115,6 +120,7 @@ def _real_profile_dir(browser: str) -> str:
     return str(fallback)
 
 def _firefox_profile_dir() -> Optional[str]:
+    """Return the default Firefox profile path parsed from profiles.ini, or None if absent."""
     home = Path.home()
 
     if _OS == "Windows":
@@ -154,6 +160,7 @@ def _firefox_profile_dir() -> Optional[str]:
     return None
 
 def _find_opera_windows() -> Optional[str]:
+    """Locate the Opera executable on Windows via common paths, the registry, or PATH."""
     local  = os.environ.get("LOCALAPPDATA", "")
     prog   = os.environ.get("PROGRAMFILES", "")
     prog86 = os.environ.get("PROGRAMFILES(X86)", "")
@@ -195,6 +202,7 @@ def _find_opera_windows() -> Optional[str]:
     return shutil.which("opera") or None
 
 def _find_exe_windows(prog_name: str) -> Optional[str]:
+    """Look up a browser executable path in the Windows registry, or return None."""
     try:
         import winreg
         paths_to_try = [
@@ -264,6 +272,9 @@ _ALIASES: dict[str, str] = {
 
 
 def _resolve_browser(name: str) -> dict | None:
+    """Resolve a browser name to its engine, executable path and Playwright channel.
+    Returns None when the browser is unsupported on the current OS.
+    """
     name   = _ALIASES.get(name.lower().strip(), name.lower().strip())
     os_map = _BROWSER_SPECS.get(_OS, {})
     spec   = os_map.get(name)
@@ -311,6 +322,7 @@ def _resolve_browser(name: str) -> dict | None:
 
 
 def _detect_default_browser() -> str:
+    """Detect the OS default web browser keyword, falling back to chrome."""
     try:
         if _OS == "Windows":
             import winreg
@@ -450,6 +462,7 @@ class _BrowserSession:
     """
 
     def __init__(self, browser_name: str):
+        """Store the browser name, resolve its launch spec and initialise session state."""
         self.browser_name = browser_name
         self._spec        = _resolve_browser(browser_name)
 
@@ -462,6 +475,7 @@ class _BrowserSession:
         self._page:    Page           | None = None
 
     def start(self):
+        """Start the background event-loop thread and wait up to 20 s for it to be ready."""
         if self._thread and self._thread.is_alive():
             return
         self._thread = threading.Thread(
@@ -473,6 +487,7 @@ class _BrowserSession:
         self._ready.wait(timeout=20)
 
     def _run_loop(self):
+        """Create the session event loop, start Playwright, then run the loop forever."""
         self._loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self._loop)
         self._loop.run_until_complete(self._async_init())
@@ -480,19 +495,23 @@ class _BrowserSession:
         self._loop.run_forever()
 
     async def _async_init(self):
+        """Start the async Playwright driver."""
         self._pw = await async_playwright().start()
 
     def run(self, coro, timeout: int = 60) -> str:
+        """Run a coroutine on the session loop and return its result (blocking up to timeout)."""
         if not self._loop:
             raise RuntimeError(f"Session for '{self.browser_name}' not started.")
         future = asyncio.run_coroutine_threadsafe(coro, self._loop)
         return future.result(timeout=timeout)
 
     def close(self):
+        """Close the browser context and Playwright from the calling thread."""
         if self._loop:
             asyncio.run_coroutine_threadsafe(self._async_close(), self._loop).result(10)
 
     async def _async_close(self):
+        """Close the browser context and stop Playwright, ignoring errors."""
         if self._context:
             try:
                 await self._context.close()
@@ -631,6 +650,7 @@ class _BrowserSession:
 
 
     async def _get_page(self) -> Page:
+        """Launch the browser if needed and return the active page, opening one if closed."""
         await self._launch()
         # If somehow page got closed, open a fresh one
         if self._page is None or self._page.is_closed():
@@ -639,6 +659,9 @@ class _BrowserSession:
         return self._page
 
     async def go_to(self, url: str) -> str:
+        """Navigate the active page to a URL, retrying in a new tab if it stays blank.
+        Returns a status message with the resulting URL.
+        """
 
         url      = _normalize_url(url)
         page     = await self._get_page()
@@ -671,10 +694,12 @@ class _BrowserSession:
         return f"Could not open: {url}"
 
     async def search(self, query: str, engine: str = "google") -> str:
+        """Search the query on the chosen engine (default Google) via go_to."""
         base = _SEARCH_ENGINES.get(engine.lower(), _SEARCH_ENGINES["google"])
         return await self.go_to(base + query.replace(" ", "+"))
 
     async def click(self, selector: str = None, text: str = None) -> str:
+        """Click an element by visible text or CSS selector and return a status message."""
         page = await self._get_page()
         try:
             if text:
@@ -691,6 +716,7 @@ class _BrowserSession:
 
     async def type_text(self, selector: str = None, text: str = "",
                         clear_first: bool = True) -> str:
+        """Type text into the selected (or focused) element, optionally clearing it first."""
         page = await self._get_page()
         try:
             el = page.locator(selector).first if selector else page.locator(":focus")
@@ -702,6 +728,7 @@ class _BrowserSession:
             return f"Type error: {e}"
 
     async def scroll(self, direction: str = "down", amount: int = 500) -> str:
+        """Scroll the page up or down by the given pixel amount via the mouse wheel."""
         page = await self._get_page()
         try:
             y = amount if direction == "down" else -amount
@@ -711,6 +738,7 @@ class _BrowserSession:
             return f"Scroll error: {e}"
 
     async def press(self, key: str) -> str:
+        """Press a keyboard key on the active page."""
         page = await self._get_page()
         try:
             await page.keyboard.press(key)
@@ -719,6 +747,7 @@ class _BrowserSession:
             return f"Key error: {e}"
 
     async def get_text(self) -> str:
+        """Return the page body's inner text, truncated to 4000 characters."""
         page = await self._get_page()
         try:
             text = await page.inner_text("body")
@@ -727,10 +756,12 @@ class _BrowserSession:
             return f"Could not get page text: {e}"
 
     async def get_url(self) -> str:
+        """Return the active page's current URL."""
         page = await self._get_page()
         return page.url
 
     async def fill_form(self, fields: dict) -> str:
+        """Fill each selector in fields with its value and report per-field results."""
         page    = await self._get_page()
         results = []
         for selector, value in fields.items():
@@ -744,6 +775,7 @@ class _BrowserSession:
         return "Form filled: " + ", ".join(results)
 
     async def smart_click(self, description: str) -> str:
+        """Click an element matched by accessible role name, text, placeholder or attributes."""
         page = await self._get_page()
         for role in ("button", "link", "searchbox", "textbox", "menuitem", "tab"):
             try:
@@ -769,6 +801,7 @@ class _BrowserSession:
         return f"Could not find element: '{description}'"
 
     async def smart_type(self, description: str, text: str) -> str:
+        """Type text into the first input matched by placeholder, label or role."""
         page = await self._get_page()
         candidates = [
             ("placeholder", page.get_by_placeholder(description, exact=False)),
@@ -790,6 +823,7 @@ class _BrowserSession:
         return f"Could not find input: '{description}'"
 
     async def new_tab(self, url: str = "") -> str:
+        """Open a new tab, make it active, and optionally navigate it to a URL."""
         page = await self._get_page()
         ctx  = page.context
         new  = await ctx.new_page()
@@ -799,6 +833,7 @@ class _BrowserSession:
         return "New tab opened."
 
     async def close_tab(self) -> str:
+        """Close the active tab and make the last remaining tab active."""
         page = self._page
         if page and not page.is_closed():
             ctx   = page.context
@@ -809,6 +844,7 @@ class _BrowserSession:
         return "No active tab to close."
 
     async def screenshot(self, path: str = None) -> str:
+        """Save a viewport screenshot to path (default Desktop/alfred_screenshot.png)."""
         page = await self._get_page()
         try:
             save_path = path or str(Path.home() / "Desktop" / "alfred_screenshot.png")
@@ -818,6 +854,7 @@ class _BrowserSession:
             return f"Screenshot error: {e}"
 
     async def back(self) -> str:
+        """Navigate the active page back in history."""
         page = await self._get_page()
         try:
             await page.go_back(timeout=10_000)
@@ -826,6 +863,7 @@ class _BrowserSession:
             return f"Back error: {e}"
 
     async def forward(self) -> str:
+        """Navigate the active page forward in history."""
         page = await self._get_page()
         try:
             await page.go_forward(timeout=10_000)
@@ -834,6 +872,7 @@ class _BrowserSession:
             return f"Forward error: {e}"
 
     async def reload(self) -> str:
+        """Reload the active page."""
         page = await self._get_page()
         try:
             await page.reload(timeout=15_000)
@@ -842,6 +881,7 @@ class _BrowserSession:
             return f"Reload error: {e}"
 
     async def close_browser(self) -> str:
+        """Close this browser session's context and Playwright instance."""
         await self._async_close()
         return f"{self.browser_name} closed."
 
@@ -849,6 +889,7 @@ class _SessionRegistry:
     """Manages all active browser sessions."""
 
     def __init__(self):
+        """Initialise an empty session map, active-browser name, lock and native URL slot."""
         self._sessions:        dict[str, _BrowserSession] = {}
         self._active_browser:  str                        = ""
         self._lock             = threading.Lock()
@@ -863,6 +904,7 @@ class _SessionRegistry:
             return name in self._sessions
 
     def note_native_url(self, url: str) -> None:
+        """Remember the last URL opened natively in the user's browser."""
         self._last_native_url = url
 
     def pop_native_url(self) -> str:
@@ -871,6 +913,7 @@ class _SessionRegistry:
         return url
 
     def _get_or_create(self, browser_name: str) -> _BrowserSession:
+        """Return the session for a browser, creating and starting it if missing."""
         with self._lock:
             if browser_name not in self._sessions:
                 sess = _BrowserSession(browser_name)
@@ -880,6 +923,7 @@ class _SessionRegistry:
             return self._sessions[browser_name]
 
     def get(self, browser_name: str | None = None) -> _BrowserSession:
+        """Return the session for a browser (or active/default one) and mark it active."""
         if not browser_name:
             browser_name = self._active_browser or _detect_default_browser()
         browser_name = _ALIASES.get(browser_name.lower().strip(), browser_name.lower().strip())
@@ -888,12 +932,14 @@ class _SessionRegistry:
         return sess
 
     def switch(self, browser_name: str) -> str:
+        """Make the given browser active, starting a session for it if needed."""
         browser_name = _ALIASES.get(browser_name.lower().strip(), browser_name.lower().strip())
         self._get_or_create(browser_name)
         self._active_browser = browser_name
         return f"Active browser → {browser_name}"
 
     def close_one(self, browser_name: str) -> str:
+        """Close and remove the session for one browser, clearing it as active if so."""
         with self._lock:
             sess = self._sessions.pop(browser_name, None)
         if sess:
@@ -904,6 +950,7 @@ class _SessionRegistry:
         return f"No active session for: {browser_name}"
 
     def close_all(self) -> str:
+        """Close every browser session and return a summary of the closed names."""
         with self._lock:
             names    = list(self._sessions.keys())
             sessions = list(self._sessions.values())
@@ -917,6 +964,7 @@ class _SessionRegistry:
         return "All browsers closed: " + (", ".join(names) if names else "none")
 
     def list_sessions(self) -> str:
+        """Return a formatted list of open browser sessions, marking the active one."""
         with self._lock:
             if not self._sessions:
                 return "No active browser sessions."
@@ -935,6 +983,10 @@ def browser_control(
     player=None,
     session_memory=None,
 ) -> str:
+    """Tool handler that dispatches a browser action from the parameters dict.
+    Navigation opens the user's native browser unless an automation session exists;
+    interactive actions run through a Playwright session. Returns a status string.
+    """
     params  = parameters or {}
     action  = params.get("action", "").lower().strip()
     browser = params.get("browser", "").lower().strip() or None
@@ -1115,6 +1167,7 @@ def browser_control(
 
 
 def _log(player, text: str):
+    """Print a truncated browser log line and forward it to the player log if present."""
     short = str(text)[:80]
     print(f"[Browser] {short}")
     if player:

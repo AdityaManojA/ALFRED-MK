@@ -76,7 +76,7 @@ class TestSentryDropdownIntegration(unittest.TestCase):
         snap = self.mgr.get_snapshot()
         self.assertTrue(snap.monitor.active)
         self.assertFalse(snap.focus.active)
-        self.assertEqual(window._sentry_btn.text, "[ ◈ ]  SCREEN MONITORING")
+        self.assertEqual(window._sentry_btn.text, "Monitoring")
         self.assertTrue(window._sentry_btn.checked)
 
         # Toggle focus via menu
@@ -84,7 +84,7 @@ class TestSentryDropdownIntegration(unittest.TestCase):
         snap2 = self.mgr.get_snapshot()
         self.assertTrue(snap2.monitor.active)
         self.assertTrue(snap2.focus.active)
-        self.assertEqual(window._sentry_btn.text, "[ ◈◉ ] SENTRY (2)")
+        self.assertEqual(window._sentry_btn.text, "Sentry (2)")
         self.assertTrue(window._sentry_btn.checked)
 
         # Toggle monitor off
@@ -92,14 +92,14 @@ class TestSentryDropdownIntegration(unittest.TestCase):
         snap3 = self.mgr.get_snapshot()
         self.assertFalse(snap3.monitor.active)
         self.assertTrue(snap3.focus.active)
-        self.assertEqual(window._sentry_btn.text, "[ ◉ ]  FOCUS MODE")
+        self.assertEqual(window._sentry_btn.text, "Focus")
 
         # Toggle focus off
         MainWindow._toggle_focus_mode(window)
         snap4 = self.mgr.get_snapshot()
         self.assertFalse(snap4.monitor.active)
         self.assertFalse(snap4.focus.active)
-        self.assertEqual(window._sentry_btn.text, "[ ▣ ]  SENTRY MODE")
+        self.assertEqual(window._sentry_btn.text, "Sentry")
         self.assertFalse(window._sentry_btn.checked)
 
     def test_minimized_overlay_has_sentry_button_and_indicator(self):

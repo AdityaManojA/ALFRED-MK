@@ -13,12 +13,14 @@ _CNW: dict = (
 )
 
 def _base_dir() -> Path:
+    """Return the app base directory, handling frozen (packaged) builds."""
     if getattr(sys, "frozen", False):
         return Path(sys.executable).parent
     return Path(__file__).resolve().parent.parent
 
 
 def _get_os() -> str:
+    """Return the current platform as mac, linux, or windows."""
     _sys = platform.system()
     if _sys == "Darwin":
         return "mac"
@@ -28,6 +30,7 @@ def _get_os() -> str:
 
 
 def _scripts_dir() -> Path:
+    """Return the reminder scripts directory under the home folder, creating it."""
     d = Path.home() / ".alfred" / "reminders"
     d.mkdir(parents=True, exist_ok=True)
     return d
@@ -35,6 +38,7 @@ def _scripts_dir() -> Path:
 
 
 def _sanitise(text: str, max_len: int = 200) -> str:
+    """Strip quotes, backslashes, and newlines from text and truncate it."""
     return (
         text.replace("\\", "")
             .replace('"', "")
@@ -45,6 +49,9 @@ def _sanitise(text: str, max_len: int = 200) -> str:
     )[:max_len]
 
 def _write_notify_script(task_name: str, message: str, os_name: str) -> Path:
+    """Write a self-deleting Python script that shows an OS notification for a reminder.
+    Returns the script path.
+    """
     script_path = _scripts_dir() / f"{task_name}.py"
     msg_literal = json.dumps(message)  
 
@@ -146,6 +153,9 @@ except Exception:
 
 def _schedule_windows(target_dt: datetime, task_name: str,
                       script_path: Path, message: str) -> str:
+    """Register a one-shot Windows Task Scheduler task that runs the reminder script.
+    Returns the task name, or an empty string on failure.
+    """
     python_exe = Path(sys.executable)
     pythonw = python_exe.parent / "pythonw.exe"
     if pythonw.exists():
@@ -202,6 +212,9 @@ def _schedule_windows(target_dt: datetime, task_name: str,
 
 def _schedule_mac(target_dt: datetime, task_name: str,
                   script_path: Path) -> str:
+    """Schedule the reminder script via a launchd agent plist on macOS.
+    Returns the task name, or an empty string on failure.
+    """
     agents_dir = Path.home() / "Library" / "LaunchAgents"
     agents_dir.mkdir(parents=True, exist_ok=True)
 
@@ -252,6 +265,9 @@ def _schedule_mac(target_dt: datetime, task_name: str,
 
 def _schedule_linux(target_dt: datetime, task_name: str,
                     script_path: Path) -> str:
+    """Schedule the reminder script with systemd-run, falling back to at.
+    Returns the task name, or an empty string on failure.
+    """
 
     if shutil.which("systemd-run"):
         on_calendar = target_dt.strftime("%Y-%m-%d %H:%M:00")
@@ -292,6 +308,9 @@ def reminder(
     session_memory=None,
 ) -> str:
 
+    """Validate a future YYYY-MM-DD HH:MM time and register a one-shot desktop notification with the OS scheduler.
+
+    Uses Task Scheduler on Windows, launchd on macOS, and systemd-run or ``at`` on Linux."""
     date_str = parameters.get("date", "").strip()
     time_str = parameters.get("time", "").strip()
     message  = parameters.get("message", "Reminder").strip()

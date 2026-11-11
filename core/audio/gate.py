@@ -32,6 +32,7 @@ class AudioGate:
     """Additive acoustic gate controlling upstream mic flow and wake-word gating."""
 
     def __init__(self, release_delay_ms: int = GATE_RELEASE_DELAY_MS) -> None:
+        """Initialise an ungated state with the given release delay."""
         self._lock = threading.Lock()
         self._reasons: Set[str] = set()
         self._release_delay_s: float = max(0.0, release_delay_ms / 1000.0)

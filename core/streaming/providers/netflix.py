@@ -65,6 +65,7 @@ class NetflixProvider(StreamingProvider):
     display_name: str = "Netflix"
 
     def __init__(self, detector: Optional[NetflixDetector] = None) -> None:
+        """Use the given Netflix detector or create a default one."""
         self.detector = detector or NetflixDetector()
 
     def discover_surfaces(self) -> List[Surface]:

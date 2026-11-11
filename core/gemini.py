@@ -184,11 +184,13 @@ _cool_lock = threading.Lock()
 
 
 def _cool(model: str) -> None:
+    """Put ``model`` on cooldown for _COOLDOWN_SECONDS."""
     with _cool_lock:
         _cooldown[model] = time.monotonic() + _COOLDOWN_SECONDS
 
 
 def _cooling(model: str) -> bool:
+    """Return True if ``model`` is still cooling down; clears expired entries."""
     with _cool_lock:
         until = _cooldown.get(model, 0.0)
         if until and time.monotonic() < until:
@@ -233,6 +235,7 @@ class _Reply:
     __slots__ = ("text",)
 
     def __init__(self, text: str):
+        """Store the reply text."""
         self.text = text
 
 
@@ -271,6 +274,7 @@ def _to_live_parts(contents) -> list:
 
 
 async def _live_turn(parts: list, system: str, key: str, timeout_s: float) -> str:
+    """Run one Live API session turn with ``parts`` and return its transcribed reply text."""
     from google import genai
     from google.genai import types as gtypes
 
@@ -298,6 +302,7 @@ async def _live_turn(parts: list, system: str, key: str, timeout_s: float) -> st
         chunks: list[str] = []
 
         async def drain():
+            """Collect output transcription chunks from the Live session."""
             async for resp in session.receive():
                 sc = getattr(resp, "server_content", None)
                 if sc and sc.output_transcription and sc.output_transcription.text:
@@ -348,6 +353,7 @@ def _live_call(contents, config, timeout_ms: int, key: str):
     box: dict = {}
 
     def runner():
+        """Thread body: run the Live turn and store its text or exception in ``box``."""
         try:
             box["text"] = asyncio.run(
                 _live_turn(parts, str(system), key, max(10.0, timeout_ms / 1000.0)))

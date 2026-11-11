@@ -10,6 +10,7 @@ MONITOR_DEFAULT_INTERVAL_S: float = 5.0
 
 
 class TargetStatus(str, Enum):
+    """Lifecycle status of a monitor target."""
     RUNNING = "running"
     ALERTED = "alerted"
     FINISHED = "finished"
@@ -17,6 +18,7 @@ class TargetStatus(str, Enum):
 
 
 class AlertSeverity(str, Enum):
+    """Severity level of a target alert."""
     INFO = "info"
     WARNING = "warning"
     CRITICAL = "critical"
@@ -24,6 +26,7 @@ class AlertSeverity(str, Enum):
 
 @dataclass(frozen=True, slots=True)
 class TargetAlert:
+    """Immutable alert record raised by a monitor target."""
     target_id: str
     message: str
     severity: AlertSeverity = AlertSeverity.INFO
@@ -39,6 +42,7 @@ class MonitorTarget(ABC):
         name: str,
         interval_s: float = MONITOR_DEFAULT_INTERVAL_S,
     ) -> None:
+        """Initialise identity, poll interval (minimum 1 second) and running status with no pending alert."""
         self.target_id = target_id
         self.name = name
         self.interval_s = max(1.0, float(interval_s))

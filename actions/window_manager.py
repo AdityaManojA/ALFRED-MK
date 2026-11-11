@@ -27,6 +27,7 @@ if sys.platform == "win32":
 
 
 def _get_user32():
+    """Return the cached user32 handle on Windows, or None elsewhere."""
     if sys.platform != "win32":
         return None
     global user32
@@ -49,6 +50,7 @@ def _get_screen() -> tuple[int, int]:
 
 
 def _focused_hwnd() -> Optional[int]:
+    """Return the handle of the foreground window, or None."""
     u32 = _get_user32()
     if u32 is None:
         return None
@@ -68,6 +70,7 @@ def _find_hwnd_by_title(title_fragment: str) -> Optional[int]:
     found = []
 
     def _cb(hwnd, _):
+        """EnumWindows callback collecting visible windows whose title matches the fragment."""
         if u32.IsWindowVisible(hwnd):
             length = u32.GetWindowTextLengthW(hwnd)
             if length > 0:
@@ -83,6 +86,7 @@ def _find_hwnd_by_title(title_fragment: str) -> Optional[int]:
 
 
 def _get_title(hwnd: int) -> str:
+    """Return the title text of a window handle."""
     u32 = _get_user32()
     if u32 is None:
         return ""
@@ -94,6 +98,7 @@ def _get_title(hwnd: int) -> str:
 
 
 def _move_resize(hwnd: int, x: Optional[int], y: Optional[int], w: int, h: int) -> None:
+    """Restore a window and move/resize it to the given geometry."""
     u32 = _get_user32()
     if u32 is None:
         return
@@ -120,6 +125,7 @@ def _resolve_hwnd(parameters: dict) -> tuple[Optional[int], str]:
 
 
 def _list_windows() -> list[str]:
+    """Return the titles of all visible windows with non-empty titles."""
     u32 = _get_user32()
     if u32 is None:
         return []
@@ -128,6 +134,7 @@ def _list_windows() -> list[str]:
     titles = []
 
     def _cb(hwnd, _):
+        """EnumWindows callback collecting titles of visible windows."""
         if u32.IsWindowVisible(hwnd):
             length = u32.GetWindowTextLengthW(hwnd)
             if length > 0:
@@ -146,6 +153,9 @@ def _list_windows() -> list[str]:
 # ── Action handler ────────────────────────────────────────────────────────────
 
 def window_manager_action(parameters: dict, **kwargs) -> str:
+    """Tool entry point that lists, snaps, resizes, or tiles windows on Windows.
+    Returns a user-facing status message.
+    """
     if sys.platform != "win32":
         return "Window management is only supported on Windows."
 

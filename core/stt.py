@@ -12,6 +12,7 @@ class WhisperSTT:
     """Offline transcription using faster-whisper."""
 
     def __init__(self, model_name: str = "base", language: str | None = None):
+        """Load the faster-whisper model on CUDA or CPU, downloading it once if it is not cached locally."""
         import os
         from faster_whisper import WhisperModel
         print(f"[STT] Loading Whisper '{model_name}'…")
@@ -74,6 +75,7 @@ class VoskSTT:
     """Streaming transcription using Vosk."""
 
     def __init__(self, model_path: str | None = None, language: str = "en-us"):
+        """Load a Vosk model (from path or by language) and create a 16 kHz recognizer."""
         from vosk import Model, KaldiRecognizer
         print("[STT] Loading Vosk model…")
         if model_path:

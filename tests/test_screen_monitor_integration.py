@@ -119,7 +119,7 @@ class TestScreenMonitorIntegration(unittest.TestCase):
 
         self.assertEqual(calls, [True, False])
         self.assertFalse(window._sentry_btn.checked)
-        self.assertEqual(window._sentry_btn.text, "[ ▣ ]  SENTRY MODE")
+        self.assertEqual(window._sentry_btn.text, "Sentry")
 
     def test_main_start_stop_helpers_share_one_controller(self):
         app = object.__new__(JarvisLive)

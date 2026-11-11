@@ -55,6 +55,7 @@ class _ImageCanvas(QWidget):
     """Custom-painted canvas that draws a prescaled pixmap letterboxed in the center."""
 
     def __init__(self, parent: QWidget | None = None) -> None:
+        """Prebuild painting tools and initialise empty image and pixmap cache state."""
         super().__init__(parent)
         self.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent, True)
 
@@ -122,10 +123,12 @@ class _ImageCanvas(QWidget):
         self._cached_size = (cw, ch)
 
     def resizeEvent(self, event) -> None:
+        """Rebuild the cached scaled pixmap when the canvas is resized."""
         super().resizeEvent(event)
         self._update_cached_pixmap()
 
     def paintEvent(self, _event) -> None:
+        """Fill the background and draw the cached pixmap centred (letterboxed)."""
         painter = QPainter(self)
         w, h = self.width(), self.height()
 
@@ -157,6 +160,7 @@ class ImageViewerWindow(QWidget):
     close_requested = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
+        """Create the frameless viewer, prebuild fonts, wire show/close signals and build the UI hidden."""
         super().__init__(parent)
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         make_frameless_overlay(self, parent)
@@ -177,6 +181,7 @@ class ImageViewerWindow(QWidget):
         self.hide()
 
     def _build_ui(self) -> None:
+        """Build the header bar (title, prev/next/close buttons), image canvas and caption strip."""
         root = QVBoxLayout(self)
         root.setContentsMargins(1, 1, 1, 1)
         root.setSpacing(0)
@@ -344,19 +349,23 @@ class ImageViewerWindow(QWidget):
     # ------------------------------------------------------------------
 
     def mousePressEvent(self, event) -> None:
+        """Start a window drag on left-button press."""
         if event.button() == Qt.MouseButton.LeftButton:
             self._drag_pos = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
             event.accept()
 
     def mouseMoveEvent(self, event) -> None:
+        """Move the window while dragging with the left button held."""
         if self._drag_pos is not None and event.buttons() == Qt.MouseButton.LeftButton:
             self.move(event.globalPosition().toPoint() - self._drag_pos)
             event.accept()
 
     def mouseReleaseEvent(self, event) -> None:
+        """End any window drag."""
         self._drag_pos = None
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
+        """Handle Esc (close), Right/N (next) and Left/P (previous); pass other keys on."""
         key = event.key()
         if key == Qt.Key.Key_Escape:
             self.close_viewer()

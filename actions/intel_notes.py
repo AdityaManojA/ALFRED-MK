@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Optional
 
 def _config_dir() -> Path:
+    """Return the repo config directory, creating it if needed."""
     base = Path(__file__).resolve().parent.parent
     d = base / "config"
     d.mkdir(parents=True, exist_ok=True)
@@ -24,6 +25,7 @@ _NOTES_FILE = _config_dir() / "intel_notes.json"
 
 
 def _load_notes() -> list[dict]:
+    """Load saved notes from the notes JSON file, or an empty list on error."""
     if not _NOTES_FILE.exists():
         return []
     try:
@@ -33,6 +35,7 @@ def _load_notes() -> list[dict]:
 
 
 def _save_notes(notes: list[dict]) -> None:
+    """Write the notes list to the notes JSON file, logging any error."""
     try:
         _NOTES_FILE.write_text(json.dumps(notes, indent=2, ensure_ascii=False), encoding="utf-8")
     except Exception as e:
@@ -40,6 +43,9 @@ def _save_notes(notes: list[dict]) -> None:
 
 
 def _auto_detect_type(content: str, explicit_type: str = "") -> str:
+    """Classify note content as note, link, data, or code.
+    An explicit valid type wins; otherwise URLs, code fences, and structured text are detected.
+    """
     if explicit_type and explicit_type.lower() in ("note", "link", "data", "code"):
         return explicit_type.lower()
     

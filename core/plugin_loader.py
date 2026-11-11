@@ -37,12 +37,14 @@ _SCHEDULING = ("WHEN_IDLE", "SILENT", "INTERRUPT")
 
 
 def _opt_upper(value, allowed: tuple[str, ...]) -> Optional[str]:
+    """Return the upper-cased value if it is in ``allowed``, else None."""
     v = str(value or "").strip().upper()
     return v if v in allowed else None
 
 
 @dataclass
 class PluginRecord:
+    """Metadata, run callable, settings schema and validation state for one discovered plugin."""
     name: str
     description: str = ""
     parameters: dict = field(default_factory=lambda: dict(_DEFAULT_PARAMS))
@@ -56,8 +58,10 @@ class PluginRecord:
 
 
 class PluginRegistry:
+    """Registry of discovered plugins: exposes tool declarations, dispatches runs and lists plugins for the UI."""
     def __init__(self, plugins: dict[str, PluginRecord], logger: Callable[[str], None],
                  notify: Callable[[str], None] | None = None):
+        """Store the valid plugins, logger and optional user-facing notify sink; init the settings cache."""
         self._plugins = plugins          # name -> PluginRecord, VALID entries only
         self._all_records: list[PluginRecord] = []   # valid + invalid, for UI listing
         self._logger = logger
@@ -72,6 +76,7 @@ class PluginRegistry:
 
     # -- called by main.py at LiveConnectConfig build time --
     def get_tool_declarations(self) -> list[dict]:
+        """Return tool declarations for valid plugins that are currently enabled."""
         decls = []
         for name, rec in self._plugins.items():
             if get_plugin_enabled(name):
@@ -86,6 +91,7 @@ class PluginRegistry:
         return decls
 
     def has(self, name: str) -> bool:
+        """Return True if a valid plugin with this name is registered."""
         return name in self._plugins
 
     def scheduling(self, name: str) -> Optional[str]:
@@ -95,6 +101,9 @@ class PluginRegistry:
 
     # -- called by main.py from _execute_tool's else branch --
     def run(self, name: str, parameters: dict, player=None, session_memory=None) -> str:
+        """Run the named plugin if it is valid and enabled.
+        Returns its result (or "Done."), or an error message; failures are logged and notified.
+        """
         rec = self._plugins.get(name)
         if rec is None or not rec.valid:
             return f"Plugin '{name}' is not available."
@@ -145,6 +154,7 @@ class PluginRegistry:
 
     # -- called by ui.py's Plugin Manager overlay --
     def list_for_ui(self) -> list[dict]:
+        """Return a summary dict (name, description, file, validity, error, enabled) for every discovered plugin."""
         out = []
         for rec in self._all_records:
             out.append({

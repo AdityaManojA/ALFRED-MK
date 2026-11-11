@@ -35,6 +35,7 @@ def add_session_tokens(count: int) -> None:
 
 @dataclass
 class GridDataSnapshot:
+    """Text and colour-state values for the four datagrid cells (git, ports/market, top process, session)."""
     git_text: str = "—"
     git_state: str = "dim"       # "accent" | "warn" | "dim"
     ports_text: str = "—"
@@ -54,6 +55,7 @@ class DataGridWorker:
     _lock = threading.Lock()
 
     def __init__(self, on_update: Optional[Callable[[GridDataSnapshot], None]] = None):
+        """Store the update callback and initialise the snapshot, stop event and per-cell sample timestamps."""
         self.on_update = on_update
         self.snapshot = GridDataSnapshot()
         self._stop_event = threading.Event()
@@ -66,6 +68,7 @@ class DataGridWorker:
 
     @classmethod
     def instance(cls, on_update: Optional[Callable[[GridDataSnapshot], None]] = None) -> DataGridWorker:
+        """Return the process-wide DataGridWorker singleton, creating it or replacing its callback if given."""
         with cls._lock:
             if cls._instance is None:
                 cls._instance = DataGridWorker(on_update)
@@ -74,18 +77,23 @@ class DataGridWorker:
             return cls._instance
 
     def start(self) -> None:
+        """Start the daemon sampling thread if it is not already running."""
         if self._thread is None or not self._thread.is_alive():
             self._stop_event.clear()
             self._thread = threading.Thread(target=self._run_loop, daemon=True, name="hud-datagrid-worker")
             self._thread.start()
 
     def stop(self) -> None:
+        """Signal the sampling thread to stop and join it with a 1s timeout."""
         self._stop_event.set()
         if self._thread:
             self._thread.join(timeout=1.0)
             self._thread = None
 
     def _run_loop(self) -> None:
+        """Sample session, top process, git and ports/market on their intervals every 0.5s,
+        invoking on_update with the snapshot whenever any cell changed.
+        """
         while not self._stop_event.is_set():
             now = time.monotonic()
             changed = False
@@ -138,6 +146,7 @@ class DataGridWorker:
 
     def _sample_market_or_ports(self) -> tuple[str, str]:
         # If watchlist has items, cycle active tickers; otherwise show ports
+        """Return a cycling watchlist quote as (text, state) if any tickers are watched, else fall back to listening ports."""
         try:
             from core.market.watchlist import WatchlistManager
             from core.market.provider import MarketProvider
@@ -160,6 +169,7 @@ class DataGridWorker:
         return self._sample_ports()
 
     def _sample_git(self) -> tuple[str, str]:
+        """Return (text, state) with the repo's current branch and clean/dirty file count via git subprocess calls."""
         repo_root = Path(__file__).resolve().parent.parent.parent.parent
         if not (repo_root / ".git").exists():
             return "no repo", "dim"
@@ -195,6 +205,7 @@ class DataGridWorker:
             return "—", "dim"
 
     def _sample_ports(self) -> tuple[str, str]:
+        """Return (text, state) listing locally bound LISTEN ports, capped at PORTS_MAX_SHOWN with an overflow count."""
         ports: list[int] = []
         try:
             conns = psutil.net_connections(kind="inet")
@@ -219,6 +230,7 @@ class DataGridWorker:
         return res, "accent"
 
     def _sample_top_proc(self) -> tuple[str, str]:
+        """Return (text, state) naming the process with the highest RSS memory and its size in MB/GB."""
         try:
             top_proc = None
             max_mem = 0

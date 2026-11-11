@@ -44,6 +44,7 @@ except ImportError:
 logger = logging.getLogger("spotify_control")
 
 def _get_base_dir() -> Path:
+    """Returns the app root: the executable's folder when frozen, otherwise the repo root."""
     if getattr(sys, "frozen", False):
         return Path(sys.executable).parent
     return Path(__file__).resolve().parent.parent
@@ -130,6 +131,7 @@ class SpotifyClient:
     _lock = threading.Lock()
 
     def __init__(self):
+        """Initialises token state and caches, loads credentials and builds the HTTP session."""
         self._session: Optional[requests.Session] = None
         self._client_id: str = ""
         self._client_secret: str = ""
@@ -151,6 +153,7 @@ class SpotifyClient:
 
     @classmethod
     def get_instance(cls) -> SpotifyClient:
+        """Returns the process-wide SpotifyClient singleton, creating it thread-safely."""
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
@@ -158,6 +161,7 @@ class SpotifyClient:
         return cls._instance
 
     def _init_session(self):
+        """Creates a pooled requests session that retries on 429 and 5xx responses."""
         if not _REQUESTS_AVAILABLE:
             return
         self._session = requests.Session()
@@ -304,6 +308,9 @@ class SpotifyClient:
         return self._access_token or None
 
     def _refresh_client_credentials(self) -> Optional[str]:
+        """Requests an app-only token via the client-credentials grant.
+        Stores the token and its expiry; returns it, or None on failure.
+        """
         if not self._session:
             return None
         try:
@@ -330,6 +337,9 @@ class SpotifyClient:
         return None
 
     def _refresh_with_refresh_token(self) -> Optional[str]:
+        """Exchanges the stored refresh token for a new user access token.
+        Updates and persists the tokens; returns the access token, or None on failure.
+        """
         if not self._session:
             return None
         try:
@@ -360,6 +370,7 @@ class SpotifyClient:
         return None
 
     def _auth_headers(self) -> Dict[str, str]:
+        """Builds JSON request headers, adding a Bearer token when one is available."""
         token = self.get_token()
         if token:
             return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
@@ -748,9 +759,11 @@ class SpotifyClient:
 # ── Module-level convenience functions ────────────────────────────────────────
 
 def get_spotify_client() -> SpotifyClient:
+    """Returns the shared SpotifyClient instance."""
     return SpotifyClient.get_instance()
 
 def spotify_search(query: str, search_type: str = "track") -> List[Dict[str, Any]]:
+    """Searches Spotify for items of the given type using the shared client."""
     return get_spotify_client().search(query, search_type=search_type)
 
 def start_playback(
@@ -760,6 +773,9 @@ def start_playback(
     device_id: Optional[str] = None,
     player=None
 ) -> Dict[str, Any]:
+    """Starts playback by query or URI and syncs the UI audio player when playing.
+    Returns the client's playback result dict.
+    """
     client = get_spotify_client()
     res = client.play(query=query, uri=uri, context_uri=context_uri, device_id=device_id)
     # Sync with ALFRED UI's Tactical Audio Player if available
@@ -771,21 +787,27 @@ def start_playback(
     return res
 
 def control_playback(action: str, device_id: Optional[str] = None, player=None) -> bool:
+    """Applies a playback control action (such as pause, resume or toggle) via the shared client."""
     return get_spotify_client().control_playback(action, device_id=device_id)
 
 def manage_queue(uri: str, action: str = "add", device_id: Optional[str] = None) -> bool:
+    """Adds a URI to the playback queue via the shared client; returns True on success."""
     return get_spotify_client().manage_queue(uri, action=action, device_id=device_id)
 
 def set_volume(percent: int, device_id: Optional[str] = None) -> bool:
+    """Sets the playback volume percentage via the shared client."""
     return get_spotify_client().set_volume(percent, device_id=device_id)
 
 def get_devices() -> List[Dict[str, Any]]:
+    """Returns the user's available Spotify Connect devices."""
     return get_spotify_client().get_devices()
 
 def set_shuffle(state: bool, device_id: Optional[str] = None) -> bool:
+    """Turns shuffle on or off via the shared client."""
     return get_spotify_client().set_shuffle(state, device_id=device_id)
 
 def set_repeat(state: str, device_id: Optional[str] = None) -> bool:
+    """Sets the repeat mode via the shared client."""
     return get_spotify_client().set_repeat(state, device_id=device_id)
 
 
@@ -1064,10 +1086,12 @@ import urllib.parse
 
 
 class _OAuthCallbackHandler(http.server.BaseHTTPRequestHandler):
+    """Local HTTP handler that captures the Spotify OAuth authorization code or error."""
     auth_code: Optional[str] = None
     auth_error: Optional[str] = None
 
     def do_GET(self):
+        """Handles the /callback redirect, storing the auth code or error and replying with HTML."""
         parsed = urllib.parse.urlparse(self.path)
         if parsed.path == "/callback":
             params = urllib.parse.parse_qs(parsed.query)
@@ -1095,6 +1119,7 @@ class _OAuthCallbackHandler(http.server.BaseHTTPRequestHandler):
             self.end_headers()
 
     def log_message(self, format, *args):
+        """Suppresses the default HTTP request logging."""
         pass
 
 

@@ -16,11 +16,14 @@ _NUM_WORDS = {
 }
 
 def _num_word(n: int) -> str:
+    """Return the English word for small numbers, or the digits otherwise."""
     return _NUM_WORDS.get(n, str(n))
 
 
 class FocusLedger:
+    """Persistent JSON ledger of focus-session totals, clean streaks and daily buckets."""
     def __init__(self, filepath: Optional[str | Path] = None) -> None:
+        """Use the given file path (default data/focus_ledger.json in the repo) and load existing data."""
         if filepath is None:
             repo_root = Path(__file__).resolve().parent.parent.parent.parent
             self.filepath = repo_root / 'data' / 'focus_ledger.json'
@@ -39,6 +42,7 @@ class FocusLedger:
         self.load()
 
     def load(self) -> None:
+        """Merge ledger data from disk if the file exists; errors are ignored."""
         if not self.filepath.exists():
             return
         try:
@@ -50,6 +54,7 @@ class FocusLedger:
             pass
 
     def save(self) -> None:
+        """Atomically write the ledger to disk via a temp file; errors are ignored."""
         try:
             self.filepath.parent.mkdir(parents=True, exist_ok=True)
             with tempfile.NamedTemporaryFile('w', dir=self.filepath.parent, delete=False, encoding='utf-8') as tf:
@@ -61,14 +66,17 @@ class FocusLedger:
 
     @property
     def clean_streak(self) -> int:
+        """Current count of consecutive drift-free sessions."""
         return int(self._data.get('clean_streak', 0))
 
     @property
     def best_clean_streak(self) -> int:
+        """Best clean streak ever recorded."""
         return int(self._data.get('best_clean_streak', 0))
 
     @property
     def total_sessions(self) -> int:
+        """Total number of recorded sessions."""
         return int(self._data.get('total_sessions', 0))
 
     def record_session(
@@ -78,6 +86,9 @@ class FocusLedger:
         drift_count: int,
         timestamp: Optional[float] = None,
     ) -> Dict[str, Any]:
+        """Record a finished session: update totals, the daily bucket and the clean streak, then save.
+        Returns the previous and new streak, whether a streak of 3+ was broken, and the best streak.
+        """
         ts = timestamp if timestamp is not None else time.time()
         date_str = datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
 
@@ -126,6 +137,7 @@ class FocusLedger:
         clean_streak: int,
         streak_broken: bool,
     ) -> str:
+        """Build the spoken end-of-session report, worded for the given cadence (gentle, drill sergeant or normal)."""
         planned_m = max(1, round(planned_seconds / 60))
         on_target_m = round(on_target_seconds / 60)
         c = cadence.value if isinstance(cadence, Cadence) else str(cadence)

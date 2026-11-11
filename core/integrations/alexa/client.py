@@ -42,6 +42,7 @@ class AlexaRelayClient:
         command_handler: Callable[[str, dict[str, Any]], Coroutine[Any, Any, str]],
         device_token: str = "",
     ) -> None:
+        """Store config, state manager, policy, command handler and device token; init connection and idempotency state."""
         self.config = config
         self.state_manager = state_manager
         self.policy = policy

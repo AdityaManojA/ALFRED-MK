@@ -50,6 +50,7 @@ class ShadowWhisperWorker:
         on_partial: Optional[Callable[[WhisperPartial], None]] = None,
         window_s: float = PARTIAL_WINDOW_S,
     ) -> None:
+        """Configure the model, partial callback and window size, and set up the audio queue and buffer."""
         self.model_name = model_name
         self.on_partial = on_partial
         self.window_s = window_s
@@ -67,6 +68,9 @@ class ShadowWhisperWorker:
         self._sub_token: Optional[int] = None
 
     def _ensure_model(self) -> bool:
+        """Lazily load the faster-whisper model thread-safely.
+        Returns False (fail-open) if loading fails or previously failed.
+        """
         if self._model is not None:
             return True
         if self._model_failed:
@@ -135,6 +139,9 @@ class ShadowWhisperWorker:
         _LOGGER.info("ShadowWhisperWorker stopped")
 
     def _worker_loop(self) -> None:
+        """Worker loop: buffer audio into 50%-overlapping windows, skip near-silence,
+        transcribe with faster-whisper and emit non-final partial results.
+        """
         target_bytes = self._window_samples * 2
 
         while self._running:

@@ -36,6 +36,7 @@ class VoiceActivityDetector:
         threshold: float = VAD_THRESHOLD,
         silence_timeout_ms: int = VAD_SILENCE_TIMEOUT_MS,
     ) -> None:
+        """Store VAD settings and initialise lazy model and speech-tracking state."""
         self.sample_rate = sample_rate
         self.threshold = threshold
         self.silence_timeout_s = silence_timeout_ms / 1000.0
@@ -49,6 +50,9 @@ class VoiceActivityDetector:
         self._speech_start_time = 0.0
 
     def _ensure_model(self) -> None:
+        """Lazily load the Silero VAD model (silero_vad package, then torch.hub).
+        On failure marks the model as failed so the energy-based fallback is used.
+        """
         if self._model is not None or self._model_failed:
             return
         with self._lock:

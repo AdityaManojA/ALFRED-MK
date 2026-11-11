@@ -12,9 +12,12 @@ _REMINDER_PREFIX = re.compile(r"^.*?\b(?:remind|tell)\s+me\s+(?:to\s+)?", re.IGN
 
 
 def _message(text: str) -> str:
+    """Strip the reminder prefix and leading time phrase from text to get the reminder message.
+    Falls back to the stripped original text if nothing remains.
+    """
     value = _REMINDER_PREFIX.sub("", text).strip(" .")
     value = re.sub(
-        r"^(?:every\s+day\s+)?at\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?\s+(?:to\s+)?",
+        r"^(?:every\s+day\s+)?at\s+\d{1,2}(?::\d{2})?(?:\s*(?:am|pm))?(?:\s+(?:to\s+)?|$)",
         "",
         value,
         flags=re.IGNORECASE,
@@ -23,6 +26,10 @@ def _message(text: str) -> str:
 
 
 def parse_schedule(text: str, now: datetime | None = None) -> dict[str, Any] | None:
+    """Parse "in N minutes/hours" or "[every day] at H[:MM] [am|pm]" phrases.
+
+    Returns a dict with trigger_time (ISO), recurrence and payload message, or None.
+    """
     now = now or datetime.now()
     source = str(text or "").strip()
     if not source:

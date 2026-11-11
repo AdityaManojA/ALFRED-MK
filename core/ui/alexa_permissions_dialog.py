@@ -47,6 +47,7 @@ class AlexaPermissionsDialog(QDialog):
     """Tactical permissions manager for Alexa capabilities."""
 
     def __init__(self, parent: Optional[QWidget] = None, policy: Optional[AlexaActionPolicy] = None, store: Optional[SecretStore] = None):
+        """Create the frameless modal dialog, resolve the action policy and secret store, then build the UI and load stored values."""
         super().__init__(parent)
         self.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, False)
@@ -61,6 +62,7 @@ class AlexaPermissionsDialog(QDialog):
         self._load_values()
 
     def showEvent(self, event) -> None:
+        """Center the dialog over its parent widget when it is shown."""
         super().showEvent(event)
         if self.parent() and isinstance(self.parent(), QWidget):
             parent_geo = self.parent().geometry()
@@ -70,6 +72,7 @@ class AlexaPermissionsDialog(QDialog):
             )
 
     def _init_ui(self) -> None:
+        """Build the dialog layout: header with close button, per-capability checkboxes, and reset/save buttons."""
         pal = ThemeChrome.get_active().palette
         self.setFixedSize(540, 580)
         self.setStyleSheet(f"""
@@ -233,6 +236,7 @@ class AlexaPermissionsDialog(QDialog):
         self.accept()
 
     def paintEvent(self, event) -> None:
+        """Fill the background with the dark panel colour and draw the styled widget primitive."""
         from PyQt6.QtGui import QColor, QPainter
         from PyQt6.QtWidgets import QStyle, QStyleOption
         opt = QStyleOption()

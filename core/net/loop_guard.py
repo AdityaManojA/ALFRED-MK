@@ -26,6 +26,7 @@ def install_transport_guard(loop: Any, logger: logging.Logger | None = None) -> 
     prev: Callable[[Any, dict[str, Any]], None] | None = loop.get_exception_handler()
 
     def handler(l: Any, ctx: dict[str, Any]) -> None:
+        """Silence connection-reset errors from closed transports; forward anything else to the previous or default handler."""
         exc = ctx.get("exception")
         msg = str(ctx.get("message", ""))
         is_conn_reset = False

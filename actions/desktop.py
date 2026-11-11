@@ -19,16 +19,19 @@ _OS = platform.system()  # "Windows" | "Darwin" | "Linux"
 
 
 def _get_base_dir() -> Path:
+    """Return the app base directory, handling frozen (packaged) builds."""
     if getattr(sys, "frozen", False):
         return Path(sys.executable).parent
     return Path(__file__).resolve().parent.parent
 
 def _get_api_key() -> str:
+    """Read the Gemini API key from config/api_keys.json."""
     path = _get_base_dir() / "config" / "api_keys.json"
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)["gemini_api_key"]
     
 def _get_desktop() -> Path:
+    """Return the user's Desktop path, honouring XDG_DESKTOP_DIR on Linux."""
     if _OS == "Linux":
         xdg = os.environ.get("XDG_DESKTOP_DIR", "")
         if xdg and Path(xdg).exists():
@@ -36,6 +39,9 @@ def _get_desktop() -> Path:
     return Path.home() / "Desktop"
 
 def _build_sandbox() -> dict:
+    """Build the restricted globals dict used to exec generated desktop code.
+    Exposes safe builtins, Path, time, limited shutil/os.path, and optional pyautogui/winreg.
+    """
     import time
 
     safe_builtins = {
@@ -81,6 +87,9 @@ def _build_sandbox() -> dict:
 
 
 def _execute_generated_code(code: str, player=None) -> str:
+    """Execute generated Python code in the sandbox and return its captured output.
+    Refuses UNSAFE code, strips code fences, and returns an error string on failure.
+    """
     if not code or code.strip() == "UNSAFE":
         return "This action cannot be performed safely."
 
@@ -102,6 +111,9 @@ def _execute_generated_code(code: str, player=None) -> str:
 
 
 def _ask_gemini_for_desktop_action(task: str) -> str:
+    """Ask Gemini to generate sandbox-safe Python code for a desktop task.
+    Returns the code (markdown fences stripped), the model's UNSAFE reply, or an ERROR string.
+    """
 
     from google import genai as _genai
 
@@ -154,6 +166,7 @@ Task: {task}"""
         return f"ERROR: {e}"
 
 def set_wallpaper(image_path: str) -> str:
+    """Set the desktop wallpaper to a local jpg/png/bmp/webp image using the OS-specific mechanism; returns a status message."""
     path = Path(image_path).expanduser().resolve()
     if not path.exists():
         return f"Image not found: {image_path}"
@@ -238,6 +251,7 @@ for (var i = 0; i < allDesktops.length; i++) {{
 
 
 def set_wallpaper_from_url(url: str) -> str:
+    """Download an image from *url* to a temp file, set it as the wallpaper, then delete the temp file."""
     try:
         import urllib.request
         suffix = Path(url.split("?")[0]).suffix or ".jpg"
@@ -254,6 +268,7 @@ def set_wallpaper_from_url(url: str) -> str:
 
 
 def get_current_wallpaper() -> str:
+    """Return a message naming the current wallpaper (Windows registry, macOS osascript, or GNOME gsettings)."""
     try:
         if _OS == "Windows":
             import winreg
@@ -307,6 +322,9 @@ _SKIP_EXTENSIONS = {
 
 
 def organize_desktop(mode: str = "by_type") -> str:
+    """Move loose Desktop files into sub-folders by file type (default) or by modification month (``by_date``).
+
+    Shortcut files are left alone and name conflicts are skipped; returns a summary."""
     desktop       = _get_desktop()
     skip_exts     = _SKIP_EXTENSIONS.get(_OS, set())
     moved, skipped = [], []
@@ -350,6 +368,7 @@ def organize_desktop(mode: str = "by_type") -> str:
 
 
 def list_desktop() -> str:
+    """Return a listing of the Desktop's non-hidden folders (with item counts) and files (with sizes)."""
     desktop = _get_desktop()
     items   = []
     for item in sorted(desktop.iterdir()):
@@ -375,6 +394,7 @@ def list_desktop() -> str:
 
 
 def clean_desktop() -> str:
+    """Move loose Desktop files (not folders or shortcuts) into a dated 'Desktop Archive YYYY-MM-DD' folder."""
     desktop     = _get_desktop()
     skip_exts   = _SKIP_EXTENSIONS.get(_OS, set())
     today       = datetime.now().strftime("%Y-%m-%d")
@@ -396,6 +416,7 @@ def clean_desktop() -> str:
 
 
 def get_desktop_stats() -> str:
+    """Return file count, folder count, total file size and path of the Desktop."""
     desktop    = _get_desktop()
     files      = [i for i in desktop.iterdir() if i.is_file()]
     folders    = [i for i in desktop.iterdir() if i.is_dir()]

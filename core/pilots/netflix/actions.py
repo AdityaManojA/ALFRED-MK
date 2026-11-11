@@ -116,10 +116,12 @@ class NetflixActions:
         detector: Optional[NetflixDetector] = None,
         speak_fn: Optional[Callable[[str], None]] = None,
     ) -> None:
+        """Store the Netflix detector (default one if None) and optional speak function."""
         self.detector = detector or NetflixDetector()
         self.speak_fn = speak_fn
 
     def _speak(self, text: str) -> None:
+        """Speak ``text`` via the speak function if set, and print it."""
         if self.speak_fn:
             try:
                 self.speak_fn(text)
@@ -128,6 +130,7 @@ class NetflixActions:
         print(f"[Netflix] {text}")
 
     def _get_answer_window(self):
+        """Create an AnswerWindow using this instance's speak function."""
         from core.sentry.answer_window import AnswerWindow
         return AnswerWindow(speak_fn=self.speak_fn)
 
@@ -306,6 +309,7 @@ _GLOBAL_NETFLIX_ACTIONS: Optional[NetflixActions] = None
 
 
 def get_netflix_actions() -> NetflixActions:
+    """Return the shared NetflixActions instance, creating it on first use."""
     global _GLOBAL_NETFLIX_ACTIONS
     if _GLOBAL_NETFLIX_ACTIONS is None:
         _GLOBAL_NETFLIX_ACTIONS = NetflixActions()

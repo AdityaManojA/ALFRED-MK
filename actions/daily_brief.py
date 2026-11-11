@@ -233,6 +233,9 @@ def daily_brief(
     pref_news = ""
 
     def _get_market_brief() -> str:
+        """Build a one-line market note from the watchlist's top mover or the S&P 500.
+        Returns an empty string when no data is available or on any error.
+        """
         try:
             from core.market.watchlist import WatchlistManager
             from core.market.provider import MarketProvider

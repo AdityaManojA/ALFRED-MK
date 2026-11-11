@@ -22,6 +22,7 @@ class LocalTTSManager:
     """Manages local text-to-speech synthesis with streaming capabilities."""
 
     def __init__(self, config: dict):
+        """Create the configured TTS engine (falling back to Kokoro on failure) and the streaming queues."""
         self.config = config
         self.engine_name = config.get("tts_engine", "kokoro").lower()
         self.voice = config.get("tts_voice", "af_heart")

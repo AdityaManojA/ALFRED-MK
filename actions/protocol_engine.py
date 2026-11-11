@@ -486,6 +486,7 @@ def create_protocol(
     }
 
     def _do_save() -> str:
+        """Persist the new workflow definition and return a status message."""
         protocols = load_protocols()
         protocols[clean_name] = protocol_def
         ok = save_protocols(protocols)

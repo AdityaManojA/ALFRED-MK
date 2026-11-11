@@ -16,7 +16,10 @@ from core.ui.themes.schema import PaletteDefinition
 
 
 class BeyondRetinalVisual(SlotVisual):
+    """Slot 1: target-lock bracket orbiting the panel centre on a Lissajous-style path."""
+
     def __init__(self) -> None:
+        """Initialise pens, font and geometry placeholders for this slot."""
         super().__init__()
         self.lock_x: float = 0.0
         self.lock_y: float = 0.0
@@ -28,6 +31,7 @@ class BeyondRetinalVisual(SlotVisual):
         self.rect_hdr = QRectF()
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build mesh and target pens and set the inner and header rects."""
         c_pri = QColor(palette.pri)
         c_acc = QColor(palette.acc)
         self.pen_mesh = QPen(QColor(c_pri.red(), c_pri.green(), c_pri.blue(), 45), 1.0)
@@ -38,6 +42,7 @@ class BeyondRetinalVisual(SlotVisual):
         self.rect_hdr.setRect(rect.x() + 8.0, rect.y() + 4.0, rect.width() - 16.0, 14.0)
 
     def tick(self, dt: float, signals: HudSignals) -> None:
+        """Move the target-lock point along a Lissajous path around the panel centre."""
         self.t = (self.t + dt * 2.0) % (2.0 * math.pi)
         cx = self.rect_inner.x() + self.rect_inner.width() / 2.0
         cy = self.rect_inner.y() + self.rect_inner.height() / 2.0
@@ -45,6 +50,7 @@ class BeyondRetinalVisual(SlotVisual):
         self.lock_y = cy + fast_sin(self.t * 1.5) * 12.0
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
+        """Draw the header and target-lock brackets around the lock point."""
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_target)
         painter.drawText(self.rect_hdr, Qt.AlignmentFlag.AlignLeft, "● ● ●  CYBER-OPTIC RETINAL // HUD")
@@ -59,7 +65,10 @@ class BeyondRetinalVisual(SlotVisual):
 
 
 class BeyondICELadderVisual(SlotVisual):
+    """Slot 2: 8-bar bandwidth ladder whose target levels scale with net_kbps."""
+
     def __init__(self) -> None:
+        """Initialise pens, font and geometry placeholders for this slot."""
         super().__init__()
         self.bars = BarArray(count=8, peak_decay_per_s=2.0)
         self.pen_ice = QPen()
@@ -69,6 +78,7 @@ class BeyondICELadderVisual(SlotVisual):
         self.rect_hdr = QRectF()
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build pen and brush and lay out the eight bars."""
         c_pri = QColor(palette.pri)
         self.pen_ice = QPen(c_pri, 1.2)
         self.brush_ice = QBrush(c_pri)
@@ -78,10 +88,12 @@ class BeyondICELadderVisual(SlotVisual):
         self.bars.layout(bx + 8.0, by + 4.0, bw - 16.0, bh - 8.0, gap=4.0)
 
     def tick(self, dt: float, signals: HudSignals) -> None:
+        """Feed sine-based values scaled by network throughput into the bars."""
         vals = [(fast_sin(i * 1.2 + dt * 5.0) * 0.5 + 0.5) * (0.3 + signals.net_kbps / 500.0) for i in range(8)]
         self.bars.tick(dt, vals)
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
+        """Draw the header and the bar rectangles."""
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_ice)
         painter.drawText(self.rect_hdr, Qt.AlignmentFlag.AlignCenter, "ICE INTRUSION LADDER // BANDWIDTH")
@@ -90,7 +102,10 @@ class BeyondICELadderVisual(SlotVisual):
 
 
 class BeyondAvatarVisual(SlotVisual):
+    """Slot 3: static sectional body (head, torso, arms, legs) drawn as five rectangles."""
+
     def __init__(self) -> None:
+        """Initialise pens, font and geometry placeholders for this slot."""
         super().__init__()
         self.pen_limb = QPen()
         self.font_hdr = QFont("Consolas", 6, QFont.Weight.Bold)
@@ -99,6 +114,7 @@ class BeyondAvatarVisual(SlotVisual):
         self.limbs = [QRectF() for _ in range(5)]
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build the limb pen and lay out the head, torso, arm and leg rectangles."""
         c_pri = QColor(palette.pri)
         self.pen_limb = QPen(c_pri, 1.2)
         bx, by, bw, bh = rect.x() + 8.0, rect.y() + 18.0, rect.width() - 16.0, rect.height() - 24.0
@@ -114,9 +130,11 @@ class BeyondAvatarVisual(SlotVisual):
         self.limbs[4].setRect(cx - 8, cy + 8, 16, 16)   # Legs
 
     def tick(self, dt: float, signals: HudSignals) -> None:
+        """No-op; this visual is static."""
         pass
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
+        """Draw the header and limb rectangles."""
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_limb)
         painter.drawText(self.rect_hdr, Qt.AlignmentFlag.AlignCenter, "CHROME-LIMB DIAGNOSTIC // NANOSUIT")

@@ -26,7 +26,9 @@ if str(ROOT) not in sys.path:
 
 
 class ProbeLog:
+    """Thread-safe line logger that writes timestamped messages to stdout and a file."""
     def __init__(self, path: Path):
+        """Create the log directory and open the log file for line-buffered appending."""
         path.parent.mkdir(parents=True, exist_ok=True)
         self.path = path
         self._file = path.open("a", encoding="utf-8", buffering=1)
@@ -34,9 +36,11 @@ class ProbeLog:
 
     @property
     def file(self):
+        """The underlying open log file object."""
         return self._file
 
     def write(self, message: str) -> None:
+        """Write a timestamped line to stdout and the log file."""
         stamp = datetime.now().strftime("%H:%M:%S.%f")[:-3]
         line = f"[{stamp}] {message}"
         with self._lock:
@@ -44,6 +48,7 @@ class ProbeLog:
             self._file.write(line + "\n")
 
     def close(self) -> None:
+        """Close the log file."""
         with self._lock:
             self._file.close()
 
@@ -66,6 +71,9 @@ def _probe_process():
 
 
 def _runtime_snapshot() -> str:
+    """Return a short CPU, RSS and thread-count summary for the process.
+    Falls back to the Python thread count if psutil is unavailable.
+    """
     try:
         process = _probe_process()
         return (
@@ -78,7 +86,9 @@ def _runtime_snapshot() -> str:
 
 
 def _timed_slot(log: ProbeLog, label: str, fn: Callable):
+    """Wrap fn so each call logs BEGIN/END lines with elapsed milliseconds."""
     def wrapped(*args, **kwargs):
+        """Call the wrapped function, logging its start and elapsed time."""
         started = time.perf_counter()
         log.write(f"BEGIN {label}")
         try:
@@ -93,6 +103,10 @@ def _timed_slot(log: ProbeLog, label: str, fn: Callable):
 
 
 def _install_probes(log: ProbeLog, stall_ms: float) -> None:
+    """Patch ui.MainWindow to time settings slots and watch for Qt event-loop stalls.
+    The patched __init__ starts a 20 ms heartbeat timer and a watchdog thread that
+    logs stalls longer than stall_ms along with all thread stacks.
+    """
     from PyQt6.QtCore import QTimer
 
     import ui
@@ -114,12 +128,14 @@ def _install_probes(log: ProbeLog, stall_ms: float) -> None:
     original_init = ui.MainWindow.__init__
 
     def instrumented_init(window, *args, **kwargs):
+        """Run the original MainWindow init, then arm the heartbeat timer and stall watchdog."""
         original_init(window, *args, **kwargs)
 
         heartbeat = {"at": time.perf_counter(), "episode": 0, "running": True}
         timer = QTimer(window)
 
         def pulse() -> None:
+            """Update the heartbeat and log a recovery when the gap exceeded the stall threshold."""
             now = time.perf_counter()
             gap_ms = (now - heartbeat["at"]) * 1000.0
             heartbeat["at"] = now
@@ -131,6 +147,7 @@ def _install_probes(log: ProbeLog, stall_ms: float) -> None:
         window._perf_probe_timer = timer
 
         def watchdog() -> None:
+            """Poll the heartbeat age and dump all thread stacks once per stall episode."""
             in_stall = False
             while heartbeat["running"]:
                 age_ms = (time.perf_counter() - heartbeat["at"]) * 1000.0
@@ -155,6 +172,7 @@ def _install_probes(log: ProbeLog, stall_ms: float) -> None:
 
 
 def _stop_probes() -> None:
+    """Stop the stall watchdog threads on all top-level windows."""
     try:
         from PyQt6.QtWidgets import QApplication
 
@@ -172,6 +190,7 @@ def _stop_probes() -> None:
 
 
 def _write_profile(profile: cProfile.Profile, output_dir: Path, run_id: str) -> None:
+    """Dump the cProfile stats and write a cumulative/tottime text report."""
     raw_path = output_dir / f"alfred-ui-{run_id}.prof"
     report_path = output_dir / f"alfred-ui-{run_id}-profile.txt"
     profile.dump_stats(raw_path)
@@ -187,6 +206,7 @@ def _write_profile(profile: cProfile.Profile, output_dir: Path, run_id: str) -> 
 
 
 def main() -> int:
+    """Run ALFRED with stall probes and an optional CPU profile; return the exit code."""
     parser = argparse.ArgumentParser(description="Run ALFRED while logging Qt stalls and slow settings callbacks.")
     parser.add_argument("--stall-ms", type=float, default=80.0)
     parser.add_argument("--cpu-profile", action="store_true")

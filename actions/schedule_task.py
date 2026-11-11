@@ -7,6 +7,7 @@ from core.scheduler import SchedulerEngine, parse_schedule
 
 
 def _engine(player=None) -> SchedulerEngine:
+    """Return the registered scheduler engine, creating and starting one if missing."""
     engine = lookup("scheduler_engine")
     if engine is not None:
         return engine
@@ -18,6 +19,9 @@ def _engine(player=None) -> SchedulerEngine:
 
 
 def schedule_task(parameters, player=None, **_) -> dict | str:
+    """Parse a schedule phrase and add a reminder (or an opt-in paste-and-run macro) to the local scheduler engine.
+
+    Returns a dict describing the scheduled task, or an explanatory string when input is incomplete."""
     params = parameters or {}
     schedule_text = str(params.get("schedule") or params.get("text") or "")
     parsed = parse_schedule(schedule_text)

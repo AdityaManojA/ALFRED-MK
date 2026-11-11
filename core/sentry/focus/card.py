@@ -34,6 +34,7 @@ class FloatingFocusCard(QWidget):
     HEIGHT = 48
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
+        """Build the frameless, always-on-top focus card and pre-cache its fonts, colours and pens; starts hidden."""
         super().__init__(parent)
         self.setWindowFlags(
             Qt.WindowType.FramelessWindowHint
@@ -109,12 +110,14 @@ class FloatingFocusCard(QWidget):
         return QPoint(x, y)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
+        """Begin dragging the card on a left-button press."""
         if event.button() == Qt.MouseButton.LeftButton:
             self._dragging = True
             self._drag_start_pos = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
             event.accept()
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
+        """Move the card with the mouse while dragging, clamped to the screen."""
         if self._dragging and event.buttons() & Qt.MouseButton.LeftButton:
             new_pos = event.globalPosition().toPoint() - self._drag_start_pos
             clamped = self.clamp_to_screen(new_pos)
@@ -122,11 +125,13 @@ class FloatingFocusCard(QWidget):
             event.accept()
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        """End dragging on left-button release."""
         if event.button() == Qt.MouseButton.LeftButton:
             self._dragging = False
             event.accept()
 
     def contextMenuEvent(self, event: QContextMenuEvent) -> None:
+        """Show the focus context menu (snooze, lock tab, extend, excuse, pause/resume, end) and run the chosen engine action."""
         engine = get_focus_engine()
         menu = QMenu(self)
         menu.setStyleSheet("""
@@ -171,6 +176,7 @@ class FloatingFocusCard(QWidget):
             engine.abort("Ended from focus card")
 
     def paintEvent(self, event: QPaintEvent) -> None:
+        """Paint the card background, progress ring, play/pause glyph, status label and countdown text."""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 

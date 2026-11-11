@@ -38,6 +38,9 @@ def parse_monitoring_request(request: str) -> list[MonitorTarget]:
 
 
 def _parse_clause(clause: str, index: int = 1) -> MonitorTarget:
+    """Parse one request clause into a MonitorTarget using regex and keyword patterns.
+    Tries market rules, window title, log file, process, command, clipboard and screen region; defaults to a TerminalTarget.
+    """
     uid = str(uuid.uuid4())[:8]
 
     # Pattern: Market monitoring — "watch NVDA above 140" / "alert me if TSLA drops 5 percent"

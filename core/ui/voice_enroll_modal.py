@@ -72,6 +72,7 @@ def _tech_font(
 
 
 class VoiceEnrollModal(QDialog):
+    """Frameless dialog that records voice samples to enroll, re-enroll or delete a local speaker profile."""
     profile_enrolled = pyqtSignal(str)   # user_name
     profile_deleted = pyqtSignal()
     recording_finished = pyqtSignal(object, int)  # audio_np, sample_rate
@@ -84,6 +85,9 @@ class VoiceEnrollModal(QDialog):
         default_user: str = "Operator",
         default_mode: str = "standard",
     ):
+        """Set up the profile store, embedding extractor and enrollment manager for the chosen mode,
+        build the UI, subscribe to theme changes and show any existing profile status.
+        """
         super().__init__(parent)
         self.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
@@ -138,6 +142,7 @@ class VoiceEnrollModal(QDialog):
             return prompts[idx]
 
     def _setup_ui(self):
+        """Build the enrollment dialog layout and its widgets."""
         self.setFixedSize(640, 590)
         pal = ThemeChrome.get_active().palette
 
@@ -522,6 +527,7 @@ class VoiceEnrollModal(QDialog):
             """)
 
     def showEvent(self, event):
+        """Center the dialog over its parent widget (kept at least 20 px from the edges) when shown."""
         super().showEvent(event)
         parent = self.parentWidget()
         if parent:
@@ -532,6 +538,7 @@ class VoiceEnrollModal(QDialog):
             )
 
     def paintEvent(self, event):
+        """Paint the rounded, bordered panel background using the active theme palette."""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         pal = ThemeChrome.get_active().palette
@@ -542,9 +549,11 @@ class VoiceEnrollModal(QDialog):
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 8, 8)
 
     def _on_theme_changed(self, theme=None):
+        """Reapply styling when the active theme changes."""
         self._apply_theme()
 
     def _apply_theme(self):
+        """Restyle the dialog and its widgets from the active theme palette."""
         pal = ThemeChrome.get_active().palette
         self.setStyleSheet(f"""
             QDialog {{
@@ -660,6 +669,7 @@ class VoiceEnrollModal(QDialog):
         self.update()
 
     def _set_status(self, text: str, status_type: str = "ready"):
+        """Show status text in the status label, coloured by the status type."""
         self._last_status_type = status_type
         pal = ThemeChrome.get_active().palette
         color_map = {
@@ -676,22 +686,27 @@ class VoiceEnrollModal(QDialog):
         self._status_label.setText(text)
 
     def closeEvent(self, event):
+        """Unsubscribe from theme changes before closing."""
         ThemeChrome.remove_listener(self._on_theme_changed)
         super().closeEvent(event)
 
     def reject(self):
+        """Unsubscribe from theme changes before rejecting the dialog."""
         ThemeChrome.remove_listener(self._on_theme_changed)
         super().reject()
 
     def accept(self):
+        """Unsubscribe from theme changes before accepting the dialog."""
         ThemeChrome.remove_listener(self._on_theme_changed)
         super().accept()
 
     def _on_name_changed(self, text: str):
+        """Update the target user name (defaulting to Operator) and recheck for an existing profile."""
         self._user_name = text.strip() or "Operator"
         self._check_existing_profile()
 
     def _check_existing_profile(self):
+        """Show the delete button and profile details if a profile exists for the user, otherwise show ready status."""
         existing = self._store.load_profile(self._user_name)
         if existing:
             self._delete_btn.show()
@@ -705,6 +720,7 @@ class VoiceEnrollModal(QDialog):
             self._set_status("[ ◈ ] Ready to record.", "ready")
 
     def _start_recording(self):
+        """Disable the controls and record one microphone sample on a background thread."""
         if self._is_recording:
             return
         self._is_recording = True
@@ -715,6 +731,7 @@ class VoiceEnrollModal(QDialog):
         self._set_status("🔴 Listening... Speak 'Hey Alfred' now.", "recording")
 
         def _rec_worker():
+            """Record a fixed-length mono clip and emit recording_finished with the audio, or None on error."""
             try:
                 import sounddevice as sd
                 samples_n = int(RECORD_DURATION_S * SAMPLE_RATE)
@@ -729,6 +746,7 @@ class VoiceEnrollModal(QDialog):
         threading.Thread(target=_rec_worker, daemon=True).start()
 
     def _on_recording_finished(self, audio: Optional[np.ndarray], sr: int):
+        """Re-enable the controls and process the recorded sample, or report a microphone failure."""
         self._is_recording = False
         self._record_btn.setEnabled(True)
         self._name_input.setEnabled(True)
@@ -778,6 +796,7 @@ class VoiceEnrollModal(QDialog):
                 return False, str(exc)
 
     def _delete_profile(self):
+        """Delete the user's stored profile, reset the enrollment session and UI progress, and emit profile_deleted."""
         self._store.delete_profile(self._user_name)
         self._enrollment_mgr.reset_session(self._user_name)
         self._current_step = 1

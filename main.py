@@ -24,7 +24,9 @@ if _platform.system() == "Windows":
     _OrigPopen = _subprocess.Popen
 
     class _Popen(_OrigPopen):
+        """Popen subclass that always adds CREATE_NO_WINDOW so child processes open no console."""
         def __init__(self, args, **kw):
+            """Add CREATE_NO_WINDOW to creationflags, drop any startupinfo, then start the process."""
             kw["creationflags"] = kw.get("creationflags", 0) | _subprocess.CREATE_NO_WINDOW
             kw.pop("startupinfo", None)   # drop any stale/shared STARTUPINFO
             super().__init__(args, **                       kw)
@@ -254,6 +256,7 @@ def resolve_shutdown_username() -> str:
     return "sir"
 
 def get_base_dir():
+    """Return the app root: the executable's folder when frozen, else this file's folder."""
     if getattr(sys, "frozen", False):
         return Path(sys.executable).parent
     return Path(__file__).resolve().parent
@@ -499,6 +502,7 @@ def _render_prompt(template: str, values: dict) -> str:
 
 
 def _get_api_key() -> str:
+    """Return the Gemini API key from api_keys.json, falling back to GEMINI_API_KEY."""
     try:
         with open(API_CONFIG_PATH, "r", encoding="utf-8") as f:
             d = json.load(f)
@@ -508,6 +512,7 @@ def _get_api_key() -> str:
 
 
 def _load_system_prompt() -> str:
+    """Return the system prompt from core/prompt.txt, or a built-in default if unreadable."""
     try:
         return PROMPT_PATH.read_text(encoding="utf-8")
     except Exception:
@@ -536,6 +541,7 @@ def _is_repeat_chunk(txt: str, buf: list) -> bool:
     return txt in joined
 
 def _clean_transcript(text: str) -> str:    
+    """Strip <ctrlN> tokens and control characters from a transcript and trim it."""
     text = _CTRL_RE.sub("", text)
     text = re.sub(r"[\x00-\x08\x0b-\x1f]", "", text)
     return text.strip()
@@ -882,6 +888,7 @@ class _ReconnectSignal(Exception):
     _on_voice_change)."""
 
     def __init__(self, keep_context: bool = True):
+        """Store whether the rebuilt session should keep its conversation context."""
         super().__init__()
         self.keep_context = keep_context
 
@@ -910,7 +917,9 @@ def _keep_context_of(exc: BaseException) -> bool:
 
 
 class AlfredLive:
+    """Main assistant runtime: owns the Live session, audio I/O, tools, wake word and UI wiring."""
     def __init__(self, ui: AlfredUI):
+        """Wire up the UI, media arbiter, scheduler and all session, audio and wake-word state."""
         self.ui             = ui
         from core.media import get_media_arbiter
         self.media_arbiter = get_media_arbiter()
@@ -1114,6 +1123,7 @@ class AlfredLive:
     # â”€â”€ Wake word: state machine â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def _wake_state(self) -> dict:
+        """Return the wake-word status dict with enabled, awake and ready flags."""
         # A loaded, running detector is definitively ready; otherwise fall back
         # to the cheap on-disk model-file check (no Model construction).
         ready = bool(self._wake_detector and self._wake_detector.ready) or wake_is_ready()
@@ -1124,6 +1134,7 @@ class AlfredLive:
         with self._wake_lock:
             if self._wake_detector is None:
                 def _safe_wake():
+                    """Forward a wake detection to the event loop thread-safely, or call it directly."""
                     lp = getattr(self, "_loop", None)
                     if lp is not None and lp.is_running():
                         try:
@@ -1150,6 +1161,9 @@ class AlfredLive:
         self.wake(reason="wake word")
 
     def wake(self, reason: str = "wake word") -> None:
+        """Enter the awake state, restart the auto-sleep clock and update the UI and log.
+        No-op if already awake.
+        """
         if self._awake:
             return
         self._awake = True
@@ -1163,6 +1177,10 @@ class AlfredLive:
         _tlog("ALFRED", "wake", f"Awake ({reason})", getattr(self, "_dashboard", None))
 
     def sleep(self, reason: str = "timeout") -> None:
+        """Enter the sleeping state: stop speaking, show SLEEPING and log the reason.
+        Ensures and resets the wake-word detector with an echo holdoff, then trims
+        process memory in the background. No-op if already asleep.
+        """
         if not self._awake:
             return
         self._awake = False
@@ -1271,6 +1289,7 @@ class AlfredLive:
             loop = asyncio.get_running_loop()
 
             def _play_fallback_farewell():
+                """Speak the farewell phrase through the local TTS engine while flagged as speaking."""
                 self.set_speaking(True)
                 try:
                     from core.tts import get_engine
@@ -1362,6 +1381,7 @@ class AlfredLive:
             return
 
         async def _say():
+            """Send the plugin instruction to the Live session as a completed user turn."""
             try:
                 await self.session.send_client_content(
                     turns={"role": "user", "parts": [{"text": instruction}]},
@@ -1441,6 +1461,10 @@ class AlfredLive:
         return url, key, auto_url, manual, localhost_url
 
     def _on_text_command(self, text: str):
+        """Handle typed input: answer pending monitor/focus prompts, catch shutdown, or forward it.
+        Ignored while asleep in wake-word mode; otherwise sent to the Live session or
+        queued for the local model.
+        """
         if not self._loop:
             return
         if getattr(self, "monitor_controller", None) and self.monitor_controller.is_waiting_for_answer:
@@ -1479,6 +1503,7 @@ class AlfredLive:
             )
 
     def _set_mic_ungated(self, active: bool) -> None:
+        """Temporarily force the mic awake for Sentry, restoring the prior sleep state afterwards."""
         if active:
             self._temp_awake_by_sentry = not self._awake
             self._awake = True
@@ -1494,6 +1519,9 @@ class AlfredLive:
         return self.monitor_controller.stop("Stopped from Sentry Mode.")
 
     def _start_screen_monitor(self, goal: str, interval_seconds: float = 3.0) -> dict:
+        """Start the screen monitor for a goal with a clamped 1-60 s interval.
+        Returns a dict with active, goal and label for the UI.
+        """
         goal = (goal or "Notify me when the current on-screen task has completed.").strip()
         interval = max(1.0, min(float(interval_seconds or 3.0), 60.0))
         started = self._screen_monitor.start(goal, interval_seconds=interval)
@@ -1507,6 +1535,7 @@ class AlfredLive:
         return {"active": status.active, "goal": status.goal, "label": label}
 
     def _stop_screen_monitor(self, message: str = "Screen monitoring stopped.") -> dict:
+        """Stop the screen monitor, update the UI and return its final status dict."""
         stopped = self._screen_monitor.stop(wait=False)
         status = self._screen_monitor.status()
         self.ui.set_screen_monitor_state(False, "Screen monitoring off")
@@ -1528,10 +1557,12 @@ class AlfredLive:
         self._queue_screen_monitor_analysis(event, completion_hint=False)
 
     def _on_screen_monitor_completion(self, event: ScreenMonitorEvent) -> None:
+        """Mark the monitor as goal-complete in the UI and queue a final analysis of the event."""
         self.ui.set_screen_monitor_state(False, "Goal completion detected")
         self._queue_screen_monitor_analysis(event, completion_hint=True)
 
     def _on_screen_monitor_stopped(self, status: ScreenMonitorStatus) -> None:
+        """Update the UI when monitoring stops and log an error after repeated capture failures."""
         self.ui.set_screen_monitor_state(False, "Screen monitoring off")
         if status.stopped_reason == "capture_failures":
             self.ui.write_log(
@@ -1545,6 +1576,9 @@ class AlfredLive:
         *,
         completion_hint: bool,
     ) -> None:
+        """Schedule analysis of a screen monitor event on the event loop if a session is available.
+        Sets the pending flag, which is cleared when the analysis finishes.
+        """
         loop = self._loop
         if not loop or (not self.session and self._local_msg_queue is None):
             return
@@ -1555,6 +1589,7 @@ class AlfredLive:
         )
 
         def _finished(_future) -> None:
+            """Clear the pending-analysis flag once the analysis future completes."""
             self._screen_monitor_analysis_pending = False
 
         future.add_done_callback(_finished)
@@ -1565,6 +1600,9 @@ class AlfredLive:
         *,
         completion_hint: bool,
     ) -> None:
+        """Wait for speech to end, then ask the model to check the screenshot against the goal.
+        Builds a SCREEN MONITOR CHECK prompt, adding completion guidance when hinted.
+        """
         while self._is_speaking:
             await asyncio.sleep(0.25)
 
@@ -1643,6 +1681,10 @@ class AlfredLive:
         return time.monotonic() < self._tail_until
 
     def set_speaking(self, value: bool):
+        """Set the speaking flag and update the audio gate, media ducking and UI state.
+        On start it claims TTS audio and ducks other apps; on stop it unducks, resets the
+        output level and drains the wake detector if asleep.
+        """
         if value:
             self._audio_gate.hold(GATE_TTS)
         else:
@@ -1724,6 +1766,7 @@ class AlfredLive:
         return scope
 
     def _on_ptt(self, held: bool) -> None:
+        """Handle push-to-talk key changes: wake on hold and set the UI state accordingly."""
         self._ptt_held = held
         if held:
             # Holding the key is also a way to wake it, so push-to-talk works
@@ -1843,6 +1886,7 @@ class AlfredLive:
         self._bg_current_task_id = task_id
 
         async def broadcast_progress(pct: int, detail: str = ""):
+            """Log a background task's progress and push it to the UI and dashboard."""
             tag = "control"
             icon = f"background {pct}%"
             msg_text = detail or f"Task {task_id} ({task_type}) {pct}%"
@@ -1986,6 +2030,7 @@ class AlfredLive:
             return False
 
     def speak(self, text: str):
+        """Inject text as a user turn into the Live session, or fall back to local TTS."""
         if self._loop and self.session:
             asyncio.run_coroutine_threadsafe(
                 self.session.send_client_content(
@@ -2007,6 +2052,7 @@ class AlfredLive:
             return
 
         def _synth_worker():
+            """Strip markdown from the text and speak it with the local TTS engine, logging progress."""
             try:
                 import re
                 clean = re.sub(r'[*_`#~]', '', text).strip()
@@ -2030,11 +2076,15 @@ class AlfredLive:
         threading.Thread(target=_synth_worker, daemon=True, name="LocalTTSSynth").start()
 
     def speak_error(self, tool_name: str, error: str):
+        """Log a tool error and have the assistant announce it briefly."""
         short = str(error)[:120]
         self.ui.write_log(f"ERR: {tool_name} — {short}")
         self.speak(f"Sir, {tool_name} encountered an error. {short}")
 
     def _build_system_instruction(self) -> tuple[str, list]:
+        """Build the system instruction from config, memory, the prompt file and current time.
+        Returns the instruction text and the list of tool declarations.
+        """
         from datetime import datetime
 
         # Load customization from config
@@ -2120,6 +2170,9 @@ class AlfredLive:
         return "\n".join(parts), _all_decls
 
     def _build_config(self) -> types.LiveConnectConfig:
+        """Build the LiveConnectConfig: audio output, transcription, tools, voice and resumption.
+        Also enables context window compression and optional thinking settings.
+        """
         system_instruction, _all_decls = self._build_system_instruction()
 
         cfg = dict(
@@ -2216,6 +2269,10 @@ class AlfredLive:
         return out
 
     async def _dispatch_tool(self, name: str, args: dict) -> str:
+        """Run a tool call by name after restriction and path guards, returning its text result.
+        Handles inline tools (memory, monitoring, chat, sleep, shutdown and more) and
+        delegates the rest to discovered action modules.
+        """
         _tlog("ALFRED", "control", f"{name}  {args}", self._dashboard)
         self.ui.set_state("THINKING")
 
@@ -2368,6 +2425,7 @@ class AlfredLive:
             elif name in ("go_to_sleep", "sleep", "sleep_mode"):
                 self.ui.write_log("SYS: Sleep requested via voice directive.")
                 async def _do_voice_sleep():
+                    """Wait for any spoken confirmation to start and finish, drain the wake detector, then sleep."""
                     # Phase 1: Wait up to 3.0s for TTS speech to begin playing if incoming
                     start_iters = int(VOICE_SLEEP_WAIT_TTS_START_MAX_S / VOICE_SLEEP_WAIT_TTS_POLL_INTERVAL_S)
                     for _ in range(start_iters):
@@ -2459,6 +2517,9 @@ class AlfredLive:
         return str(result)
 
     async def _execute_tool(self, fc) -> types.FunctionResponse:
+        """Execute a model function call and wrap the result in a FunctionResponse.
+        save_memory results are marked silent; the UI returns to LISTENING afterwards.
+        """
         name = fc.name
         args = dict(fc.args or {})
 
@@ -2486,6 +2547,7 @@ class AlfredLive:
         )
 
     async def _send_realtime(self):
+        """Forward queued mic or phone PCM chunks to the Live session as realtime audio."""
         while True:
             msg = await self.out_queue.get()
             # Gemini 3.x Live rejects the old realtime_input.media_chunks field
@@ -2501,10 +2563,15 @@ class AlfredLive:
             )
 
     async def _listen_audio(self):
+        """Open the shared mic stream and route captured audio to the wake detector or Gemini."""
         _tlog("ALFRED", "mic", "Mic started", self._dashboard)
         loop = asyncio.get_event_loop()
 
         def callback(indata, frames, time_info, status):
+            """Mic stream callback: gate frames by mute, wake and echo state, then queue them.
+            While asleep frames go only to the local wake-word detector; when awake they are
+            sent to the outgoing queue and drive the HUD level meter.
+            """
             # ── Silence Protocol / UI Mute Gate ─────────────────────────
             # When muted, drop audio frames immediately. Mic audio never
             # feeds wake detector, VAD, or Gemini.
@@ -2577,6 +2644,7 @@ class AlfredLive:
 
                 data = indata.tobytes()
                 def _push_mic():
+                    """Put the captured PCM chunk on the outgoing audio queue, ignoring a full queue."""
                     try:
                         self.out_queue.put_nowait({"data": data, "mime_type": "audio/pcm"})
                     except Exception:
@@ -2672,6 +2740,10 @@ class AlfredLive:
         return True
 
     async def _receive_audio(self):
+        """Consume Live session responses: audio, transcripts, interruptions and tool calls.
+        Stores resumable handles, logs deduplicated transcripts, triggers voice sleep or
+        camera close, and runs tool calls concurrently before replying.
+        """
         _tlog("ALFRED", "listen", "Recv started", self._dashboard)
         out_buf, in_buf = [], []
 
@@ -2800,6 +2872,7 @@ class AlfredLive:
                                 elif self._awake and is_sleep_command(full_in):
                                     self.ui.write_log("SYS: Sleep directive recognized in voice input.")
                                     async def _do_stt_sleep():
+                                        """Wait for the spoken reply to start and finish, drain the wake detector, then sleep."""
                                         # Phase 1: Wait up to 3.0s for TTS speech to begin playing if incoming
                                         start_iters = int(VOICE_SLEEP_WAIT_TTS_START_MAX_S / VOICE_SLEEP_WAIT_TTS_POLL_INTERVAL_S)
                                         for _ in range(start_iters):
@@ -2852,6 +2925,7 @@ class AlfredLive:
                                 self._vision_close_pending = False
                                 self._vision_busy = False
                                 async def _cam_close():
+                                    """Stop the camera stream after a two-second delay."""
                                     await asyncio.sleep(2.0)
                                     self.ui.stop_camera_stream()
                                 asyncio.create_task(_cam_close())
@@ -2863,6 +2937,7 @@ class AlfredLive:
                         sem = asyncio.Semaphore(_MAX_WORKERS)
 
                         async def _run_tool_bounded(fc):
+                            """Execute one tool call under the concurrency semaphore, returning an error response on failure."""
                             async with sem:
                                 self._tool_calls_active += 1
                                 _tlog("ALFRED", "phone", fc.name, self._dashboard)
@@ -2892,6 +2967,9 @@ class AlfredLive:
             raise
 
     async def _play_audio(self):
+        """Open the speaker stream and play queued model audio, driving speech state and visemes.
+        Falls back to the default output device if the chosen one cannot be opened.
+        """
         _tlog("ALFRED", "speaker", "Play started", self._dashboard)
 
         _spk_name = get_output_device()
@@ -2900,6 +2978,7 @@ class AlfredLive:
             _tlog("ALFRED", "speaker", f"Output device: {_spk_name}", self._dashboard)
 
         def _open_spk(dev):
+            """Open and start a raw int16 output stream on the given device and return it."""
             st = sd.RawOutputStream(
                 samplerate=RECEIVE_SAMPLE_RATE,
                 channels=CHANNELS,
@@ -3072,10 +3151,12 @@ class AlfredLive:
         prefs = memory.get("preferences", {})
 
         def _val(key: str) -> str:
+            """Return the trimmed value of an identity memory entry, or an empty string."""
             entry = identity.get(key, {})
             return (entry.get("value", "") if isinstance(entry, dict) else str(entry)).strip()
 
         def _pref(key: str) -> str:
+            """Return the trimmed value of a preferences memory entry, or an empty string."""
             entry = prefs.get(key, {})
             return (entry.get("value", "") if isinstance(entry, dict) else str(entry)).strip()
 
@@ -3155,10 +3236,12 @@ class AlfredLive:
         prefs    = memory.get("preferences", {})
 
         def _val(k: str) -> str:
+            """Return the trimmed value of an identity memory entry, or an empty string."""
             e = identity.get(k, {})
             return (e.get("value", "") if isinstance(e, dict) else str(e)).strip()
 
         def _pref(k: str) -> str:
+            """Return the trimmed value of a preferences memory entry, or an empty string."""
             e = prefs.get(k, {})
             return (e.get("value", "") if isinstance(e, dict) else str(e)).strip()
 
@@ -3216,6 +3299,10 @@ class AlfredLive:
 
         # â”€â”€ Phase 2: fire as soon as Phase 1 audio is done â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         async def _deliver_news():
+            """Phase 2 of the briefing: await the greeting and news fetch, then send the headlines.
+            Aborts if the briefing was cancelled, interrupted or the user spoke meanwhile;
+            shows the news on the content panel when available.
+            """
             try:
                 lang_str = (f" Speak in {lang} unless the user has since "
                             f"spoken another language, in which case use theirs."
@@ -3482,6 +3569,7 @@ class AlfredLive:
                     pass
 
     def _on_phone_connected(self) -> None:
+        """Log the phone connection and notify the UI."""
         self.ui.write_log("SYS: Phone connected via Remote Dashboard.")
         self.ui.notify_phone_connected()
 
@@ -3615,6 +3703,10 @@ class AlfredLive:
     # â”€â”€ dashboard command relay â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async def _process_dashboard_commands(self) -> None:
+        """Forward text commands from the dashboard queue to the active session or local model.
+        Waits briefly for a session, wakes the assistant if asleep, and echoes the command
+        to the UI and dashboard.
+        """
         while True:
             try:
                 text = await asyncio.wait_for(
@@ -3661,6 +3753,10 @@ class AlfredLive:
                 await asyncio.sleep(0.5)
 
     async def run_local(self, provider: str = "ollama"):
+        """Run the assistant against a local or OpenRouter LLM instead of Gemini Live.
+        Warms the model, starts monitors, then loops over queued text, streaming replies,
+        executing tool calls and speaking answers through local TTS.
+        """
         from core.llm_client import (
             call_llm_stream, call_llm_text, ensure_ollama_running,
             get_llm_settings, warmup_model
@@ -3716,6 +3812,7 @@ class AlfredLive:
 
         # Warm up prefix cache off-thread in background task
         async def _warmup_worker():
+            """Warm up the local model with the system instruction in a worker thread."""
             try:
                 await asyncio.to_thread(warmup_model, system_instruction)
             except Exception as _e:
@@ -3752,6 +3849,7 @@ class AlfredLive:
                 chunk_q = queue.Queue()
 
                 def _stream_worker(hist, tools, q):
+                    """Stream LLM chunks for the history into the queue, queuing an error dict on failure."""
                     try:
                         for chunk in call_llm_stream(hist, tools=tools):
                             q.put(chunk)
@@ -3871,10 +3969,15 @@ class AlfredLive:
     # â”€â”€ main loop â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async def run(self):
+        """Main async entry: wire services, start the dashboard, then run the session loop.
+        Uses run_local for local providers; otherwise connects to Gemini Live and
+        reconnects with backoff, keeping or dropping the resumption handle as needed.
+        """
         self._loop = asyncio.get_event_loop()
         install_transport_guard(self._loop)
         self.scheduler.start()
         def _proactor_exc_handler(loop, context):
+            """Swallow benign connection-reset errors and pass others to the default handler."""
             exc = context.get("exception")
             msg = str(context.get("message", ""))
             if (
@@ -3899,6 +4002,7 @@ class AlfredLive:
 
         audio_devices.configure(SEND_SAMPLE_RATE, RECEIVE_SAMPLE_RATE)
         def _audio_ready_cb():
+            """Mark the audio status READY in the UI once audio devices are prefetched."""
             if self.ui and hasattr(self.ui, "set_audio_status"):
                 self.ui.set_audio_status("READY")
         audio_devices.prefetch(on_ready=_audio_ready_cb)
@@ -4174,6 +4278,7 @@ class JarvisLive(AlfredLive):
     pass
 
 def main():
+    """Create the UI, start the assistant in a background thread and run the UI main loop."""
     try:
         from core.tts.capability import prewarm_alfred_capability_async
         prewarm_alfred_capability_async()
@@ -4186,6 +4291,7 @@ def main():
         ui.enable_orb_mode(native=(sys.platform == "darwin"))
 
     def runner():
+        """Wait for an API key, run AlfredLive and stop the monitor and scheduler on exit."""
         ui.wait_for_api_key()
         alfred = AlfredLive(ui)
         try:

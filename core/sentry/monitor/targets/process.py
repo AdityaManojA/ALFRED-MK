@@ -19,6 +19,7 @@ class ProcessTarget(MonitorTarget):
         alert_on_exit: bool = True,
         interval_s: float = 3.0,
     ) -> None:
+        """Store the process name/PID, CPU and memory thresholds and exit-alert flag; attach to the PID if given."""
         super().__init__(target_id, name, interval_s)
         self.pid = pid
         self.cpu_threshold = cpu_threshold
@@ -33,9 +34,13 @@ class ProcessTarget(MonitorTarget):
                 pass
 
     def describe(self) -> str:
+        """Return a short description naming the process and PID."""
         return f"process '{self.name}' (PID: {self.pid or 'auto'})"
 
     def poll(self) -> TargetStatus:
+        """Find the process if needed, then alert on exit or CPU/memory thresholds.
+        Returns the resulting target status.
+        """
         self.last_poll_t = time.time()
 
         # Resolve process by name if PID not supplied
@@ -77,6 +82,7 @@ class ProcessTarget(MonitorTarget):
             return self.status
 
     def _find_proc_by_name(self, name: str) -> psutil.Process | None:
+        """Return the first running process whose name contains the given text, or None."""
         low = name.lower()
         for p in psutil.process_iter(["pid", "name"]):
             try:

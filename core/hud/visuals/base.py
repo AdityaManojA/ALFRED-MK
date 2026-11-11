@@ -73,6 +73,7 @@ class SlotVisual(ABC):
     """
 
     def __init__(self) -> None:
+        """Initialise LOD, error-count, disabled flag and paint-timing bookkeeping."""
         self.lod_low: bool = False
         self.error_count: int = 0
         self.disabled: bool = False

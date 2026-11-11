@@ -7,7 +7,9 @@ WEB_RESULTS_LIMIT = 8
 IMAGE_MAX_DOWNLOAD_MB = 15
 
 class WebSource(ImageSource):
+    """Image source backed by the Openverse image search API."""
     def search(self, query: str, limit: int = WEB_RESULTS_LIMIT) -> list[ImageResult]:
+        """Query Openverse (page size capped at WEB_RESULTS_LIMIT); return [] on any error."""
         try:
             data = requests.get("https://api.openverse.org/v1/images", params={"q": query, "page_size": min(limit, WEB_RESULTS_LIMIT)}, timeout=WEB_IMAGE_TIMEOUT_S).json()
         except Exception:

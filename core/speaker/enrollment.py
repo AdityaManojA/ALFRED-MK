@@ -26,6 +26,7 @@ MIN_PAIRWISE_CONSISTENCY = 0.40
 
 @dataclasses.dataclass(frozen=True)
 class QualityValidationResult:
+    """Outcome of an enrollment sample quality check, with message, duration and RMS energy."""
     ok: bool
     message: str
     duration_s: float = 0.0
@@ -34,6 +35,7 @@ class QualityValidationResult:
 
 @dataclasses.dataclass
 class EnrollmentResult:
+    """Outcome of an enrollment attempt: success flag, profile, error and pairwise similarities."""
     success: bool
     profile: Optional[SpeakerProfile] = None
     error_message: Optional[str] = None
@@ -109,6 +111,7 @@ class SpeakerEnrollmentManager:
         min_samples: int = 2,
         target_samples: int = 3,
     ) -> None:
+        """Set up the profile store, embedding extractor and sample-count limits for enrollment sessions."""
         self.store = profile_store or SpeakerProfileStore()
         self.extractor = extractor or embedding_extractor or CampplusOnnxExtractor()
         self.min_samples = max(2, min_samples)

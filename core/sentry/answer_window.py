@@ -23,6 +23,7 @@ class AnswerWindow:
         speak_fn: Callable[[str], None] | None = None,
         un_gate_fn: Callable[[bool], None] | None = None,
     ) -> None:
+        """Store the speak and mic un-gate callbacks and initialise an inactive window state."""
         self._speak_fn = speak_fn
         self._un_gate_fn = un_gate_fn
         self._lock = threading.Lock()
@@ -34,6 +35,7 @@ class AnswerWindow:
 
     @property
     def is_active(self) -> bool:
+        """Whether an answer window is currently open."""
         with self._lock:
             return self._active
 
@@ -168,6 +170,9 @@ class AnswerWindow:
         self._close_window()
 
     def _close_window(self) -> None:
+        """Close the active answer window: unregister it, restore the mic gate and release any pending waiter.
+        Cancels an unfinished async future and sets the sync event; no-op if the window is not active.
+        """
         with self._lock:
             if not self._active:
                 return

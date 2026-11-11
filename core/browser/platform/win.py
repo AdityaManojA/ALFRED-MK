@@ -51,9 +51,11 @@ class WinBrowserDriver(BaseBrowserPlatformDriver):
     KNOWN_WIN_BROWSERS = KNOWN_WIN_BROWSERS
 
     def __init__(self) -> None:
+        """Bind user32 via ctypes (None if unavailable)."""
         self._user32 = getattr(ctypes.windll, "user32", None)
 
     def _get_foreground_hwnd_and_proc(self) -> tuple[int, str]:
+        """Return the foreground window handle and its lower-cased process name ("" if unknown)."""
         if not self._user32:
             return 0, ""
         hwnd = self._user32.GetForegroundWindow()
@@ -71,12 +73,14 @@ class WinBrowserDriver(BaseBrowserPlatformDriver):
             return hwnd, ""
 
     def get_frontmost_browser(self) -> Optional[str]:
+        """Return the browser name for the foreground window's process, or None."""
         _, proc_name = self._get_foreground_hwnd_and_proc()
         if proc_name in KNOWN_WIN_BROWSERS:
             return KNOWN_WIN_BROWSERS[proc_name]
         return None
 
     def _send_keys(self, *vk_codes: int) -> bool:
+        """Press the given virtual-key codes in order and release them in reverse; returns True on success."""
         if not self._user32:
             return False
         try:
@@ -131,6 +135,7 @@ class WinBrowserDriver(BaseBrowserPlatformDriver):
         hwnds: list[tuple[int, int, str]] = []
 
         def enum_proc(hwnd: int, lParam: int) -> int:
+            """EnumWindows callback: collect (hwnd, pid, title) for visible windows with a title."""
             if self._user32.IsWindowVisible(hwnd):
                 length = self._user32.GetWindowTextLengthW(hwnd)
                 if length > 0:

@@ -12,6 +12,7 @@ from core.path_guard import is_safe_path, is_heavenly_restricted
 
 
 def get_base_dir():
+    """Return the app root: the executable's folder when frozen, otherwise the repository root."""
     if getattr(sys, "frozen", False):
         return Path(sys.executable).parent
     return Path(__file__).resolve().parent.parent
@@ -28,6 +29,7 @@ MODEL_PLANNER    = gemini.SMART
 MODEL_WRITER     = gemini.SMART
 
 def _get_api_key() -> str:
+    """Read the Gemini API key from the API config file."""
     with open(API_CONFIG_PATH, "r", encoding="utf-8") as f:
         return json.load(f)["gemini_api_key"]
 
@@ -36,7 +38,9 @@ def _get_model(model_name: str = gemini.SMART):
     """Planning and writing whole files — the reasoning tier, and a long
     deadline because the answer is a source file rather than a sentence."""
     class _W:
+        """Thin wrapper exposing generate_content over the shared Gemini model ladder."""
         def generate_content(self, contents):
+            """Call Gemini at the bound tier with a 60s deadline; raise if every model fails."""
             resp = gemini.call(contents, tier=model_name, timeout_ms=60000)
             if resp is None:
                 raise RuntimeError("every Gemini model on the ladder failed")
@@ -46,6 +50,7 @@ def _get_model(model_name: str = gemini.SMART):
 
 
 def _strip_fences(text: str) -> str:
+    """Strip surrounding whitespace and Markdown code fences from model output."""
     text = text.strip()
     text = re.sub(r"^```[a-zA-Z]*\r?\n?", "", text)
     text = re.sub(r"\r?\n?```\s*$", "", text)
@@ -53,11 +58,15 @@ def _strip_fences(text: str) -> str:
 
 
 def _is_rate_limit(error: Exception) -> bool:
+    """Return True if the exception message looks like a quota or 429 rate-limit error."""
     msg = str(error).lower()
     return "429" in msg or "quota" in msg or "resource_exhausted" in msg
 
 
 def _parse_traceback(output: str, project_files: list[str]) -> tuple[str | None, int | None]:
+    """Find the innermost project file and line number referenced in a Python traceback.
+    Returns (project_file, line) or (None, None) when no project file matches.
+    """
     pattern = re.compile(r'File ["\']([^"\']+\.py)["\'],\s+line\s+(\d+)', re.IGNORECASE)
     matches = pattern.findall(output)
     if not matches or not project_files:
@@ -84,6 +93,7 @@ def _parse_traceback(output: str, project_files: list[str]) -> tuple[str | None,
 
 
 def _classify_error(output: str) -> str:
+    """Classify run output as dependency, syntax, import or runtime error, or none."""
 
     low = output.lower()
 
@@ -107,6 +117,7 @@ def _classify_error(output: str) -> str:
 
 
 def _has_error(output: str, run_command: str) -> bool:
+    """Return True if run output shows an error; timeouts and empty output count as success."""
     
     low = output.lower()
 
@@ -120,10 +131,14 @@ def _has_error(output: str, run_command: str) -> bool:
     return error_type != "none"
 
 class RateLimitError(Exception):
+    """Raised when a Gemini call fails because of rate limiting or quota exhaustion."""
     pass
 
 
 def _plan_project(description: str, language: str) -> dict:
+    """Ask Gemini for a JSON file plan (files, entry point, run command, dependencies).
+    Raises ValueError on invalid JSON and RateLimitError on quota errors.
+    """
     model = _get_model(MODEL_PLANNER)
 
     prompt = f"""You are a senior software architect. Create a minimal, complete file plan for this project.
@@ -180,6 +195,9 @@ def _write_file(
     project_dir: Path,
     already_written: dict[str, str],
 ) -> str:
+    """Generate one project file with Gemini, given the plan and already-written dependencies.
+    Writes it under project_dir and returns the code; raises RateLimitError on quota errors.
+    """
     model = _get_model(MODEL_WRITER)
 
     file_path = file_info["path"]
@@ -257,6 +275,9 @@ Code for {file_path}:"""
         raise
 
 def _install_dependencies(dependencies: list[str], project_dir: Path) -> str:
+    """pip-install any listed dependencies that are not already installed.
+    Returns a status message; install failures are reported as non-fatal.
+    """
     if not dependencies:
         return "No external dependencies."
 
@@ -292,6 +313,7 @@ def _install_dependencies(dependencies: list[str], project_dir: Path) -> str:
         return f"Install error (non-fatal): {e}"
 
 def _open_vscode(project_dir: Path) -> bool:
+    """Try to open the project folder in VS Code; return True if a launch command started."""
     vscode_candidates = [
         "code",
         rf"C:\Users\{Path.home().name}\AppData\Local\Programs\Microsoft VS Code\bin\code.cmd",
@@ -313,6 +335,9 @@ def _open_vscode(project_dir: Path) -> bool:
     return False
 
 def _run_project(run_command: str, project_dir: Path, timeout: int = 30) -> str:
+    """Run the project's run command in its folder and return combined stdout/stderr.
+    A timeout is reported as likely success for long-running apps.
+    """
     print(f"[DevAgent] 🚀 Running: {run_command}")
     try:
         parts = run_command.split()
@@ -376,6 +401,10 @@ def _fix_files(
     project_dir: Path,
     entry_point: str,
 ) -> dict[str, str]:
+    """Ask Gemini to fix the files implicated by an error and write the fixes to disk.
+    Targets the traceback file (plus its importers for import errors) or the entry point;
+    returns a dict of updated path to code.
+    """
 
     model = _get_model(MODEL_PLANNER)
 
@@ -464,8 +493,13 @@ def _build_project(
     speak=None,
     player=None,
 ) -> str:
+    """Plan, write, install, run and iteratively fix a multi-file project with Gemini.
+    Opens the project in VS Code, auto-installs missing modules and retries fixes up to
+    MAX_FIX_ATTEMPTS; speaks and returns the final status.
+    """
 
     def log(msg: str):
+        """Print a DevAgent log line and mirror it to the player's log if available."""
         print(f"[DevAgent] {msg}")
         if player:
             player.write_log(f"[DevAgent] {msg}")
@@ -495,6 +529,7 @@ def _build_project(
     log(f"Project: {proj_name} | Files: {len(files)} | Entry: {entry_point}")
 
     def _dep_sort_key(fi: dict) -> int:
+        """Sort key that orders files by their number of project imports."""
         return len(fi.get("imports", []))
 
     sorted_files = sorted(files, key=_dep_sort_key)
@@ -968,6 +1003,9 @@ def dev_agent(
     session_memory=None,
     speak=None,
 ) -> str:
+    """Entry point for the dev agent tool: build a project or heal/patch a failing tool.
+    heal and apply_patch actions return JSON results; otherwise builds from the description.
+    """
     p            = parameters or {}
     action       = p.get("action", "build").strip().lower()
 

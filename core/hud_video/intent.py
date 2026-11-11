@@ -60,6 +60,7 @@ _SPACES = re.compile(r" {2,}")
 
 
 class IntentResult(NamedTuple):
+    """Result of locus/play-intent detection with the cleaned query and optional start time."""
     locus_found: bool
     play_intent_found: bool
     query: str          # Cleaned query with locus + intent verbs stripped
@@ -68,6 +69,7 @@ class IntentResult(NamedTuple):
 
 
 class HudIntentClassification(NamedTuple):
+    """Classified HUD video command: action, target query, and optional seek/start positions."""
     action: str                     # "pause", "resume", "replay", "seek", "query_time", "stop", "new_video", "none"
     target: str = ""                # Query for new video
     seek_s: Optional[float] = None  # Absolute seek position or None

@@ -32,6 +32,7 @@ import requests
 _SENT_END = re.compile(r'(?<=[.!?])\s+|(?<=\n)\s*\n')
 
 def get_base_dir() -> Path:
+    """Return the app root: the executable's folder when frozen, else the repo root."""
     if getattr(sys, "frozen", False):
         return Path(sys.executable).parent
     return Path(__file__).resolve().parent.parent
@@ -58,6 +59,7 @@ def get_llm_provider() -> str:
 
 
 def _load_config() -> dict:
+    """Load the JSON config file, returning {} on any error."""
     try:
         return json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
     except Exception:
@@ -65,6 +67,7 @@ def _load_config() -> dict:
 
 
 def _get_headers(provider: str) -> dict:
+    """Build HTTP headers for ``provider``, including its API key and OpenRouter attribution headers."""
     cfg = _load_config()
     headers = {"Content-Type": "application/json"}
     if provider == "openrouter":
@@ -81,6 +84,7 @@ def _get_headers(provider: str) -> dict:
 
 
 def _chat_endpoint(url: str) -> str:
+    """Return the OpenAI-compatible chat completions URL for a base ``url``."""
     base = url.rstrip("/")
     return f"{base}/chat/completions" if base.endswith("/v1") else f"{base}/v1/chat/completions"
 
@@ -125,6 +129,7 @@ def ensure_ollama_running(timeout: int = 15) -> bool:
     health = f"{url}/api/tags"
 
     def _is_up() -> bool:
+        """Return True if the Ollama tags endpoint answers with HTTP 200."""
         try:
             return requests.get(health, timeout=3).status_code == 200
         except Exception:
@@ -590,6 +595,7 @@ def call_llm_stream(
         payload["tools"] = tools
 
     def _do_stream() -> Generator[dict, None, None]:
+        """Stream an Ollama chat response, yielding sentence events and a final "done" event with content and tool calls."""
         with requests.post(endpoint, json=payload, timeout=timeout, stream=True) as resp:
             resp.raise_for_status()
             full_content = ""

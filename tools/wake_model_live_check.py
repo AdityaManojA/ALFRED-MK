@@ -27,6 +27,8 @@ THRESHOLD = 0.038  # Standard ALFRED wake threshold
 
 
 def main():
+    """Stream the microphone through the wake model(s) and print acoustic or
+    Whisper-verified wake detections plus a live VU meter until Ctrl+C."""
     import argparse
     parser = argparse.ArgumentParser(description="Live Microphone Test for ALFRED Wake-Word Model (Universal / General Usage)")
     parser.add_argument("--model", type=str, default="", help="Path to specific ONNX model, or leave empty for full ensemble")
@@ -67,6 +69,7 @@ def main():
     noise_floor = 110.0
 
     def audio_callback(indata, frames, _time_info, _status):
+        """Append incoming raw microphone bytes to the shared buffer."""
         nonlocal buffer
         buffer.extend(indata)
 

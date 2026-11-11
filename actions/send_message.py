@@ -1,4 +1,5 @@
 import json
+import re
 import subprocess
 import sys
 import time
@@ -19,11 +20,13 @@ except ImportError:
     _PYPERCLIP = False
 
 def _base_dir() -> Path:
+    """Return the app root: the executable's folder when frozen, otherwise the repo root."""
     if getattr(sys, "frozen", False):
         return Path(sys.executable).parent
     return Path(__file__).resolve().parent.parent
 
 def _get_os() -> str:
+    """Return the configured OS name from api_keys.json, defaulting to windows."""
     try:
         cfg = json.loads(
             (_base_dir() / "config" / "api_keys.json").read_text(encoding="utf-8")
@@ -34,11 +37,13 @@ def _get_os() -> str:
 
 
 def _require_pyautogui():
+    """Raise RuntimeError if PyAutoGUI is not installed."""
     if not _PYAUTOGUI:
         raise RuntimeError("PyAutoGUI not installed. Run: pip install pyautogui")
 
 
 def _paste_text(text: str) -> None:
+    """Paste text via the clipboard and the OS paste hotkey, or type it if pyperclip is missing."""
     _require_pyautogui()
 
     os_name = _get_os()
@@ -54,6 +59,7 @@ def _paste_text(text: str) -> None:
 
 
 def _clear_and_paste(text: str) -> None:
+    """Select all in the focused field, delete it, then paste the given text."""
     _require_pyautogui()
     os_name = _get_os()
     select_all = ("command", "a") if os_name == "mac" else ("ctrl", "a")
@@ -64,6 +70,10 @@ def _clear_and_paste(text: str) -> None:
     _paste_text(text)
 
 def _open_app(app_name: str) -> bool:
+    """Launch a desktop app by name and return True if the launch appeared to succeed.
+    Uses Start-menu search on Windows, open -a on macOS, and gtk-launch or the bare
+    command on Linux.
+    """
     _require_pyautogui()
     os_name = _get_os()
 
@@ -115,6 +125,7 @@ def _open_app(app_name: str) -> bool:
 
 
 def _open_browser_url(url: str) -> bool:
+    """Open a URL in the default browser and wait for it to load; return True on success."""
     import webbrowser
     try:
         webbrowser.open(url)
@@ -125,6 +136,7 @@ def _open_browser_url(url: str) -> bool:
         return False
 
 def _search_in_app(query: str) -> None:
+    """Open the app's in-window search with the find hotkey and enter the query."""
     _require_pyautogui()
     os_name = _get_os()
     search_hotkey = ("command", "f") if os_name == "mac" else ("ctrl", "f")
@@ -135,6 +147,9 @@ def _search_in_app(query: str) -> None:
     time.sleep(1.0)
 
 def _desktop_send(app_name: str, receiver: str, message: str) -> str:
+    """Send a message through a desktop chat app and return a status message.
+    Opens the app, searches for the receiver, then pastes and sends the message.
+    """
     if not _open_app(app_name):
         return f"Could not open {app_name}."
 
@@ -150,20 +165,25 @@ def _desktop_send(app_name: str, receiver: str, message: str) -> str:
     return f"Message sent to {receiver} via {app_name}."
 
 def _send_whatsapp(receiver: str, message: str) -> str:
+    """Send a message to a contact through the WhatsApp desktop app."""
     return _desktop_send("WhatsApp", receiver, message)
 
 def _send_telegram(receiver: str, message: str) -> str:
+    """Send a message to a contact through the Telegram desktop app."""
     return _desktop_send("Telegram", receiver, message)
 
 def _send_signal(receiver: str, message: str) -> str:
+    """Send a message to a contact through the Signal desktop app."""
     return _desktop_send("Signal", receiver, message)
 
 
 def _send_discord(receiver: str, message: str) -> str:
+    """Send a message to a contact through the Discord desktop app."""
     return _desktop_send("Discord", receiver, message)
 
 
 def _send_instagram(receiver: str, message: str) -> str:
+    """Send an Instagram direct message by driving the web new-message page with PyAutoGUI."""
     _require_pyautogui()
 
     if not _open_browser_url("https://www.instagram.com/direct/new/"):
@@ -192,6 +212,7 @@ def _send_instagram(receiver: str, message: str) -> str:
 
 
 def _send_messenger(receiver: str, message: str) -> str:
+    """Send a Facebook Messenger message by driving messenger.com with PyAutoGUI."""
     _require_pyautogui()
 
     if not _open_browser_url("https://www.messenger.com/"):
@@ -223,9 +244,16 @@ _PLATFORM_MAP = [
 
 
 def _resolve_platform(platform_str: str):
+    """Return the send handler matching a platform name or alias.
+    Short aliases must match whole words; unknown platforms fall back to the desktop sender
+    using the title-cased name.
+    """
     key = platform_str.lower().strip()
+    # Short aliases (wp, tg, ig, fb) must match a whole word: a plain substring
+    # test sent "signal" to Instagram because "ig" occurs inside it.
+    tokens = set(re.split(r"[^a-z0-9]+", key))
     for keywords, handler in _PLATFORM_MAP:
-        if any(k in key for k in keywords):
+        if any((k in tokens) if len(k) <= 2 else (k in key) for k in keywords):
             return handler
     return lambda r, m: _desktop_send(platform_str.strip().title(), r, m)
 
@@ -236,6 +264,7 @@ def send_message(
     player=None,
     session_memory=None,
 ) -> str:
+    """Send ``message_text`` to ``receiver`` on the named platform by driving the desktop app or website with PyAutoGUI."""
     params       = parameters or {}
     receiver     = params.get("receiver", "").strip()
     message_text = params.get("message_text", "").strip()

@@ -28,10 +28,12 @@ class BrowserController:
     """Standardised cross-browser controller across Chrome, Brave, Edge, Firefox, Arc, Safari."""
 
     def __init__(self, driver: Optional[BaseBrowserPlatformDriver] = None) -> None:
+        """Use the given driver or the current platform's default browser driver."""
         self._driver = driver or get_platform_browser_driver()
 
     @property
     def driver(self) -> BaseBrowserPlatformDriver:
+        """The underlying platform browser driver."""
         return self._driver
 
     def get_frontmost_browser(self) -> Optional[str]:

@@ -114,6 +114,7 @@ def _visual_difference(
 
 
 def _fingerprint_key(fingerprint: tuple[int, ...]) -> str:
+    """Return a short blake2s hex key for a visual fingerprint tuple."""
     return hashlib.blake2s(bytes(fingerprint), digest_size=8).hexdigest()
 
 
@@ -182,6 +183,7 @@ class ScreenMonitorController:
         max_capture_failures: int = 3,
         visual_change_threshold: float = _VISUAL_CHANGE_THRESHOLD,
     ) -> None:
+        """Validate settings and initialise callbacks, threading primitives, and monitor state."""
         if interval_seconds <= 0:
             raise ValueError("interval_seconds must be greater than zero")
         if max_capture_failures <= 0:
@@ -284,6 +286,9 @@ class ScreenMonitorController:
             return self._status_unlocked()
 
     def _run(self) -> None:
+        """Background loop that captures, analyses, and emits screen events until stopped.
+        Applies backoff on capture failures and degraded frames; clears active state on exit.
+        """
         try:
             while not self._stop_event.is_set():
                 sleep_s = self._interval_seconds
@@ -342,6 +347,9 @@ class ScreenMonitorController:
                     self._thread = None
 
     def _capture_observation(self) -> ScreenObservation:
+        """Capture the screen and return a ScreenObservation with a visual fingerprint.
+        Raises TypeError if the capture callback returns an unexpected shape.
+        """
         captured = self._capture()
         if isinstance(captured, ScreenObservation):
             if captured.visual_fingerprint is not None:
@@ -377,6 +385,7 @@ class ScreenMonitorController:
         previous: ScreenObservation | None,
         goal: str,
     ) -> AnalysisResult:
+        """Run the default analyzer with this monitor's visual change threshold."""
         return _default_analyzer(
             observation,
             previous,
@@ -385,6 +394,9 @@ class ScreenMonitorController:
         )
 
     def _record_capture_failure(self, exc: Exception) -> bool:
+        """Record a capture failure and stop monitoring once the failure limit is hit.
+        Returns True if monitoring was stopped.
+        """
         with self._lock:
             self._consecutive_failures += 1
             self._last_error = f"{type(exc).__name__}: {exc}"
@@ -417,6 +429,7 @@ class ScreenMonitorController:
     def _coerce_analysis(
         result: AnalysisResult | Mapping[str, object] | None,
     ) -> AnalysisResult:
+        """Normalise an analysis callback result into an AnalysisResult."""
         if result is None:
             return AnalysisResult()
         if isinstance(result, AnalysisResult):
@@ -440,6 +453,9 @@ class ScreenMonitorController:
         observation: ScreenObservation,
         goal: str,
     ) -> bool:
+        """Dispatch completion or meaningful-state callbacks for an analysis result.
+        Returns True if the goal completed and monitoring should stop.
+        """
         event = ScreenMonitorEvent(goal=goal, observation=observation, analysis=result)
 
         if result.completed:
@@ -466,6 +482,7 @@ class ScreenMonitorController:
         return False
 
     def _status_unlocked(self) -> ScreenMonitorStatus:
+        """Build a status snapshot; the caller must hold the lock."""
         return ScreenMonitorStatus(
             active=self._active,
             goal=self._goal,
@@ -479,6 +496,7 @@ class ScreenMonitorController:
         )
 
     def _emit_stopped(self) -> None:
+        """Invoke the stopped callback once with the final status."""
         with self._lock:
             if self._stopped_emitted or self._stopped_reason is None:
                 return
@@ -498,6 +516,7 @@ class ScreenMonitorController:
         event: ScreenMonitorEvent,
         callback_name: str,
     ) -> None:
+        """Call an event callback if set, logging any exception it raises."""
         if callback is None:
             return
         try:

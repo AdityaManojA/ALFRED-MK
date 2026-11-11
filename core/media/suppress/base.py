@@ -7,6 +7,8 @@ from typing import Any
 
 
 class Suppressor(ABC):
+    """Abstract platform backend that pauses/resumes external media players."""
+
     @abstractmethod
     def enumerate_players(self) -> list[Any]:
         """Return opaque handles; callers must never inspect or log them."""
@@ -25,14 +27,20 @@ class Suppressor(ABC):
 
 
 class NullSuppressor(Suppressor):
+    """No-op backend: finds no players and reports every operation as failed."""
+
     def enumerate_players(self) -> list[Any]:
+        """Return no players."""
         return []
 
     def pause(self, handle: Any) -> bool:
+        """Do nothing; return False."""
         return False
 
     def resume(self, handle: Any) -> bool:
+        """Do nothing; return False."""
         return False
 
     def is_playing(self, handle: Any) -> bool:
+        """Return False."""
         return False

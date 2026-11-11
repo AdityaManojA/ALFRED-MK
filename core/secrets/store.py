@@ -63,6 +63,7 @@ class SecretStore:
     _lock = threading.RLock()
 
     def __init__(self, secrets_path: Optional[Path] = None):
+        """Initialise the store at secrets_path (or the default path), set up encryption and load secrets."""
         self._path = secrets_path or get_secrets_file_path()
         self._cache: dict[str, str] = {}
         self._fernet: Optional[Fernet] = None
@@ -72,6 +73,7 @@ class SecretStore:
 
     @classmethod
     def get_instance(cls) -> SecretStore:
+        """Return the process-wide SecretStore singleton, creating it thread-safely on first use."""
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:

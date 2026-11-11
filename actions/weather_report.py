@@ -7,6 +7,7 @@ def weather_action(
     player=None,
     session_memory=None,
 ) -> str:
+    """Open a Google weather search for the given city and time in the default browser and return a confirmation."""
     city     = parameters.get("city")
     when     = parameters.get("time", "today")  
 
@@ -43,6 +44,7 @@ def weather_action(
 
 
 def _log(message: str, player=None) -> None:
+    """Print a weather log message and forward it to the player log if available."""
     print(f"[Weather] {message}")
     if player:
         try:

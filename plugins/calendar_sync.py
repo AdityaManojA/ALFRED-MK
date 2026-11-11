@@ -18,6 +18,7 @@ if not _STORE.exists() and _LEGACY_STORE.exists():
 
 
 def _load_events() -> list[dict]:
+    """Load stored calendar events, returning an empty list if missing or unreadable."""
     if not _STORE.exists():
         return []
     try:
@@ -27,6 +28,7 @@ def _load_events() -> list[dict]:
 
 
 def _save_events(events: list[dict]) -> None:
+    """Write the calendar events list to the store file as JSON."""
     _STORE.parent.mkdir(parents=True, exist_ok=True)
     _STORE.write_text(json.dumps(events, indent=2), encoding="utf-8")
 

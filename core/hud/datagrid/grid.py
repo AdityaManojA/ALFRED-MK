@@ -27,6 +27,7 @@ class DeveloperDataGridWidget(QWidget):
     _snapshot_updated = pyqtSignal(object)
 
     def __init__(self, parent=None):
+        """Set up fixed height, default colours, pens, fonts and layout rects, then start the shared DataGridWorker."""
         super().__init__(parent)
         self.setFixedHeight(92)
         self.snapshot = GridDataSnapshot()
@@ -70,6 +71,7 @@ class DeveloperDataGridWidget(QWidget):
         self.worker.start()
 
     def resizeEvent(self, event) -> None:
+        """Recompute the cached quadrant label/value rects and divider positions."""
         super().resizeEvent(event)
         W, H = float(self.width()), float(self.height())
         self._w_int = int(W)
@@ -94,9 +96,11 @@ class DeveloperDataGridWidget(QWidget):
         pass
 
     def _on_worker_update(self, snap: GridDataSnapshot) -> None:
+        """Forward a worker snapshot to the GUI thread via the _snapshot_updated signal."""
         self._snapshot_updated.emit(snap)
 
     def _apply_snapshot(self, snap: GridDataSnapshot) -> None:
+        """Store the snapshot and repaint (when visible) only if any cell text changed."""
         new_cells = (snap.git_text, snap.ports_text, snap.proc_text, snap.session_text)
         if new_cells != self._cached_cells:
             self._cached_cells = new_cells
@@ -109,6 +113,7 @@ class DeveloperDataGridWidget(QWidget):
         self._update_theme_cache()
 
     def _update_theme_cache(self) -> None:
+        """Rebuild colours and pens from the active theme palette when the theme name changes."""
         active = ThemeChrome.get_active()
         t_name = getattr(active, "name", "")
         if self._cached_theme_name == t_name:
@@ -128,6 +133,7 @@ class DeveloperDataGridWidget(QWidget):
         self._pen_warn = QPen(self._c_warn)
 
     def paintEvent(self, _):
+        """Draw the backplate, dividers, and four label/value cells coloured by each cell's state."""
         p = QPainter(self)
         if not p.isActive():
             return

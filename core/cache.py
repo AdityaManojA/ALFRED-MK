@@ -29,6 +29,7 @@ class CentralizedCache:
         max_entries: int = 5000,
         redis_url: Optional[str] = None,
     ):
+        """Configure TTL and size limits for the in-memory store and connect Redis if a URL is given or set in REDIS_URL."""
         self.default_ttl = default_ttl
         self.max_entries = max_entries
         self._lock = threading.RLock()
@@ -42,6 +43,7 @@ class CentralizedCache:
             self._init_redis(redis_target)
 
     def _init_redis(self, url: str) -> None:
+        """Connect to Redis and ping it; on failure fall back to the in-memory store."""
         try:
             import redis
             self._redis = redis.Redis.from_url(url, socket_timeout=1.5, socket_connect_timeout=1.5)
@@ -58,6 +60,7 @@ class CentralizedCache:
         and SHA-256 hashing.
         """
         def _canonicalize(obj: Any) -> Any:
+            """Recursively convert ``obj`` into a sorted, JSON-friendly structure for stable key hashing."""
             if isinstance(obj, dict):
                 return sorted((k, _canonicalize(v)) for k, v in obj.items())
             if isinstance(obj, (list, tuple, set)):
@@ -223,9 +226,11 @@ class CentralizedCache:
     ) -> Callable:
         """Decorator implementing the cache-aside pattern with automatic fallback."""
         def decorator(fn: Callable) -> Callable:
+            """Wrap ``fn`` with cache-aside lookup/store and attach cache_key/invalidate helpers."""
             @functools.wraps(fn)
             def wrapper(*args, **kwargs) -> Any:
                 # 1. Build deterministic cache key
+                """Return the cached result for these arguments, or call ``fn`` and cache a non-None result."""
                 try:
                     if key_builder:
                         cache_key = key_builder(*args, **kwargs)

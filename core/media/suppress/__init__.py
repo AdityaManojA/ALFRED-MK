@@ -8,6 +8,7 @@ from .base import NullSuppressor, Suppressor
 
 
 def get_suppressor() -> Suppressor:
+    """Return the media suppressor for the current OS, or a NullSuppressor."""
     system = platform.system()
     if system == "Windows":
         from .win import WindowsSuppressor

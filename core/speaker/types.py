@@ -23,12 +23,14 @@ class WakeCandidateAudio:
 
     @property
     def duration_s(self) -> float:
+        """Duration of the audio in seconds (0.0 if the sample rate is invalid)."""
         if self.sample_rate <= 0:
             return 0.0
         return float(len(self.audio_pcm)) / float(self.sample_rate)
 
     @property
     def rms_energy(self) -> float:
+        """Root-mean-square energy of the audio samples (0.0 if empty)."""
         if len(self.audio_pcm) == 0:
             return 0.0
         return float(np.sqrt(np.mean(self.audio_pcm.astype(np.float32) ** 2)))
@@ -43,6 +45,7 @@ class SpeakerEmbedding:
     dimension: int = 512
 
     def cosine_similarity(self, other: "SpeakerEmbedding") -> float:
+        """Return the dot product of the two embedding vectors; raises ValueError on shape mismatch."""
         if self.vector.shape != other.vector.shape:
             raise ValueError(f"Shape mismatch: {self.vector.shape} vs {other.vector.shape}")
         return float(np.dot(self.vector, other.vector))
@@ -63,6 +66,7 @@ class SpeakerProfile:
     schema_version: int = 1
 
     def to_dict(self) -> Dict[str, Any]:
+        """Serialise the profile to a plain dict."""
         return {
             "schema_version": self.schema_version,
             "profile_id": self.profile_id,
@@ -77,6 +81,7 @@ class SpeakerProfile:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "SpeakerProfile":
+        """Build a SpeakerProfile from a dict, applying defaults for missing fields."""
         return cls(
             profile_id=str(data.get("profile_id", "")),
             user_name=str(data.get("user_name", "")),
@@ -103,12 +108,15 @@ class VerificationDecision:
 
     @property
     def verified(self) -> bool:
+        """Alias for is_match."""
         return self.is_match
 
     @property
     def similarity_score(self) -> float:
+        """Alias for score."""
         return self.score
 
     @property
     def profile_id(self) -> Optional[str]:
+        """Alias for matched_profile_id."""
         return self.matched_profile_id

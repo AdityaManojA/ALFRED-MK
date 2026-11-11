@@ -48,6 +48,7 @@ TIMEOUT_SECONDS = 90.0
 
 @dataclass
 class _Pending:
+    """A confirmation awaiting the user's answer: its key, title, detail, action callable and creation time."""
     key:     str
     title:   str
     detail:  str
@@ -72,6 +73,7 @@ def bind(show, hide, log=None) -> None:
 
 
 def _log(msg: str) -> None:
+    """Forward a message to the registered log callback, ignoring callback errors."""
     if _log_cb:
         try:
             _log_cb(msg)
@@ -152,6 +154,7 @@ def resolve(accepted: bool) -> None:
         return
 
     def _worker():
+        """Run the confirmed action and log its result or failure."""
         try:
             result = p.run() or "Done."
             _log(f"SYS: Confirmed — {p.title}. {result}")

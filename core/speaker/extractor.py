@@ -22,9 +22,11 @@ class SpeakerEmbeddingExtractor(Protocol):
     """Protocol for extracting normalized speaker embeddings from raw PCM audio."""
 
     def extract_embedding(self, audio_pcm: np.ndarray, sample_rate: int = 16000) -> SpeakerEmbedding:
+        """Compute a speaker embedding from PCM audio at the given sample rate."""
         ...
 
     def is_available(self) -> bool:
+        """Return whether the extractor is ready to produce embeddings."""
         ...
 
 
@@ -37,15 +39,20 @@ class CampplusOnnxExtractor:
     """
 
     def __init__(self, model_path: Optional[Path | str] = None) -> None:
+        """Store the ONNX model path (default if not given); the session is created lazily."""
         self.model_path = Path(model_path) if model_path else DEFAULT_MODEL_PATH
         self._session = None
         self._input_name = "feats"
         self._output_name = "embs"
 
     def is_available(self) -> bool:
+        """Return True if the model file exists and is larger than 1 MB."""
         return self.model_path.is_file() and self.model_path.stat().st_size > 1000000
 
     def _ensure_session(self) -> None:
+        """Lazily create the CPU ONNX Runtime session and record its input/output names.
+        Raises FileNotFoundError if the model is unavailable.
+        """
         if self._session is not None:
             return
 
@@ -166,6 +173,7 @@ class FakeSpeakerEmbeddingExtractor:
     """Deterministic fake extractor for fast, hermetic unit tests."""
 
     def __init__(self, dimension: int = 512) -> None:
+        """Set up a fake extractor with the given embedding dimension and empty tag registry."""
         self.dimension = dimension
         self._next_embedding: Optional[np.ndarray] = None
         self._registry: dict[str, np.ndarray] = {}
@@ -180,6 +188,7 @@ class FakeSpeakerEmbeddingExtractor:
         self._registry[tag] = arr
 
     def set_next_embedding(self, vec: np.ndarray) -> None:
+        """Queue a normalised vector to be returned by the next extract_embedding call."""
         arr = np.asarray(vec, dtype=np.float32).flatten()
         norm = np.linalg.norm(arr)
         if norm > 0:
@@ -187,9 +196,13 @@ class FakeSpeakerEmbeddingExtractor:
         self._next_embedding = arr
 
     def is_available(self) -> bool:
+        """Always return True; the fake extractor needs no model."""
         return True
 
     def extract_embedding(self, audio_pcm: np.ndarray, sample_rate: int = 16000) -> SpeakerEmbedding:
+        """Return a fake embedding: the queued vector, a registered vector for the speaker tag,
+        or a deterministic unit vector seeded from a hash of the audio.
+        """
         if self._next_embedding is not None:
             vec = self._next_embedding.copy()
             self._next_embedding = None

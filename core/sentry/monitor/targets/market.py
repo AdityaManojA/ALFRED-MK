@@ -31,6 +31,7 @@ class MarketTarget(MonitorTarget):
         name: str | None = None,
         provider: MarketProvider | None = None,
     ) -> None:
+        """Normalise the symbol and store the alert rule and market data provider."""
         self.symbol = MarketProvider.normalize_symbol(symbol)
         display_name = name or f"Market {self.symbol}"
         super().__init__(target_id=target_id, name=display_name, interval_s=MARKET_POLL_INTERVAL_S)
@@ -41,6 +42,7 @@ class MarketTarget(MonitorTarget):
         self._prev_price: float | None = None
 
     def describe(self) -> str:
+        """Return a short description of the symbol and its alert rule."""
         r_type = self.rule.rule_type
         sym = self.symbol.replace("-USD", "")
         if r_type == RuleType.THRESHOLD_ABOVE:

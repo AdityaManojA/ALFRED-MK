@@ -37,6 +37,7 @@ from config import get_os, is_windows, is_mac, is_linux
 
 
 def _get_base_dir() -> Path:
+    """Return the app base directory, handling frozen (packaged) builds."""
     if getattr(sys, "frozen", False):
         return Path(sys.executable).parent
     return Path(__file__).resolve().parent.parent
@@ -58,11 +59,13 @@ _YT_VIDEO_FILTER = "EgIQAQ%3D%3D"
 
 
 def _get_api_key() -> str:
+    """Read the Gemini API key from the API config file."""
     with open(API_CONFIG_PATH, "r", encoding="utf-8") as f:
         return json.load(f)["gemini_api_key"]
 
 
 def _open_url(url: str) -> None:
+    """Open a URL in the default browser for the current OS."""
     try:
         if is_mac():
             subprocess.Popen(["open", url])
@@ -74,6 +77,7 @@ def _open_url(url: str) -> None:
         print(f"[YouTube] ⚠️ open_url failed: {e}")
 
 def _scrape_first_video_url(query: str) -> str | None:
+    """Scrape YouTube search results and return the first non-Shorts video URL."""
 
     if not _REQUESTS_OK:
         return None
@@ -106,6 +110,7 @@ def _scrape_first_video_url(query: str) -> str | None:
     return None
 
 def _extract_video_id(url: str) -> str | None:
+    """Extract the 11-character video ID from a YouTube URL, or None."""
     match = re.search(
         r"(?:v=|\/v\/|youtu\.be\/|\/embed\/|\/shorts\/)([A-Za-z0-9_-]{11})", url
     )
@@ -113,10 +118,14 @@ def _extract_video_id(url: str) -> str | None:
 
 
 def _is_valid_youtube_url(url: str) -> bool:
+    """Return True if the string looks like a YouTube URL."""
     return bool(re.search(r"(youtube\.com|youtu\.be)", url or ""))
 
 
 def _get_transcript(video_id: str) -> str | None:
+    """Fetch a video transcript, preferring manual then generated captions.
+    Returns the joined transcript text, or None if unavailable.
+    """
     if not _TRANSCRIPT_OK:
         return None
     try:
@@ -150,6 +159,7 @@ def _get_transcript(video_id: str) -> str | None:
 
 
 def _summarize_with_gemini(transcript: str, video_url: str) -> str:
+    """Summarise a video transcript with Gemini and return the summary text."""
     from google.genai import types
     from core import gemini
 
@@ -177,6 +187,9 @@ def _summarize_with_gemini(transcript: str, video_url: str) -> str:
 
 
 def _save_summary(content: str, video_url: str) -> str:
+    """Save a summary to a timestamped Desktop file and open it in an editor.
+    Returns the saved file path.
+    """
     ts       = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"youtube_summary_{ts}.txt"
     desktop  = Path.home() / "Desktop"
@@ -207,6 +220,7 @@ def _save_summary(content: str, video_url: str) -> str:
 
 
 def _scrape_video_info(video_id: str) -> dict:
+    """Scrape title, channel, views, duration, and likes from a video page."""
     if not _REQUESTS_OK:
         return {}
     url = f"https://www.youtube.com/watch?v={video_id}"
@@ -240,6 +254,7 @@ def _scrape_video_info(video_id: str) -> dict:
 
 
 def _scrape_trending(region: str = "TR", max_results: int = 8) -> list[dict]:
+    """Scrape trending video titles and channels for a region."""
     if not _REQUESTS_OK:
         return []
     url = f"https://www.youtube.com/feed/trending?gl={region.upper()}"
@@ -266,6 +281,7 @@ def _scrape_trending(region: str = "TR", max_results: int = 8) -> list[dict]:
         return []
 
 def _handle_play(parameters: dict, player) -> str:
+    """Open the first matching video for a query, or the filtered search page."""
     query = parameters.get("query", "").strip()
     if not query:
         return "Please tell me what you'd like to watch, sir."
@@ -293,6 +309,9 @@ def _handle_play(parameters: dict, player) -> str:
 
 
 def _handle_summarize(parameters: dict, player, speak) -> str:
+    """Resolve a video, fetch its transcript, and summarise it with Gemini.
+    Speaks progress if possible and optionally saves the summary to the Desktop.
+    """
     if not _TRANSCRIPT_OK:
         return "youtube-transcript-api is not installed. Run: pip install youtube-transcript-api"
 
@@ -339,6 +358,7 @@ def _handle_summarize(parameters: dict, player, speak) -> str:
 
 
 def _handle_get_info(parameters: dict, player, speak) -> str:
+    """Resolve a video and return its scraped metadata as text, speaking it if possible."""
     url = (parameters.get("url") or parameters.get("query") or "").strip()
     if url and not _is_valid_youtube_url(url):
         found_url = _scrape_first_video_url(url)
@@ -373,6 +393,7 @@ def _handle_get_info(parameters: dict, player, speak) -> str:
 
 
 def _handle_trending(parameters: dict, player, speak) -> str:
+    """Return a list of trending videos for a region, speaking the top three."""
     region = parameters.get("region", "TR").upper()
 
     if player:
@@ -410,6 +431,7 @@ def youtube_video(
     session_memory=None,
     speak=None,
 ) -> str:
+    """Dispatch a YouTube action (play, summarize, get_info or trending) and return its result or an error message."""
     params = parameters or {}
     action = params.get("action", "play").lower().strip()
 

@@ -91,6 +91,7 @@ def gui_thread_only(func: Callable[..., Any]) -> Callable[..., Any]:
     """
     @functools.wraps(func)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
+        """Call ``func`` directly on the GUI thread; otherwise schedule it there and return None."""
         if is_gui_thread():
             return func(*args, **kwargs)
         run_on_gui_thread(func, *args, **kwargs)

@@ -34,6 +34,7 @@ class LinuxBrowserDriver(BaseBrowserPlatformDriver):
     """Linux driver using xdotool / wmctrl / xdg-open."""
 
     def __init__(self) -> None:
+        """Detect whether the session is running under Wayland."""
         self._is_wayland = bool(os.environ.get("WAYLAND_DISPLAY"))
 
     def _get_active_window_info(self) -> tuple[int, str]:
@@ -52,6 +53,7 @@ class LinuxBrowserDriver(BaseBrowserPlatformDriver):
             return 0, ""
 
     def get_frontmost_browser(self) -> Optional[str]:
+        """Return the browser name matching the active window's class, or None."""
         _, cls_out = self._get_active_window_info()
         for k, v in KNOWN_LINUX_BROWSERS.items():
             if k in cls_out:
@@ -59,6 +61,9 @@ class LinuxBrowserDriver(BaseBrowserPlatformDriver):
         return None
 
     def _send_xdotool_key(self, key_combo: str) -> bool:
+        """Send a key combo to the active window via xdotool, falling back to pyautogui.
+        Returns True on success.
+        """
         wid, _ = self._get_active_window_info()
         cmd = ["xdotool", "key"]
         if wid > 0:
@@ -78,6 +83,7 @@ class LinuxBrowserDriver(BaseBrowserPlatformDriver):
                 return False
 
     def close_active_tab(self) -> bool:
+        """Close the active tab (Ctrl+W) if the frontmost window is a known browser."""
         browser = self.get_frontmost_browser()
         if not browser:
             _LOGGER.debug("[LinuxBrowserDriver] Frontmost window is not a recognized browser.")
@@ -115,6 +121,7 @@ class LinuxBrowserDriver(BaseBrowserPlatformDriver):
         return False
 
     def new_tab(self, url: Optional[str] = None) -> bool:
+        """Open ``url`` with xdg-open, or send Ctrl+T to the frontmost browser when no URL is given."""
         if url:
             try:
                 subprocess.Popen(["xdg-open", url], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -128,6 +135,7 @@ class LinuxBrowserDriver(BaseBrowserPlatformDriver):
         return self._send_xdotool_key("ctrl+t")
 
     def switch_tab(self, direction: str = "next") -> bool:
+        """Switch to the previous or next tab in the frontmost browser via Ctrl+(Shift+)Tab."""
         browser = self.get_frontmost_browser()
         if not browser:
             return False
@@ -136,12 +144,14 @@ class LinuxBrowserDriver(BaseBrowserPlatformDriver):
         return self._send_xdotool_key("ctrl+Tab")
 
     def reopen_closed_tab(self) -> bool:
+        """Reopen the last closed tab (Ctrl+Shift+T) in the frontmost browser."""
         browser = self.get_frontmost_browser()
         if not browser:
             return False
         return self._send_xdotool_key("ctrl+shift+t")
 
     def close_window(self) -> bool:
+        """Close the frontmost browser window (Alt+F4)."""
         browser = self.get_frontmost_browser()
         if not browser:
             return False

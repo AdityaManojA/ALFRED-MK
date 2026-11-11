@@ -25,6 +25,7 @@ class DesktopRelayBridge:
     """Manages active desktop client connections and routes Skill requests to connected installations."""
 
     def __init__(self) -> None:
+        """Initialise empty device, pending-request and user-to-device maps."""
         # device_id -> active WebSocket connection object
         self._connected_devices: dict[str, Any] = {}
         # request_id -> asyncio.Future[AlexaResultEnvelope]
@@ -61,6 +62,7 @@ class DesktopRelayBridge:
         logger.info(f"Unregistered desktop device: {device_id}")
 
     def is_device_connected(self, device_id: str) -> bool:
+        """Return True if the device has an active WebSocket connection."""
         return device_id in self._connected_devices
 
     def handle_result_from_desktop(self, result: AlexaResultEnvelope) -> None:

@@ -362,7 +362,7 @@ Many maximise model hype and under-ship the glue. MARK-IX invests in the glue th
 * **Hybrid Google Colab & Local IDE Notebook**: Shipped [`training/train_alfred_colab.ipynb`](training/train_alfred_colab.ipynb) for cloud GPU/CPU training with automated active-kernel package management, audio augmentation, and transfer learning from baseline weights.
 * **Multi-Speaker Dataset Recorder & Packager (`tools/record_training_samples.py`)**: Interactive CLI tool for recording positive utterances per speaker, negative room noise/speech, auto-zipping datasets (`--zip`), and direct local PyTorch-to-ONNX compilation (`--train-local`).
 * **Neural Speaker Verification Engine (`core/speaker/`)**: Dual-gate biometric speaker verification using pre-trained CAM++ embeddings (`models/speaker_verifier.onnx`). Bounded 5s ring buffer extracts time-aligned wake audio, matching against locally stored, versioned voice profiles (`~/.alfred/voice_profiles/`) with calibrated cosine thresholds. Hands-free wake is restricted strictly to enrolled users, while post-wake dialogue remains open to all conversation participants.
-* **Dual-Phrase Gating & Real-Time Acoustic HUD (`tools/test_wake_model.py`)**: Dual-phrase architecture ("Hey Alfred" >= 0.70, "Alfred" >= 0.85) with `GATE_TTS` acoustic shielding, 1500 ms refractory suppression, and live console VU meter testing.
+* **Dual-Phrase Gating & Real-Time Acoustic HUD (`tools/wake_model_live_check.py`)**: Dual-phrase architecture ("Hey Alfred" >= 0.70, "Alfred" >= 0.85) with `GATE_TTS` acoustic shielding, 1500 ms refractory suppression, and live console VU meter testing.
 
 ### 🎵 Tactical Audio Core Voice Control
 Introduced dedicated `actions/audio_core.py` action tool and UI methods (`pause_audio_core`, `resume_audio_core`), allowing users to control the ambient TRON Legacy score directly (*"pause audio core"*, *"resume audio core"*, *"audio core volume to 25%"*) without conflicting with Spotify routing.
@@ -783,7 +783,7 @@ py tools/enroll_voice.py --delete "Master Wayne"
                                                        │
                                 ┌──────────────────────▼───────────────────────┐
                                 │ Live VU Meter & Microphone Acoustic Test     │
-                                │ tools/test_wake_model.py                     │
+                                │ tools/wake_model_live_check.py               │
                                 └──────────────────────────────────────────────┘
 ```
 
@@ -841,14 +841,14 @@ ALFRED natively supports loading pre-trained community models from the [OpenWake
 1. **Drop Model into `models/` or `training/`**: Place any external ONNX model into `models/` or `training/` (e.g. named `1.onnx`, `2.onnx`, `3.onnx`, or containing `alfred`/`wake`/`hey`).
 2. **Zero-Overhead Multi-Head Ensemble**: On startup, ALFRED automatically discovers all active wake-word models. OpenWakeWord executes the shared feature extractor (`melspectrogram.onnx` + `embedding_model.onnx`) once per audio frame, evaluating both the baseline model and community models (`alfred`, `1`, `2`, `3`) in parallel with near-zero added latency (<0.2ms).
 3. **Trigger Evaluation**: ALFRED wakes up if *any* model in the ensemble fires with high confidence, providing the broad generalization of large synthetic community datasets alongside the microphone specialization of local training.
-4. **Live Verification**: Run `py tools/test_wake_model.py` to inspect live scores and see which model triggers.
+4. **Live Verification**: Run `py tools/wake_model_live_check.py` to inspect live scores and see which model triggers.
 
 ### 🎧 Step 3: Live Microphone Acoustic Verification & VU Meter
 
 Validate model sensitivity and acoustic response in real time before launching ALFRED:
 
 ```powershell
-py tools/test_wake_model.py
+py tools/wake_model_live_check.py
 ```
 
 * **Live Dynamic VU Meter**: Visualizes live microphone RMS input levels and noise floor in the console.
@@ -1201,7 +1201,7 @@ ALFRED-MK-IX/
 ├── tools/                      # Training, testing & diagnostic toolset
 │   ├── record_training_samples.py # Multi-speaker voice dataset recorder & packager
 │   ├── train_personal_verifier.py # Biometric personal voice verifier trainer
-│   ├── test_wake_model.py      # Real-time microphone test & acoustic VU meter
+│   ├── wake_model_live_check.py # Real-time microphone test & acoustic VU meter
 │   ├── train_wakeword.py       # Baseline ONNX integrity verifier & downloader
 │   ├── benchmark_latency_pipeline.py # End-to-end pipeline benchmark
 │   └── profile_alfred_ui.py    # UI frame timing & rendering profiler

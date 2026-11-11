@@ -30,15 +30,20 @@ class LinuxPlatformReader(BasePlatformReader):
     """Inspects frontmost window on Linux via X11 (xdotool/xprop) or Wayland IPC."""
 
     def __init__(self) -> None:
+        """Record whether the session is Wayland and this process's PID."""
         self._is_wayland = bool(os.environ.get("WAYLAND_DISPLAY"))
         self._own_pid = os.getpid()
 
     def get_frontmost_surface(self, from_card: bool = False) -> SurfaceIdentity:
+        """Identify the foreground window via hyprctl on Wayland or xdotool/xprop on X11."""
         if self._is_wayland:
             return self._get_wayland_surface()
         return self._get_x11_surface()
 
     def _get_x11_surface(self) -> SurfaceIdentity:
+        """Identify the active X11 window via xdotool/xprop: app id, title and a hashed browser host when one is found.
+        Returns a home-base identity for Alfred's own window and UNKNOWN if no active window is found.
+        """
         try:
             # 1. Get active window ID
             res = subprocess.run(["xdotool", "getactivewindow"], capture_output=True, text=True, timeout=CLI_TIMEOUT_S)
@@ -98,6 +103,7 @@ class LinuxPlatformReader(BasePlatformReader):
             return SurfaceIdentity(capability="UNKNOWN")
 
     def _get_wayland_surface(self) -> SurfaceIdentity:
+        """Identify the active Wayland window via hyprctl; falls back to an APP_ONLY identity on failure."""
         # Wayland compositor query (swaymsg or hyprctl fallback)
         try:
             res = subprocess.run(["hyprctl", "activewindow", "-j"], capture_output=True, text=True, timeout=CLI_TIMEOUT_S)

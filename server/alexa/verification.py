@@ -30,11 +30,15 @@ class RequestReplayCache:
     """Bounded TTL cache to prevent request replay attacks."""
 
     def __init__(self, ttl_s: float = ALEXA_REQUEST_MAX_AGE_S, max_entries: int = 10000) -> None:
+        """Set the TTL and capacity for the replay cache."""
         self.ttl_s = ttl_s
         self.max_entries = max_entries
         self._cache: dict[str, float] = {}
 
     def is_replayed(self, request_id: str) -> bool:
+        """Return True if the request ID is empty or was already seen within the TTL.
+        Otherwise records it (evicting the oldest 100 entries when full) and returns False.
+        """
         now = time.time()
         self._purge(now)
         if not request_id:
@@ -50,6 +54,7 @@ class RequestReplayCache:
         return False
 
     def _purge(self, now: float) -> None:
+        """Remove cache entries older than the TTL."""
         stale = [k for k, ts in self._cache.items() if now - ts > self.ttl_s]
         for k in stale:
             self._cache.pop(k, None)
@@ -124,6 +129,7 @@ class AlexaRequestVerifier:
     """Consolidated request verification for Alexa Skills Kit requests."""
 
     def __init__(self, expected_skill_id: str, skip_signature_for_dev: bool = False) -> None:
+        """Store the expected skill ID and dev flag and create a replay cache."""
         self.expected_skill_id = expected_skill_id
         self.skip_signature_for_dev = skip_signature_for_dev
         self.replay_cache = RequestReplayCache()

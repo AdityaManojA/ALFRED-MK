@@ -55,6 +55,7 @@ class ProviderRegistry:
     """Lazy registry for streaming providers."""
 
     def __init__(self) -> None:
+        """Create empty factory and instance maps."""
         self._factories: Dict[str, ProviderFactory] = {}
         self._instances: Dict[str, StreamingProvider] = {}
 
@@ -101,10 +102,12 @@ def get_provider_registry() -> ProviderRegistry:
 def _register_defaults(reg: ProviderRegistry) -> None:
     """Register built-in providers with lazy loader thunks."""
     def _netflix_factory() -> StreamingProvider:
+        """Lazily import and return a new NetflixProvider."""
         from core.streaming.providers.netflix import NetflixProvider
         return NetflixProvider()
 
     def _crunchyroll_factory() -> StreamingProvider:
+        """Lazily import and return a new CrunchyrollProvider."""
         from core.streaming.providers.crunchyroll import CrunchyrollProvider
         return CrunchyrollProvider()
 

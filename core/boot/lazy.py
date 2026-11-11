@@ -22,6 +22,7 @@ class LazyService(Generic[T]):
     """Thread-safe transparent proxy that delays object construction until first access."""
 
     def __init__(self, factory: Callable[[], T], name: str = "AnonymousService") -> None:
+        """Store the factory and service name; the instance is created on first use."""
         self._factory = factory
         self._name = name
         self._instance: Optional[T] = None
@@ -44,10 +45,12 @@ class LazyService(Generic[T]):
             return self._instance
 
     def __getattr__(self, item: str) -> Any:
+        """Forward attribute access to the lazily created instance."""
         target = self.get()
         return getattr(target, item)
 
     def __repr__(self) -> str:
+        """Return a repr showing the service name and whether it has been instantiated."""
         status = "instantiated" if self.is_instantiated() else "uninstantiated"
         return f"<LazyService name='{self._name}' status='{status}'>"
 
@@ -55,6 +58,7 @@ class LazyService(Generic[T]):
 def create_lazy_scheduler(speak_fn: Callable[[str], Any], notify_fn: Callable[[str], Any]) -> LazyService:
     """Create a lazy SchedulerEngine proxy."""
     def _factory():
+        """Build a SchedulerEngine wired to the given speak and notify callbacks."""
         from core.scheduler import SchedulerEngine
         return SchedulerEngine(speak=speak_fn, notify=notify_fn)
 
@@ -64,6 +68,7 @@ def create_lazy_scheduler(speak_fn: Callable[[str], Any], notify_fn: Callable[[s
 def create_lazy_sentry_mgr() -> LazyService:
     """Create a lazy SentryModeManager proxy."""
     def _factory():
+        """Return the sentry mode manager singleton."""
         from core.sentry.mode_manager import get_sentry_mode_manager
         return get_sentry_mode_manager()
 
@@ -73,6 +78,7 @@ def create_lazy_sentry_mgr() -> LazyService:
 def create_lazy_monitor_controller() -> LazyService:
     """Create a lazy MonitorController proxy."""
     def _factory():
+        """Return the monitor controller singleton."""
         from core.sentry.monitor.controller import get_monitor_controller
         return get_monitor_controller()
 
@@ -82,6 +88,7 @@ def create_lazy_monitor_controller() -> LazyService:
 def create_lazy_hud_video_controller() -> LazyService:
     """Create a lazy HudVideoController proxy."""
     def _factory():
+        """Return the HUD video controller singleton."""
         from core.hud_video.controller import get_hud_video_controller
         return get_hud_video_controller()
 

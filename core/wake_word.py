@@ -137,6 +137,7 @@ _OWW_IMPORT_LOCK = threading.Lock()
 
 
 def _import_openwakeword():
+    """Import openwakeword and its model module under the import lock and return the package."""
     with _OWW_IMPORT_LOCK:
         import openwakeword
         import openwakeword.utils
@@ -163,6 +164,7 @@ def _ensure_openwakeword():
         if not hasattr(openwakeword, "get_pretrained_model_paths"):
             models = getattr(openwakeword, "MODELS", {})
             def get_pretrained_model_paths(inference_framework="tflite"):
+                """Return the model paths from openwakeword.MODELS for the given inference framework."""
                 if inference_framework == "tflite":
                     return [models[i]["model_path"] for i in models.keys()]
                 elif inference_framework == "onnx":
@@ -276,6 +278,7 @@ def is_ready() -> bool:
 
 
 def _download_file(url: str, dest: Path) -> None:
+    """Download ``url`` to ``dest`` via a temporary file, creating parent directories."""
     dest.parent.mkdir(parents=True, exist_ok=True)
     tmp = dest.with_suffix(".tmp")
     req = urllib.request.Request(
@@ -442,6 +445,7 @@ class WakeWordDetector:
                  enable_personal_verifier: bool = True,
                  speaker_verifier: SpeakerVerifier | None = None,
                  enable_speaker_verification: bool = True):
+        """Configure the detector (thresholds, callbacks, verifiers, queues) and replace any previous global detector."""
         global _GLOBAL_DETECTOR
         # Stop any previous detector before replacing it
         if _GLOBAL_DETECTOR is not None and _GLOBAL_DETECTOR is not self:
@@ -542,6 +546,7 @@ class WakeWordDetector:
         return True
 
     def stop(self) -> None:
+        """Stop the detector: reset state, unblock and join the worker thread, drop the model and shut down the verifier pool."""
         with self._lock:
             if not self._running and not self._ready:
                 return
@@ -599,6 +604,7 @@ class WakeWordDetector:
 
     @property
     def ready(self) -> bool:
+        """Return True once the detector is ready."""
         return self._ready
 
     def reload_speaker_profiles(self) -> int:
@@ -653,6 +659,7 @@ class WakeWordDetector:
     # ── trigger dispatch ──────────────────────────────────────────────────────
 
     def _trigger_match(self, source: str = "acoustic", latency_ms: float = 0.0) -> None:
+        """Fire the wake callback, enforcing a 1.2 s cooldown and draining queued audio."""
         now = time.monotonic()
         with self._lock:
             # Enforce 1.2s cooldown to prevent double firing on the same speech utterance
@@ -673,6 +680,9 @@ class WakeWordDetector:
     # ── speaker candidate verification (runs in verifier executor) ────────────
 
     def _verify_candidate_async(self, candidate: WakeCandidateAudio, gate_latency_ms: float = 0.0) -> None:
+        """Run speaker verification on a wake candidate and trigger on a match.
+        Triggers directly if verification is disabled; refuses when no voice profile is enrolled.
+        """
         now = time.monotonic()
         with self._lock:
             if not self._running or (now - self._last_trigger_time) < 1.2:
@@ -710,6 +720,7 @@ class WakeWordDetector:
     # ── speech burst verification (runs in worker thread) ─────────────────────
 
     def _verify_burst_async(self, audio_data, burst_start_ts: float) -> None:
+        """Transcribe a speech burst with Whisper and, if it contains the wake phrase, speaker-verify it and trigger."""
         now = time.monotonic()
         with self._lock:
             if not self._running or (now - self._last_trigger_time) < 1.2:
@@ -809,6 +820,7 @@ class WakeWordDetector:
     # ── inference loop (runs in WakeWordThread) ────────────────────────────────
 
     def _loop(self) -> None:
+        """Wake-word thread loop: consume queued audio frames, score them and track speech bursts until stopped."""
         import time
         import numpy as np
 
@@ -994,6 +1006,7 @@ class WakeWordDetector:
             return False
 
     def _drain(self) -> None:
+        """Discard all audio frames currently in the queue."""
         try:
             while True:
                 self._queue.get_nowait()
