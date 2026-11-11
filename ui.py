@@ -806,32 +806,32 @@ _OS = platform.system()  # "Windows" | "Darwin" | "Linux"
 CRT_THEMES: dict[str, dict] = {
     "dossier": {
         "name": "DEFAULT BATCAVE",
-        "hex": "#8e9bff",
+        "hex": "#5cc8ff",
         "colors": {
-            "BG": "#090a12",
-            "PANEL": "#0d0f1e",
-            "PANEL2": "#121528",
-            "PANEL_BG": "rgba(13, 15, 30, 0.96)",
-            "BORDER": "#222748",
-            "BORDER_B": "#505bb5",
-            "BORDER_A": "#343a6b",
-            "PRI": "#8e9bff",
-            "PRI_DIM": "#5463cc",
-            "PRI_GHO": "#1a1d36",
-            "ACC": "#ff7390",
-            "ACC2": "#ffd166",
-            "GREEN": "#4ef2bb",
-            "GREEN_D": "#228562",
-            "RED": "#ff2a55",
-            "MUTED": "#707ab0",
-            "MUTED_C": "#ff3366",
-            "TEXT": "#e8ecff",
-            "TEXT_DIM": "#707ab0",
-            "TEXT_MED": "#a6b2f0",
+            "BG": "#070b12",
+            "PANEL": "#0b111b",
+            "PANEL2": "#0e1622",
+            "PANEL_BG": "rgba(11, 17, 27, 0.97)",
+            "BORDER": "#17222f",
+            "BORDER_B": "#3a5571",
+            "BORDER_A": "#1f2d3f",
+            "PRI": "#5cc8ff",
+            "PRI_DIM": "#3a8fbd",
+            "PRI_GHO": "#0f2233",
+            "ACC": "#ff6b81",
+            "ACC2": "#ffc857",
+            "GREEN": "#5ce0b8",
+            "GREEN_D": "#2b8a6e",
+            "RED": "#ff4d6a",
+            "MUTED": "#566a80",
+            "MUTED_C": "#ff5c7a",
+            "TEXT": "#e3edf7",
+            "TEXT_DIM": "#566a80",
+            "TEXT_MED": "#8fa3b8",
             "TEXT_BRIGHT": "#ffffff",
-            "WHITE": "#f4f6ff",
-            "DARK": "#05060a",
-            "BAR_BG": "#101222",
+            "WHITE": "#f2f7fc",
+            "DARK": "#04070c",
+            "BAR_BG": "#0f1824",
         },
     },
     "vector": {
@@ -866,32 +866,32 @@ CRT_THEMES: dict[str, dict] = {
     },
     "beyond": {
         "name": "BATMAN BEYOND [NEO-GOTHAM]",
-        "hex": "#ff0037",
+        "hex": "#e5132b",
         "colors": {
-            "BG": "#070103",
-            "PANEL": "#0d0205",
-            "PANEL2": "#18040a",
-            "PANEL_BG": "rgba(13, 2, 5, 0.96)",
-            "BORDER": "#3b0813",
-            "BORDER_B": "#ff0037",
-            "BORDER_A": "#660d1f",
-            "PRI": "#ff0037",
-            "PRI_DIM": "#b80028",
-            "PRI_GHO": "#33000b",
-            "ACC": "#00d4ff",
-            "ACC2": "#38bdf8",
-            "GREEN": "#00d4ff",
-            "GREEN_D": "#0284c7",
-            "RED": "#ff0037",
-            "MUTED": "#8a2538",
-            "MUTED_C": "#ff0037",
-            "TEXT": "#ffebef",
-            "TEXT_DIM": "#8a2538",
-            "TEXT_MED": "#ff758f",
+            "BG": "#090909",
+            "PANEL": "#0e0d0d",
+            "PANEL2": "#151213",
+            "PANEL_BG": "rgba(14, 13, 13, 0.97)",
+            "BORDER": "#221a1b",
+            "BORDER_B": "#5a2a30",
+            "BORDER_A": "#2a1d1f",
+            "PRI": "#e5132b",
+            "PRI_DIM": "#a30e1f",
+            "PRI_GHO": "#2a0b0f",
+            "ACC": "#ffb454",
+            "ACC2": "#ffd28a",
+            "GREEN": "#6fd3a6",
+            "GREEN_D": "#2f7f5f",
+            "RED": "#ff4055",
+            "MUTED": "#6e6364",
+            "MUTED_C": "#ff5a6e",
+            "TEXT": "#f0eaea",
+            "TEXT_DIM": "#6e6364",
+            "TEXT_MED": "#a59a9b",
             "TEXT_BRIGHT": "#ffffff",
-            "WHITE": "#fff0f3",
-            "DARK": "#040002",
-            "BAR_BG": "#140308",
+            "WHITE": "#f7f2f2",
+            "DARK": "#050505",
+            "BAR_BG": "#171314",
         },
     },
 }
@@ -901,33 +901,33 @@ _ACTIVE_THEME_ID = "dossier"
 
 class C:
     # Default initial state matches DOSSIER CRT [A-34]
-    BG          = "#090a12"       # Deep CRT obsidian backing
-    PANEL       = "#0d0f1e"       # CRT phosphor glass panel
-    PANEL2      = "#121528"       # Elevated tactical module layer
-    PANEL_BG    = "rgba(13, 15, 30, 0.96)"
-    BORDER      = "#222748"       # Precision CRT frame line
-    BORDER_B    = "#505bb5"       # Bright glowing phosphorescent border
-    BORDER_A    = "#343a6b"       # Subtle division grid rule
-    PRI         = "#8e9bff"       # Electric CRT Phosphor Lavender / Indigo
-    PRI_DIM     = "#5463cc"       # Medium phosphor bloom
-    PRI_GHO     = "#1a1d36"       # Phosphor ghost backdrop glow
-    ACC         = "#ff7390"       # Tactical dossier alert red
-    ACC2        = "#ffd166"       # Telemetry warning amber
-    WARN        = "#ffd166"       # Telemetry warning amber alias
-    GREEN       = "#4ef2bb"       # Phosphor matrix emerald
-    GREEN_D     = "#228562"       # Muted green bio-metric
-    RED         = "#ff2a55"       # Threat assessment crimson
-    CYAN        = "#00f0ff"       # High-tech focus cyan
-    MUTED       = "#707ab0"       # Muted terminal readout
-    MUTED_C     = "#ff3366"       # Silence protocol neon
-    TEXT        = "#e8ecff"       # Crisp luminescent CRT white-blue
-    TEXT_DIM    = "#707ab0"       # Muted terminal readout
-    TEXT_MED    = "#a6b2f0"       # Medium high-tech CRT readout
-    TEXT_MUTED  = "#707ab0"       # Muted phosphor readout alias
+    BG          = "#070b12"       # Deep CRT obsidian backing
+    PANEL       = "#0b111b"       # CRT phosphor glass panel
+    PANEL2      = "#0e1622"       # Elevated tactical module layer
+    PANEL_BG    = "rgba(11, 17, 27, 0.97)"
+    BORDER      = "#17222f"       # Precision CRT frame line
+    BORDER_B    = "#3a5571"       # Bright glowing phosphorescent border
+    BORDER_A    = "#1f2d3f"       # Subtle division grid rule
+    PRI         = "#5cc8ff"       # Electric CRT Phosphor Lavender / Indigo
+    PRI_DIM     = "#3a8fbd"       # Medium phosphor bloom
+    PRI_GHO     = "#0f2233"       # Phosphor ghost backdrop glow
+    ACC         = "#ff6b81"       # Tactical dossier alert red
+    ACC2        = "#ffc857"       # Telemetry warning amber
+    WARN        = "#ffc857"       # Telemetry warning amber alias
+    GREEN       = "#5ce0b8"       # Phosphor matrix emerald
+    GREEN_D     = "#2b8a6e"       # Muted green bio-metric
+    RED         = "#ff4d6a"       # Threat assessment crimson
+    CYAN        = "#5cc8ff"       # High-tech focus cyan
+    MUTED       = "#566a80"       # Muted terminal readout
+    MUTED_C     = "#ff5c7a"       # Silence protocol neon
+    TEXT        = "#e3edf7"       # Crisp luminescent CRT white-blue
+    TEXT_DIM    = "#566a80"       # Muted terminal readout
+    TEXT_MED    = "#8fa3b8"       # Medium high-tech CRT readout
+    TEXT_MUTED  = "#566a80"       # Muted phosphor readout alias
     TEXT_BRIGHT = "#ffffff"       # Pure laser highlight
-    WHITE       = "#f4f6ff"       # Clean CRT white
-    DARK        = "#05060a"       # Deep shadow floor
-    BAR_BG      = "#101222"       # Metric meter channel track
+    WHITE       = "#f2f7fc"       # Clean CRT white
+    DARK        = "#04070c"       # Deep shadow floor
+    BAR_BG      = "#0f1824"       # Metric meter channel track
 
 
 # Monospaced Retro-Futuristic Terminal Typography (OCR / CRT Matrix / Cascadia)
@@ -974,6 +974,27 @@ def mono_font(size: int | float, weight: QFont.Weight = QFont.Weight.Normal, let
 
 
 HOVER_HELP_DELAY_MS: int = 600
+
+
+_UI_FONT_FAMILIES = (
+    "Inter", "Segoe UI", "SF Pro Text", "Helvetica Neue", "Noto Sans", "Arial", "sans-serif"
+)
+
+
+@functools.lru_cache(maxsize=64)
+def ui_font(size: int | float, weight: QFont.Weight = QFont.Weight.Normal, letter_spacing: float | None = None) -> QFont:
+    """Proportional interface font for the main window's labels, buttons and transcript."""
+    f = QFont()
+    f.setFamilies(list(_UI_FONT_FAMILIES))
+    if isinstance(size, float):
+        f.setPointSizeF(size)
+    else:
+        f.setPointSize(int(size))
+    f.setWeight(weight)
+    f.setStyleHint(QFont.StyleHint.SansSerif)
+    if letter_spacing is not None:
+        f.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, letter_spacing)
+    return f
 
 
 class TacticalInWindowTooltip(QFrame):
@@ -1238,7 +1259,7 @@ _HUE_LINKED = (
 )
 _PALETTE_DEFAULTS: dict[str, str] = {k: getattr(C, k) for k in _HUE_LINKED}
 
-DEFAULT_UI_COLOR = "#8e9bff"
+DEFAULT_UI_COLOR = "#5cc8ff"
 
 
 def apply_ui_accent(accent_hex: str) -> bool:
@@ -1265,6 +1286,9 @@ def apply_ui_accent(accent_hex: str) -> bool:
 
     reg = ThemeRegistry.instance()
     matched_theme = reg.get_by_hex(accent_hex) or reg.get_by_id(accent_hex)
+    if matched_theme is None and accent_hex in reg.LEGACY_ALIASES:
+        # Saved configs still carry the pre-redesign accent hexes.
+        matched_theme = reg.get_by_id(reg.LEGACY_ALIASES[accent_hex])
     if matched_theme is not None:
         _ACTIVE_THEME_ID = matched_theme.id
         for k, v in matched_theme.palette.to_dict().items():
@@ -2504,7 +2528,8 @@ class HudCanvas(QWidget):
         self._globe_orb_unit_cache[n_orb_pts] = pts
         return pts
 
-    def _paint_3d_vector_globe(self, p: QPainter, cx: float, cy: float, r: float, W: float, H: float):
+    def _paint_3d_vector_globe(self, p: QPainter, cx: float, cy: float, r: float, W: float, H: float,
+                               minimal: bool = False):
         """
         3D Rotating Vector Wireframe Globe (Matching Screenshot 2: WAKU CRT Globe).
         Zero-trig projection loop with precomputed unit sphere vectors and cached pens.
@@ -2619,6 +2644,10 @@ class HudCanvas(QWidget):
         p.drawLines(meridian_front)
         p.setPen(self._get_pen(self._blend(main, 0.12), 0.8))
         p.drawLines(meridian_back)
+
+        if minimal:
+            # Main window: the bare wireframe is the whole visual.
+            return
 
         # ── 4. Tilted Orbital Satellite Node Ring ─────────────────────────────
         orb_r = r * 1.15
@@ -3206,71 +3235,11 @@ class HudCanvas(QWidget):
                     p.drawText(pill_rect, Qt.AlignmentFlag.AlignCenter, st_text)
                     return
 
-                p.fillRect(self.rect(), qcol(C.BG))
-
-                # 1. Subtle CRT coordinate background grid with crosshairs (Screenshot 2)
-                self._paint_crt_grid(p, W, H)
-
-                # 2. Dynamic particles & constellation links
-                p.setPen(Qt.PenStyle.NoPen)
-                pts_coords = []
-                _is_sleeping = (self.state == "SLEEPING")
-                _is_thinking = (self.state in ("THINKING", "PROCESSING"))
-                _in_wake_burst = (time.time() - getattr(self, '_wake_burst_t', 0.0)) < 0.55
-                for pt in self._particles:
-                    px = pt['x'] * W
-                    py = pt['y'] * H
-                    pts_coords.append((px, py))
-                    pulse = 0.6 + 0.4 * math.sin(pt['phase'] + self._tick * 0.05)
-                    # Phase C: alpha driven by state. The shared visibility value eases
-                    # over two seconds, so entering or leaving sleep never pops.
-                    if _in_wake_burst:
-                        _alpha_scale = 1.0    # full bright during burst
-                    elif _is_thinking:
-                        _alpha_scale = 0.70   # slight dim, focus inward
-                    elif self.speaking:
-                        _alpha_scale = 0.85 + 0.15 * amp  # brighter on speech
-                    else:
-                        _alpha_scale = 0.65
-                    _alpha_scale *= self._particle_visibility
-                    a = min(255, max(0, int(pt['alpha'] * pulse * 140 * _alpha_scale)))
-                    p.setBrush(QBrush(blend(main, a / 255.0)))
-                    # Phoneme level gives a tighter particle pulse than smoothed amp.
-                    _level = max(amp, self._vis_level)
-                    _sz_boost = (1.0 + _level * 0.60) if self.speaking else (1.0 + amp * 0.20)
-                    sz = pt['size'] * _sz_boost
-                    p.drawEllipse(QPointF(px, py), sz, sz)
-
-                # Micro links (batched drawLines, skipped in SLEEPING and SPEAKING states to prioritize audio/UI threads)
-                if not _is_sleeping and not self.speaking:
-                    p.setBrush(Qt.BrushStyle.NoBrush)
-                    link_lines = []
-                    for i in range(len(pts_coords)):
-                        px1, py1 = pts_coords[i]
-                        for j in range(i + 1, min(i + 4, len(pts_coords))):
-                            px2, py2 = pts_coords[j]
-                            if (px1 - px2)**2 + (py1 - py2)**2 < 3600:
-                                link_lines.append(QLineF(px1, py1, px2, py2))
-                    if link_lines:
-                        p.setPen(self._get_pen(self._blend(main, 0.08), 1.0))
-                        p.drawLines(link_lines)
-
-                # 3. Always Wayne Crest background watermark emblem
-                self._draw_custom_emblem(p, cx, cy * 0.65, fw * 0.42, fw * 0.42)
-
-                # 4. Centerpiece Rendering: Batcomputer Tactical Core (Globe + Waveforms + Matrix)
-                globe_r  = min(fw * 0.35, 175.0)
-                globe_cy = cy * 0.72
-                self._paint_3d_vector_globe(p, cx, globe_cy, globe_r, W, H)
-                self._paint_globe_waveforms(p, cx, globe_cy + globe_r * 0.78, W, H)
-                self._paint_hex_matrix_stream(p, cx, globe_cy + globe_r * 0.78 + 36.0, W, H)
-
-
-                # 5. High-Impact Status Banner (Screenshot 2)
-                self._paint_status_highlight_banner(p, cx, H - 34.0, W, H)
-
-                # 6. CRT Screen Scanlines & Corner Brackets
-                self._paint_crt_scanlines_and_reticles(p, W, H)
+                # Main window: emblem inside a speech-reactive wireframe, nothing else.
+                p.fillRect(self.rect(), bg)
+                globe_r = max(40.0, min(fw * 0.32, 160.0))
+                self._draw_custom_emblem(p, cx, cy, globe_r * 1.2, globe_r * 1.2)
+                self._paint_3d_vector_globe(p, cx, cy, globe_r, W, H, minimal=True)
             finally:
                 p.end()
                 t_paint_ms = (time.perf_counter() - t_paint_start) * 1000.0
@@ -4259,6 +4228,7 @@ class TacticalAudioPlayerWidget(QWidget):
 
 class LogWidget(QTextEdit):
     _sig = pyqtSignal(str)
+    line_logged = pyqtSignal(str)   # every accepted line, for the main-window caption
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -4267,14 +4237,13 @@ class LogWidget(QTextEdit):
         # without bound — keeps memory flat and every insert cheap. Oldest
         # lines drop off the top automatically.
         self.document().setMaximumBlockCount(600)
-        self.setFont(mono_font(9))
+        self.setFont(ui_font(10))
         self.setStyleSheet(f"""
             QTextEdit {{
-                background: rgba(3, 14, 26, 0.88);
+                background: transparent;
                 color: {C.TEXT};
-                border: 1px solid rgba(0, 240, 255, 0.16);
-                border-radius: 10px;
-                padding: 10px;
+                border: none;
+                padding: 4px 2px;
                 selection-background-color: {C.PRI_GHO};
             }}
             QScrollBar:vertical {{
@@ -4284,12 +4253,12 @@ class LogWidget(QTextEdit):
                 margin: 4px 2px;
             }}
             QScrollBar::handle:vertical {{
-                background: rgba(0, 240, 255, 0.28);
+                background: {C.BORDER_A};
                 border-radius: 3px;
                 min-height: 24px;
             }}
             QScrollBar::handle:vertical:hover {{
-                background: rgba(0, 240, 255, 0.65);
+                background: {C.BORDER_B};
             }}
             QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
                 height: 0; border: none;
@@ -4314,6 +4283,7 @@ class LogWidget(QTextEdit):
         if not self.show_thinking and text.startswith("THINK:"):
             return
         self._queue.append(text)
+        self.line_logged.emit(text)
         if not self._typing:
             self._next()
 
@@ -4347,12 +4317,12 @@ class LogWidget(QTextEdit):
             cur = self.textCursor()
             fmt = cur.charFormat()
             col = {
-                "you":   qcol(C.WHITE),
-                "ai":    qcol(C.PRI),
+                "you":   qcol(C.PRI),
+                "ai":    qcol(C.TEXT),
                 "think": qcol(C.MUTED),
                 "err":   qcol(C.RED),
                 "file":  qcol(C.GREEN),
-                "sys":   qcol(C.TEXT_MED),
+                "sys":   qcol(C.TEXT_DIM),
             }.get(self._tag, qcol(C.TEXT))
             fmt.setForeground(QBrush(col))
             fmt.setFontItalic(self._tag == "think")
@@ -4431,28 +4401,30 @@ class MinimizedHudOverlay(QWidget):
         shell.setObjectName("overlayShell")
         shell.setStyleSheet(f"""
             QFrame#overlayShell {{
-                background: rgba(3, 14, 26, 238);
-                border: 1px solid rgba(0, 240, 255, 112);
+                background: {C.PANEL};
+                border: 1px solid {C.BORDER_A};
                 border-radius: 8px;
             }}
-            QLabel {{ background: transparent; border: none; color: #b8c9ff; }}
+            QLabel {{ background: transparent; border: none; color: {C.TEXT}; }}
+            QLabel#overlayDot {{ color: {C.PRI}; }}
             QTextEdit {{
-                background: rgba(3, 14, 26, 210);
-                color: #f2f7ff;
-                border: none;
-                padding: 4px 8px 8px 8px;
-            }}
-            QPushButton {{
                 background: transparent;
                 color: {C.TEXT_MED};
                 border: none;
+                padding: 2px 6px 6px 6px;
+            }}
+            QPushButton {{
+                background: transparent;
+                color: {C.TEXT_DIM};
+                border: none;
+                border-radius: 4px;
                 min-width: 26px;
                 max-width: 26px;
                 min-height: 24px;
                 max-height: 24px;
             }}
-            QPushButton:hover {{ color: {C.WHITE}; background: rgba(0, 240, 255, 28); }}
-            QPushButton#closeButton:hover {{ color: {C.RED}; background: rgba(255, 61, 87, 28); }}
+            QPushButton:hover {{ color: {C.TEXT_BRIGHT}; background: {C.PANEL2}; }}
+            QPushButton#closeButton:hover {{ color: {C.RED}; background: {C.PANEL2}; }}
         """)
 
         root = QVBoxLayout(self)
@@ -4468,10 +4440,13 @@ class MinimizedHudOverlay(QWidget):
         header.setContentsMargins(4, 0, 0, 0)
         header.setSpacing(2)
 
-        header_font = self._readable_monospace_font(9)
-        header_font.setWeight(QFont.Weight.Bold)
+        dot = QLabel("●")
+        dot.setObjectName("overlayDot")
+        dot.setFont(ui_font(7))
+        header.addWidget(dot)
+        header.addSpacing(6)
         self._title = QLabel()
-        self._title.setFont(header_font)
+        self._title.setFont(ui_font(9, QFont.Weight.DemiBold, letter_spacing=1.6))
         header.addWidget(self._title)
         header.addStretch()
 
@@ -4505,9 +4480,7 @@ class MinimizedHudOverlay(QWidget):
         self._transcript.setObjectName("overlayTranscript")
         self._transcript.setReadOnly(True)
         self._transcript.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        transcript_font = self._readable_monospace_font(10)
-        transcript_font.setWeight(QFont.Weight.Medium)
-        self._transcript.setFont(transcript_font)
+        self._transcript.setFont(ui_font(10, QFont.Weight.Medium))
         self._transcript.setAccessibleName("Recent Alfred replies")
         self._transcript.document().setMaximumBlockCount(20)
         from core.ui.themes import ThemeChrome
@@ -4548,14 +4521,14 @@ class MinimizedHudOverlay(QWidget):
         if foc_active and mon_active:
             mins = max(0, foc_remaining_s) // 60
             secs = max(0, foc_remaining_s) % 60
-            dot_color = "#ffcc00" if waiting_for_answer else "#00ff88"
+            dot_color = C.WARN if waiting_for_answer else C.GREEN
             label = f"●{mins:02d}:{secs:02d}"
             if drifting:
                 color = C.RED
                 border = f"1px solid {C.RED}"
             else:
-                color = "#00ff88"
-                border = f"1px solid rgba(0, 255, 136, 80)"
+                color = C.GREEN
+                border = f"1px solid {C.GREEN_D}"
             self._sentry_btn.setText(label)
             self._sentry_btn.setStyleSheet(
                 f"QPushButton#sentryButton {{ color: {color}; font-weight: bold; min-width: 80px; max-width: 95px; border: {border}; }}"
@@ -4570,16 +4543,16 @@ class MinimizedHudOverlay(QWidget):
             if drifting:
                 self._sentry_btn.setStyleSheet(f"QPushButton#sentryButton {{ color: {C.RED}; font-weight: bold; min-width: 80px; max-width: 90px; border: 1px solid {C.RED}; }}")
             else:
-                self._sentry_btn.setStyleSheet(f"QPushButton#sentryButton {{ color: {C.CYAN}; font-weight: bold; min-width: 80px; max-width: 90px; border: 1px solid rgba(0, 240, 255, 80); }}")
+                self._sentry_btn.setStyleSheet(f"QPushButton#sentryButton {{ color: {C.PRI}; font-weight: bold; min-width: 80px; max-width: 90px; border: 1px solid {C.PRI_DIM}; }}")
             self._sentry_btn.setToolTip(f"FOCUS Mode: {mins:02d}:{secs:02d} remaining" + (" (DRIFTING)" if drifting else ""))
         elif mon_active:
-            dot_color = "#ffcc00" if waiting_for_answer else "#00ff88"
+            dot_color = C.WARN if waiting_for_answer else C.GREEN
             self._sentry_btn.setText("MON ●")
             self._sentry_btn.setStyleSheet(f"QPushButton#sentryButton {{ color: {dot_color}; font-weight: bold; min-width: 60px; max-width: 70px; }}")
             self._sentry_btn.setToolTip("Sentry Screen Monitoring Active" if not waiting_for_answer else "Sentry Monitor: Awaiting Target")
         else:
             self._sentry_btn.setText("S")
-            self._sentry_btn.setStyleSheet(f"QPushButton#sentryButton {{ color: {C.TEXT_MED}; font-weight: bold; min-width: 26px; max-width: 26px; border: none; }}")
+            self._sentry_btn.setStyleSheet(f"QPushButton#sentryButton {{ color: {C.TEXT_DIM}; font-weight: bold; min-width: 26px; max-width: 26px; border: none; }}")
 
 
     def set_assistant_name(self, name: str) -> None:
@@ -4594,7 +4567,7 @@ class MinimizedHudOverlay(QWidget):
         disp = self._assistant_name.upper() if self._assistant_name else "ALFRED"
         self.setWindowTitle(f"{disp} // {chrome.window_title_suffix}")
         if hasattr(self, "_title") and self._title:
-            self._title.setText(f"●  {disp} // {chrome.window_title_suffix}")
+            self._title.setText(disp)
         if hasattr(self, "_transcript") and self._transcript:
             self._transcript.setPlaceholderText(chrome.mini_hud_placeholder)
         self.update()
@@ -7143,6 +7116,84 @@ class ReactiveMicButton(QPushButton):
         p.end()
 
 
+class DrawerRow(QPushButton):
+    """Flat row for the controls drawer: label on the left, current value on the right."""
+
+    def __init__(self, label: str = "", value: str = "", parent=None):
+        super().__init__(parent)
+        self._label = ""
+        self._value = ""
+        self._on = False
+        self._warn = False
+        self.setFixedHeight(30)
+        self.setFlat(True)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setAttribute(Qt.WidgetAttribute.WA_Hover, True)
+        self.set_row(label, value)
+
+    def set_row(self, label: str, value: str = "", on: bool = False, warn: bool = False) -> None:
+        self._label, self._value = label, value
+        self._on, self._warn = bool(on), bool(warn)
+        # text() stays meaningful for accessibility and for callers that read it.
+        super().setText(f"{label}  {value}".strip())
+        self.update()
+
+    def setText(self, text: str) -> None:
+        self.set_row(text)
+
+    def paintEvent(self, _):
+        p = QPainter(self)
+        if not p.isActive():
+            return
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        hover = self.underMouse() and self.isEnabled()
+        rect = QRectF(self.rect()).adjusted(0, 1, 0, -1)
+        if self.isDown():
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(QBrush(qcol(C.PRI_GHO)))
+            p.drawRoundedRect(rect, 4, 4)
+        elif hover:
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(QBrush(qcol(C.PANEL2)))
+            p.drawRoundedRect(rect, 4, 4)
+
+        pad = 10.0
+        value_font = ui_font(9)
+        value_w = 0.0
+        if self._value:
+            fm = QFontMetrics(value_font)
+            value = fm.elidedText(self._value, Qt.TextElideMode.ElideRight, int(rect.width() * 0.55))
+            value_w = fm.horizontalAdvance(value) + 8.0
+            if not self.isEnabled():
+                v_col = C.TEXT_DIM
+            elif self._warn:
+                v_col = C.WARN
+            elif self._on:
+                v_col = C.PRI
+            else:
+                v_col = C.TEXT_DIM
+            p.setFont(value_font)
+            p.setPen(qcol(v_col))
+            p.drawText(rect.adjusted(pad, 0, -pad, 0),
+                       Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter, value)
+
+        label_font = ui_font(9, QFont.Weight.Medium)
+        fm = QFontMetrics(label_font)
+        label = fm.elidedText(self._label, Qt.TextElideMode.ElideRight,
+                              max(20, int(rect.width() - pad * 2 - value_w)))
+        if not self.isEnabled():
+            l_col = C.TEXT_DIM
+        elif hover or self._on:
+            l_col = C.TEXT
+        else:
+            l_col = C.TEXT_MED
+        p.setFont(label_font)
+        p.setPen(qcol(l_col))
+        p.drawText(rect.adjusted(pad, 0, -pad, 0),
+                   Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, label)
+        p.end()
+
+
 class TacticalControlsDrawer(QWidget):
     """
     Floating, translucent, draggable tactical controls quick drawer.
@@ -7186,33 +7237,10 @@ class TacticalControlsDrawer(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        # Translucent dark tactical background:
-        # High opacity (~93%) ensures complete readability while maintaining translucent HUD feel
-        bg_color = QColor(6, 12, 20, 238)
-        border_color = QColor(C.BORDER_B)
-
         rect = self.rect().adjusted(1, 1, -1, -1)
-        painter.setBrush(QBrush(bg_color))
-        painter.setPen(QPen(border_color, 1))
-        painter.drawRoundedRect(rect, 4, 4)
-
-        # Subtle tactical corner accents
-        accent_color = QColor(C.PRI)
-        accent_pen = QPen(accent_color, 1.5)
-        painter.setPen(accent_pen)
-        # Top-left corner tick
-        painter.drawLine(rect.left(), rect.top() + 6, rect.left(), rect.top())
-        painter.drawLine(rect.left(), rect.top(), rect.left() + 6, rect.top())
-        # Top-right corner tick
-        painter.drawLine(rect.right() - 6, rect.top(), rect.right(), rect.top())
-        painter.drawLine(rect.right(), rect.top(), rect.right(), rect.top() + 6)
-        # Bottom-left corner tick
-        painter.drawLine(rect.left(), rect.bottom() - 6, rect.left(), rect.bottom())
-        painter.drawLine(rect.left(), rect.bottom(), rect.left() + 6, rect.bottom())
-        # Bottom-right corner tick
-        painter.drawLine(rect.right() - 6, rect.bottom(), rect.right(), rect.bottom())
-        painter.drawLine(rect.right(), rect.bottom(), rect.right(), rect.bottom() - 6)
-
+        painter.setBrush(QBrush(qcol(C.PANEL, 250)))
+        painter.setPen(QPen(qcol(C.BORDER_A), 1))
+        painter.drawRoundedRect(rect, 6, 6)
         painter.end()
 
     def mousePressEvent(self, event: QMouseEvent):
@@ -7482,7 +7510,7 @@ class MainWindow(QMainWindow):
         self._center_split.setStyleSheet(f"""
             QSplitter::handle {{
                 background: {C.BORDER};
-                height: 4px;
+                height: 1px;
             }}
             QSplitter::handle:hover {{
                 background: {C.PRI_DIM};
@@ -7494,10 +7522,11 @@ class MainWindow(QMainWindow):
         self._center_split.setStretchFactor(0, 3)
         self._center_split.setStretchFactor(1, 1)
         self._center_split.setCollapsible(0, False)
-        body.addWidget(self._center_split, stretch=5)
-
         self._right_panel = self._build_right_panel()
+        body.addWidget(self._build_center_column(), stretch=5)
         body.addWidget(self._right_panel, stretch=0)
+        self._log.line_logged.connect(self._update_caption)
+        self.setAcceptDrops(True)
         self.hud.on_visual_level = self._mute_btn.set_reactivity
 
         root.addLayout(body, stretch=1)
@@ -7612,7 +7641,7 @@ class MainWindow(QMainWindow):
         pw = _CameraPreview._W
         ph = self._cam_preview.height()
         self._cam_preview.setGeometry(
-            cw.width() - _RIGHT_W - pw - 12,
+            cw.width() - self._right_inset() - pw - 12,
             cw.height() - ph - 28,
             pw, ph,
         )
@@ -8218,7 +8247,7 @@ class MainWindow(QMainWindow):
         pw = _CameraPreview._W
         ph = self._cam_preview.height() or _CameraPreview._H
         self._cam_preview.setGeometry(
-            cw.width() - _RIGHT_W - pw - 12,
+            cw.width() - self._right_inset() - pw - 12,
             cw.height() - ph - 28,
             pw, ph,
         )
@@ -8276,6 +8305,19 @@ class MainWindow(QMainWindow):
         else:
             self._bar_tmp.set_value(0, "N/A")
 
+        if hasattr(self, "_metrics_lbl"):
+            def _m(label: str, value: str, hot: bool = False) -> str:
+                col = C.RED if hot else C.TEXT_MED
+                return f'{label} <span style="color:{col}">{value}</span>'
+            line = "&nbsp;&nbsp;&nbsp;".join((
+                _m("CPU", f"{cpu:.0f}%", cpu >= 85),
+                _m("MEM", f"{mem:.0f}%", mem >= 90),
+                _m("GPU", f"{gpu:.0f}%" if gpu >= 0 else "n/a", gpu >= 90),
+                _m("NET", net_str),
+            ))
+            if self._metrics_lbl.text() != line:
+                self._metrics_lbl.setText(line)
+
         if hasattr(self, "_uptime_lbl"):
             new_uptime = f"UP  {snap.get('uptime', '--:--')}"
             if self._uptime_lbl.text() != new_uptime:
@@ -8287,190 +8329,210 @@ class MainWindow(QMainWindow):
                 self._proc_lbl.setText(new_proc)
 
 
+    def _ghost_btn_style(self) -> str:
+        return f"""
+            QPushButton {{
+                background: transparent;
+                color: {C.TEXT_MED};
+                border: none;
+                border-radius: 4px;
+                padding: 0 10px;
+            }}
+            QPushButton:hover {{ background: {C.PANEL2}; color: {C.TEXT_BRIGHT}; }}
+            QPushButton:pressed {{ background: {C.PRI_GHO}; }}
+            QPushButton:checked {{ background: {C.PRI_GHO}; color: {C.PRI}; }}
+        """
+
+    def _ghost_btn(self, text: str, tip: str, checkable: bool = False, height: int = 28) -> QPushButton:
+        btn = QPushButton(text)
+        btn.setFixedHeight(height)
+        btn.setFont(ui_font(9, QFont.Weight.Medium))
+        btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn.setCheckable(checkable)
+        btn.setStyleSheet(self._ghost_btn_style())
+        attach_hover_help(btn, tip)
+        return btn
+
     def _build_header(self) -> QWidget:
         w = QWidget()
-        w.setFixedHeight(56)
-        w.setStyleSheet(f"""
-            QWidget {{
-                background: {C.PANEL};
-                border-bottom: 1px solid {C.BORDER_A};
-            }}
-        """)
+        w.setObjectName("alfredHeader")
+        w.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        w.setFixedHeight(44)
+        w.setStyleSheet(
+            f"QWidget#alfredHeader {{ background: {C.BG}; border-bottom: 1px solid {C.BORDER}; }}"
+        )
         lay = QHBoxLayout(w)
-        lay.setContentsMargins(14, 0, 14, 0)
+        lay.setContentsMargins(8, 0, 12, 0)
+        lay.setSpacing(4)
 
-        self._drawer_btn = QPushButton("[ ⚙ ]  TACTICAL CONTROLS")
-        self._drawer_btn.setFixedHeight(30)
-        self._drawer_btn.setFont(mono_font(8, QFont.Weight.Bold, letter_spacing=0.6))
-        self._drawer_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._drawer_btn.setStyleSheet(f"""
-            QPushButton {{
-                background: {C.PANEL2};
-                color: {C.TEXT_MED};
-                border: 1px solid {C.BORDER_A};
-                border-radius: 2px;
-                padding: 0 12px;
-            }}
-            QPushButton:hover {{
-                background: rgba(142, 155, 255, 0.14);
-                color: #ffffff;
-                border: 1px solid {C.PRI};
-            }}
-            QPushButton:checked {{
-                color: {C.DARK};
-                border: 1px solid {C.PRI};
-                background: {C.PRI};
-            }}
-        """)
-        self._drawer_btn.setCheckable(True)
+        # Menu position: the quick-controls drawer opens directly beneath this button.
+        self._drawer_btn = self._ghost_btn(
+            "Controls", "Open quick access to system settings and tools.", checkable=True)
         self._drawer_btn.clicked.connect(self._toggle_drawer)
-        attach_hover_help(self._drawer_btn, "Toggle the tactical controls panel for quick access to system settings and tools.")
         lay.addWidget(self._drawer_btn)
-
-        self._directives_btn = QPushButton("[ ▤ ]  DIRECTIVES ARCHIVE")
-        self._directives_btn.setFixedHeight(30)
-        self._directives_btn.setFont(mono_font(8, QFont.Weight.Bold, letter_spacing=0.6))
-        self._directives_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._directives_btn.setStyleSheet(f"""
-            QPushButton {{
-                background: {C.PANEL2};
-                color: {C.TEXT_MED};
-                border: 1px solid {C.BORDER_A};
-                border-radius: 2px;
-                padding: 0 12px;
-            }}
-            QPushButton:hover {{
-                background: rgba(142, 155, 255, 0.14);
-                color: #ffffff;
-                border: 1px solid {C.PRI};
-            }}
-            QPushButton:pressed {{
-                background: rgba(142, 155, 255, 0.25);
-            }}
-        """)
-        self._directives_btn.clicked.connect(self._open_directives)
-        attach_hover_help(self._directives_btn, "Open the full directory of operational skills, directives, and capabilities.")
-        lay.addWidget(self._directives_btn)
-
-        # Sentry Monitoring Toggle Button
-        self._sentry_btn = QPushButton("[ ▣ ]  SENTRY MODE")
-        self._sentry_btn.setFixedHeight(30)
-        self._sentry_btn.setFont(mono_font(8, QFont.Weight.Bold, letter_spacing=0.6))
-        self._sentry_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._sentry_btn.setStyleSheet(f"""
-            QPushButton {{
-                background: {C.PANEL2};
-                color: {C.TEXT_MED};
-                border: 1px solid {C.BORDER_A};
-                border-radius: 2px;
-                padding: 0 12px;
-            }}
-            QPushButton:hover {{
-                background: rgba(142, 155, 255, 0.14);
-                color: #ffffff;
-                border: 1px solid {C.PRI};
-            }}
-            QPushButton:pressed {{
-                background: rgba(142, 155, 255, 0.25);
-            }}
-            QPushButton:checked {{
-                color: {C.DARK};
-                border: 1px solid {C.PRI};
-                background: {C.PRI};
-            }}
-        """)
-        self._sentry_btn.setCheckable(True)
-        self._sentry_btn.clicked.connect(self._toggle_sentry_mode)
-        attach_hover_help(self._sentry_btn, "Toggle continuous visual monitoring and active task focus tracking.")
-        lay.addWidget(self._sentry_btn)
-
-        self._orb_mode_btn = QPushButton("[ 🌐 ]  BAT GLOBE")
-        self._orb_mode_btn.setFixedHeight(30)
-        self._orb_mode_btn.setFont(mono_font(8, QFont.Weight.Bold, letter_spacing=0.6))
-        self._orb_mode_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._orb_mode_btn.setStyleSheet(f"""
-            QPushButton {{
-                background: {C.PANEL2};
-                color: {C.TEXT_MED};
-                border: 1px solid {C.BORDER_A};
-                border-radius: 2px;
-                padding: 0 12px;
-            }}
-            QPushButton:hover {{
-                background: rgba(0, 240, 255, 0.16);
-                color: #00f0ff;
-                border: 1px solid {C.PRI};
-            }}
-            QPushButton:pressed {{
-                background: rgba(0, 240, 255, 0.28);
-            }}
-        """)
-        self._orb_mode_btn.clicked.connect(self.show_bat_globe_orb)
-        attach_hover_help(self._orb_mode_btn, "Switch to minimal floating interactive Bat Globe Orb (Siri / Assistant style).")
-        lay.addWidget(self._orb_mode_btn)
-
-        lay.addStretch()
-
-        mid = QVBoxLayout(); mid.setSpacing(2)
-        _disp = self._assistant_name.upper()
-
-        top_title_row = QHBoxLayout()
-        top_title_row.setSpacing(8)
-        top_title_row.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        lay.addSpacing(8)
 
         self._header_icon_lbl = QLabel()
-        self._header_icon_lbl.setFixedSize(22, 22)
+        self._header_icon_lbl.setFixedSize(18, 18)
         self._header_icon_lbl.setStyleSheet("background: transparent;")
         if getattr(self, "_current_icon_path", None) and Path(self._current_icon_path).exists():
-            pm = _scaled_icon_pixmap(self._current_icon_path, 22, 22)
+            pm = _scaled_icon_pixmap(self._current_icon_path, 18, 18)
             if not pm.isNull():
                 self._header_icon_lbl.setPixmap(pm)
-        top_title_row.addWidget(self._header_icon_lbl)
+        lay.addWidget(self._header_icon_lbl)
+        lay.addSpacing(6)
 
-        self._title_lbl = QLabel(f"┌  {_disp} // {APP_VERSION}  ┐")
-        self._title_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._title_lbl.setFont(mono_font(12, QFont.Weight.Bold, letter_spacing=2.5))
-        self._title_lbl.setStyleSheet(f"color: {C.PRI}; background: transparent;")
-        top_title_row.addWidget(self._title_lbl)
+        self._title_lbl = QLabel(self._assistant_name.upper())
+        self._title_lbl.setFont(ui_font(10, QFont.Weight.DemiBold, letter_spacing=2.0))
+        self._title_lbl.setStyleSheet(f"color: {C.TEXT}; background: transparent;")
+        lay.addWidget(self._title_lbl)
+        lay.addSpacing(8)
 
-        mid.addLayout(top_title_row)
+        self._status_lbl = QLabel("Online")
+        self._status_lbl.setFont(ui_font(9))
+        self._status_lbl.setStyleSheet(f"color: {C.TEXT_DIM}; background: transparent;")
+        lay.addWidget(self._status_lbl)
 
-        from core.ui.themes import ThemeChrome
-        self._sub_lbl = QLabel(ThemeChrome.identity().affiliation_line)
-        self._sub_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._sub_lbl.setFont(mono_font(7, QFont.Weight.Medium, letter_spacing=1.6))
-        self._sub_lbl.setStyleSheet(f"color: {C.TEXT_DIM}; background: transparent;")
-        mid.addWidget(self._sub_lbl)
-        lay.addLayout(mid)
         lay.addStretch()
 
-        right_col = QVBoxLayout(); right_col.setSpacing(2)
-        self._clock_lbl = QLabel("00:00:00")
-        self._clock_lbl.setFont(mono_font(12, QFont.Weight.Bold, letter_spacing=1.0))
-        self._clock_lbl.setStyleSheet(f"color: {C.PRI}; background: transparent;")
-        self._clock_lbl.setAlignment(Qt.AlignmentFlag.AlignRight)
-        right_col.addWidget(self._clock_lbl)
-        self._date_lbl = QLabel("")
-        self._date_lbl.setFont(mono_font(7, QFont.Weight.Normal, letter_spacing=0.5))
-        self._date_lbl.setStyleSheet(f"color: {C.TEXT_DIM}; background: transparent;")
-        self._date_lbl.setAlignment(Qt.AlignmentFlag.AlignRight)
-        right_col.addWidget(self._date_lbl)
-        lay.addLayout(right_col)
+        self._chat_btn = self._ghost_btn(
+            "Conversation", "Show or hide the full conversation and notes.", checkable=True)
+        self._chat_btn.clicked.connect(self._toggle_conversation_panel)
+        lay.addWidget(self._chat_btn)
+
+        self._systems_btn = self._ghost_btn(
+            "Systems", "Show or hide system telemetry and the music player.", checkable=True)
+        self._systems_btn.clicked.connect(self._toggle_systems_panel)
+        lay.addWidget(self._systems_btn)
+
+        self._directives_btn = self._ghost_btn(
+            "Archive", "Open the full directory of operational skills, directives, and capabilities.")
+        self._directives_btn.clicked.connect(self._open_directives)
+        lay.addWidget(self._directives_btn)
+
+        self._sentry_btn = self._ghost_btn(
+            "Sentry", "Toggle continuous visual monitoring and active task focus tracking.", checkable=True)
+        self._sentry_btn.clicked.connect(self._toggle_sentry_mode)
+        lay.addWidget(self._sentry_btn)
+
+        self._orb_mode_btn = self._ghost_btn(
+            "Orb", "Switch to the small floating Bat Globe orb.")
+        self._orb_mode_btn.clicked.connect(self.show_bat_globe_orb)
+        lay.addWidget(self._orb_mode_btn)
+
+        lay.addSpacing(10)
+        self._clock_lbl = QLabel("00:00")
+        self._clock_lbl.setFont(mono_font(9))
+        self._clock_lbl.setStyleSheet(f"color: {C.TEXT_DIM}; background: transparent;")
+        lay.addWidget(self._clock_lbl)
+
+        # Kept for callers that still update them; not part of the minimal header.
+        self._sub_lbl = QLabel("", w)
+        self._sub_lbl.hide()
+        self._date_lbl = QLabel("", w)
+        self._date_lbl.hide()
         return w
 
+    def _toggle_conversation_panel(self, checked: bool = False) -> None:
+        self._right_panel.setVisible(bool(checked))
+        self._chat_btn.setChecked(bool(checked))
+        QTimer.singleShot(0, self._reposition_cam_preview)
+
+    def _toggle_systems_panel(self, checked: bool = False) -> None:
+        self._left_panel.setVisible(bool(checked))
+        self._systems_btn.setChecked(bool(checked))
+
+    def _right_inset(self) -> int:
+        """Width currently taken by the conversation panel on the right edge."""
+        rp = getattr(self, "_right_panel", None)
+        return _RIGHT_W if rp is not None and rp.isVisible() else 0
+
+    def _reposition_cam_preview(self) -> None:
+        if not hasattr(self, "_cam_preview"):
+            return
+        cw = self.centralWidget()
+        pw = _CameraPreview._W
+        ph = self._cam_preview.height() or _CameraPreview._H
+        self._cam_preview.setGeometry(
+            cw.width() - self._right_inset() - pw - 12,
+            cw.height() - ph - 28,
+            pw, ph,
+        )
+
+    def _refresh_status_label(self) -> None:
+        lbl = getattr(self, "_status_lbl", None)
+        hud = getattr(self, "hud", None)
+        if lbl is None or hud is None:
+            return
+        st = str(getattr(hud, "state", "") or "").upper()
+        if self._muted:
+            text, col = "Muted", C.MUTED_C
+        elif getattr(hud, "speaking", False) or st == "SPEAKING":
+            text, col = "Speaking", C.PRI
+        elif st in ("THINKING", "PROCESSING"):
+            text, col = "Thinking", C.PRI
+        elif st in ("LISTENING", "HEARING"):
+            text, col = "Listening", C.GREEN
+        elif st == "SLEEPING":
+            text, col = "Sleeping", C.TEXT_DIM
+        else:
+            text, col = "Online", C.TEXT_DIM
+        key = (text, col)
+        if getattr(self, "_status_key", None) != key:
+            self._status_key = key
+            lbl.setText(text)
+            lbl.setStyleSheet(f"color: {col}; background: transparent;")
+
+    @staticmethod
+    def _elide(text: str, limit: int) -> str:
+        text = " ".join((text or "").split())
+        return text if len(text) <= limit else text[: limit - 1].rstrip() + "…"
+
+    def _update_caption(self, text: str) -> None:
+        """Mirror the latest exchange under the emblem."""
+        if not hasattr(self, "_caption_lbl"):
+            return
+        t = (text or "").strip()
+        tl = t.lower()
+        if tl.startswith("you:"):
+            said = self._elide(t[4:], 140)
+            self._you_lbl.setText(f"You said: {said}" if said else "")
+        elif tl.startswith((f"{self._assistant_name.lower()}:", "alfred:", "jarvis:")):
+            reply = self._elide(t.split(":", 1)[1], 260)
+            if reply:
+                self._caption_lbl.setText(reply)
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            super().dragEnterEvent(event)
+
+    def dropEvent(self, event):
+        for url in event.mimeData().urls():
+            path = url.toLocalFile()
+            if path and Path(path).is_file():
+                self._drop_zone._set_file(path)
+                event.acceptProposedAction()
+                return
+        super().dropEvent(event)
+
     def _tick_clock(self):
-        self._clock_lbl.setText(time.strftime("%H:%M:%S"))
-        self._date_lbl.setText(time.strftime("%a %d %b %Y"))
+        now = time.strftime("%H:%M")
+        if self._clock_lbl.text() != now:
+            self._clock_lbl.setText(now)
+            self._clock_lbl.setToolTip(time.strftime("%a %d %b %Y"))
+        self._refresh_status_label()
 
     def _build_left_panel(self) -> QWidget:
+        """Systems sheet: telemetry and the music player. Hidden until asked for."""
         container = QWidget()
+        container.setObjectName("alfredSystems")
+        container.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         container.setFixedWidth(_LEFT_W)
-        container.setStyleSheet(f"""
-            QWidget {{
-                background: {C.PANEL};
-                border-right: 1px solid {C.BORDER_A};
-            }}
-        """)
+        container.setStyleSheet(
+            f"QWidget#alfredSystems {{ background: {C.PANEL}; border-right: 1px solid {C.BORDER}; }}"
+        )
         container_lay = QVBoxLayout(container)
         container_lay.setContentsMargins(0, 0, 0, 0)
         container_lay.setSpacing(0)
@@ -8483,12 +8545,12 @@ class MainWindow(QMainWindow):
         scroll.setStyleSheet(f"""
             QScrollArea {{ background: transparent; border: none; }}
             QScrollBar:vertical {{
-                background: {C.PANEL};
+                background: transparent;
                 width: 4px;
                 margin: 0;
             }}
             QScrollBar::handle:vertical {{
-                background: {C.BORDER_B};
+                background: {C.BORDER_A};
                 min-height: 20px;
                 border-radius: 2px;
             }}
@@ -8500,39 +8562,24 @@ class MainWindow(QMainWindow):
         w = QWidget()
         w.setStyleSheet("background: transparent; border: none;")
         lay = QVBoxLayout(w)
-        lay.setContentsMargins(8, 8, 8, 8)
+        lay.setContentsMargins(10, 12, 10, 10)
         lay.setSpacing(8)
 
-        # 1. Optical Recon Scanner Widget (Screenshot 1 top-left)
-        self._recon_widget = CRTReconWidget()
-        lay.addWidget(self._recon_widget)
+        # The decorative recon / fingerprint / pose widgets are gone from the main window.
+        self._recon_widget = None
+        self._bio_widget = None
+        self._pose_widget = None
 
-        # 2. Biometric Fingerprint Scanner Widget (Screenshot 1 middle-left)
-        self._bio_widget = BiometricFingerprintWidget()
-        lay.addWidget(self._bio_widget)
-
-        # 3. Telemetry Pose Humanoid Widget (Screenshot 1 lower-left)
-        self._pose_widget = WireframePoseWidget()
-        lay.addWidget(self._pose_widget)
-
-        # Developer / Power-User 2x2 Data Grid (GIT, PORTS, TOP PROC, SESSION)
-        from core.hud.datagrid import DeveloperDataGridWidget
-        self._data_grid = DeveloperDataGridWidget()
-        lay.addWidget(self._data_grid)
-
-        # 4. Metric Bars
-        lay.addSpacing(2)
-        from core.ui.themes import ThemeChrome
-        self._hdr_telemetry = QLabel(ThemeChrome.chrome().telemetry_header)
-        self._hdr_telemetry.setFont(mono_font(7, QFont.Weight.Bold, letter_spacing=1.0))
-        self._hdr_telemetry.setStyleSheet(f"color: {C.PRI}; background: transparent; border: none; padding-left: 2px;")
+        self._hdr_telemetry = QLabel("System")
+        self._hdr_telemetry.setFont(ui_font(9, QFont.Weight.Medium))
+        self._hdr_telemetry.setStyleSheet(f"color: {C.TEXT_MED}; background: transparent; border: none; padding-left: 2px;")
         lay.addWidget(self._hdr_telemetry)
 
         self._bar_cpu = MetricBar("CPU", C.PRI)
-        self._bar_mem = MetricBar("MEM", C.ACC2)
-        self._bar_net = MetricBar("NET", C.GREEN)
-        self._bar_gpu = MetricBar("GPU", C.ACC)
-        self._bar_tmp = MetricBar("TMP", "#ff5577")
+        self._bar_mem = MetricBar("MEM", C.PRI)
+        self._bar_net = MetricBar("NET", C.PRI)
+        self._bar_gpu = MetricBar("GPU", C.PRI)
+        self._bar_tmp = MetricBar("TMP", C.PRI)
 
         for bar in [self._bar_cpu, self._bar_mem, self._bar_net, self._bar_gpu, self._bar_tmp]:
             bar.setFixedHeight(34)
@@ -8551,76 +8598,59 @@ class MainWindow(QMainWindow):
         meta_row.addWidget(self._proc_lbl)
         lay.addLayout(meta_row)
 
-        lay.addSpacing(4)
+        # Developer / power-user 2x2 data grid (git, ports, top process, session)
+        from core.hud.datagrid import DeveloperDataGridWidget
+        self._data_grid = DeveloperDataGridWidget()
+        lay.addWidget(self._data_grid)
 
-        # 5. Dedicated Cyber Audio Player Widget (Bottom-Left Deck)
+        lay.addStretch(1)
+
         self._audio_player = TacticalAudioPlayerWidget(self._bg_music, parent=w)
         lay.addWidget(self._audio_player)
 
         scroll.setWidget(w)
         container_lay.addWidget(scroll)
+        container.setVisible(False)
         return container
 
     def _build_right_panel(self) -> QWidget:
+        """Conversation sheet: full transcript and notes. Hidden until asked for."""
         w = QWidget()
+        w.setObjectName("alfredConversation")
+        w.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         w.setFixedWidth(_RIGHT_W)
-        w.setStyleSheet(f"""
-            QWidget {{
-                background: {C.PANEL};
-                border-left: 1px solid {C.BORDER_A};
-            }}
-        """)
+        w.setStyleSheet(
+            f"QWidget#alfredConversation {{ background: {C.PANEL}; border-left: 1px solid {C.BORDER}; }}"
+        )
         lay = QVBoxLayout(w)
-        lay.setContentsMargins(10, 8, 10, 8)
-        lay.setSpacing(8)
+        lay.setContentsMargins(14, 8, 10, 10)
+        lay.setSpacing(6)
 
-        # 1. Subject Tactical Dossier Card (Screenshot 1 exact card!)
-        self._dossier_card = SubjectDossierCard(self._assistant_name)
-        lay.addWidget(self._dossier_card)
+        # Kept for name / threat-state callers; no longer shown in the main window.
+        self._dossier_card = SubjectDossierCard(self._assistant_name, parent=w)
+        self._dossier_card.hide()
 
-        # 2. Segmented tab header: Telemetry vs Dossier Notes
-        from core.ui.themes import ThemeChrome
-        tab_row = QHBoxLayout(); tab_row.setSpacing(6)
-        self._tab_activity_btn = QPushButton(ThemeChrome.chrome().tab_telemetry)
-        self._tab_activity_btn.setFixedHeight(28)
-        self._tab_activity_btn.setFont(mono_font(7, QFont.Weight.Bold, letter_spacing=0.8))
-        self._tab_activity_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._tab_activity_btn.setCheckable(True)
+        tab_row = QHBoxLayout()
+        tab_row.setSpacing(14)
+        self._tab_activity_btn = QPushButton("Conversation")
+        self._tab_notes_btn = QPushButton("Notes")
+        for btn in (self._tab_activity_btn, self._tab_notes_btn):
+            btn.setFixedHeight(30)
+            btn.setFont(ui_font(9, QFont.Weight.Medium))
+            btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            btn.setCheckable(True)
+            tab_row.addWidget(btn)
         self._tab_activity_btn.setChecked(True)
+        tab_row.addStretch(1)
 
-        self._tab_notes_btn = QPushButton(ThemeChrome.chrome().tab_intel)
-        self._tab_notes_btn.setFixedHeight(28)
-        self._tab_notes_btn.setFont(mono_font(7, QFont.Weight.Bold, letter_spacing=0.8))
-        self._tab_notes_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._tab_notes_btn.setCheckable(True)
-        self._tab_notes_btn.setChecked(False)
-
-        tab_row.addWidget(self._tab_activity_btn)
-        tab_row.addWidget(self._tab_notes_btn)
-        lay.addLayout(tab_row)
-
-        attach_hover_help(self._tab_activity_btn, "Display live system telemetry, activity logs, and assistant messages.")
+        attach_hover_help(self._tab_activity_btn, "Display the conversation, activity log, and assistant messages.")
         attach_hover_help(self._tab_notes_btn, "View gathered intel entries, research notes, URLs, and code snippets.")
-
         self._tab_activity_btn.clicked.connect(lambda: self._switch_terminal_tab(0))
         self._tab_notes_btn.clicked.connect(lambda: self._switch_terminal_tab(1))
 
-        self._terminal_stack = QStackedWidget()
-        self._terminal_stack.setStyleSheet("background: transparent; border: none;")
-        self._log = LogWidget()
-        self._notes_terminal = NotesTerminalWidget()
-        self._notes_terminal.note_added.connect(self._on_notes_count_updated)
-        self._terminal_stack.addWidget(self._log)
-        self._terminal_stack.addWidget(self._notes_terminal)
-
-        # ── Cognitive-trace & Barge-In toggles ─────────────────────────────────
-        # Sits between the tab row and chat stack so both are clearly above the chat.
-        trace_row = QHBoxLayout()
-        trace_row.setSpacing(6)
-
-        self._think_btn = QPushButton("[ ◈ ]  COGNITIVE TRACE : OFF")
-        self._think_btn.setFixedHeight(24)
-        self._think_btn.setFont(mono_font(7, QFont.Weight.Bold, letter_spacing=0.6))
+        self._think_btn = QPushButton("Reasoning")
+        self._think_btn.setFixedHeight(26)
+        self._think_btn.setFont(ui_font(8, QFont.Weight.Medium))
         self._think_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._think_btn.setCheckable(True)
         self._think_btn.setChecked(False)
@@ -8630,313 +8660,266 @@ class MainWindow(QMainWindow):
         )
         self._style_think_btn(False)
         self._think_btn.toggled.connect(self._toggle_think)
-        trace_row.addWidget(self._think_btn, stretch=1)
-        lay.addLayout(trace_row)
+        tab_row.addWidget(self._think_btn)
 
+        self._clear_btn = self._ghost_btn(
+            "Clear", "Clear conversational chat history and reset the transcript.", height=26)
+        self._clear_btn.setFont(ui_font(8, QFont.Weight.Medium))
+        self._clear_btn.clicked.connect(self.clear_chat)
+        tab_row.addWidget(self._clear_btn)
+        lay.addLayout(tab_row)
+
+        self._terminal_stack = QStackedWidget()
+        self._terminal_stack.setStyleSheet("background: transparent; border: none;")
+        self._log = LogWidget()
+        self._notes_terminal = NotesTerminalWidget()
+        self._notes_terminal.note_added.connect(self._on_notes_count_updated)
+        self._terminal_stack.addWidget(self._log)
+        self._terminal_stack.addWidget(self._notes_terminal)
         lay.addWidget(self._terminal_stack, stretch=1)
         self._update_tab_button_styles(0)
 
-        # 3. Forensic Data Ingestion
-        self._drop_zone = FileDropZone()
+        # File intake lives behind the + button and window-wide drag and drop.
+        self._drop_zone = FileDropZone(w)
         self._drop_zone.file_selected.connect(self._on_file_selected)
-        attach_hover_help(self._drop_zone, "Drop files or click to upload documents, images, code, and logs for immediate analysis.")
-        lay.addWidget(self._drop_zone)
+        self._drop_zone.hide()
 
-        self._file_hint = QLabel("DROP EVIDENCE // SURVEILLANCE CAPTURES // TELEMETRY LOGS")
-        self._file_hint.setFont(mono_font(6, letter_spacing=0.8))
-        self._file_hint.setStyleSheet(f"color: {C.TEXT_DIM}; background: transparent; padding-left: 2px;")
-        self._file_hint.setWordWrap(True)
-        lay.addWidget(self._file_hint)
+        w.setVisible(False)
+        return w
 
-        # 4. Directive Input Row
-        lay.addLayout(self._build_input_row())
+    def _build_center_column(self) -> QWidget:
+        """Emblem, the latest exchange, and the single input bar."""
+        col = QWidget()
+        v = QVBoxLayout(col)
+        v.setContentsMargins(0, 0, 0, 0)
+        v.setSpacing(0)
+        v.addWidget(self._center_split, stretch=1)
 
-        # 5. Emergency Purge Button
-        self._interrupt_btn = QPushButton("[ ■ ]  ABORT ACTIVE DIRECTIVE  //  ESC")
-        self._interrupt_btn.setFixedHeight(32)
-        self._interrupt_btn.setFont(mono_font(7, QFont.Weight.Bold, letter_spacing=1.2))
-        self._interrupt_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        attach_hover_help(self._interrupt_btn, "Immediately stop active speech synthesis, reasoning tasks, and ongoing directives.")
-        self._interrupt_btn.setStyleSheet(f"""
-            QPushButton {{
-                background: rgba(255, 42, 85, 0.08);
-                color: #ff5577;
-                border: 1px solid rgba(255, 42, 85, 0.45);
-                border-radius: 2px;
-                padding: 0 8px;
-            }}
-            QPushButton:hover {{
-                background: #ff2a55;
-                border: 1px solid #ff2a55;
-                color: #05060a;
-            }}
-            QPushButton:pressed {{
-                background: #cc1840;
-                color: #ffffff;
+        def _centered(widget: QWidget, max_w: int) -> QHBoxLayout:
+            widget.setMaximumWidth(max_w)
+            row = QHBoxLayout()
+            row.setContentsMargins(0, 0, 0, 0)
+            row.addStretch(1)
+            row.addWidget(widget, 20)
+            row.addStretch(1)
+            return row
+
+        dock = QWidget()
+        dv = QVBoxLayout(dock)
+        dv.setContentsMargins(24, 0, 24, 16)
+        dv.setSpacing(6)
+
+        self._caption_lbl = QLabel("Standing by.")
+        self._caption_lbl.setFont(ui_font(12))
+        self._caption_lbl.setWordWrap(True)
+        self._caption_lbl.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignBottom)
+        self._caption_lbl.setFixedHeight(62)
+        self._caption_lbl.setStyleSheet(f"color: {C.TEXT}; background: transparent;")
+        dv.addLayout(_centered(self._caption_lbl, 640))
+
+        self._you_lbl = QLabel("")
+        self._you_lbl.setFont(ui_font(9))
+        self._you_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._you_lbl.setFixedHeight(18)
+        self._you_lbl.setStyleSheet(f"color: {C.TEXT_DIM}; background: transparent;")
+        dv.addLayout(_centered(self._you_lbl, 640))
+        dv.addSpacing(6)
+
+        bar = QFrame()
+        bar.setObjectName("alfredInput")
+        bar.setFixedHeight(42)
+        bar.setStyleSheet(
+            f"QFrame#alfredInput {{ background: {C.PANEL2}; border: 1px solid {C.BORDER_A}; border-radius: 4px; }}"
+        )
+        row = QHBoxLayout(bar)
+        row.setContentsMargins(6, 5, 6, 5)
+        row.setSpacing(2)
+
+        attach = self._ghost_btn("+", "Attach a file for analysis. You can also drop a file anywhere on the window.", height=30)
+        attach.setFont(ui_font(13))
+        attach.setFixedWidth(30)
+        attach.setAccessibleName("Attach file")
+        attach.clicked.connect(lambda: self._drop_zone._browse())
+        row.addWidget(attach)
+
+        self._input = QLineEdit()
+        self._input.setPlaceholderText(f"Ask {self._assistant_name}")
+        self._input.setFont(ui_font(10))
+        self._input.setStyleSheet(f"""
+            QLineEdit {{
+                background: transparent;
+                color: {C.TEXT};
+                border: none;
+                padding: 0 6px;
+                selection-background-color: {C.PRI_GHO};
             }}
         """)
-        self._interrupt_btn.clicked.connect(self._do_interrupt)
-        lay.addWidget(self._interrupt_btn)
+        self._input.returnPressed.connect(self._send)
+        attach_hover_help(self._input, "Type a text directive or question to submit to ALFRED directly.")
+        row.addWidget(self._input, stretch=1)
 
-        # 6. Mute Button
-        self._mute_btn = ReactiveMicButton("BATCAVE SENSORS: ONLINE")
-        self._mute_btn.setFixedHeight(32)
-        self._mute_btn.setFont(mono_font(8, QFont.Weight.Bold, letter_spacing=0.8))
+        self._mute_btn = ReactiveMicButton("Mic on")
+        self._mute_btn.setFixedHeight(30)
         self._mute_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._mute_btn.setAccessibleName("Acoustic sensors")
+        self._mute_btn.setAccessibleName("Microphone")
         self._mute_btn.setAccessibleDescription(
             "Toggle microphone listening. The outline responds to input level while listening."
         )
-        attach_hover_help(self._mute_btn, "Toggle microphone input on or off. Responds dynamically to audio volume.")
+        attach_hover_help(self._mute_btn, "Toggle microphone input on or off (F4). Responds to audio volume.")
         self._mute_btn.clicked.connect(self._toggle_mute)
         self._style_mute_btn()
-        lay.addWidget(self._mute_btn)
+        row.addWidget(self._mute_btn)
 
-        return w
+        self._interrupt_btn = self._ghost_btn(
+            "Stop", "Immediately stop active speech, reasoning tasks, and ongoing directives (Esc).", height=30)
+        self._interrupt_btn.clicked.connect(self._do_interrupt)
+        row.addWidget(self._interrupt_btn)
 
-    def _build_quick_drawer(self) -> QWidget:
-        """Floating overlay panel shown when the ⚙ header button is toggled."""
-        _BTN_STYLE_PRI = f"""
+        send = QPushButton("Send")
+        send.setFixedHeight(30)
+        send.setFont(ui_font(9, QFont.Weight.DemiBold))
+        send.setCursor(Qt.CursorShape.PointingHandCursor)
+        send.setStyleSheet(f"""
             QPushButton {{
-                background: rgba(142, 155, 255, 0.12);
-                color: {C.PRI};
-                border: 1px solid {C.PRI};
-                border-radius: 2px;
-                text-align: left; padding: 0 10px;
-                font-weight: bold;
-            }}
-            QPushButton:hover {{
                 background: {C.PRI};
                 color: {C.DARK};
-                border: 1px solid {C.PRI};
+                border: none;
+                border-radius: 4px;
+                padding: 0 14px;
             }}
-            QPushButton:pressed {{
-                background: {C.PRI_DIM};
-                color: {C.DARK};
-            }}
-        """
-        _BTN_STYLE_DIM = f"""
-            QPushButton {{
-                background: {C.PANEL2};
-                color: {C.TEXT_MED};
-                border: 1px solid {C.BORDER_A};
-                border-radius: 2px;
-                text-align: left; padding: 0 10px;
-                font-weight: 500;
-            }}
-            QPushButton:hover {{
-                color: #ffffff;
-                border-color: {C.PRI};
-                background: rgba(142, 155, 255, 0.10);
-            }}
-            QPushButton:pressed {{
-                background: rgba(142, 155, 255, 0.20);
-            }}
-        """
+            QPushButton:hover {{ background: {C.TEXT_BRIGHT}; }}
+            QPushButton:pressed {{ background: {C.PRI_DIM}; }}
+        """)
+        send.clicked.connect(self._send)
+        attach_hover_help(send, "Send the typed directive or question.")
+        row.addWidget(send)
+        dv.addLayout(_centered(bar, 600))
 
+        self._file_hint = QLabel("")
+        self._file_hint.setFont(ui_font(8))
+        self._file_hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._file_hint.setFixedHeight(16)
+        self._file_hint.setStyleSheet(f"color: {C.TEXT_DIM}; background: transparent;")
+        dv.addLayout(_centered(self._file_hint, 600))
+
+        v.addWidget(dock)
+        return col
+
+    def _build_quick_drawer(self) -> QWidget:
+        """Floating controls panel shown when the header's Controls button is toggled."""
         parent_target = self if sys.platform == "win32" else (self.centralWidget() or self)
         w = TacticalControlsDrawer(parent_target)
         w.closed.connect(lambda: self._drawer_btn.setChecked(False) if hasattr(self, "_drawer_btn") else None)
         w.hide()
 
         lay = QVBoxLayout(w)
-        lay.setContentsMargins(12, 12, 12, 12)
-        lay.setSpacing(6)
+        lay.setContentsMargins(8, 10, 8, 10)
+        lay.setSpacing(1)
 
         hdr_row = QHBoxLayout()
-        hdr_row.setContentsMargins(0, 0, 0, 2)
+        hdr_row.setContentsMargins(10, 0, 4, 4)
         hdr_row.setSpacing(6)
 
-        hdr_icon = QLabel("⠿")
-        hdr_icon.setFont(mono_font(9, QFont.Weight.Bold))
-        hdr_icon.setStyleSheet(f"color: {C.PRI_DIM}; background: transparent;")
-        hdr_icon.setCursor(Qt.CursorShape.SizeAllCursor)
-        hdr_icon.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
-        hdr_row.addWidget(hdr_icon)
-
-        hdr = QLabel("◈  BATCAVE TACTICAL SYSTEMS")
-        hdr.setFont(mono_font(8, QFont.Weight.Bold, letter_spacing=1.5))
-        hdr.setStyleSheet(f"color: {C.PRI}; background: transparent;")
-        hdr.setCursor(Qt.CursorShape.SizeAllCursor)
+        hdr = QLabel("Controls")
+        hdr.setFont(ui_font(9, QFont.Weight.DemiBold))
+        hdr.setStyleSheet(f"color: {C.TEXT}; background: transparent;")
         hdr.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
-        hdr.setToolTip("Click and drag to reposition Tactical Controls (double-click to reset)")
         hdr_row.addWidget(hdr)
-
         hdr_row.addStretch()
 
         close_btn = QPushButton("✕")
-        close_btn.setFixedSize(20, 20)
-        close_btn.setFont(mono_font(8, QFont.Weight.Bold))
+        close_btn.setFixedSize(22, 22)
+        close_btn.setFont(ui_font(8))
         close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        close_btn.setToolTip("Close Tactical Controls (Esc)")
+        close_btn.setToolTip("Close controls (Esc). Drag the panel to move it; double-click to reset.")
         close_btn.setStyleSheet(f"""
             QPushButton {{
                 background: transparent;
                 color: {C.TEXT_DIM};
-                border: 1px solid transparent;
-                border-radius: 2px;
+                border: none;
+                border-radius: 4px;
                 padding: 0;
             }}
-            QPushButton:hover {{
-                background: rgba(255, 42, 85, 0.20);
-                color: #ff5577;
-                border: 1px solid rgba(255, 42, 85, 0.50);
-            }}
-            QPushButton:pressed {{
-                background: rgba(255, 42, 85, 0.40);
-                color: #ffffff;
-            }}
+            QPushButton:hover {{ background: {C.PANEL2}; color: {C.TEXT_BRIGHT}; }}
         """)
         close_btn.clicked.connect(w.close_drawer)
         hdr_row.addWidget(close_btn)
-
         lay.addLayout(hdr_row)
 
-        divider = QFrame()
-        divider.setFrameShape(QFrame.Shape.HLine)
-        divider.setFrameShadow(QFrame.Shadow.Plain)
-        divider.setStyleSheet(f"color: {C.BORDER_A}; background-color: {C.BORDER_A}; height: 1px; border: none; margin-bottom: 2px;")
-        lay.addWidget(divider)
+        def _divider() -> None:
+            line = QFrame()
+            line.setFixedHeight(1)
+            line.setStyleSheet(f"background: {C.BORDER}; border: none;")
+            lay.addSpacing(4)
+            lay.addWidget(line)
+            lay.addSpacing(4)
 
-        remote_btn = QPushButton("[ ⟁ ]  SATELLITE COMMS // UPLINK")
-        remote_btn.setFixedHeight(30)
-        remote_btn.setFont(mono_font(8, QFont.Weight.Bold, letter_spacing=0.5))
-        remote_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        remote_btn.setStyleSheet(_BTN_STYLE_PRI)
-        remote_btn.clicked.connect(self._open_remote)
-        attach_hover_help(remote_btn, "Pair with companion mobile device or browser to control ALFRED remotely over your local network.")
-        lay.addWidget(remote_btn)
+        def _row(label: str, tip: str, slot=None, value: str = "") -> DrawerRow:
+            row = DrawerRow(label, value)
+            if slot is not None:
+                row.clicked.connect(slot)
+            attach_hover_help(row, tip)
+            lay.addWidget(row)
+            return row
 
-        fs_btn = QPushButton("[ ⛶ ]  TACTICAL HUD VIEW  [F11]")
-        fs_btn.setFixedHeight(29)
-        fs_btn.setFont(mono_font(8, letter_spacing=0.5))
-        fs_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        fs_btn.setStyleSheet(_BTN_STYLE_DIM)
-        fs_btn.clicked.connect(self._toggle_fullscreen)
-        attach_hover_help(fs_btn, "Toggle full-screen tactical Batcomputer HUD view (or press F11).")
-        lay.addWidget(fs_btn)
+        _divider()
+        _row("Remote uplink",
+             "Pair with companion mobile device or browser to control ALFRED remotely over your local network.",
+             self._open_remote)
+        _row("Fullscreen", "Toggle the full-screen view (or press F11).", self._toggle_fullscreen, value="F11")
+        _row("Desktop shortcut", "Create a quick-launch shortcut icon for ALFRED on your desktop.",
+             self._create_desktop_shortcut)
+        _row("Settings", "Customize assistant name, how you are addressed, voice, theme, and app icon.",
+             self._open_customize)
 
-        sc_btn = QPushButton("[ ⊞ ]  DEPLOY BATCAVE CONSOLE")
-        sc_btn.setFixedHeight(29)
-        sc_btn.setFont(mono_font(8, letter_spacing=0.5))
-        sc_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        sc_btn.setStyleSheet(_BTN_STYLE_DIM)
-        sc_btn.clicked.connect(self._create_desktop_shortcut)
-        attach_hover_help(sc_btn, "Create a quick-launch shortcut icon for ALFRED on your Windows desktop.")
-        lay.addWidget(sc_btn)
-
-        self._autostart_btn = QPushButton("[ ◈ ]  BATCOMPUTER AUTO-BOOT: OFF")
-        self._autostart_btn.setFixedHeight(29)
-        self._autostart_btn.setFont(mono_font(8, letter_spacing=0.5))
-        self._autostart_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._autostart_btn.clicked.connect(self._toggle_autostart)
-        attach_hover_help(self._autostart_btn, "Automatically start ALFRED in the background whenever Windows boots up.")
-        lay.addWidget(self._autostart_btn)
-
-        cust_btn = QPushButton("[ ⚙ ]  RECONFIGURE BATCOMPUTER")
-        cust_btn.setFixedHeight(29)
-        cust_btn.setFont(mono_font(8, letter_spacing=0.5))
-        cust_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        cust_btn.setStyleSheet(_BTN_STYLE_DIM)
-        cust_btn.clicked.connect(self._open_customize)
-        attach_hover_help(cust_btn, "Customize assistant name, commander designation, vocal synthesis, CRT theme, and app icon.")
-        lay.addWidget(cust_btn)
-
-        self._brief_btn = QPushButton()
-        self._brief_btn.setFixedHeight(29)
-        self._brief_btn.setFont(mono_font(8, letter_spacing=0.5))
-        self._brief_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._brief_btn.clicked.connect(self._toggle_brief)
-        attach_hover_help(self._brief_btn, "Deliver an automated morning briefing with weather, unread emails, and schedule on startup.")
-        lay.addWidget(self._brief_btn)
-
-        self._clipboard_btn = QPushButton()
-        self._clipboard_btn.setFixedHeight(29)
-        self._clipboard_btn.setFont(mono_font(8, letter_spacing=0.5))
-        self._clipboard_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._clipboard_btn.clicked.connect(self._toggle_clipboard_monitor)
-        attach_hover_help(
-            self._clipboard_btn,
+        _divider()
+        self._autostart_btn = _row(
+            "Auto-start", "Automatically start ALFRED in the background whenever the computer boots up.",
+            self._toggle_autostart)
+        self._brief_btn = _row(
+            "Daily briefing",
+            "Deliver an automated morning briefing with weather, unread emails, and schedule on startup.",
+            self._toggle_brief)
+        self._clipboard_btn = _row(
+            "Clipboard stream",
             "Toggle real-time clipboard copy stream interception and tools. "
-            "Disabled by default to protect passkeys, tokens, and sensitive credentials."
-        )
-        lay.addWidget(self._clipboard_btn)
+            "Disabled by default to protect passkeys, tokens, and sensitive credentials.",
+            self._toggle_clipboard_monitor)
         self._refresh_clipboard_btn()
 
-        # ── Wake word ──────────────────────────────────────────────────────────
-        self._wake_btn = QPushButton()
-        self._wake_btn.setFixedHeight(29)
-        self._wake_btn.setFont(mono_font(8, letter_spacing=0.5))
-        self._wake_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._wake_btn.clicked.connect(self._toggle_wake_word)
-        attach_hover_help(self._wake_btn, "Toggle continuous hands-free voice wake word detection for 'Alfred'.")
-        lay.addWidget(self._wake_btn)
-
-        self._wake_sleep_btn = QPushButton()
-        self._wake_sleep_btn.setFixedHeight(29)
-        self._wake_sleep_btn.setFont(mono_font(8, letter_spacing=0.5))
-        self._wake_sleep_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._wake_sleep_btn.clicked.connect(self._tap_wake_manual)
-        attach_hover_help(self._wake_sleep_btn, "Manually trigger listening mode or put speech recognition to sleep.")
-        lay.addWidget(self._wake_sleep_btn)
-        self._wake_btn.setText("[ ◈ ]  COWL VOICE SENSORS")
-        self._wake_btn.setStyleSheet(_BTN_STYLE_DIM)
+        _divider()
+        self._wake_btn = _row(
+            "Wake word", "Toggle continuous hands-free voice wake word detection for 'Alfred'.",
+            self._toggle_wake_word)
+        self._wake_sleep_btn = _row(
+            "Sleep now", "Manually trigger listening mode or put speech recognition to sleep.",
+            self._tap_wake_manual)
         self._wake_sleep_btn.hide()
-
-        self._voice_profile_btn = QPushButton()
-        self._voice_profile_btn.setFixedHeight(29)
-        self._voice_profile_btn.setFont(mono_font(8, letter_spacing=0.5))
-        self._voice_profile_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._voice_profile_btn.clicked.connect(self._open_voice_enroll)
-        attach_hover_help(self._voice_profile_btn, "Configure local speaker verification biometric voice profile.")
-        lay.addWidget(self._voice_profile_btn)
-
-        self._ptt_btn = QPushButton()
-        self._ptt_btn.setFixedHeight(29)
-        self._ptt_btn.setFont(mono_font(8, letter_spacing=0.5))
-        self._ptt_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._ptt_btn.clicked.connect(self._toggle_ptt)
-        attach_hover_help(self._ptt_btn, "Hold hotkey to speak so the microphone only listens while the key combination is held down.")
-        lay.addWidget(self._ptt_btn)
-
+        self._voice_profile_btn = _row(
+            "Voice profile", "Configure local speaker verification biometric voice profile.",
+            self._open_voice_enroll)
+        self._ptt_btn = _row(
+            "Push to talk",
+            "Hold hotkey to speak so the microphone only listens while the key combination is held down.",
+            self._toggle_ptt)
         self._refresh_talk_btns()
+        _row("Audio devices",
+             "Choose which microphone and speaker devices ALFRED uses for voice input and speech output.",
+             self._open_audio_devices)
 
-        audio_btn = QPushButton("[ ☊ ]  COWL ACOUSTIC ROUTING")
-        audio_btn.setFixedHeight(29)
-        audio_btn.setFont(mono_font(8, letter_spacing=0.5))
-        audio_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        audio_btn.setStyleSheet(_BTN_STYLE_DIM)
-        audio_btn.clicked.connect(self._open_audio_devices)
-        attach_hover_help(audio_btn, "Choose which microphone and speaker devices ALFRED uses for voice input and speech output.")
-        lay.addWidget(audio_btn)
-
-        mem_btn = QPushButton("[ ☵ ]  WAYNE SECURE ARCHIVES")
-        mem_btn.setFixedHeight(29)
-        mem_btn.setFont(mono_font(8, letter_spacing=0.5))
-        mem_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        mem_btn.setStyleSheet(_BTN_STYLE_DIM)
-        mem_btn.clicked.connect(self._open_memory_panel)
-        attach_hover_help(mem_btn, "View and manage remembered facts, user habits, and long-term memory stored in the archives.")
-        lay.addWidget(mem_btn)
-
-        self._neural_btn = QPushButton("[ ◈ ]  AI MODEL // GEMINI LIVE")
-        self._neural_btn.setFixedHeight(29)
-        self._neural_btn.setFont(mono_font(8, letter_spacing=0.5))
-        self._neural_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._neural_btn.setStyleSheet(_BTN_STYLE_PRI)
-        self._neural_btn.clicked.connect(self._open_neural_setup)
-        attach_hover_help(self._neural_btn, "Configure Gemini Live API key or switch intelligence backend to local models (Ollama, LM Studio, OpenRouter).")
-        lay.addWidget(self._neural_btn)
+        _divider()
+        _row("Memory",
+             "View and manage remembered facts, user habits, and long-term memory stored in the archives.",
+             self._open_memory_panel)
+        self._neural_btn = _row(
+            "AI model",
+            "Configure Gemini Live API key or switch intelligence backend to local models (Ollama, LM Studio, OpenRouter).",
+            self._open_neural_setup)
         self._refresh_neural_btn()
-
-        self._setup_api_btn = QPushButton("[ ◈ ]  SETUP API BACKENDS")
-        self._setup_api_btn.setFixedHeight(29)
-        self._setup_api_btn.setFont(mono_font(8, letter_spacing=0.5))
-        self._setup_api_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._setup_api_btn.setStyleSheet(_BTN_STYLE_DIM)
-        self._setup_api_btn.clicked.connect(self._open_api_setup)
-        attach_hover_help(self._setup_api_btn, "Manage encrypted credentials and OAuth tokens for Google Workspace, Spotify, and Gmail.")
-        lay.addWidget(self._setup_api_btn)
+        self._setup_api_btn = _row(
+            "API connections",
+            "Manage encrypted credentials and OAuth tokens for Google Workspace, Spotify, and Gmail.",
+            self._open_api_setup)
         self._refresh_setup_api_btn()
 
         w.adjustSize()
@@ -9033,83 +9016,6 @@ class MainWindow(QMainWindow):
                 self._quick_drawer.sizeHint().height(),
             )
             self._quick_drawer.raise_()
-
-    def _build_input_row(self) -> QHBoxLayout:
-        row = QHBoxLayout(); row.setSpacing(6)
-        self._input = QLineEdit()
-        self._input.setPlaceholderText("INPUT DIRECTIVE // QUERY BATCOMPUTER...")
-        self._input.setFont(mono_font(8, letter_spacing=0.6))
-        self._input.setFixedHeight(34)
-        self._input.setStyleSheet(f"""
-            QLineEdit {{
-                background: {C.PANEL2};
-                color: {C.WHITE};
-                border: 1px solid {C.BORDER_A};
-                border-radius: 2px;
-                padding: 4px 10px;
-            }}
-            QLineEdit:focus {{
-                border: 1px solid {C.PRI};
-                background: rgba(0, 240, 255, 0.08);
-            }}
-        """)
-        self._input.returnPressed.connect(self._send)
-        attach_hover_help(self._input, "Type a text directive or question to submit to ALFRED directly.")
-        row.addWidget(self._input)
-
-        send = QPushButton("TRANSMIT ❯")
-        send.setFixedHeight(34)
-        send.setFont(mono_font(7, QFont.Weight.Bold, letter_spacing=1.0))
-        send.setCursor(Qt.CursorShape.PointingHandCursor)
-        send.setStyleSheet(f"""
-            QPushButton {{
-                background: rgba(0, 240, 255, 0.12);
-                color: {C.PRI};
-                border: 1px solid {C.PRI};
-                border-radius: 2px;
-                padding: 0 14px;
-            }}
-            QPushButton:hover {{
-                background: {C.PRI};
-                border: 1px solid {C.PRI};
-                color: #040e19;
-            }}
-            QPushButton:pressed {{
-                background: {C.PRI_DIM};
-                color: #040e19;
-            }}
-        """)
-        send.clicked.connect(self._send)
-        attach_hover_help(send, "Transmit typed directive or query to the AI reasoning engine.")
-        row.addWidget(send)
-
-        self._clear_btn = QPushButton("✕ CLEAR")
-        self._clear_btn.setFixedHeight(34)
-        self._clear_btn.setFont(mono_font(7, QFont.Weight.Bold, letter_spacing=1.0))
-        self._clear_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        attach_hover_help(self._clear_btn, "Clear conversational chat history and reset terminal display.")
-        self._clear_btn.setStyleSheet(f"""
-            QPushButton {{
-                background: rgba(255, 42, 85, 0.08);
-                color: #ff5577;
-                border: 1px solid rgba(255, 42, 85, 0.45);
-                border-radius: 2px;
-                padding: 0 12px;
-            }}
-            QPushButton:hover {{
-                background: #ff2a55;
-                border: 1px solid #ff2a55;
-                color: #05060a;
-            }}
-            QPushButton:pressed {{
-                background: #cc1840;
-                color: #ffffff;
-            }}
-        """)
-        self._clear_btn.clicked.connect(self.clear_chat)
-        row.addWidget(self._clear_btn)
-
-        return row
 
     def _build_content_panel(self) -> QWidget:
         """
@@ -9587,28 +9493,31 @@ class MainWindow(QMainWindow):
 
     def _build_footer(self) -> QWidget:
         w = QWidget()
+        w.setObjectName("alfredFooter")
+        w.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         w.setFixedHeight(26)
-        w.setStyleSheet(f"""
-            background: {C.PANEL};
-            border-top: 1px solid {C.BORDER_A};
-        """)
-        lay = QHBoxLayout(w); lay.setContentsMargins(14, 0, 14, 0)
+        w.setStyleSheet(
+            f"QWidget#alfredFooter {{ background: {C.BG}; border-top: 1px solid {C.BORDER}; }}"
+        )
+        lay = QHBoxLayout(w); lay.setContentsMargins(16, 0, 16, 0)
 
-        def _fl(txt, color=C.TEXT_MED):
-            l = QLabel(txt); l.setFont(mono_font(7, QFont.Weight.Bold, letter_spacing=0.8))
+        def _fl(txt, color=C.TEXT_DIM):
+            l = QLabel(txt); l.setFont(mono_font(8))
             l.setStyleSheet(f"color: {color}; background: transparent;")
             return l
 
-        lay.addWidget(_fl("CONTROL YOUR DATA · PROTECT YOUR PRIVACY · WAYNE TACTICAL OS"))
+        self._metrics_lbl = _fl("CPU --   MEM --   GPU --   NET --")
+        self._metrics_lbl.setTextFormat(Qt.TextFormat.RichText)
+        lay.addWidget(self._metrics_lbl)
         lay.addStretch()
         self._streaming_status_pill = _fl("", C.PRI)
         self._streaming_status_pill.setVisible(False)
         lay.addWidget(self._streaming_status_pill)
         lay.addSpacing(16)
-        self._audio_status_pill = _fl("AUDIO: INITIALISING...", C.ACC2)
+        self._audio_status_pill = _fl("Audio starting", C.ACC2)
         lay.addWidget(self._audio_status_pill)
         lay.addSpacing(16)
-        lay.addWidget(_fl("⌨ [F4] MUTE  ·  [F11] FULLSCREEN  ·  [ESC] ABORT", C.PRI_DIM))
+        lay.addWidget(_fl("F4 mute  ·  F11 fullscreen  ·  Esc stop"))
         return w
 
     def _on_file_selected(self, path: str):
@@ -9769,28 +9678,7 @@ class MainWindow(QMainWindow):
     def _update_autostart_btn(self, enabled: bool):
         if not hasattr(self, '_autostart_btn'):
             return
-        if enabled:
-            self._autostart_btn.setText("[ ◈ ]  AUTO-START : ON")
-            self._autostart_btn.setStyleSheet(f"""
-                QPushButton {{
-                    background: rgba(78, 242, 187, 0.08); color: {C.GREEN};
-                    border: 1px solid rgba(78, 242, 187, 0.45); border-radius: 2px;
-                    text-align: left; padding: 0 10px; font-weight: bold;
-                }}
-                QPushButton:hover {{ background: {C.GREEN}; color: #05060a; border: 1px solid {C.GREEN}; }}
-                QPushButton:pressed {{ background: {C.GREEN_D}; color: #ffffff; }}
-            """)
-        else:
-            self._autostart_btn.setText("[ ⊘ ]  AUTO-START : OFF")
-            self._autostart_btn.setStyleSheet(f"""
-                QPushButton {{
-                    background: {C.PANEL2}; color: {C.TEXT_MED};
-                    border: 1px solid {C.BORDER_A}; border-radius: 2px;
-                    text-align: left; padding: 0 10px; font-weight: 500;
-                }}
-                QPushButton:hover {{ color: #ffffff; border: 1px solid {C.PRI}; background: rgba(142, 155, 255, 0.10); }}
-                QPushButton:pressed {{ background: rgba(142, 155, 255, 0.20); }}
-            """)
+        self._autostart_btn.set_row("Auto-start", "On" if enabled else "Off", on=enabled)
 
     def _toggle_brief(self):
         from memory.config_manager import get_brief_enabled, save_brief_enabled
@@ -9804,28 +9692,7 @@ class MainWindow(QMainWindow):
         from memory.config_manager import get_clipboard_monitor_enabled
         enabled = get_clipboard_monitor_enabled()
         self._clipboard_monitor_enabled = enabled
-        if enabled:
-            self._clipboard_btn.setText("[ ◈ ]  CLIPBOARD STREAM : ON")
-            self._clipboard_btn.setStyleSheet(f"""
-                QPushButton {{
-                    background: rgba(0, 240, 255, 0.14); color: {C.PRI};
-                    border: 1px solid {C.PRI}; border-radius: 2px;
-                    text-align: left; padding: 0 10px; font-weight: 500;
-                }}
-                QPushButton:hover {{ color: #ffffff; border: 1px solid {C.PRI}; background: rgba(0, 240, 255, 0.22); }}
-                QPushButton:pressed {{ background: rgba(0, 240, 255, 0.30); }}
-            """)
-        else:
-            self._clipboard_btn.setText("[ ⊘ ]  CLIPBOARD STREAM : OFF")
-            self._clipboard_btn.setStyleSheet(f"""
-                QPushButton {{
-                    background: {C.PANEL2}; color: {C.TEXT_MED};
-                    border: 1px solid {C.BORDER_A}; border-radius: 2px;
-                    text-align: left; padding: 0 10px; font-weight: 500;
-                }}
-                QPushButton:hover {{ color: #ffffff; border: 1px solid {C.PRI}; background: rgba(142, 155, 255, 0.10); }}
-                QPushButton:pressed {{ background: rgba(142, 155, 255, 0.20); }}
-            """)
+        self._clipboard_btn.set_row("Clipboard stream", "On" if enabled else "Off", on=enabled)
 
     def _toggle_clipboard_monitor(self):
         from memory.config_manager import (
@@ -9881,48 +9748,23 @@ class MainWindow(QMainWindow):
         if not hasattr(self, '_wake_btn'):
             return
         st = self._wake_state()
-        _on = f"""
-            QPushButton {{ background: rgba(78, 242, 187, 0.08); color: {C.GREEN};
-                border: 1px solid rgba(78, 242, 187, 0.45); border-radius: 2px;
-                text-align: left; padding: 0 10px; font-weight: bold; }}
-            QPushButton:hover {{ background: {C.GREEN}; color: #05060a; border: 1px solid {C.GREEN}; }}
-            QPushButton:pressed {{ background: {C.GREEN_D}; color: #ffffff; }}"""
-        _off = f"""
-            QPushButton {{ background: {C.PANEL2}; color: {C.TEXT_MED};
-                border: 1px solid {C.BORDER_A}; border-radius: 2px;
-                text-align: left; padding: 0 10px; font-weight: 500; }}
-            QPushButton:hover {{ color: #ffffff; border: 1px solid {C.PRI}; background: rgba(142, 155, 255, 0.10); }}
-            QPushButton:pressed {{ background: rgba(142, 155, 255, 0.20); }}"""
         self._wake_btn.setEnabled(True)
         if not st["ready"]:
-            self._wake_btn.setText("[ ⬇ ]  WAKE SENSORS : DOWNLOAD")
-            self._wake_btn.setStyleSheet(_off)
+            self._wake_btn.set_row("Wake word", "Download")
             self._wake_sleep_btn.hide()
-        elif st["enabled"]:
-            self._wake_btn.setText("[ ◈ ]  WAKE SENSORS : LISTENING ('ALFRED')")
-            self._wake_btn.setStyleSheet(_on)
-            self._wake_sleep_btn.show()
-            self._wake_sleep_btn.setText("[ ⊘ ]  MANUAL SLEEP" if st["awake"] else "[ ⚡ ]  MANUAL WAKE")
-            self._wake_sleep_btn.setStyleSheet(_off)
         else:
-            self._wake_btn.setText("[ ⊘ ]  WAKE SENSORS : DISABLED")
-            self._wake_btn.setStyleSheet(_off)
+            if st["enabled"]:
+                self._wake_btn.set_row("Wake word", "Listening", on=True)
+            else:
+                self._wake_btn.set_row("Wake word", "Off")
             self._wake_sleep_btn.show()
-            self._wake_sleep_btn.setText("[ ⊘ ]  MANUAL SLEEP" if st["awake"] else "[ ⚡ ]  MANUAL WAKE")
-            self._wake_sleep_btn.setStyleSheet(_off)
+            self._wake_sleep_btn.set_row("Sleep now" if st["awake"] else "Wake now")
 
         if hasattr(self, '_voice_profile_btn'):
             if st.get("enrolled_user"):
-                self._voice_profile_btn.setText(f"[ 👤 ]  VOICE BIOMETRICS : {st['enrolled_user'].upper()}")
-                self._voice_profile_btn.setStyleSheet(_on)
+                self._voice_profile_btn.set_row("Voice profile", str(st["enrolled_user"]), on=True)
             else:
-                self._voice_profile_btn.setText("[ ⚠ ]  VOICE BIOMETRICS : NOT ENROLLED")
-                self._voice_profile_btn.setStyleSheet(f"""
-                    QPushButton {{ background: rgba(255, 180, 0, 0.08); color: {C.WARN};
-                        border: 1px solid rgba(255, 180, 0, 0.45); border-radius: 2px;
-                        text-align: left; padding: 0 10px; font-weight: bold; }}
-                    QPushButton:hover {{ background: {C.WARN}; color: #05060a; border: 1px solid {C.WARN}; }}
-                    QPushButton:pressed {{ background: #cca000; color: #ffffff; }}""")
+                self._voice_profile_btn.set_row("Voice profile", "Not enrolled", warn=True)
 
     def _refresh_talk_btns(self):
         """Repaint the push-to-talk row from the saved setting."""
@@ -9930,23 +9772,9 @@ class MainWindow(QMainWindow):
             return
         from core.hotkey import chord_label
         from memory.config_manager import get_push_to_talk_enabled
-        _on = f"""
-            QPushButton {{ background: rgba(78, 242, 187, 0.08); color: {C.GREEN};
-                border: 1px solid rgba(78, 242, 187, 0.45); border-radius: 2px;
-                text-align: left; padding: 0 10px; font-weight: bold; }}
-            QPushButton:hover {{ background: {C.GREEN}; color: #05060a; border: 1px solid {C.GREEN}; }}
-            QPushButton:pressed {{ background: {C.GREEN_D}; color: #ffffff; }}"""
-        _off = f"""
-            QPushButton {{ background: {C.PANEL2}; color: {C.TEXT_MED};
-                border: 1px solid {C.BORDER_A}; border-radius: 2px;
-                text-align: left; padding: 0 10px; font-weight: 500; }}
-            QPushButton:hover {{ color: #ffffff; border: 1px solid {C.PRI}; background: rgba(142, 155, 255, 0.10); }}
-            QPushButton:pressed {{ background: rgba(142, 155, 255, 0.20); }}"""
 
         ptt = get_push_to_talk_enabled()
-        self._ptt_btn.setText(f"[ ◈ ]  TACTICAL COMMS PTT : {chord_label()}" if ptt
-                              else "[ ⊘ ]  TACTICAL COMMS PTT : OFF")
-        self._ptt_btn.setStyleSheet(_on if ptt else _off)
+        self._ptt_btn.set_row("Push to talk", chord_label() if ptt else "Off", on=ptt)
         self._ptt_btn.setToolTip(
             "Microphone stays closed until you hold the key — nothing is sent "
             "while you are not holding it." if ptt
@@ -10017,7 +9845,7 @@ class MainWindow(QMainWindow):
         st = self._wake_state()
         if not st["ready"]:
             # First time: download openwakeword + model in a worker thread.
-            self._wake_btn.setText("⬇  DOWNLOADING… (one-time)")
+            self._wake_btn.set_row("Wake word", "Downloading…")
             self._wake_btn.setEnabled(False)
             def _work():
                 try:
@@ -10085,28 +9913,7 @@ class MainWindow(QMainWindow):
     def _update_brief_btn(self, enabled: bool):
         if not hasattr(self, '_brief_btn'):
             return
-        if enabled:
-            self._brief_btn.setText("[ ◈ ]  GOTHAM BRIEFING : ON")
-            self._brief_btn.setStyleSheet(f"""
-                QPushButton {{
-                    background: rgba(78, 242, 187, 0.08); color: {C.GREEN};
-                    border: 1px solid rgba(78, 242, 187, 0.45); border-radius: 2px;
-                    text-align: left; padding: 0 10px; font-weight: bold;
-                }}
-                QPushButton:hover {{ background: {C.GREEN}; color: #05060a; border: 1px solid {C.GREEN}; }}
-                QPushButton:pressed {{ background: {C.GREEN_D}; color: #ffffff; }}
-            """)
-        else:
-            self._brief_btn.setText("[ ⊘ ]  GOTHAM BRIEFING : OFF")
-            self._brief_btn.setStyleSheet(f"""
-                QPushButton {{
-                    background: {C.PANEL2}; color: {C.TEXT_MED};
-                    border: 1px solid {C.BORDER_A}; border-radius: 2px;
-                    text-align: left; padding: 0 10px; font-weight: 500;
-                }}
-                QPushButton:hover {{ color: #ffffff; border: 1px solid {C.PRI}; background: rgba(142, 155, 255, 0.10); }}
-                QPushButton:pressed {{ background: rgba(142, 155, 255, 0.20); }}
-            """)
+        self._brief_btn.set_row("Daily briefing", "On" if enabled else "Off", on=enabled)
 
     # ── Directives & Intel Terminal Controls ────────────────────────────────────
 
@@ -10130,70 +9937,35 @@ class MainWindow(QMainWindow):
         self._terminal_stack.setCurrentIndex(index)
         self._update_tab_button_styles(index)
         cnt = self._notes_terminal.count()
-        count_str = f" ({cnt})" if cnt > 0 else ""
-        from core.ui.themes import ThemeChrome
-        self._tab_notes_btn.setText(f"{ThemeChrome.chrome().tab_intel}{count_str}")
+        self._tab_notes_btn.setText(f"Notes ({cnt})" if cnt > 0 else "Notes")
+
+    def _tab_style(self, color: str, underline: str) -> str:
+        return f"""
+            QPushButton {{
+                background: transparent;
+                color: {color};
+                border: none;
+                border-bottom: 2px solid {underline};
+                border-radius: 0px;
+                padding: 0 2px;
+            }}
+            QPushButton:hover {{ color: {C.TEXT_BRIGHT}; }}
+        """
 
     def _update_tab_button_styles(self, active_index: int):
-        _ACTIVE_STYLE = f"""
-            QPushButton {{
-                background: {C.PANEL2};
-                color: {C.PRI};
-                border: 1px solid {C.PRI};
-                border-radius: 2px;
-                font-weight: bold;
-            }}
-            QPushButton:hover {{
-                background: {C.PRI};
-                color: {C.DARK};
-            }}
-        """
-        _INACTIVE_STYLE = f"""
-            QPushButton {{
-                background: {C.PANEL2};
-                color: {C.TEXT_MED};
-                border: 1px solid {C.BORDER_A};
-                border-radius: 2px;
-            }}
-            QPushButton:hover {{
-                background: rgba(142, 155, 255, 0.10);
-                color: #ffffff;
-                border: 1px solid {C.PRI};
-            }}
-        """
-        if active_index == 0:
-            self._tab_activity_btn.setChecked(True)
-            self._tab_activity_btn.setStyleSheet(_ACTIVE_STYLE)
-            self._tab_notes_btn.setChecked(False)
-            self._tab_notes_btn.setStyleSheet(_INACTIVE_STYLE)
-        else:
-            self._tab_activity_btn.setChecked(False)
-            self._tab_activity_btn.setStyleSheet(_INACTIVE_STYLE)
-            self._tab_notes_btn.setChecked(True)
-            self._tab_notes_btn.setStyleSheet(_ACTIVE_STYLE)
+        active = self._tab_style(C.TEXT, C.PRI)
+        inactive = self._tab_style(C.TEXT_DIM, "transparent")
+        self._tab_activity_btn.setChecked(active_index == 0)
+        self._tab_activity_btn.setStyleSheet(active if active_index == 0 else inactive)
+        self._tab_notes_btn.setChecked(active_index != 0)
+        self._tab_notes_btn.setStyleSheet(inactive if active_index == 0 else active)
 
     def _on_notes_count_updated(self, count: int):
         cur_idx = self._terminal_stack.currentIndex()
-        count_str = f" ({count})" if count > 0 else ""
-        from core.ui.themes import ThemeChrome
-        tab_lbl = ThemeChrome.chrome().tab_intel
+        self._tab_notes_btn.setText(f"Notes ({count})" if count > 0 else "Notes")
         if cur_idx == 0 and count > 0:
-            self._tab_notes_btn.setText(f"{tab_lbl} • ({count})")
-            self._tab_notes_btn.setStyleSheet(f"""
-                QPushButton {{
-                    background: {C.PANEL2};
-                    color: {C.ACC};
-                    border: 1px solid {C.ACC};
-                    border-radius: 2px;
-                    font-weight: bold;
-                }}
-                QPushButton:hover {{
-                    background: {C.ACC};
-                    color: {C.DARK};
-                }}
-            """)
-        else:
-            self._tab_notes_btn.setText(f"{tab_lbl}{count_str}")
+            # Unread notes: tint the tab until it is opened.
+            self._tab_notes_btn.setStyleSheet(self._tab_style(C.ACC, "transparent"))
 
     def _on_intel_note_received(self, title: str, content: str, note_type: str):
         self._notes_terminal.add_note(title, content, note_type)
@@ -10457,14 +10229,8 @@ class MainWindow(QMainWindow):
             self.setWindowTitle(f"{display} — {APP_VERSION} // {chrome.window_title_suffix}")
             if hasattr(self, "_sub_lbl") and self._sub_lbl:
                 self._sub_lbl.setText(ident.affiliation_line)
-            if hasattr(self, "_hdr_telemetry") and self._hdr_telemetry:
-                self._hdr_telemetry.setText(chrome.telemetry_header)
-            if hasattr(self, "_tab_activity_btn") and self._tab_activity_btn:
-                self._tab_activity_btn.setText(chrome.tab_telemetry)
-            if hasattr(self, "_tab_notes_btn") and self._tab_notes_btn:
-                cnt = self._notes_terminal.count() if hasattr(self, "_notes_terminal") and self._notes_terminal else 0
-                count_str = f" ({cnt})" if cnt > 0 else ""
-                self._tab_notes_btn.setText(f"{chrome.tab_intel}{count_str}")
+            self._status_key = None
+            self._refresh_status_label()
             if hasattr(self, "_dossier_card") and self._dossier_card:
                 self._dossier_card.update()
             if hasattr(self, "_recon_widget") and self._recon_widget:
@@ -10485,8 +10251,10 @@ class MainWindow(QMainWindow):
         display = self._assistant_name.upper()
         from core.ui.themes import ThemeChrome
         self.setWindowTitle(f"{display} — {APP_VERSION} // {ThemeChrome.chrome().window_title_suffix}")
-        self._title_lbl.setText(f"┌  {display} // {APP_VERSION}  ┐")
+        self._title_lbl.setText(display)
         self._sub_lbl.setText(ThemeChrome.identity().affiliation_line)
+        if hasattr(self, "_input"):
+            self._input.setPlaceholderText(f"Ask {self._assistant_name}")
         self._log._ai_name_lc = self._assistant_name.lower()
         self._hud_overlay.set_assistant_name(self._assistant_name)
         self.hud._assistant_name = display
@@ -10562,10 +10330,10 @@ class MainWindow(QMainWindow):
         st = (status or "").upper().strip()
         if hasattr(self, "_audio_status_pill") and self._audio_status_pill is not None:
             if "READY" in st or "ONLINE" in st:
-                self._audio_status_pill.setText("AUDIO: READY")
-                self._audio_status_pill.setStyleSheet(f"color: {C.GREEN}; background: transparent;")
+                self._audio_status_pill.setText("Audio ready")
+                self._audio_status_pill.setStyleSheet(f"color: {C.TEXT_DIM}; background: transparent;")
             else:
-                self._audio_status_pill.setText(f"AUDIO: {st}")
+                self._audio_status_pill.setText(f"Audio {st.lower()}")
                 self._audio_status_pill.setStyleSheet(f"color: {C.ACC2}; background: transparent;")
 
     def set_streaming_status(self, provider: str, surface: str, state: str) -> None:
@@ -10685,24 +10453,24 @@ class MainWindow(QMainWindow):
                     pass
 
     def _refresh_neural_btn(self):
-        """Update Tactical Controls button text with active neural model backend."""
+        """Update the controls drawer row with the active model backend."""
         if hasattr(self, "_neural_btn") and self._neural_btn is not None:
             try:
                 cfg = _read_full_config()
                 prov = (cfg.get("llm_provider") or "gemini").upper()
                 if prov == "GEMINI":
-                    self._neural_btn.setText("[ ◈ ]  AI MODEL // GEMINI LIVE")
+                    value = "Gemini Live"
                 elif prov == "OLLAMA":
-                    model = cfg.get("llm_model", "llama3.2")
-                    self._neural_btn.setText(f"[ ◈ ]  AI MODEL // OLLAMA ({model})")
+                    value = f"Ollama ({cfg.get('llm_model', 'llama3.2')})"
                 elif prov == "OPENAI":
-                    self._neural_btn.setText("[ ◈ ]  AI MODEL // LM STUDIO")
+                    value = "LM Studio"
                 elif prov == "OPENROUTER":
-                    self._neural_btn.setText("[ ◈ ]  AI MODEL // OPENROUTER")
+                    value = "OpenRouter"
                 else:
-                    self._neural_btn.setText(f"[ ◈ ]  AI MODEL // {prov}")
+                    value = prov.title()
+                self._neural_btn.set_row("AI model", value, on=True)
             except Exception:
-                self._neural_btn.setText("[ ◈ ]  AI MODEL & API CONFIG")
+                self._neural_btn.set_row("AI model")
 
     def _refresh_setup_api_btn(self):
         """Update the Tactical Controls and Reconfigure Batcomputer button texts with configured counts."""
@@ -10710,9 +10478,9 @@ class MainWindow(QMainWindow):
             try:
                 from core.apis.registry import get_configured_backends_count
                 configured, total = get_configured_backends_count()
-                self._setup_api_btn.setText(f"[ ◈ ]  SETUP API BACKENDS ({configured}/{total})")
+                self._setup_api_btn.set_row("API connections", f"{configured}/{total}", on=configured > 0)
             except Exception:
-                self._setup_api_btn.setText("[ ◈ ]  SETUP API BACKENDS")
+                self._setup_api_btn.set_row("API connections")
         if hasattr(self, "_customize_overlay") and self._customize_overlay is not None:
             try:
                 self._customize_overlay._refresh_services_btn()
@@ -10840,91 +10608,41 @@ class MainWindow(QMainWindow):
                     pass
 
     def _style_mute_btn(self):
-        if self._muted:
-            self._mute_btn.setText("[ ⊘ ]  SILENCE PROTOCOL : ENGAGED  //  COWL MUTED")
-            self._mute_btn.setFont(mono_font(7, QFont.Weight.Bold, letter_spacing=1.0))
-            self._mute_btn.setStyleSheet(f"""
-                QPushButton {{
-                    background: rgba(255, 51, 102, 0.08);
-                    color: #ff3366;
-                    border: 1px solid rgba(255, 51, 102, 0.45);
-                    border-radius: 2px;
-                    padding: 0 8px;
-                }}
-                QPushButton:hover {{
-                    background: #ff3366;
-                    border: 1px solid #ff3366;
-                    color: #05060a;
-                }}
-                QPushButton:pressed {{
-                    background: #cc2244;
-                    color: #ffffff;
-                }}
-            """)
-        else:
-            self._mute_btn.setText("[ ◈ ]  ACOUSTIC SENSORS : ONLINE  //  COWL PROTOCOL")
-            self._mute_btn.setFont(mono_font(7, QFont.Weight.Bold, letter_spacing=1.0))
-            self._mute_btn.setStyleSheet(f"""
-                QPushButton {{
-                    background: rgba(78, 242, 187, 0.08);
-                    color: {C.GREEN};
-                    border: 1px solid rgba(78, 242, 187, 0.45);
-                    border-radius: 2px;
-                    padding: 0 8px;
-                }}
-                QPushButton:hover {{
-                    background: {C.GREEN};
-                    border: 1px solid {C.GREEN};
-                    color: #05060a;
-                }}
-                QPushButton:pressed {{
-                    background: {C.GREEN_D};
-                    color: #ffffff;
-                }}
-            """)
+        muted = bool(self._muted)
+        col = C.MUTED_C if muted else C.GREEN
+        self._mute_btn.setText("Muted" if muted else "Mic on")
+        self._mute_btn.setFont(ui_font(9, QFont.Weight.Medium))
+        self._mute_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: transparent;
+                color: {col};
+                border: none;
+                border-radius: 4px;
+                padding: 0 10px;
+            }}
+            QPushButton:hover {{ background: {C.PANEL}; }}
+            QPushButton:pressed {{ background: {C.PRI_GHO}; }}
+        """)
+        self._status_key = None
+        self._refresh_status_label()
 
     # ── Cognitive-trace toggle ────────────────────────────────────────────────
 
     def _style_think_btn(self, active: bool) -> None:
-        """Style the COGNITIVE TRACE toggle to reflect its on/off state."""
-        if active:
-            self._think_btn.setText("[ ◈ ]  COGNITIVE TRACE : ON")
-            self._think_btn.setStyleSheet(f"""
-                QPushButton {{
-                    background: rgba(0, 240, 255, 0.10);
-                    color: {C.PRI};
-                    border: 1px solid {C.PRI_DIM};
-                    border-radius: 2px;
-                    padding: 0 8px;
-                    font-weight: bold;
-                }}
-                QPushButton:hover {{
-                    background: {C.PRI_GHO};
-                    border-color: {C.PRI};
-                }}
-                QPushButton:pressed {{
-                    background: rgba(0, 240, 255, 0.25);
-                }}
-            """)
-        else:
-            self._think_btn.setText("[ ◈ ]  COGNITIVE TRACE : OFF")
-            self._think_btn.setStyleSheet(f"""
-                QPushButton {{
-                    background: transparent;
-                    color: {C.TEXT_DIM};
-                    border: 1px solid {C.BORDER};
-                    border-radius: 2px;
-                    padding: 0 8px;
-                }}
-                QPushButton:hover {{
-                    color: {C.TEXT_MED};
-                    border-color: {C.BORDER_B};
-                    background: rgba(255, 255, 255, 0.03);
-                }}
-                QPushButton:pressed {{
-                    background: rgba(255, 255, 255, 0.06);
-                }}
-            """)
+        """Style the reasoning-trace toggle to reflect its on/off state."""
+        self._think_btn.setText("Reasoning")
+        col = C.PRI if active else C.TEXT_DIM
+        bg = C.PRI_GHO if active else "transparent"
+        self._think_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: {bg};
+                color: {col};
+                border: none;
+                border-radius: 4px;
+                padding: 0 8px;
+            }}
+            QPushButton:hover {{ color: {C.TEXT_BRIGHT}; background: {C.PANEL2}; }}
+        """)
 
     def _toggle_think(self, active: bool) -> None:
         """Show or hide the agent's internal reasoning trace in the chat log."""
@@ -11028,19 +10746,19 @@ class MainWindow(QMainWindow):
 
             if mon.active and foc.active:
                 self._sentry_btn.setChecked(True)
-                self._sentry_btn.setText("[ ◈◉ ] SENTRY (2)")
+                self._sentry_btn.setText("Sentry (2)")
                 self._sentry_btn.setToolTip("Both MONITOR and FOCUS active")
             elif mon.active:
                 self._sentry_btn.setChecked(True)
-                self._sentry_btn.setText("[ ◈ ]  SCREEN MONITORING")
+                self._sentry_btn.setText("Monitoring")
                 self._sentry_btn.setToolTip(f"MONITOR active: {mon.label or 'running'}")
             elif foc.active:
                 self._sentry_btn.setChecked(True)
-                self._sentry_btn.setText("[ ◉ ]  FOCUS MODE")
+                self._sentry_btn.setText("Focus")
                 self._sentry_btn.setToolTip("FOCUS active")
             else:
                 self._sentry_btn.setChecked(False)
-                self._sentry_btn.setText("[ ▣ ]  SENTRY MODE")
+                self._sentry_btn.setText("Sentry")
                 self._sentry_btn.setToolTip("Sentry Mode: MONITOR + FOCUS")
 
             if hasattr(self, "hud") and hasattr(self.hud, "set_sentry_snapshot"):
@@ -11082,7 +10800,7 @@ class MainWindow(QMainWindow):
             target_count=1 if active else 0,
         )
         self._sentry_btn.setChecked(bool(active))
-        self._sentry_btn.setText("[ ◈ ]  SCREEN MONITORING" if active else "[ ▣ ]  SENTRY MODE")
+        self._sentry_btn.setText("Monitoring" if active else "Sentry")
         self._sentry_btn.setToolTip(label or (
             "Continuous screen monitoring active" if active
             else "Monitor the screen for task completion"
@@ -11123,6 +10841,7 @@ class MainWindow(QMainWindow):
     def _apply_state(self, state: str):
         self.hud.state    = state
         self.hud.speaking = (state == "SPEAKING")
+        self._refresh_status_label()
         if hasattr(self, "_bat_globe_orb") and self._bat_globe_orb is not None:
             self._bat_globe_orb.canvas.state = state
             self._bat_globe_orb.canvas.speaking = (state == "SPEAKING")
