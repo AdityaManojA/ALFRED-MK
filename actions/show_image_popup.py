@@ -21,6 +21,7 @@ class ImagePopupOverlay(QWidget):
     dismissed = pyqtSignal()
 
     def __init__(self, image_path: str, parent=None):
+        """Build the frameless popup with a drag grip, scaled image, and dismiss button."""
         super().__init__(parent)
         self._drag_pos = QPoint()
         self._dragging = False

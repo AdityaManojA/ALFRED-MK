@@ -9,6 +9,7 @@ from pathlib import Path
 from config import is_windows, is_mac, is_linux
 
 def _get_base_dir() -> Path:
+    """Return the app base directory, handling frozen (packaged) builds."""
     if getattr(sys, "frozen", False):
         return Path(sys.executable).parent
     return Path(__file__).resolve().parent.parent
@@ -19,6 +20,7 @@ API_CONFIG_PATH = BASE_DIR / "config" / "api_keys.json"
 
 
 def _get_api_key() -> str:
+    """Read the Gemini API key from the API config file."""
     with open(API_CONFIG_PATH, "r", encoding="utf-8") as f:
         return json.load(f)["gemini_api_key"]
 
@@ -38,6 +40,9 @@ _RELATIVE_MAP_KEYS = {
 
 
 def _parse_date(raw: str) -> str:
+    """Normalise a date expression to YYYY-MM-DD.
+    Tries ISO and common formats, today/tomorrow, Gemini, then month-name parsing.
+    """
 
     raw   = raw.strip()
     lower = raw.lower()
@@ -100,6 +105,7 @@ def _build_google_flights_url(
     passengers:  int        = 1,
     cabin:       str        = "economy",
 ) -> str:
+    """Build a pre-filled Google Flights search URL for the given trip parameters."""
     cabin_code = _CABIN_CODE.get(cabin.lower(), "1")
     base       = "https://www.google.com/travel/flights"
 
@@ -128,6 +134,7 @@ def _search_flights_browser(
     passengers:  int,
     cabin:       str,
 ) -> tuple[str, str]:
+    """Open Google Flights in the browser and return the page text and URL."""
     import time
     from actions.browser_control import browser_control
 
@@ -148,6 +155,9 @@ def _parse_flights_with_gemini(
     destination: str,
     date:        str,
 ) -> list[dict]:
+    """Extract up to five flight options from raw page text using Gemini.
+    Returns a list of flight dicts, or an empty list on failure.
+    """
     from google import genai as _genai
     from google.genai import types
 
@@ -187,6 +197,7 @@ def _format_spoken(
     destination: str,
     date:        str,
 ) -> str:
+    """Format flight results as a spoken summary, including the cheapest option."""
     if not flights:
         return (
             f"I couldn't find any flights from {origin} to {destination} "
@@ -236,6 +247,7 @@ def _format_text_report(
     return_date: str | None,
     page_url:    str,
 ) -> str:
+    """Format flight results as a plain-text report for saving to a file."""
     lines = [
         "ALFRED — Flight Search Results",
         "─" * 50,
@@ -271,6 +283,9 @@ def _format_text_report(
     return "\n".join(lines)
 
 def _save_to_desktop(content: str, origin: str, destination: str) -> str:
+    """Save the report to a timestamped file on the Desktop and open it in an editor.
+    Returns the saved file path.
+    """
     ts       = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"flights_{origin}_{destination}_{ts}.txt".replace(" ", "_")
     desktop  = Path.home() / "Desktop"
@@ -294,6 +309,9 @@ def _save_to_desktop(content: str, origin: str, destination: str) -> str:
 
 
 def flight_finder(parameters: dict, player=None, speak=None) -> str:
+    """Validate the request, search Google Flights in the browser, parse results with Gemini and return a spoken summary.
+
+    With ``save`` set, a text report is also written to the Desktop."""
     params = parameters or {}
 
     origin      = params.get("origin",      "").strip()

@@ -49,6 +49,7 @@ class LocalUrlBackend(QObject, BackendBase):
     on_seekable_changed = pyqtSignal(bool)
 
     def __init__(self, video_widget: QVideoWidget, parent: QObject | None = None) -> None:
+        """Create the video and separate-audio QMediaPlayers, shared audio output, and wire player signals to slots."""
         super().__init__(parent)
         self._volume: float = BACKEND_DEFAULT_VOLUME
         self._muted: bool = False
@@ -96,6 +97,9 @@ class LocalUrlBackend(QObject, BackendBase):
             QCoreApplication.processEvents()
 
     def load(self, ref: PlayableRef) -> None:
+        """Stop any current media, then load and start buffering the ref (local file or URL).
+        Uses a separate audio player when ref.audio_uri is set. Must run on the GUI thread.
+        """
         from core.hud_video.controller import assert_gui_thread
         assert_gui_thread()
 
@@ -129,6 +133,7 @@ class LocalUrlBackend(QObject, BackendBase):
             self._audio_player.play()
 
     def play(self) -> None:
+        """Resume playback of the video (and separate audio stream, if any) on the GUI thread."""
         from core.hud_video.controller import assert_gui_thread
         assert_gui_thread()
         self._player.play()
@@ -136,6 +141,7 @@ class LocalUrlBackend(QObject, BackendBase):
             self._audio_player.play()
 
     def pause(self) -> None:
+        """Pause the video (and separate audio stream, if any) on the GUI thread."""
         from core.hud_video.controller import assert_gui_thread
         assert_gui_thread()
         self._player.pause()
@@ -143,6 +149,7 @@ class LocalUrlBackend(QObject, BackendBase):
             self._audio_player.pause()
 
     def stop(self) -> None:
+        """Stop playback, wait for the player to stop, and clear both sources to release decoder/file handles."""
         from core.hud_video.controller import assert_gui_thread
         assert_gui_thread()
         self._ready_fired = False
@@ -152,6 +159,7 @@ class LocalUrlBackend(QObject, BackendBase):
         self._has_dual_stream = False
 
     def set_muted(self, muted: bool) -> None:
+        """Set the mute state on the audio output, restoring the stored volume when unmuting."""
         from core.hud_video.controller import assert_gui_thread
         assert_gui_thread()
         self._muted = muted
@@ -160,6 +168,7 @@ class LocalUrlBackend(QObject, BackendBase):
             self._audio.setVolume(self._volume)
 
     def set_volume(self, volume: float) -> None:
+        """Clamp the volume to 0.0-1.0, store it, and apply it unless muted."""
         from core.hud_video.controller import assert_gui_thread
         assert_gui_thread()
         self._volume = max(0.0, min(1.0, volume))
@@ -167,6 +176,7 @@ class LocalUrlBackend(QObject, BackendBase):
             self._audio.setVolume(self._volume)
 
     def seek(self, position_s: float) -> None:
+        """Seek the video (and separate audio stream, if any) to position_s seconds."""
         from core.hud_video.controller import assert_gui_thread
         assert_gui_thread()
         ms = int(max(0.0, position_s) * 1000)
@@ -179,6 +189,7 @@ class LocalUrlBackend(QObject, BackendBase):
     # ------------------------------------------------------------------
 
     def _on_playback_state(self, state: QMediaPlayer.PlaybackState) -> None:
+        """Emit on_ready on the first transition to Playing, and on_ended when stopping after ready."""
         playing = state == QMediaPlayer.PlaybackState.PlayingState
         stopped = state == QMediaPlayer.PlaybackState.StoppedState
 
@@ -191,6 +202,7 @@ class LocalUrlBackend(QObject, BackendBase):
             self.on_ended.emit()
 
     def _on_media_status(self, status: QMediaPlayer.MediaStatus) -> None:
+        """Emit on_ended when the media reaches its end after having become ready."""
         if status == QMediaPlayer.MediaStatus.EndOfMedia and self._ready_fired:
             self.on_ended.emit()
 
@@ -199,6 +211,7 @@ class LocalUrlBackend(QObject, BackendBase):
         error: QMediaPlayer.Error,
         error_string: str,
     ) -> None:
+        """Log a video player error and emit on_error with the message truncated to 80 chars."""
         if error != QMediaPlayer.Error.NoError:
             log.warning("[LocalUrlBackend] error %s: %s", error, error_string)
             self.on_error.emit(error_string[:80])
@@ -208,14 +221,17 @@ class LocalUrlBackend(QObject, BackendBase):
         error: QMediaPlayer.Error,
         error_string: str,
     ) -> None:
+        """Log errors from the separate audio player."""
         if error != QMediaPlayer.Error.NoError:
             log.warning("[LocalUrlBackend] audio player error %s: %s", error, error_string)
 
     def _on_buffer_progress(self, progress: float) -> None:
         # Optional: could expose progress to loading chrome in future
+        """Ignore buffer progress updates (placeholder slot)."""
         pass
 
     def _on_position_changed_slot(self, position_ms: int) -> None:
+        """Resync the separate audio stream if it drifts over 400 ms, then emit the position in seconds."""
         if self._has_dual_stream:
             # Keep audio synchronized with video if drift exceeds 400ms
             audio_pos_ms = self._audio_player.position()
@@ -224,7 +240,9 @@ class LocalUrlBackend(QObject, BackendBase):
         self.on_position_changed.emit(max(0.0, position_ms / 1000.0))
 
     def _on_duration_changed_slot(self, duration_ms: int) -> None:
+        """Emit the new media duration converted to seconds."""
         self.on_duration_changed.emit(max(0.0, duration_ms / 1000.0))
 
     def _on_seekable_changed_slot(self, seekable: bool) -> None:
+        """Forward the player's seekable flag via on_seekable_changed."""
         self.on_seekable_changed.emit(seekable)

@@ -18,6 +18,7 @@ if not _STATE_FILE.exists() and _LEGACY_STATE_FILE.exists():
 
 
 def _read_state() -> dict:
+    """Load the focus session state, defaulting to inactive if missing or unreadable."""
     if not _STATE_FILE.exists():
         return {"active": False}
     try:
@@ -27,6 +28,7 @@ def _read_state() -> dict:
 
 
 def _write_state(st: dict) -> None:
+    """Write the focus session state to the state file as JSON."""
     _STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
     _STATE_FILE.write_text(json.dumps(st, indent=2), encoding="utf-8")
 

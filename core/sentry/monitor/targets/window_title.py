@@ -19,6 +19,7 @@ class WindowTitleTarget(MonitorTarget):
         alert_on_close: bool = False,
         interval_s: float = 3.0,
     ) -> None:
+        """Store the app name, optional title pattern and close-alert flag."""
         super().__init__(target_id, name, interval_s)
         self.app_name = (app_name or "").strip()
         self.pattern_str = title_pattern or ""
@@ -27,12 +28,16 @@ class WindowTitleTarget(MonitorTarget):
         self._was_present = False
 
     def describe(self) -> str:
+        """Return a short description of the window and title pattern."""
         desc = f"window '{self.app_name or 'any'}'"
         if self.pattern_str:
             desc += f" title matching '{self.pattern_str}'"
         return desc
 
     def poll(self) -> TargetStatus:
+        """Check matching window titles and finish with an alert on a pattern match or, if enabled, on window close.
+        Returns the resulting target status.
+        """
         self.last_poll_t = time.time()
         try:
             titles = self._get_matching_window_titles()
@@ -79,6 +84,7 @@ class WindowTitleTarget(MonitorTarget):
             try:
                 import win32gui
                 def _enum(hwnd, _):
+                    """EnumWindows callback collecting visible window titles that contain the app name."""
                     if win32gui.IsWindowVisible(hwnd):
                         t = win32gui.GetWindowText(hwnd)
                         if t and (not low_app or low_app in t.lower()):

@@ -26,6 +26,7 @@ DEFAULT_TOP_RIGHT_MARGIN_Y_PX: int = 48
 
 
 def _get_base_dir() -> Path:
+    """Return the app base directory: the executable's folder when frozen, otherwise the project root."""
     if getattr(sys, "frozen", False):
         return Path(sys.executable).parent
     return Path(__file__).resolve().parent.parent
@@ -166,6 +167,7 @@ class CrossPlatformDragHandler:
     """
 
     def __init__(self, threshold_px: int = DRAG_THRESHOLD_PX) -> None:
+        """Initialise the drag threshold and clear all drag tracking state."""
         self.threshold_px: int = threshold_px
         self._drag_start_pos: Optional[QPoint] = None
         self._drag_offset: Optional[QPoint] = None
@@ -175,6 +177,7 @@ class CrossPlatformDragHandler:
 
     @property
     def is_dragging(self) -> bool:
+        """Whether a drag is currently in progress."""
         return self._is_dragging
 
     def handle_mouse_press(

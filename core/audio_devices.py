@@ -154,6 +154,7 @@ def _transport_works(idx: int, kind: str, api_key) -> bool:
             frames = [0]
 
             def _cb(indata, n, *_a):
+                """Input stream callback that counts the frames received."""
                 frames[0] += n
 
             st = sd.InputStream(samplerate=rate, channels=1, dtype="int16",
@@ -251,6 +252,7 @@ _PSEUDO_DEVICES = (
 
 
 def _is_pseudo(name: str) -> bool:
+    """Return True if the device name contains a known pseudo-device token."""
     low = name.lower()
     return any(tok in low for tok in _PSEUDO_DEVICES)
 
@@ -323,6 +325,7 @@ def prefetch(on_ready=None) -> None:
     """Warm the cache on a background thread. Called once at startup so the
     settings drawer never pays for enumeration on the Qt thread."""
     def _work():
+        """Query devices, store the result in the module cache, log counts and call ``on_ready``."""
         global _cache
         result = _query()
         with _cache_lock:
@@ -396,6 +399,7 @@ def resolve(name: str, kind: str):
         chan_key = "max_input_channels" if want_in else "max_output_channels"
 
         def _candidates(api_filter):
+            """Yield (index, name) of devices with channels of the wanted kind, optionally filtered by host API name."""
             for idx, dev in enumerate(devices):
                 if dev.get(chan_key, 0) <= 0:
                     continue
@@ -427,7 +431,8 @@ def resolve(name: str, kind: str):
                     if _usable(idx, kind):
                         return idx
                     continue
-                if partial is None and (dev_name.startswith(wanted[:24])
+                # An unnamed endpoint must not prefix-match: "x".startswith("") is True.
+                if partial is None and dev_name and (dev_name.startswith(wanted[:24])
                                         or wanted.startswith(dev_name[:24])):
                     if _usable(idx, kind):
                         partial = idx

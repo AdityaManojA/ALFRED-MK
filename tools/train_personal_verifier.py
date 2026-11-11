@@ -110,6 +110,8 @@ def record_interactive_negative(num_clips: int = 10) -> None:
 
 
 def extract_positive_features(wav_path: str, model: any, model_name: str) -> any:
+    """Return (N, 16, 96) openWakeWord feature frames from the loud (RMS >= 250) chunks
+    of a WAV file, falling back to the three loudest chunks if none qualify."""
     import numpy as np
     import scipy.io.wavfile as wavfile
 
@@ -147,6 +149,7 @@ def extract_positive_features(wav_path: str, model: any, model_name: str) -> any
 
 
 def extract_negative_features(wav_path: str, model: any, model_name: str) -> any:
+    """Return (N, 16, 96) openWakeWord feature frames for every 1280-sample chunk of a WAV file."""
     import numpy as np
     import scipy.io.wavfile as wavfile
 
@@ -318,6 +321,7 @@ def test_live() -> None:
     noise_floor = 110.0
 
     def callback(indata, frames, _time_info, _status):
+        """Append incoming raw microphone bytes to the shared buffer."""
         nonlocal buffer
         buffer.extend(indata)
 
@@ -404,6 +408,7 @@ def test_live() -> None:
 
 
 def main() -> None:
+    """CLI entry point: dispatch to recording, training or live testing by flag."""
     parser = argparse.ArgumentParser(description="Multi-User Personal Wake-Word Verifier Trainer")
     parser.add_argument("--record-positive", action="store_true", help="Record positive wake-word utterances")
     parser.add_argument("--record-negative", action="store_true", help="Record negative chatter/ambient clips")

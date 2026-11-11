@@ -11,6 +11,7 @@ from typing import Any, Dict, Optional
 
 @dataclass(frozen=True)
 class TypedSkillIntent:
+    """An Alexa skill intent name with its slot values."""
     intent_name: str
     slots: dict[str, Any] = field(default_factory=dict)
 

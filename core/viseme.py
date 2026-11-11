@@ -218,16 +218,19 @@ class VisemeStream:
     _MAX_STEP = 0.105
 
     def __init__(self) -> None:
+        """Initialise an empty viseme queue resting on the "REST" shape."""
         self._q: deque[tuple[str, float]] = deque()
         self._cur = ("REST", 1.0)
         self._carry = 0.0
 
     def reset(self) -> None:
+        """Drop all queued shapes and return to the resting mouth."""
         self._q.clear()
         self._cur = ("REST", 1.0)
         self._carry = 0.0
 
     def feed_text(self, text: str) -> None:
+        """Queue the viseme sequence for `text`, keeping at most 600 entries."""
         for item in text_to_visemes(text):
             self._q.append(item)
         # Never let a stalled turn pile up an unbounded backlog.
@@ -236,11 +239,13 @@ class VisemeStream:
 
     @property
     def pending(self) -> int:
+        """Number of viseme entries still waiting in the queue."""
         return len(self._q)
 
     def _step_seconds(self) -> float:
         # A long backlog means speech is outrunning the clock; shorten the step
         # so the mouth catches up instead of drifting further behind the voice.
+        """Return the per-viseme step duration, shortened as the queue backlog grows."""
         backlog = min(1.0, len(self._q) / 45.0)
         return self._MAX_STEP - (self._MAX_STEP - self._MIN_STEP) * backlog
 

@@ -20,6 +20,7 @@ class CommandTarget(MonitorTarget):
         alert_on_change: bool = False,
         interval_s: float = 10.0,
     ) -> None:
+        """Store the shell command, expected exit code and whether to alert on output changes."""
         super().__init__(target_id, name, interval_s)
         self.command = command
         self.expected_code = expected_code
@@ -27,9 +28,13 @@ class CommandTarget(MonitorTarget):
         self._last_stdout = ""
 
     def describe(self) -> str:
+        """Return a short description naming the command."""
         return f"command '{self.command[:35]}'"
 
     def poll(self) -> TargetStatus:
+        """Run the command and alert on an unexpected exit code, changed output (if enabled) or timeout.
+        Returns the resulting target status.
+        """
         self.last_poll_t = time.time()
         try:
             res = subprocess.run(

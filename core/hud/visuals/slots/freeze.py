@@ -15,7 +15,10 @@ from core.ui.themes.schema import PaletteDefinition
 
 
 class FreezeCoreLatticeVisual(SlotVisual):
+    """Slot 1: six slowly rotating snowflake spokes radiating from the panel centre."""
+
     def __init__(self) -> None:
+        """Initialise pens, font and geometry placeholders for this slot."""
         super().__init__()
         self.rot: float = 0.0
         self.pen_ice = QPen()
@@ -24,12 +27,14 @@ class FreezeCoreLatticeVisual(SlotVisual):
         self.spokes = [QLineF() for _ in range(6)]
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build the ice pen and compute the inner panel rect."""
         c_pri = QColor(palette.pri)
         self.pen_ice = QPen(c_pri, 1.4)
         bx, by, bw, bh = rect.x() + 8.0, rect.y() + 22.0, rect.width() - 16.0, rect.height() - 30.0
         self.rect_inner = QRectF(bx, by, bw, bh)
 
     def tick(self, dt: float, signals: HudSignals) -> None:
+        """Rotate the six lattice spokes around the panel centre."""
         self.rot = (self.rot + dt * 0.5) % (2.0 * math.pi)
         cx = self.rect_inner.x() + self.rect_inner.width() / 2.0
         cy = self.rect_inner.y() + self.rect_inner.height() / 2.0
@@ -39,6 +44,7 @@ class FreezeCoreLatticeVisual(SlotVisual):
             self.spokes[i].setLine(cx, cy, cx + fast_cos(ang) * r, cy + fast_sin(ang) * r)
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
+        """Draw the header and lattice spokes."""
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_ice)
         painter.drawText(QRectF(rect.x() + 8, rect.y() + 4, rect.width() - 16, 14),
@@ -47,7 +53,10 @@ class FreezeCoreLatticeVisual(SlotVisual):
 
 
 class FreezeThermalColumnVisual(SlotVisual):
+    """Slot 2: vertical gauge column drawn filled to a fixed 75% from the bottom."""
+
     def __init__(self) -> None:
+        """Initialise column rects, pen, brush and font for this slot."""
         super().__init__()
         self.col_rect = QRectF()
         self.fill_rect = QRectF()
@@ -56,6 +65,7 @@ class FreezeThermalColumnVisual(SlotVisual):
         self.font_hdr = QFont("Consolas", 6, QFont.Weight.Bold)
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build pen and brush and lay out the thermal column rect."""
         c_pri = QColor(palette.pri)
         self.pen_ice = QPen(c_pri, 1.2)
         self.brush_ice = QBrush(c_pri)
@@ -64,10 +74,12 @@ class FreezeThermalColumnVisual(SlotVisual):
         self.fill_rect = QRectF(self.col_rect)
 
     def tick(self, dt: float, signals: HudSignals) -> None:
+        """Set the fill rect to a fixed 75% of the column height."""
         h = self.col_rect.height() * 0.75
         self.fill_rect.setRect(self.col_rect.x(), self.col_rect.bottom() - h, self.col_rect.width(), h)
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
+        """Draw the header, column outline and filled level."""
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_ice)
         painter.drawText(QRectF(rect.x() + 8, rect.y() + 4, rect.width() - 16, 12),
@@ -78,13 +90,17 @@ class FreezeThermalColumnVisual(SlotVisual):
 
 
 class FreezeCoolantLoopVisual(SlotVisual):
+    """Slot 3: static dash-dot rounded rectangle representing the coolant loop."""
+
     def __init__(self) -> None:
+        """Initialise pens, font and geometry placeholders for this slot."""
         super().__init__()
         self.pen_loop = QPen()
         self.font_hdr = QFont("Consolas", 6, QFont.Weight.Bold)
         self.loop_rect = QRectF()
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build the dashed loop pen and lay out the coolant loop rect."""
         c_pri = QColor(palette.pri)
         self.pen_loop = QPen(c_pri, 1.5, Qt.PenStyle.DashDotLine)
         bx, by, bw, bh = rect.x() + 8.0, rect.y() + 18.0, rect.width() - 16.0, rect.height() - 24.0
@@ -92,9 +108,11 @@ class FreezeCoolantLoopVisual(SlotVisual):
         self.loop_rect = QRectF(cx - 24, cy - 14, 48, 28)
 
     def tick(self, dt: float, signals: HudSignals) -> None:
+        """No-op; this visual is static."""
         pass
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
+        """Draw the header and rounded coolant loop."""
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_loop)
         painter.drawText(QRectF(rect.x() + 8, rect.y() + 3, rect.width() - 16, 12),

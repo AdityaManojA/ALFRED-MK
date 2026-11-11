@@ -40,6 +40,7 @@ class PluginSettingsOverlay(QWidget):
     _OW = 460
 
     def __init__(self, sections: list[dict], parent=None):
+        """Build the plugin settings overlay with a scrollable section per plugin, or a notice when none are configurable."""
         super().__init__(parent)
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.setStyleSheet(f"""
@@ -139,6 +140,7 @@ class PluginSettingsOverlay(QWidget):
     # ── helpers ───────────────────────────────────────────────────────────────
     def _lbl(self, txt, fs=9, bold=False, color=C.PRI,
              align=Qt.AlignmentFlag.AlignLeft):
+        """Return a word-wrapped transparent label with the given text, font size, weight, colour and alignment."""
         w = QLabel(txt); w.setAlignment(align); w.setWordWrap(True)
         w.setFont(tech_font(fs,
                             QFont.Weight.Bold if bold else QFont.Weight.Normal,
@@ -147,6 +149,7 @@ class PluginSettingsOverlay(QWidget):
         return w
 
     def _build_section(self, form: QVBoxLayout, sec: dict):
+        """Add a plugin section to the form, creating a choice, toggle or text input for each declared field."""
         ns     = sec.get("namespace") or sec.get("plugin") or "plugin"
         title  = sec.get("title") or ns
         fields = sec.get("fields") or []
@@ -226,6 +229,7 @@ class PluginSettingsOverlay(QWidget):
         form.addWidget(line)
 
     def _style_toggle(self, btn: QPushButton):
+        """Set a toggle button's text and style to reflect its checked state."""
         on = btn.isChecked()
         btn.setText("ACTIVE" if on else "OFF")
         if on:
@@ -237,6 +241,7 @@ class PluginSettingsOverlay(QWidget):
 
     # ── data ──────────────────────────────────────────────────────────────────
     def _gather(self, ns: str) -> dict:
+        """Return the current input values for the given plugin namespace."""
         out = {}
         for (n, key), w in self._widgets.items():
             if n != ns:
@@ -251,10 +256,12 @@ class PluginSettingsOverlay(QWidget):
         return out
 
     def _save_ns(self, ns: str):
+        """Persist the current values for the given plugin namespace."""
         from memory.config_manager import save_plugin_config
         save_plugin_config(ns, self._gather(ns))
 
     def _save_all(self):
+        """Save every plugin section and mark each status label as saved."""
         for sec in self._sections:
             ns = sec.get("namespace") or sec.get("plugin")
             if ns:
@@ -265,6 +272,7 @@ class PluginSettingsOverlay(QWidget):
                     lbl.setStyleSheet(f"color: {C.PRI}; background: transparent;")
 
     def _run_action(self, ns: str):
+        """Save the namespace's values, then run the plugin's test action on a background thread."""
         sec = next((s for s in self._sections
                     if (s.get("namespace") or s.get("plugin")) == ns), None)
         if not sec:
@@ -280,6 +288,7 @@ class PluginSettingsOverlay(QWidget):
             lbl.setStyleSheet(f"color: {C.TEXT_DIM}; background: transparent;")
 
         def worker():
+            """Run the plugin action, normalise its result to (ok, message) and emit it."""
             try:
                 res = run_fn(values)
                 if isinstance(res, tuple) and len(res) == 2:
@@ -293,6 +302,7 @@ class PluginSettingsOverlay(QWidget):
         threading.Thread(target=worker, daemon=True).start()
 
     def _on_test_done(self, ns: str, ok: bool, msg: str):
+        """Show the test result message in the namespace's status label, coloured by success."""
         lbl = self._status_labels.get(ns)
         if not lbl:
             return

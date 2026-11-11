@@ -13,6 +13,7 @@ from typing import Optional
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def _get_psutil():
+    """Return the psutil module, or None if it is not installed."""
     try:
         import psutil  # type: ignore[import]
         return psutil
@@ -39,6 +40,7 @@ def _find_procs_by_name(name: str):
 
 
 def _top_procs(by: str = "cpu", n: int = 10) -> list[dict]:
+    """Return the top n processes sorted by CPU or memory usage."""
     psutil = _get_psutil()
     if not psutil:
         return []
@@ -64,6 +66,7 @@ def _top_procs(by: str = "cpu", n: int = 10) -> list[dict]:
 # ── Action handler ────────────────────────────────────────────────────────────
 
 def process_manager_action(parameters: dict, **kwargs) -> str:
+    """Handle list_heavy / find / kill / restart / suspend / resume_process requests via psutil and return a summary."""
     psutil = _get_psutil()
     if not psutil:
         return "psutil is not installed. Run: pip install psutil"

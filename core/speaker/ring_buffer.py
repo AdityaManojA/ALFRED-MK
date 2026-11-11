@@ -18,6 +18,7 @@ class AudioRingBuffer:
     """
 
     def __init__(self, capacity_seconds: float = 4.0, sample_rate: int = 16000) -> None:
+        """Set up a ring buffer holding at least one second of audio at the given sample rate."""
         self.capacity_seconds = max(1.0, float(capacity_seconds))
         self.sample_rate = sample_rate
         self.capacity_samples = int(self.capacity_seconds * self.sample_rate)

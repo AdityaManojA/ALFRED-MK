@@ -14,6 +14,7 @@ from core.integrations.alexa.config import ALEXA_STATE_TOKEN_TTL_S
 
 @dataclass(frozen=True)
 class LinkingState:
+    """A pending account-link state token with its creation/expiry times and device id."""
     state_token: str
     created_at: float
     expires_at: float
@@ -24,6 +25,7 @@ class AccountLinkingManager:
     """Manages short-lived single-use linking state tokens for Echo account pairing."""
 
     def __init__(self, ttl_s: float = ALEXA_STATE_TOKEN_TTL_S) -> None:
+        """Set the state-token TTL and initialise the lock and pending-state map."""
         self.ttl_s = ttl_s
         self._lock = threading.RLock()
         self._states: dict[str, LinkingState] = {}

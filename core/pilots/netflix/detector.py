@@ -110,9 +110,11 @@ class NetflixDetector:
     """Detects Netflix state on-demand via frontmost check, title cues, and snapshot OCR."""
 
     def __init__(self, ocr_engine: Optional[Any] = None) -> None:
+        """Store an optional OCR engine."""
         self._ocr = ocr_engine
 
     def _get_ocr(self) -> Any:
+        """Return the OCR engine, lazily loading RapidOCR; None if unavailable."""
         if self._ocr is not None:
             return self._ocr
         try:

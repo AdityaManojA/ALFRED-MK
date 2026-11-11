@@ -17,7 +17,10 @@ from core.ui.themes.schema import PaletteDefinition
 
 # ── Slot 1: Orbital Bat-Satellite Radar ───────────────────────────────────────
 class BatcaveRadarVisual(SlotVisual):
+    """Slot 1: radar with counter-rotating reticles; sweep speed follows alert_level, blip follows CPU."""
+
     def __init__(self) -> None:
+        """Initialise radar sweep, reticle state, pens, font, static title text and geometry placeholders."""
         super().__init__()
         self.radar = RadarSweep(max_blips=8)
         self.reticle_angle1: float = 0.0
@@ -46,6 +49,7 @@ class BatcaveRadarVisual(SlotVisual):
         self.pt_hdr: QPointF = QPointF()
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build pens and brush from the palette and compute radar centre, radius, crosshairs and header position."""
         c_pri = QColor(palette.pri)
         c_acc = QColor(palette.acc)
         c_dim = QColor(palette.pri_dim)
@@ -71,6 +75,7 @@ class BatcaveRadarVisual(SlotVisual):
         self.blip_points = [QPointF() for _ in range(self.radar.max_blips)]
 
     def tick(self, dt: float, signals: HudSignals) -> None:
+        """Advance radar sweep and reticle rotation, place a CPU-driven blip and recompute reticle tick lines."""
         speed = 2.0 + (signals.alert_level * 1.5)
         self.radar.tick(dt, speed_rad_per_s=speed)
         self.reticle_angle1 = (self.reticle_angle1 + dt * 0.5) % (2.0 * math.pi)
@@ -104,6 +109,7 @@ class BatcaveRadarVisual(SlotVisual):
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
         # Panel boundary & title
+        """Draw the panel border, title, range rings, crosshairs, reticles, sweep line and visible blips."""
         painter.setPen(self.pen_grid)
         painter.drawRect(self.rect_inner)
         painter.setFont(self.font_hdr)
@@ -139,7 +145,10 @@ class BatcaveRadarVisual(SlotVisual):
 
 # ── Slot 2: 16-Band Audio Spectrum ───────────────────────────────────────────
 class BatcaveSpectrumVisual(SlotVisual):
+    """Slot 2: 16-band spectrum driven by max(mic_level, sys_audio_level) with peak-hold caps."""
+
     def __init__(self) -> None:
+        """Initialise the 16-band bar array, pens, font, static title and simulated band values."""
         super().__init__()
         self.bars = BarArray(count=16, peak_decay_per_s=1.2)
         self.pen_bar = QPen()
@@ -157,6 +166,7 @@ class BatcaveSpectrumVisual(SlotVisual):
         self.sim_values = [0.0] * 16
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build bar, peak and border pens and lay out the 16 bars and centred header."""
         c_pri = QColor(palette.pri)
         c_acc = QColor(palette.acc2 or palette.acc)
         c_dim = QColor(palette.pri_dim)
@@ -174,6 +184,7 @@ class BatcaveSpectrumVisual(SlotVisual):
         self.bars.layout(bx + 4.0, by + 4.0, bw - 8.0, bh - 8.0, gap=3.0)
 
     def tick(self, dt: float, signals: HudSignals) -> None:
+        """Synthesise 16 band levels from mic/system audio level and feed them into the bars."""
         base_level = max(signals.mic_level, signals.sys_audio_level)
         for i in range(16):
             # Synthesize 16-band EQ envelope off acoustic level + deterministic jitter
@@ -182,6 +193,7 @@ class BatcaveSpectrumVisual(SlotVisual):
         self.bars.tick(dt, self.sim_values)
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
+        """Draw the panel border, title, filled bars and peak lines."""
         painter.setPen(self.pen_border)
         painter.drawRect(self.rect_inner)
         painter.setFont(self.font_hdr)
@@ -196,6 +208,7 @@ class BatcaveSpectrumVisual(SlotVisual):
 
 
 def time_step(i: int) -> float:
+    """Deterministic per-band phase offset in [0, 3.0]: ((i * 17) % 31) * 0.1."""
     return (i * 17) % 31 * 0.1
 
 
@@ -228,7 +241,10 @@ BATWING_EDGES = [
 
 
 class BatcaveBlueprintVisual(SlotVisual):
+    """Slot 3: rotating 3D batwing wireframe whose yaw speed scales with CPU, plus static readouts."""
+
     def __init__(self) -> None:
+        """Initialise the Batwing wireframe model, rotation, pens, fonts and static text labels."""
         super().__init__()
         self.model = Wireframe3D(BATWING_VERTICES, BATWING_EDGES)
         self.yaw: float = 0.0
@@ -260,6 +276,7 @@ class BatcaveBlueprintVisual(SlotVisual):
         self.cy: float = 0.0
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build pens and lay out the header, telemetry label positions and model centre."""
         c_pri = QColor(palette.pri)
         c_dim = QColor(palette.pri_dim)
 
@@ -281,10 +298,12 @@ class BatcaveBlueprintVisual(SlotVisual):
 
     def tick(self, dt: float, signals: HudSignals) -> None:
         # Rotation driven by CPU & system status
+        """Advance the yaw (faster with CPU) and reproject the wireframe model."""
         self.yaw = (self.yaw + dt * (0.8 + signals.cpu_pct * 0.01)) % (2.0 * math.pi)
         self.model.update_geometry(self.cx, self.cy, scale=0.85, yaw=self.yaw, pitch=self.pitch)
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
+        """Draw the panel border, title, wireframe model and telemetry labels."""
         painter.setPen(self.pen_border)
         painter.drawRect(self.rect_inner)
         painter.setFont(self.font_hdr)

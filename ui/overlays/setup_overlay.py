@@ -32,11 +32,13 @@ from ui import (
 
 
 class SetupOverlay(QWidget):
+    """First-run setup overlay for choosing the LLM provider, OS and names; emits the resulting config dict."""
     done = pyqtSignal(object)  # emits config dict
     setup_api_requested = pyqtSignal()
     _probe_done = pyqtSignal(str, bool, object)
 
     def __init__(self, parent=None):
+        """Detect the OS, read the current config for the provider, and build the setup form."""
         super().__init__(parent)
         self._probe_done.connect(self._on_probe_done)
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
@@ -63,6 +65,7 @@ class SetupOverlay(QWidget):
 
         def _lbl(txt, font_size=9, bold=False, color=C.PRI,
                  align=Qt.AlignmentFlag.AlignCenter):
+            """Return a transparent label with the given text, font size, weight, colour and alignment."""
             w = QLabel(txt)
             w.setAlignment(align)
             w.setFont(tech_font(font_size,
@@ -456,6 +459,7 @@ class SetupOverlay(QWidget):
         layout.addLayout(btn_row)
 
     def _set_backend(self, key: str):
+        """Select the LLM provider, switch the provider page and restyle the mode buttons."""
         self._provider = key
         idx_map = {"gemini": 0, "ollama": 1, "openai": 2, "openrouter": 3}
         self._provider_stack.setCurrentIndex(idx_map.get(key, 0))
@@ -477,6 +481,7 @@ class SetupOverlay(QWidget):
                 """)
 
     def _sel_os_btn(self, key: str):
+        """Select the target OS and restyle the OS buttons."""
         self._sel_os = key
         for k, btn in self._os_btns.items():
             if k == key:
@@ -496,11 +501,13 @@ class SetupOverlay(QWidget):
                 """)
 
     def _probe_ollama(self):
+        """Probe the Ollama server for available models on a background thread."""
         self._probe_status.setText("Probing Ollama...")
         self._probe_status.setStyleSheet(f"color: {C.ACC2}; background: transparent;")
         url = self._ollama_url.text().strip() or "http://localhost:11434"
 
         def _check():
+            """Query the Ollama tags endpoint; return (True, model names) on success or (False, [])."""
             import urllib.request
             try:
                 req = urllib.request.Request(f"{url.rstrip('/')}/api/tags", headers={"User-Agent": "ALFRED"})
@@ -514,12 +521,14 @@ class SetupOverlay(QWidget):
             return False, []
 
         def _worker():
+            """Run the Ollama check and emit the probe result."""
             ok, models = _check()
             self._probe_done.emit("ollama", ok, models)
 
         threading.Thread(target=_worker, daemon=True).start()
 
     def _probe_openrouter(self):
+        """Validate the OpenRouter API key against the gateway on a background thread."""
         key = self._or_key_input.text().strip()
         if not key:
             self._or_probe_status.setText("▲ ENTER API KEY FIRST")
@@ -529,6 +538,7 @@ class SetupOverlay(QWidget):
         self._or_probe_status.setStyleSheet(f"color: {C.ACC2}; background: transparent;")
 
         def _check():
+            """Call the OpenRouter key endpoint and return (ok, status message)."""
             import urllib.request
             try:
                 req = urllib.request.Request(
@@ -553,6 +563,7 @@ class SetupOverlay(QWidget):
             return False, "▲ PROBE FAILED"
 
         def _worker():
+            """Run the OpenRouter check and emit the probe result."""
             ok, message = _check()
             self._probe_done.emit("openrouter", ok, message)
 
@@ -580,6 +591,7 @@ class SetupOverlay(QWidget):
         )
 
     def _submit(self):
+        """Validate the form for the chosen provider and emit done with the config dict, or show an error."""
         self._err_lbl.hide()
         prov = self._provider
         os_name = self._sel_os
@@ -677,6 +689,7 @@ class SetupOverlay(QWidget):
         self._or_model.setText(cur_cfg.get("openrouter_model", "anthropic/claude-3.5-sonnet"))
 
     def showEvent(self, event):
+        """Reload the stored configuration into the form when shown."""
         super().showEvent(event)
         self.refresh_values()
 

@@ -66,6 +66,7 @@ def _make_uploads_dir() -> Path:
 UPLOADS_DIR = _make_uploads_dir()
 
 def _get_gemini_key() -> str | None:
+    """Return the Gemini API key from config/api_keys.json, or None if unavailable."""
     try:
         import json as _json
         with open(BASE_DIR / "config" / "api_keys.json", "r", encoding="utf-8") as f:
@@ -124,6 +125,7 @@ def _ensure_network_access(port: int) -> None:
         py_exe     = sys.executable
 
         def _netsh_rule_exists(name: str) -> bool:
+            """Return True if a Windows firewall rule with this name exists."""
             try:
                 r = subprocess.run(
                     ["netsh", "advfirewall", "firewall", "show", "rule", f"name={name}"],
@@ -134,6 +136,7 @@ def _ensure_network_access(port: int) -> None:
                 return False
 
         def _network_is_public() -> bool:
+            """Return True if any active network profile is categorised as Public."""
             try:
                 r = subprocess.run(
                     ["powershell", "-NoProfile", "-NonInteractive", "-Command",
@@ -230,6 +233,7 @@ def _ensure_network_access(port: int) -> None:
         finally:
             # Cleanup after the bat has had time to run
             def _cleanup(path: str) -> None:
+                """Delete the temporary setup batch file after a short delay."""
                 time.sleep(5)
                 try:
                     os.unlink(path)
@@ -268,6 +272,7 @@ def _ensure_network_access(port: int) -> None:
 
     # ── Linux ─────────────────────────────────────────────────────────────────
     def _privileged(cmd: list[str]) -> bool:
+        """Run a command via pkexec or sudo -n and return True if either succeeds."""
         for prefix in (["pkexec"], ["sudo", "-n"]):
             try:
                 r = subprocess.run(prefix + cmd, capture_output=True, timeout=30)
@@ -315,6 +320,7 @@ def _ensure_network_access(port: int) -> None:
 
 
 def _ensure_crypto_js() -> None:
+    """Download and cache CryptoJS locally once; the client falls back to the CDN on failure."""
     if _CRYPTOJS_FILE.exists():
         return
     try:
@@ -455,14 +461,17 @@ def _ensure_certs() -> bool:
 
 
 def _read(name: str) -> str:
+    """Return the text of a file from the dashboard static directory."""
     return (STATIC_DIR / name).read_text(encoding="utf-8")
 
 
 # ── DashboardServer ───────────────────────────────────────────────────────────
 
 class DashboardServer:
+    """FastAPI remote dashboard: phone pairing, encrypted commands, files, audio and broadcasts."""
 
     def __init__(self):
+        """Initialise auth, client, queue and callback state, load device sessions and build the app."""
         self._ip                          = _local_ip()
         self._tokens: set[str]            = set()
         self._token_keys: dict[str, str]  = {}   # auth_token → session_key
@@ -486,6 +495,7 @@ class DashboardServer:
         self.app                          = self._build_app()
 
     def _load_device_sessions(self) -> dict[str, dict]:
+        """Load persisted device sessions and pre-derive their AES keys; return {} on failure."""
         try:
             if self._device_sessions_file.exists():
                 data = json.loads(self._device_sessions_file.read_text(encoding="utf-8"))
@@ -501,6 +511,7 @@ class DashboardServer:
         return {}
 
     def _save_device_sessions(self) -> None:
+        """Write the device sessions to config/device_sessions.json."""
         try:
             self._device_sessions_file.parent.mkdir(parents=True, exist_ok=True)
             self._device_sessions_file.write_text(json.dumps(self._device_sessions, indent=2), encoding="utf-8")
@@ -510,6 +521,9 @@ class DashboardServer:
     # ── one-time key management ───────────────────────────────────────────
 
     def new_key(self, expiry_secs: int = 600) -> str:
+        """Create a six-character one-time pairing key valid for expiry_secs and return it.
+        Expired pending keys are pruned first.
+        """
         now = time.time()
         self._pending_keys = {k: v for k, v in self._pending_keys.items() if v > now}
         key = ''.join(secrets.choice(_KEY_CHARS) for _ in range(6))
@@ -518,10 +532,12 @@ class DashboardServer:
 
     @staticmethod
     def _ssl_enabled() -> bool:
+        """Return True if both the TLS key and certificate exist in config/certs."""
         certs = BASE_DIR / "config" / "certs"
         return (certs / "jarvis.key").exists() and (certs / "jarvis.crt").exists()
 
     def get_url(self) -> str:
+        """Return the dashboard URL, using https when TLS certificates are present."""
         proto = "https" if self._ssl_enabled() else "http"
         return f"{proto}://{self._ip}:{PORT}"
 
@@ -533,11 +549,13 @@ class DashboardServer:
         return f"{proto}://{self._ip}:{PORT}"
 
     def _aes_key(self, session_key: str) -> bytes:
+        """Return the cached AES key for a session key, deriving it on first use."""
         if session_key not in self._aes_cache:
             self._aes_cache[session_key] = _derive_key(session_key)
         return self._aes_cache[session_key]
 
     def _decrypt(self, token: str, enc_b64: str) -> str | None:
+        """Decrypt a payload with the session key bound to this token; return None on failure."""
         sk = self._token_keys.get(token)
         if not sk:
             return None
@@ -549,15 +567,19 @@ class DashboardServer:
     # ── callbacks ────────────────────────────────────────────────────────
 
     def set_wake_callback(self, fn) -> None:
+        """Register the callback invoked when a remote command or wake request arrives."""
         self._wake_callback = fn
 
     def set_connect_callback(self, fn) -> None:
+        """Register the callback invoked when a phone completes pairing."""
         self._connect_callback = fn
 
     def set_clear_chat_callback(self, fn) -> None:
+        """Register the callback invoked when the dashboard clears the chat."""
         self._clear_chat_callback = fn
 
     def set_action_callback(self, fn) -> None:
+        """Register the async callback that executes dashboard action buttons."""
         self._action_callback = fn
 
     # ── background tasks & broadcast ────────────────────────────────────
@@ -570,6 +592,7 @@ class DashboardServer:
         status: str,
         detail: str = "",
     ) -> None:
+        """Record a background task's progress and broadcast it to connected clients."""
         payload = {
             "type": "background_task",
             "task_id": task_id,
@@ -583,9 +606,13 @@ class DashboardServer:
         await self.broadcast(payload)
 
     def get_background_tasks(self) -> dict:
+        """Return a copy of the tracked background tasks keyed by task id."""
         return dict(self._background_tasks)
 
     async def broadcast(self, msg: dict) -> None:
+        """Send a message to all WebSocket clients and record it in the capped history.
+        A clear_chat message empties the history; clients that fail are dropped.
+        """
         if msg.get("type") == "clear_chat":
             self._history.clear()
         else:
@@ -607,9 +634,13 @@ class DashboardServer:
     # ── FastAPI app ───────────────────────────────────────────────────────
 
     def _build_app(self) -> "FastAPI":
+        """Build the FastAPI app with all HTTP and WebSocket routes and return it."""
         app = FastAPI(docs_url=None, redoc_url=None)
 
         def _auth(req: Request) -> bool:
+            """Return True if the request carries a known bearer token or device token.
+            A valid device token also registers the supplied bearer token.
+            """
             tok = req.headers.get("authorization", "").removeprefix("Bearer ").strip()
             if tok and tok in self._tokens:
                 return True
@@ -626,6 +657,7 @@ class DashboardServer:
         # serve CryptoJS from local cache, fallback to CDN redirect
         @app.get("/static/crypto.js")
         async def serve_crypto():
+            """Serve the cached CryptoJS file, or redirect to the CDN copy."""
             if _CRYPTOJS_FILE.exists():
                 return FileResponse(str(_CRYPTOJS_FILE),
                                     media_type="application/javascript")
@@ -634,10 +666,12 @@ class DashboardServer:
 
         @app.get("/login", response_class=HTMLResponse)
         async def login_page():
+            """Serve the login page HTML."""
             return HTMLResponse(self._login_html)
 
         @app.get("/", response_class=HTMLResponse)
         async def index():
+            """Serve the dashboard app HTML with the IP, port and theme colour filled in."""
             # Auth is handled client-side via sessionStorage bearer token.
             # Server-side header auth can't work here because browser navigations
             # don't send custom headers (location.href doesn't carry Authorization).
@@ -663,6 +697,9 @@ class DashboardServer:
 
         @app.post("/login")
         async def login(req: Request):
+            """Exchange a valid one-time PIN for a bearer token and a persistent device token.
+            Returns 401 for an invalid or expired key.
+            """
             body    = await req.json()
             entered = str(body.get("pin", "")).strip().upper()
             now     = time.time()
@@ -805,6 +842,9 @@ class DashboardServer:
 
         @app.post("/api/command")
         async def command(req: Request):
+            """Accept an authorised (optionally encrypted) text command and queue it.
+            Invokes the wake callback when a command is queued.
+            """
             if not _auth(req):
                 return JSONResponse({"error": "Unauthorized"}, status_code=401)
             body  = await req.json()
@@ -824,6 +864,7 @@ class DashboardServer:
 
         @app.post("/api/wake")
         async def wake_ep(req: Request):
+            """Trigger the wake callback for an authorised request."""
             if not _auth(req):
                 return JSONResponse({"error": "Unauthorized"}, status_code=401)
             if self._wake_callback:
@@ -832,6 +873,7 @@ class DashboardServer:
 
         @app.post("/api/clear-chat")
         async def clear_chat_ep(req: Request):
+            """Clear the chat history, broadcast the clear and invoke the clear-chat callback."""
             if not _auth(req):
                 return JSONResponse({"error": "Unauthorized"}, status_code=401)
             self._history.clear()
@@ -844,6 +886,9 @@ class DashboardServer:
             return JSONResponse({"ok": True})
 
         def _resolve_ws_auth(token: str = "", device_token: str = "") -> str | None:
+            """Resolve a bearer or device token to a valid bearer token, or None if unauthorised.
+            A known device token mints and registers a bearer token when none is given.
+            """
             tok = (token or "").strip()
             if tok and tok in self._tokens:
                 return tok
@@ -861,6 +906,7 @@ class DashboardServer:
 
         @app.websocket("/ws/phone-audio")
         async def phone_audio_ws(websocket: WebSocket, token: str = "", device_token: str = ""):
+            """Receive phone mic PCM over a WebSocket and queue it for the Live session."""
             tok = _resolve_ws_auth(token, device_token)
             if not tok:
                 await websocket.close(code=4001)
@@ -888,6 +934,7 @@ class DashboardServer:
         # ── File sharing ──────────────────────────────────────────────────────
 
         def _safe_filename(raw: str) -> str:
+            """Return a filesystem-safe base name for an uploaded file, defaulting to upload."""
             name = Path(raw).name                          # strip path components
             name = re.sub(r'[<>:"/\\|?*\x00-\x1f]', '_', name).strip(". ")
             return name or "upload"
@@ -895,6 +942,9 @@ class DashboardServer:
         if _UPLOAD_OK:
             @app.post("/api/upload")
             async def upload_file(req: Request, file: UploadFile = FastAPIFile(...)):
+                """Save an authorised upload to the uploads folder under a unique name.
+                Rejects files over MAX_UPLOAD_MB and broadcasts a file_received event on success.
+                """
                 if not _auth(req):
                     return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
@@ -940,6 +990,7 @@ class DashboardServer:
         else:
             @app.post("/api/upload")
             async def upload_unavailable(req: Request):
+                """Report that uploads need python-multipart installed (HTTP 503)."""
                 return JSONResponse(
                     {"error": "File uploads require: pip install python-multipart"},
                     status_code=503,
@@ -947,6 +998,7 @@ class DashboardServer:
 
         @app.get("/api/files")
         async def list_files(req: Request):
+            """Return the uploaded files, newest first, with their sizes."""
             if not _auth(req):
                 return JSONResponse({"error": "Unauthorized"}, status_code=401)
             files = []
@@ -963,6 +1015,7 @@ class DashboardServer:
 
         @app.get("/uploads/{filename}")
         async def download_file(filename: str, token: str = "", device_token: str = ""):
+            """Serve an uploaded file to a client authorised by query-string token."""
             # Auth via query param — browser <a download> can't send custom headers
             tok = _resolve_ws_auth(token, device_token)
             if not tok:
@@ -975,10 +1028,12 @@ class DashboardServer:
 
         @app.get("/api/background_tasks")
         async def background_tasks_ep(req: Request):
+            """Return the list of tracked background tasks."""
             return JSONResponse({"ok": True, "tasks": list(self._background_tasks.values())})
 
         @app.websocket("/ws")
         async def ws_ep(websocket: WebSocket, token: str = "", device_token: str = ""):
+            """Main dashboard WebSocket: sends history, then handles ping, command and action messages."""
             tok = _resolve_ws_auth(token, device_token)
             if not tok:
                 try:
@@ -1047,6 +1102,7 @@ class DashboardServer:
 
             # Task to handle incoming audio from browser to ALFRED mic
             async def handle_incoming_audio():
+                """Read browser mic PCM from the WebSocket and queue it for the assistant."""
                 try:
                     while True:
                         data = await websocket.receive_bytes()
@@ -1065,6 +1121,7 @@ class DashboardServer:
 
             # Task to handle outgoing audio from ALFRED to browser speakers
             async def handle_outgoing_audio():
+                """Send queued assistant audio chunks to the browser over the WebSocket."""
                 try:
                     while True:
                         try:
@@ -1114,6 +1171,9 @@ class DashboardServer:
         await uvicorn.Server(cfg).serve()
 
     async def serve(self) -> None:
+        """Start the dashboard with uvicorn, over TLS when certificates are available.
+        Opens firewall access in the background and starts the alias server on PORT+1 for TLS.
+        """
         if not _DEPS_OK:
             print("[Dashboard] fastapi/uvicorn not installed — dashboard disabled.")
             print("[Dashboard] Run:  pip install fastapi 'uvicorn[standard]' cryptography")

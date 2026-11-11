@@ -72,6 +72,7 @@ def download_model(force: bool = False) -> bool:
 
 
 def main() -> None:
+    """CLI entry point: --download (optionally --force) or --verify; exits 0 on success, 1 on failure."""
     parser = argparse.ArgumentParser(description="ALFRED Wake-Word Model Tool")
     parser.add_argument("--verify", action="store_true", help="Verify local ONNX model integrity")
     parser.add_argument("--download", action="store_true", help="Download official model weights")

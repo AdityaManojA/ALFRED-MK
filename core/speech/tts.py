@@ -46,11 +46,13 @@ class TTSPhraseCache:
     """Thread-safe LRU cache for synthesized audio waveforms."""
 
     def __init__(self, maxsize: int = TTS_CACHE_SIZE):
+        """Create an empty LRU phrase cache holding up to maxsize entries."""
         self.maxsize = maxsize
         self._cache: collections.OrderedDict[str, Tuple[np.ndarray, int]] = collections.OrderedDict()
         self._lock = threading.Lock()
 
     def get(self, text: str) -> Optional[Tuple[np.ndarray, int]]:
+        """Return cached (audio, sample_rate) for the normalised text, marking it recently used, or None."""
         key = text.strip().lower()
         with self._lock:
             if key in self._cache:
@@ -60,6 +62,7 @@ class TTSPhraseCache:
             return None
 
     def put(self, text: str, audio: np.ndarray, sample_rate: int) -> None:
+        """Cache audio for the normalised text, evicting the oldest entry when full."""
         key = text.strip().lower()
         with self._lock:
             if len(self._cache) >= self.maxsize:
@@ -67,6 +70,7 @@ class TTSPhraseCache:
             self._cache[key] = (audio, sample_rate)
 
     def clear(self) -> None:
+        """Remove all cached phrases."""
         with self._lock:
             self._cache.clear()
 
@@ -83,6 +87,7 @@ class InstrumentedTTS:
         synthesizer: Optional[Callable[[str], Tuple[np.ndarray, int]]] = None,
         cache_size: int = TTS_CACHE_SIZE,
     ):
+        """Set up the synthesizer, shared phrase cache and playback queue; the worker is not started."""
         self._synthesizer = synthesizer
         self._cache = TTS_CACHE
         self._queue: queue.Queue = queue.Queue(maxsize=20)
@@ -90,6 +95,7 @@ class InstrumentedTTS:
         self._worker_thread: Optional[threading.Thread] = None
 
     def start(self) -> None:
+        """Start the daemon playback worker thread if not already running."""
         if self._running:
             return
         self._running = True
@@ -101,6 +107,7 @@ class InstrumentedTTS:
         self._worker_thread.start()
 
     def stop(self) -> None:
+        """Stop the playback worker by clearing the running flag and enqueueing a sentinel."""
         self._running = False
         try:
             self._queue.put_nowait(None)
@@ -136,6 +143,9 @@ class InstrumentedTTS:
         return np.zeros(1600, dtype=np.float32), 16000, False
 
     def _playback_loop(self) -> None:
+        """Worker loop: synthesise (or fetch cached) queued text, play it with sounddevice
+        and record queue, synthesis, device and total latency, passing the report to the callback.
+        """
         import sounddevice as sd
 
         while self._running:

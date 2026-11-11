@@ -21,6 +21,7 @@ from typing import Optional
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def _local_ip() -> str:
+    """Return this machine's outbound LAN IP address, or unavailable."""
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("8.8.8.8", 80))
@@ -32,6 +33,7 @@ def _local_ip() -> str:
 
 
 def _public_ip() -> str:
+    """Return the public IP from ipify or AWS checkip, or unavailable."""
     for url in ("https://api.ipify.org", "https://checkip.amazonaws.com"):
         try:
             with urllib.request.urlopen(url, timeout=5) as r:
@@ -76,6 +78,7 @@ def _speedtest_cli() -> Optional[dict]:
 
 
 def _ping(host: str, count: int = 4) -> dict:
+    """Ping a host and return a dict with average RTT, packet loss, and raw output."""
     system = platform.system().lower()
     if system == "windows":
         cmd = ["ping", "-n", str(count), host]
@@ -104,6 +107,9 @@ def _ping(host: str, count: int = 4) -> dict:
 
 
 def _active_connections() -> list[dict]:
+    """List established non-loopback TCP connections with their owning processes.
+    Returns an empty list if psutil is not installed.
+    """
     try:
         import psutil  # type: ignore[import]
         conns = []
@@ -124,6 +130,7 @@ def _active_connections() -> list[dict]:
 # ── Action handler ────────────────────────────────────────────────────────────
 
 def network_tools_action(parameters: dict, **kwargs) -> str:
+    """Run a network diagnostic (get_ip, speed_test, ping or connections) and return a one-line or multi-line summary."""
     action = str(parameters.get("action", "get_ip")).lower().strip()
 
     if action in ("get_ip", "ip", "my_ip", "whats_my_ip"):

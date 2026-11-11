@@ -16,7 +16,10 @@ from core.ui.themes.schema import PaletteDefinition
 
 
 class JokerCardScatterVisual(SlotVisual):
+    """Slot 1: five 16x24 cards orbiting the panel centre on offset sine/cosine paths."""
+
     def __init__(self) -> None:
+        """Initialise pens, font and geometry placeholders for this slot."""
         super().__init__()
         self.t: float = 0.0
         self.pen_card = QPen()
@@ -26,6 +29,7 @@ class JokerCardScatterVisual(SlotVisual):
         self.cards = [QRectF() for _ in range(5)]
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build card pen and brush and compute the inner panel rect."""
         c_pri = QColor(palette.pri)
         c_acc = QColor(palette.acc)
         self.pen_card = QPen(c_acc, 1.2)
@@ -34,6 +38,7 @@ class JokerCardScatterVisual(SlotVisual):
         self.rect_inner = QRectF(bx, by, bw, bh)
 
     def tick(self, dt: float, signals: HudSignals) -> None:
+        """Advance the phase and reposition the five scattering cards."""
         self.t = (self.t + dt * 2.5) % (2.0 * math.pi)
         cx = self.rect_inner.x() + self.rect_inner.width() / 2.0
         cy = self.rect_inner.y() + self.rect_inner.height() / 2.0
@@ -43,6 +48,7 @@ class JokerCardScatterVisual(SlotVisual):
             self.cards[i].setRect(cx + ox - 8, cy + oy - 12, 16, 24)
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
+        """Draw the header and the card rectangles."""
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_card)
         painter.drawText(QRectF(rect.x() + 8, rect.y() + 4, rect.width() - 16, 14),
@@ -53,7 +59,10 @@ class JokerCardScatterVisual(SlotVisual):
 
 
 class JokerLaughWaveVisual(SlotVisual):
+    """Slot 2: 40-sample interfering sine/cosine 'laugh' waveform."""
+
     def __init__(self) -> None:
+        """Initialise pens, font and geometry placeholders for this slot."""
         super().__init__()
         self.wave = WaveTrace(sample_count=40)
         self.t: float = 0.0
@@ -62,6 +71,7 @@ class JokerLaughWaveVisual(SlotVisual):
         self.rect_inner = QRectF()
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build the waveform pen and lay out the wave trace."""
         c_acc = QColor(palette.acc)
         self.pen_laugh = QPen(c_acc, 1.4)
         bx, by, bw, bh = rect.x() + 8.0, rect.y() + 20.0, rect.width() - 16.0, rect.height() - 28.0
@@ -69,11 +79,13 @@ class JokerLaughWaveVisual(SlotVisual):
         self.wave.layout(bx + 4.0, by + bh / 2.0, bw - 8.0, height_amp=bh * 0.4)
 
     def tick(self, dt: float, signals: HudSignals) -> None:
+        """Advance the phase and recompute the distorted sine-times-cosine samples."""
         self.t = (self.t + dt * 6.0) % (2.0 * math.pi)
         samples = [fast_sin(i * 0.8 + self.t) * (fast_cos(i * 1.5 - self.t * 2.0)) for i in range(40)]
         self.wave.update_samples(samples)
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
+        """Draw the header and waveform."""
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_laugh)
         painter.drawText(QRectF(rect.x() + 8, rect.y() + 4, rect.width() - 16, 12),
@@ -82,22 +94,28 @@ class JokerLaughWaveVisual(SlotVisual):
 
 
 class JokerGrinningMaskVisual(SlotVisual):
+    """Slot 3: static smile arc drawn at the panel centre."""
+
     def __init__(self) -> None:
+        """Initialise pens, font and geometry placeholders for this slot."""
         super().__init__()
         self.pen_grin = QPen()
         self.font_hdr = QFont("Consolas", 6, QFont.Weight.Bold)
         self.rect_inner = QRectF()
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build the grin pen and compute the inner panel rect."""
         c_pri = QColor(palette.pri)
         self.pen_grin = QPen(c_pri, 1.6)
         bx, by, bw, bh = rect.x() + 8.0, rect.y() + 18.0, rect.width() - 16.0, rect.height() - 24.0
         self.rect_inner = QRectF(bx, by, bw, bh)
 
     def tick(self, dt: float, signals: HudSignals) -> None:
+        """No-op; this visual is static."""
         pass
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
+        """Draw the header and a smile arc at the panel centre."""
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_grin)
         painter.drawText(QRectF(rect.x() + 8, rect.y() + 3, rect.width() - 16, 12),

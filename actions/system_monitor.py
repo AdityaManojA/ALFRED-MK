@@ -87,6 +87,7 @@ def _nvml_gpu() -> float:
         return -1.0
     try:
         class _Util(ctypes.Structure):
+            """ctypes struct holding NVML GPU and memory utilisation percentages."""
             _fields_ = [("gpu", ctypes.c_uint), ("memory", ctypes.c_uint)]
 
         if _nvml_lib is None:
@@ -125,6 +126,7 @@ def _nvml_gpu() -> float:
 
 
 def _get_gpu_usage() -> float:
+    """Return GPU utilisation percent via pynvml, falling back to raw NVML."""
     global _pynvml_obj, _pynvml_handle, _pynvml_ok
     if _pynvml_ok is not False:
         try:
@@ -146,6 +148,7 @@ def _get_gpu_usage() -> float:
 
 
 def _get_cpu_temp() -> float:
+    """Return CPU temperature in Celsius from psutil or WMI, or -1.0 if unavailable."""
     try:
         temps = psutil.sensors_temperatures()
         for name in ["coretemp", "k10temp", "cpu_thermal", "acpitz",
@@ -454,6 +457,7 @@ def terminate_process(pid: int, ask_confirmation: bool = True) -> Dict[str, Any]
             return {"status": "rejected", "message": msg}
 
         def _do_terminate() -> str:
+            """Terminate the target process and return a status message."""
             try:
                 proc.terminate()
                 return f"Process <{pid}:{name}> terminated successfully."
@@ -487,17 +491,23 @@ class SystemMonitor:
     """
 
     def __init__(self, thresholds: dict | None = None):
+        """Merge custom thresholds with defaults and reset alert tracking state."""
         self.thresholds = {**DEFAULT_THRESHOLDS, **(thresholds or {})}
         self._last_alert: dict[str, float] = {}
         self._cpu_streak = 0
 
     def _can_alert(self, key: str) -> bool:
+        """Return True if the cooldown for this alert key has elapsed."""
         return (time.monotonic() - self._last_alert.get(key, 0)) > _COOLDOWN
 
     def _record(self, key: str):
+        """Record the current time as the last alert for this key."""
         self._last_alert[key] = time.monotonic()
 
     def check(self) -> str | None:
+        """Sample CPU, RAM, temperature, and GPU and build alert prompts for breaches.
+        Respects per-key cooldowns and a CPU streak; returns the alert text or None.
+        """
         try:
             cpu = psutil.cpu_percent(interval=None)
             ram = psutil.virtual_memory().percent

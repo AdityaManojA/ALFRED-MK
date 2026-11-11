@@ -67,6 +67,7 @@ _APP_ALIASES: dict[str, dict[str, str]] = {
 
 
 def _normalize(raw: str) -> str:
+    """Map a spoken app name to its OS-specific launch name using the alias table."""
     key = raw.lower().strip()
 
     if key in _APP_ALIASES:
@@ -167,6 +168,10 @@ def _find_windows_app_path(app_name: str) -> str | None:
 
 
 def _launch_windows(app_name: str) -> bool:
+    """Launch an app on Windows using a chain of fallbacks.
+    Tries URI schemes, resolved paths, os.startfile, cmd start, then Start Menu search.
+    Returns True if any method appears to succeed.
+    """
     import os
 
     # 1. Protocol / URI scheme launch (e.g. ms-settings:, calc:, spotify:)
@@ -245,6 +250,9 @@ def _launch_windows(app_name: str) -> bool:
 
 
 def _launch_macos(app_name: str) -> bool:
+    """Launch an app on macOS via open -a, a PATH binary, or Spotlight search.
+    Returns True if any method appears to succeed.
+    """
 
     try:
         result = subprocess.run(
@@ -302,6 +310,9 @@ _LINUX_TERMINAL_FALLBACKS = [
 ]
 
 def _launch_linux(app_name: str) -> bool:
+    """Launch an app on Linux via terminal fallbacks, PATH binaries, xdg-open, then gtk-launch.
+    Returns True if any method appears to succeed, else False.
+    """
 
     # terminal emulators: try common ones in order
     if app_name in ("x-terminal-emulator", "gnome-terminal", "terminal"):
@@ -371,6 +382,9 @@ def open_app(
     player=None,
     session_memory=None,
 ):
+    """Tool entry point that opens an application by name on the current OS.
+    Applies path-guard restrictions and returns a user-facing status message.
+    """
     params = parameters or {}
     app_name = str(params.get("app_name") or params.get("app") or params.get("name") or "").strip()
 

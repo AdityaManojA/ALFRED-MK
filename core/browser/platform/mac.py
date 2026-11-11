@@ -31,6 +31,7 @@ class MacBrowserDriver(BaseBrowserPlatformDriver):
     """macOS driver using AppleScript front-browser targeting and System Events keystrokes."""
 
     def _run_osascript(self, script: str) -> tuple[bool, str]:
+        """Run an AppleScript snippet and return (success, stripped stdout or error text)."""
         try:
             res = subprocess.run(
                 ["osascript", "-e", script],
@@ -44,6 +45,7 @@ class MacBrowserDriver(BaseBrowserPlatformDriver):
             return (False, str(exc))
 
     def get_frontmost_browser(self) -> Optional[str]:
+        """Return the browser name for the frontmost app's bundle id, or None if it is not a known browser."""
         script = 'tell application "System Events" to get bundle identifier of (first process whose frontmost is true)'
         ok, out = self._run_osascript(script)
         if ok and out in KNOWN_MAC_BROWSERS:
@@ -51,6 +53,7 @@ class MacBrowserDriver(BaseBrowserPlatformDriver):
         return None
 
     def close_active_tab(self) -> bool:
+        """Close the active tab of the frontmost browser via AppleScript, falling back to Cmd+W."""
         browser = self.get_frontmost_browser()
         if not browser:
             _LOGGER.debug("[MacBrowserDriver] Frontmost application is not a recognized browser.")
@@ -135,6 +138,7 @@ class MacBrowserDriver(BaseBrowserPlatformDriver):
         return False
 
     def new_tab(self, url: Optional[str] = None) -> bool:
+        """Open ``url`` with ``open``, or send Cmd+T to the frontmost browser when no URL is given."""
         if url:
             try:
                 subprocess.run(["open", url], check=True, timeout=DEFAULT_TIMEOUT_S)
@@ -151,6 +155,7 @@ class MacBrowserDriver(BaseBrowserPlatformDriver):
         return ok
 
     def switch_tab(self, direction: str = "next") -> bool:
+        """Switch to the previous or next tab in the frontmost browser via Cmd+Shift+[ or ]."""
         browser = self.get_frontmost_browser()
         if not browser:
             return False
@@ -162,6 +167,7 @@ class MacBrowserDriver(BaseBrowserPlatformDriver):
         return ok
 
     def reopen_closed_tab(self) -> bool:
+        """Reopen the last closed tab (Cmd+Shift+T) in the frontmost browser."""
         browser = self.get_frontmost_browser()
         if not browser:
             return False
@@ -170,6 +176,7 @@ class MacBrowserDriver(BaseBrowserPlatformDriver):
         return ok
 
     def close_window(self) -> bool:
+        """Close the frontmost browser window (Cmd+Shift+W)."""
         browser = self.get_frontmost_browser()
         if not browser:
             return False

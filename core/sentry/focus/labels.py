@@ -65,7 +65,8 @@ def resolve_distraction_label(surface: SurfaceIdentity) -> str:
     if surface.is_browser and surface.raw_title:
         low_title = surface.raw_title.lower()
         for host, friendly in HOST_LABEL_MAP.items():
-            if host in low_title or friendly.lower() in low_title:
+            # Friendly names must match as whole words: "X" must not match "Firefox".
+            if host in low_title or re.search(r"(?<!\w)" + re.escape(friendly.lower()) + r"(?!\w)", low_title):
                 return friendly
 
         # Check for bare registrable domain in title

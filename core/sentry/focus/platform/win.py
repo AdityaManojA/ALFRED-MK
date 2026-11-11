@@ -36,6 +36,7 @@ class WinPlatformReader(BasePlatformReader):
     """Inspects frontmost window on Windows via Win32 API and UI Automation."""
 
     def __init__(self) -> None:
+        """Record this process's PID to recognise Alfred's own window."""
         self._own_pid = os.getpid()
 
     def get_frontmost_surface(self, from_card: bool = False) -> SurfaceIdentity:
@@ -107,6 +108,7 @@ class WinPlatformReader(BasePlatformReader):
         found_hwnd = None
 
         def enum_cb(hwnd: int, _: int) -> bool:
+            """EnumWindows callback that records the first visible, non-minimised browser window not owned by Alfred."""
             nonlocal found_hwnd
             if found_hwnd is not None:
                 return False
@@ -133,6 +135,7 @@ class WinPlatformReader(BasePlatformReader):
         return found_hwnd
 
     def _get_window_title(self, hwnd: int) -> str:
+        """Return the window's title text, or an empty string."""
         length = user32.GetWindowTextLengthW(hwnd)
         if length > 0:
             buf = ctypes.create_unicode_buffer(length + 1)
@@ -141,6 +144,9 @@ class WinPlatformReader(BasePlatformReader):
         return ""
 
     def _extract_browser_host(self, hwnd: int, app_name: str, title: str) -> str:
+        """Infer the browser tab host from the title (URL or domain), the UIA address bar, or known site keywords.
+        Returns an empty string when no host can be determined.
+        """
         # Title regex heuristic
         url_match = re.search(r"https?://([a-zA-Z0-9_\-\.]+)", title)
         if url_match:
@@ -170,6 +176,7 @@ class WinPlatformReader(BasePlatformReader):
         return ""
 
     def _read_uia_address_bar(self, hwnd: int) -> str:
+        """Read the browser address bar via UI Automation and return its host, or an empty string."""
         try:
             import uiautomation as auto
             ctrl = auto.ControlFromHandle(hwnd)

@@ -64,12 +64,15 @@ COLOR_RED = "#ff2a55"
 class _TabsProxy:
     """Compatibility proxy for tab inspection in automated test suites."""
     def __init__(self, tab_names: list[str]):
+        """Store the tab display names."""
         self._names = tab_names
 
     def count(self) -> int:
+        """Return the number of tab names."""
         return len(self._names)
 
     def tabText(self, idx: int) -> str:
+        """Return the tab name at idx, or an empty string if out of range."""
         return self._names[idx] if 0 <= idx < len(self._names) else ""
 
 
@@ -84,6 +87,9 @@ class SetupApiModal(QDialog):
     _MODAL_H = 620
 
     def __init__(self, parent=None, store: Optional[SecretStore] = None):
+        """Create the frameless API setup modal, wire the secret store and Alexa managers, build the UI and load saved values.
+        Also exposes input-field aliases used by UI tests.
+        """
         super().__init__(parent)
         from core.hud_video.layering import make_frameless_overlay
         make_frameless_overlay(self, parent)
@@ -136,6 +142,7 @@ class SetupApiModal(QDialog):
         self._on_submit_current_tab(sync=sync)
 
     def _init_ui(self) -> None:
+        """Build the modal layout: header, backend tab buttons, stacked backend pages, and a footer with status, discard and save buttons."""
         pal = ThemeChrome.get_active().palette
 
         self.setFixedSize(self._MODAL_W, self._MODAL_H)
@@ -290,6 +297,7 @@ class SetupApiModal(QDialog):
         self._switch_tab(0)
 
     def paintEvent(self, event):
+        """Paint the dark rounded-rect background with the active palette border."""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         pal = ThemeChrome.get_active().palette
@@ -300,11 +308,13 @@ class SetupApiModal(QDialog):
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 8, 8)
 
     def showEvent(self, event):
+        """Reload stored credentials into the fields and clear the status line on show."""
         super().showEvent(event)
         self._load_current_values()
         self._status_lbl.setText("")
 
     def _field_style(self) -> str:
+        """Return the themed stylesheet shared by line-edit and text-edit fields."""
         pal = ThemeChrome.get_active().palette
         return f"""
             QLineEdit, QTextEdit {{
@@ -324,6 +334,7 @@ class SetupApiModal(QDialog):
         """
 
     def _lbl(self, text: str, fs: int = 7) -> QLabel:
+        """Return a bold, dim-coloured Consolas field label with the given text and font size."""
         pal = ThemeChrome.get_active().palette
         lbl = QLabel(text)
         lbl.setFont(QFont("Consolas", fs, QFont.Weight.Bold))
@@ -332,6 +343,7 @@ class SetupApiModal(QDialog):
 
     # ── Google Workspace Page ────────────────────────────────────────────────
     def _build_google_page(self) -> QWidget:
+        """Build the Google Workspace page with client ID/secret fields and a browser OAuth button."""
         w = QWidget()
         lay = QVBoxLayout(w)
         lay.setContentsMargins(4, 8, 4, 8)
@@ -384,6 +396,7 @@ class SetupApiModal(QDialog):
 
     # ── Spotify Page ─────────────────────────────────────────────────────────
     def _build_spotify_page(self) -> QWidget:
+        """Build the Spotify page with client ID/secret fields and a browser authorization button."""
         w = QWidget()
         lay = QVBoxLayout(w)
         lay.setContentsMargins(4, 8, 4, 8)
@@ -435,6 +448,7 @@ class SetupApiModal(QDialog):
 
     # ── Gmail Page ───────────────────────────────────────────────────────────
     def _build_gmail_page(self) -> QWidget:
+        """Build the Gmail page with a mode toggle between app-password fields and an OAuth credentials JSON editor."""
         w = QWidget()
         lay = QVBoxLayout(w)
         lay.setContentsMargins(4, 8, 4, 8)
@@ -502,6 +516,7 @@ class SetupApiModal(QDialog):
         return w
 
     def _set_gmail_mode(self, mode: str) -> None:
+        """Switch the Gmail page between app-password and OAuth JSON modes, updating button states and the stacked page."""
         pal = ThemeChrome.get_active().palette
         active_ss = f"background: {pal.pri}; color: {pal.dark}; border: 1px solid {pal.pri}; font-weight: bold;"
         idle_ss = f"background: {pal.panel2}; color: {pal.text_med}; border: 1px solid {pal.border_a};"
@@ -521,6 +536,7 @@ class SetupApiModal(QDialog):
 
     # ── Alexa Page ───────────────────────────────────────────────────────────
     def _build_alexa_page(self) -> QWidget:
+        """Build the Alexa page as a stack holding the overview widget and the permissions widget."""
         self._alexa_stack = QStackedWidget()
         self._alexa_overview_widget = self._build_alexa_overview()
         self._alexa_perms_widget = self._build_alexa_permissions_widget()
@@ -529,6 +545,9 @@ class SetupApiModal(QDialog):
         return self._alexa_stack
 
     def _build_alexa_overview(self) -> QWidget:
+        """Build the scrollable Alexa overview: connection status, connect/disconnect and permissions buttons,
+        linking instructions, and a collapsible developer configuration section.
+        """
         pal = ThemeChrome.get_active().palette
 
         scroll = QScrollArea()
@@ -1087,7 +1106,7 @@ class SetupApiModal(QDialog):
         self._refresh_alexa_ui_state()
 
         self._status_lbl.setText("Account linking initiated. Enable the skill and link your Echo account.")
-        self._status_lbl.setStyleSheet(f"color: {ThemeChrome.get_active().palette.cyan};")
+        self._status_lbl.setStyleSheet(f"color: {COLOR_CYAN};")
 
         import webbrowser
         try:
@@ -1122,7 +1141,7 @@ class SetupApiModal(QDialog):
         self._alexa_link_container.setVisible(False)
         self._refresh_alexa_ui_state()
         self._status_lbl.setText("Alexa connection unlinked and local tokens revoked.")
-        self._status_lbl.setStyleSheet(f"color: {ThemeChrome.get_active().palette.yellow};")
+        self._status_lbl.setStyleSheet(f"color: {COLOR_YELLOW};")
 
     def _toggle_alexa_dev_panel(self) -> None:
         """Toggle collapsed developer panel."""
@@ -1212,6 +1231,7 @@ class SetupApiModal(QDialog):
         self._refresh_alexa_ui_state()
 
     def _switch_tab(self, idx: int) -> None:
+        """Select the backend tab at the clamped index, restyle the tab buttons and clear the status label."""
         self._active_tab_idx = max(0, min(len(self._backend_ids) - 1, idx))
         self._stack.setCurrentIndex(self._active_tab_idx)
 
@@ -1311,6 +1331,7 @@ class SetupApiModal(QDialog):
         self._load_alexa_values()
 
     def _start_google_oauth(self) -> None:
+        """Validate the Google client ID and secret, then run the Google OAuth flow on a background thread."""
         cid = self._gw_cid.text().strip()
         csecret = self._gw_secret.text().strip()
         if not cid or not csecret:
@@ -1322,6 +1343,7 @@ class SetupApiModal(QDialog):
         self._status_lbl.setStyleSheet(f"color: {COLOR_CYAN};")
 
         def worker():
+            """Persist the Google credentials to the store and API config, run the OAuth flow and emit the result."""
             if cid:
                 self.store.set("google_workspace.client_id", cid)
             if csecret:
@@ -1345,6 +1367,7 @@ class SetupApiModal(QDialog):
         threading.Thread(target=worker, daemon=True, name="GoogleOAuthThread").start()
 
     def _start_spotify_oauth(self) -> None:
+        """Validate the Spotify client ID and secret, then run Spotify browser authorization on a background thread."""
         cid = self._spot_cid.text().strip()
         csecret = self._spot_secret.text().strip()
         if not cid or not csecret:
@@ -1356,6 +1379,7 @@ class SetupApiModal(QDialog):
         self._status_lbl.setStyleSheet(f"color: {COLOR_CYAN};")
 
         def worker():
+            """Apply the credentials to the Spotify client, run user authorization and emit the result."""
             from actions.spotify_control import authorize_user, get_spotify_client
             client = get_spotify_client()
             client._client_id = cid
@@ -1367,6 +1391,9 @@ class SetupApiModal(QDialog):
         threading.Thread(target=worker, daemon=True, name="SpotifyOAuthThread").start()
 
     def _on_submit_current_tab(self, sync: bool = False) -> None:
+        """Collect the active tab's credential fields and save/validate them for that backend.
+        Runs on a background thread unless sync is True; the result is emitted via the validation signal.
+        """
         bid = self._backend_ids[self._active_tab_idx]
         self._status_lbl.setText(f"Validating {bid}...")
         self._status_lbl.setStyleSheet(f"color: {ThemeChrome.get_active().palette.pri};")
@@ -1407,6 +1434,7 @@ class SetupApiModal(QDialog):
             }
 
         def worker():
+            """Save the backend credentials, mirror them into the relevant legacy config files or state, and emit the result."""
             ok, msg = save_backend_credentials(bid, fields, store=self.store)
             if ok and bid == "google_workspace":
                 try:
@@ -1462,6 +1490,7 @@ class SetupApiModal(QDialog):
             threading.Thread(target=worker, daemon=True, name="BackendValidateThread").start()
 
     def _on_validation_result(self, backend_name: str, is_valid: bool, message: str) -> None:
+        """Show a success or failure message in the status label; on success emit config_saved for the backend."""
         pal = ThemeChrome.get_active().palette
         if is_valid:
             self._status_lbl.setText(f"✓ {message}")

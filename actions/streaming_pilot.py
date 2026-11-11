@@ -71,6 +71,7 @@ def streaming_pilot(
 
     # Helper to update active session and notify HUD status
     def _sync_status(p_id: Optional[str], surf: Optional[Surface], st: ProviderState) -> None:
+        """Record the active streaming session and mirror it to the player UI if supported."""
         set_active_streaming_session(p_id, surf, st)
         if player and hasattr(player, "set_streaming_status"):
             surf_str = getattr(surf, "id", "web") if surf else ""
@@ -86,6 +87,7 @@ def streaming_pilot(
 
     # 2. Surface Resolution (Ask-Once Memory via One-Shot Prompt)
     def _prompt_surface_choice(prompt_text: str, _: Any = None) -> Optional[str]:
+        """Ask the user via the active answer window and return the reply, or None."""
         try:
             from core.registry import get as reg_get
             ans_win = reg_get("active_answer_window")

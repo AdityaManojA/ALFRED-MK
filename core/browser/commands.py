@@ -54,6 +54,9 @@ def _ensure_browser_focus(sys_name: str) -> None:
                 WNDENUMPROC = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_int, ctypes.c_int)
 
                 def enum_proc(h, _):
+                    """EnumWindows callback: record the first visible, non-minimised browser window of another process.
+                    Returns False to stop enumeration once found.
+                    """
                     if not user32.IsWindowVisible(h) or user32.IsIconic(h):
                         return True
                     p = ctypes.c_ulong()

@@ -42,6 +42,7 @@ DEFAULT_SCOPES = [
 
 
 class OAuthError(Enum):
+    """Failure categories returned by GoogleOAuthFlow.execute()."""
     NONE = "none"
     TIMEOUT = "timeout"
     USER_DENIED = "user_denied"
@@ -56,6 +57,7 @@ class _OAuthRedirectHandler(http.server.BaseHTTPRequestHandler):
     error: Optional[str] = None
 
     def do_GET(self):
+        """Capture the OAuth ``code`` or ``error`` query parameter from the redirect and reply with a status page."""
         parsed = urllib.parse.urlparse(self.path)
         params = urllib.parse.parse_qs(parsed.query)
 
@@ -91,6 +93,7 @@ class _OAuthRedirectHandler(http.server.BaseHTTPRequestHandler):
 
     def log_message(self, format, *args):
         # Silence local server logs
+        """Suppress the HTTP server's default request logging."""
         pass
 
 
@@ -106,6 +109,7 @@ class GoogleOAuthFlow:
         scopes: Optional[list[str]] = None,
         store: Optional[SecretStore] = None,
     ):
+        """Store the OAuth client credentials, redirect URI, scopes and secret store."""
         self.client_id = client_id.strip()
         self.client_secret = client_secret.strip()
         self.redirect_uri = redirect_uri.strip()

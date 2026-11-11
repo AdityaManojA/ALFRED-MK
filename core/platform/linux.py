@@ -22,9 +22,11 @@ class LinuxPlatformBackend(PlatformBackend):
     """Linux implementation using pactl, playerctl, xdotool, and standard utilities."""
 
     def platform_name(self) -> str:
+        """Return the platform identifier string 'linux'."""
         return "linux"
 
     def window_flags(self) -> Qt.WindowType:
+        """Return the Qt window flags for a frameless, always-on-top top-level window."""
         return (
             Qt.WindowType.Window
             | Qt.WindowType.FramelessWindowHint
@@ -32,10 +34,14 @@ class LinuxPlatformBackend(PlatformBackend):
         )
 
     def make_toplevel(self, widget: QWidget) -> None:
+        """Apply the platform window flags and a translucent background to the widget."""
         widget.setWindowFlags(self.window_flags())
         widget.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
 
     def tts_speak(self, text: str, voice: Optional[str] = None, speed: float = 1.0) -> bool:
+        """Speak text via the first available of espeak-ng, espeak or piper.
+        Returns True if a process was launched; voice and speed are ignored.
+        """
         if shutil.which("espeak-ng"):
             try:
                 subprocess.Popen(["espeak-ng", text])
@@ -57,9 +63,11 @@ class LinuxPlatformBackend(PlatformBackend):
         return False
 
     def stt_listen(self) -> None:
+        """No-op placeholder for platform speech-to-text listening."""
         pass
 
     def frontmost(self) -> dict[str, Any]:
+        """Return app id, spoken label and browser/home-base flags of the frontmost surface, or {} on failure."""
         try:
             from core.sentry.focus.platform.linux import LinuxPlatformReader
             reader = LinuxPlatformReader()
@@ -75,6 +83,9 @@ class LinuxPlatformBackend(PlatformBackend):
             return {}
 
     def capture_screen(self, save_path: Optional[Path] = None) -> Optional[Path]:
+        """Take a screenshot with maim, grim or gnome-screenshot.
+        Saves to save_path or a timestamped file on the Desktop; returns the path or None.
+        """
         dest = save_path or (Path.home() / "Desktop" / f"alfred_shot_{int(time.time())}.png")
         for cmd in [["maim", str(dest)], ["grim", str(dest)], ["gnome-screenshot", "-f", str(dest)]]:
             if shutil.which(cmd[0]):
@@ -87,6 +98,7 @@ class LinuxPlatformBackend(PlatformBackend):
         return None
 
     def set_volume(self, pct: int) -> bool:
+        """Set the default PulseAudio sink volume (clamped to 0-100) via pactl; returns success."""
         try:
             vol = max(0, min(100, int(pct)))
             subprocess.run(["pactl", "set-sink-volume", "@DEFAULT_SINK@", f"{vol}%"], capture_output=True, timeout=3)
@@ -96,6 +108,7 @@ class LinuxPlatformBackend(PlatformBackend):
             return False
 
     def get_volume(self) -> Optional[int]:
+        """Return the default sink volume percentage parsed from pactl output, or None."""
         try:
             r = subprocess.run(["pactl", "get-sink-volume", "@DEFAULT_SINK@"],
                                capture_output=True, text=True, timeout=3)
@@ -106,6 +119,7 @@ class LinuxPlatformBackend(PlatformBackend):
             return None
 
     def pause_audio(self) -> bool:
+        """Pause media playback via playerctl if it is installed; returns success."""
         if shutil.which("playerctl"):
             try:
                 subprocess.run(["playerctl", "pause"], capture_output=True, timeout=2)
@@ -115,6 +129,7 @@ class LinuxPlatformBackend(PlatformBackend):
         return False
 
     def resume_audio(self) -> bool:
+        """Resume media playback via playerctl if it is installed; returns success."""
         if shutil.which("playerctl"):
             try:
                 subprocess.run(["playerctl", "play"], capture_output=True, timeout=2)
@@ -124,6 +139,7 @@ class LinuxPlatformBackend(PlatformBackend):
         return False
 
     def paste(self, text: str) -> bool:
+        """Copy text to the clipboard and send Ctrl+V; returns False on any error."""
         try:
             import pyperclip
             import pyautogui
@@ -135,6 +151,7 @@ class LinuxPlatformBackend(PlatformBackend):
             return False
 
     def hotkey(self, *keys: str) -> bool:
+        """Press the given key combination with pyautogui; returns False on any error."""
         try:
             import pyautogui
             pyautogui.hotkey(*keys)

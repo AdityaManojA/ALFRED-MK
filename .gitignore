@@ -67,3 +67,7 @@ dashboard/uploads/
 bin/
 data/wakeword_samples/
 
+
+# coverage artifacts
+.coverage
+coverage.xml

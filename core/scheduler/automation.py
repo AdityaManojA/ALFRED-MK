@@ -12,11 +12,16 @@ POST_PASTE_DELAY_MS = 200
 
 @dataclass(frozen=True)
 class AutomationResult:
+    """Outcome of a macro run: success flag plus a human-readable detail."""
+
     ok: bool
     detail: str
 
 
 def _focus_windows(keyword: str) -> bool:
+    """Restore and activate the first window whose title contains keyword (case-insensitive).
+    Returns False if none matches or on error.
+    """
     try:
         import pygetwindow as gw
         matches = [item for item in gw.getAllWindows() if keyword.casefold() in (item.title or "").casefold()]
@@ -32,6 +37,7 @@ def _focus_windows(keyword: str) -> bool:
 
 
 def _focus_macos(keyword: str) -> bool:
+    """Bring the first process whose name contains keyword to the front via osascript; returns success."""
     script = 'tell application "System Events" to set frontmost of first process whose name contains ' + repr(keyword) + ' to true'
     try:
         return subprocess.run(["osascript", "-e", script], capture_output=True, timeout=3, check=False).returncode == 0
@@ -40,6 +46,7 @@ def _focus_macos(keyword: str) -> bool:
 
 
 def _focus_linux(keyword: str) -> bool:
+    """Activate the first window whose name matches keyword using xdotool; returns success."""
     try:
         found = subprocess.run(["xdotool", "search", "--name", keyword], capture_output=True, text=True, timeout=3, check=False)
         window_id = next((line.strip() for line in found.stdout.splitlines() if line.strip()), "")

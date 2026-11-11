@@ -69,6 +69,7 @@ class _SingleFlightManager:
     """Thread-safe deduplication, debounce, and cancellation for HUD video resolution."""
 
     def __init__(self) -> None:
+        """Initialise the lock and active-target, token, and resolve-timing state."""
         self._lock = threading.Lock()
         self._active_target: str = ""
         self._active_token: int = 0

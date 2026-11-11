@@ -28,11 +28,13 @@ class SpeakerProfileStore:
     """
 
     def __init__(self, storage_dir: Optional[Path | str] = None) -> None:
+        """Set the storage directory (default if not given), create a lock and ensure the directory exists."""
         self.storage_dir = Path(storage_dir) if storage_dir else DEFAULT_STORAGE_DIR
         self._lock = threading.RLock()
         self._ensure_dir()
 
     def _ensure_dir(self) -> None:
+        """Create the storage directory, restricting it to the user on POSIX; logs a warning on failure."""
         try:
             self.storage_dir.mkdir(parents=True, exist_ok=True)
             # Restrict directory permissions to user on POSIX
@@ -45,6 +47,7 @@ class SpeakerProfileStore:
             _LOGGER.warning(f"Could not initialize speaker profile storage dir: {e}")
 
     def _profile_path(self, profile_id: str) -> Path:
+        """Return the JSON file path for a profile id sanitised to lowercase alphanumerics, '-' and '_'."""
         safe_id = "".join(c for c in profile_id if c.isalnum() or c in ("-", "_")).lower()
         return self.storage_dir / f"{safe_id}.json"
 

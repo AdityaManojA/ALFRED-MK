@@ -64,6 +64,7 @@ except ImportError:
 
 
 def _base_dir() -> Path:
+    """Return the app root: the executable's folder when frozen, otherwise the repo root."""
     if getattr(sys, "frozen", False):
         return Path(sys.executable).parent
     return Path(__file__).resolve().parent.parent
@@ -74,6 +75,7 @@ _CONFIG_PATH = _BASE / "config" / "api_keys.json"
 
 
 def _load_config() -> dict:
+    """Load the JSON config file, returning an empty dict if it is missing or invalid."""
     try:
         return json.loads(_CONFIG_PATH.read_text(encoding="utf-8"))
     except Exception:
@@ -81,6 +83,7 @@ def _load_config() -> dict:
 
 
 def _save_config_key(key: str, value) -> None:
+    """Set one key in the JSON config file and write it back, logging any failure."""
     try:
         cfg = _load_config()
         cfg[key] = value
@@ -90,6 +93,7 @@ def _save_config_key(key: str, value) -> None:
 
 
 def _get_os() -> str:
+    """Return the configured OS name in lower case, defaulting to windows."""
     return _load_config().get("os_system", "windows").lower()
 
 
@@ -99,6 +103,10 @@ _JPEG_Q    = 82
 
 
 def _compress(img_bytes: bytes, source_format: str = "PNG") -> tuple[bytes, str]:
+    """Downscale and re-encode an image as JPEG to shrink it for the vision model.
+    Returns (bytes, mime_type); falls back to the original bytes if Pillow is unavailable
+    or fails.
+    """
     if not _PIL:
         return img_bytes, f"image/{source_format.lower()}"
 
@@ -329,9 +337,11 @@ class ScreenCapturePayload(tuple):
       (`.img_bytes`, `.mime_type`, `.window_context`, `.text`, `.payload`) for direct stream consumption.
     """
     def __new__(cls, img_bytes: bytes, mime_type: str, window_context: str = "", payload: dict | None = None):
+        """Create the underlying (img_bytes, mime_type, window_context) tuple."""
         return super().__new__(cls, (img_bytes, mime_type, window_context))
 
     def __init__(self, img_bytes: bytes, mime_type: str, window_context: str = "", payload: dict | None = None):
+        """Store the capture fields and build the visual payload if none was given."""
         self.img_bytes = img_bytes
         self.mime_type = mime_type
         self.window_context = window_context
@@ -339,18 +349,22 @@ class ScreenCapturePayload(tuple):
 
     @property
     def payload(self) -> dict:
+        """The formatted visual payload dict."""
         return self._payload
 
     @property
     def text(self) -> str:
+        """The payload's text, falling back to the window context."""
         return self._payload.get("text", self.window_context)
 
     def get(self, key, default=None):
+        """Dict-style lookup on the payload; context keys return the window context."""
         if key in ("context", "window_context"):
             return self.window_context
         return self._payload.get(key, default)
 
     def __contains__(self, item):
+        """Report membership for context keys, payload keys, or tuple items."""
         if item in ("context", "window_context"):
             return True
         if isinstance(item, str) and item in self._payload:
@@ -358,6 +372,7 @@ class ScreenCapturePayload(tuple):
         return super().__contains__(item)
 
     def __getitem__(self, item):
+        """Index by payload key (or context key) for strings, otherwise by tuple position."""
         if item in ("context", "window_context"):
             return self.window_context
         if isinstance(item, str):
@@ -436,6 +451,7 @@ def _cv2_backend() -> int:
 
 
 def _probe_camera(index: int, backend: int, warmup: int = 5) -> bool:
+    """Return True if the camera at index yields a non-black frame after warm-up reads."""
     if not _CV2:
         return False
     cap = cv2.VideoCapture(index, backend)
@@ -452,6 +468,9 @@ def _probe_camera(index: int, backend: int, warmup: int = 5) -> bool:
 
 
 def _detect_camera_index() -> int:
+    """Find the first usable camera among indices 0-5 and save it to config.
+    Falls back to index 0 (also saved) when none produces a usable frame.
+    """
     backend = _cv2_backend()
     print("\033[91m[Vision]\033[0m \033[91m[search]\033[0m Auto-detecting camera...")
     for idx in range(6):
@@ -467,6 +486,7 @@ def _detect_camera_index() -> int:
 
 
 def _get_camera_index() -> int:
+    """Return the configured camera index, auto-detecting it if not set."""
     cfg = _load_config()
     if "camera_index" in cfg:
         return int(cfg["camera_index"])
@@ -474,6 +494,9 @@ def _get_camera_index() -> int:
 
 
 def _capture_camera() -> tuple[bytes, str]:
+    """Grab one webcam frame and return it as downscaled JPEG (bytes, mime_type).
+    Raises RuntimeError if OpenCV is missing or the camera yields no frame.
+    """
     if not _CV2:
         raise RuntimeError("OpenCV (cv2) is not installed. Run: pip install opencv-python")
 

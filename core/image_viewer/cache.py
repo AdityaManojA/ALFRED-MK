@@ -30,6 +30,7 @@ class ImageViewerCache:
     """Thread-safe disk cache for downloaded reference images."""
 
     def __init__(self, root: Path = IMAGE_CACHE_DIR, max_mb: int = IMAGE_CACHE_MAX_MB) -> None:
+        """Set the cache root and size cap, and create the cache directory if possible."""
         self.root = root
         self.max_bytes = max_mb * 1024 * 1024
         self._lock = threading.Lock()
@@ -53,6 +54,7 @@ class ImageViewerCache:
             return "unknown"
 
     def path_for(self, uri: str) -> Path:
+        """Return the on-disk cache file path for ``uri``."""
         return self.root / f"{self.key(uri)}.img"
 
     def get(self, uri: str) -> bytes | None:

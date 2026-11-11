@@ -18,6 +18,7 @@ SPEAK_ON_SUPPRESS = True
 
 
 class AudioSource(Enum):
+    """Sources that can claim audio output."""
     APP_PLAYER = auto()
     TTS = auto()
     ALERT = auto()
@@ -40,6 +41,7 @@ class MediaArbiter(QObject):
     state_changed = pyqtSignal(object)
 
     def __init__(self, parent: QObject | None = None, suppressor=None) -> None:
+        """Initialise claim set, media state, signal throttling and suppression bookkeeping."""
         super().__init__(parent)
         self._lock = threading.RLock()
         self._claims: set[AudioSource] = set()
@@ -58,10 +60,12 @@ class MediaArbiter(QObject):
 
     @property
     def state(self) -> MediaState:
+        """Current media state (thread-safe read)."""
         with self._lock:
             return self._state
 
     def claim(self, source: AudioSource) -> MediaState:
+        """Claim audio for ``source`` (starting external suppression for the app player) and return the state."""
         with self._lock:
             if source in self._claims:
                 return self._state
@@ -72,6 +76,7 @@ class MediaArbiter(QObject):
             return self._state
 
     def release(self, source: AudioSource) -> MediaState:
+        """Release ``source``'s claim (stopping suppression for the app player) and return the state."""
         with self._lock:
             if source not in self._claims:
                 return self._state
@@ -82,6 +87,7 @@ class MediaArbiter(QObject):
             return self._state
 
     def _rebuild_state_locked(self) -> None:
+        """Recompute app-playing and TTS-ducking flags and schedule a signal if the state changed."""
         next_state = MediaState(
             app_playing=AudioSource.APP_PLAYER in self._claims,
             external_suppressed=self._state.external_suppressed,
@@ -97,15 +103,18 @@ class MediaArbiter(QObject):
         self._schedule_state_signal_locked()
 
     def set_notice_callback(self, callback) -> None:
+        """Set the callback used to speak suppression notices."""
         self._notice_callback = callback
 
     def _get_suppressor_locked(self):
+        """Return the suppressor, lazily creating the platform default."""
         if self._suppressor is None:
             from .suppress import get_suppressor
             self._suppressor = get_suppressor()
         return self._suppressor
 
     def _start_suppression_locked(self) -> None:
+        """Start the suppression watchdog thread if it is not already running."""
         self._watchdog_stop.clear()
         if self._watchdog_thread is None or not self._watchdog_thread.is_alive():
             self._watchdog_thread = threading.Thread(
@@ -114,6 +123,7 @@ class MediaArbiter(QObject):
             self._watchdog_thread.start()
 
     def _stop_suppression_locked(self) -> None:
+        """Stop the watchdog, optionally resume paused players, clear suppression bookkeeping and reset state."""
         self._watchdog_stop.set()
         if RESUME_EXTERNAL_ON_STOP:
             suppressor = self._get_suppressor_locked()
@@ -132,6 +142,7 @@ class MediaArbiter(QObject):
         self._rebuild_state_locked()
 
     def _watchdog_loop(self) -> None:
+        """Sweep external players periodically while the app player holds its claim."""
         while True:
             with self._lock:
                 if AudioSource.APP_PLAYER not in self._claims:
@@ -141,6 +152,10 @@ class MediaArbiter(QObject):
                 return
 
     def _sweep_locked(self) -> None:
+        """Pause external players and update suppression state.
+
+        A player that resumes twice within the override window is left alone; announces the first suppression and the first override.
+        """
         suppressor = self._get_suppressor_locked()
         now = time.monotonic()
         suppressed_now = 0
@@ -176,11 +191,13 @@ class MediaArbiter(QObject):
             self._notice("As you wish, sir — I'll share the stage.")
 
     def _notice(self, text: str) -> None:
+        """Pass ``text`` to the notice callback when one is set and speaking is enabled."""
         callback = self._notice_callback
         if callback and SPEAK_ON_SUPPRESS:
             callback(text)
 
     def _schedule_state_signal_locked(self) -> None:
+        """Emit the state signal now or schedule it so emissions are throttled."""
         now = time.monotonic()
         remaining_s = STATE_SIGNAL_INTERVAL_S - (now - self._last_emit_s)
         if remaining_s <= 0 and self._pending_timer is None:
@@ -192,6 +209,7 @@ class MediaArbiter(QObject):
             self._pending_timer.start()
 
     def _emit_state(self) -> None:
+        """Clear the pending timer, record the emit time and emit ``state_changed``."""
         with self._lock:
             self._pending_timer = None
             self._last_emit_s = time.monotonic()

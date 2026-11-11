@@ -31,6 +31,7 @@ class BootStage:
     description: str = ""
 
     def __post_init__(self) -> None:
+        """Validate that ``thread_affinity`` is THREAD_MAIN or THREAD_WORKER; raise ValueError otherwise."""
         if self.thread_affinity not in (THREAD_MAIN, THREAD_WORKER):
             raise ValueError(
                 f"Invalid thread affinity '{self.thread_affinity}' for stage '{self.name}'. "

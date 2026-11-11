@@ -26,6 +26,7 @@ class MonitorScheduler:
         on_status: Callable[[str], None] | None = None,
         on_follow_up: Callable[[], None] | None = None,
     ) -> None:
+        """Store the alert/status/follow-up callbacks and initialise an empty, stopped target list."""
         self._on_alert = on_alert
         self._on_status = on_status
         self._on_follow_up = on_follow_up
@@ -39,16 +40,19 @@ class MonitorScheduler:
 
     @property
     def is_running(self) -> bool:
+        """Whether the scheduler loop is running."""
         with self._lock:
             return self._running
 
     @property
     def target_count(self) -> int:
+        """Number of monitored targets."""
         with self._lock:
             return len(self._targets)
 
     @property
     def cooldown(self) -> float:
+        """Current minimum seconds between alerts."""
         with self._lock:
             return self._cooldown_s
 
@@ -58,6 +62,7 @@ class MonitorScheduler:
         on_status: Callable[[str], None] | None = None,
         on_follow_up: Callable[[], None] | None = None,
     ) -> None:
+        """Replace any non-None callbacks."""
         with self._lock:
             if on_alert is not None:
                 self._on_alert = on_alert
@@ -67,16 +72,19 @@ class MonitorScheduler:
                 self._on_follow_up = on_follow_up
 
     def set_cooldown(self, seconds: float) -> float:
+        """Set the alert cooldown clamped to the allowed range; returns the applied value."""
         with self._lock:
             self._cooldown_s = max(MONITOR_MIN_COOLDOWN_S, min(float(seconds), MONITOR_MAX_COOLDOWN_S))
             return self._cooldown_s
 
     def quieter(self) -> float:
+        """Raise the alert cooldown by 15 seconds (capped); returns the new value."""
         with self._lock:
             self._cooldown_s = min(MONITOR_MAX_COOLDOWN_S, self._cooldown_s + 15.0)
             return self._cooldown_s
 
     def louder(self) -> float:
+        """Lower the alert cooldown by 10 seconds (floored); returns the new value."""
         with self._lock:
             self._cooldown_s = max(MONITOR_MIN_COOLDOWN_S, self._cooldown_s - 10.0)
             return self._cooldown_s
@@ -84,12 +92,14 @@ class MonitorScheduler:
     # ── Target Management ─────────────────────────────────────────────────────
 
     def add_target(self, target: MonitorTarget) -> None:
+        """Add a target and post the updated monitoring status."""
         with self._lock:
             self._targets.append(target)
             desc = ", ".join(t.describe() for t in self._targets)
         self._update_status(f"Monitoring: {desc}")
 
     def remove_target(self, target_id_or_name: str) -> bool:
+        """Close and remove targets whose id matches or whose name contains the text; returns whether any were removed."""
         removed = False
         with self._lock:
             target_low = target_id_or_name.lower().strip()
@@ -109,6 +119,7 @@ class MonitorScheduler:
         return removed
 
     def clear_targets(self) -> None:
+        """Close and remove all targets and post a stopped status."""
         with self._lock:
             for t in self._targets:
                 t.close()
@@ -116,6 +127,7 @@ class MonitorScheduler:
         self._update_status("Monitoring stopped")
 
     def describe_active(self) -> str:
+        """Return a spoken summary of the active targets."""
         with self._lock:
             if not self._targets:
                 return "Nothing is currently being monitored, sir."
@@ -125,6 +137,7 @@ class MonitorScheduler:
     # ── Lifecycle ─────────────────────────────────────────────────────────────
 
     def start(self) -> None:
+        """Start the polling loop on a daemon thread if not already running."""
         with self._lock:
             if self._running:
                 return
@@ -133,6 +146,7 @@ class MonitorScheduler:
             self._thread.start()
 
     def stop(self) -> None:
+        """Stop the loop, close and clear all targets, join the thread briefly and post an off status."""
         thread = None
         with self._lock:
             if not self._running:
@@ -151,6 +165,9 @@ class MonitorScheduler:
     # ── Polling Loop ──────────────────────────────────────────────────────────
 
     def _scheduler_loop(self) -> None:
+        """Polling loop: poll due targets, raise alerts subject to the cooldown and drop finished targets.
+        Calls the follow-up callback once all targets have finished.
+        """
         while True:
             with self._lock:
                 if not self._running:
@@ -202,6 +219,7 @@ class MonitorScheduler:
             time.sleep(MONITOR_SCHEDULER_TICK_S)
 
     def _trigger_alert(self, message: str) -> None:
+        """Invoke the alert callback (logging errors) and post the alert as status."""
         if self._on_alert:
             try:
                 self._on_alert(message)
@@ -210,6 +228,7 @@ class MonitorScheduler:
         self._update_status(f"Alert: {message}")
 
     def _update_status(self, text: str) -> None:
+        """Send text to the status callback, ignoring errors."""
         if self._on_status:
             try:
                 self._on_status(text)

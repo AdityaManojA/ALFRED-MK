@@ -22,6 +22,7 @@ DEFAULT_WATCHLIST_PATH = Path("data/watchlist.json")
 
 @dataclass
 class WatchItem:
+    """A watched symbol with its alert rule type, threshold and metadata."""
     watch_id: str
     symbol: str
     rule_type: str
@@ -31,10 +32,12 @@ class WatchItem:
     display_name: str = ""
 
     def to_dict(self) -> dict[str, Any]:
+        """Return the item as a plain dict."""
         return asdict(self)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> WatchItem:
+        """Build a WatchItem from a dict, applying defaults for missing fields."""
         return cls(
             watch_id=str(data.get("watch_id", "")),
             symbol=str(data.get("symbol", "")),
@@ -54,12 +57,14 @@ class WatchlistManager:
 
     @classmethod
     def instance(cls, path: Path | str = DEFAULT_WATCHLIST_PATH) -> WatchlistManager:
+        """Return the shared watchlist manager, creating it with ``path`` on first use."""
         with cls._instance_lock:
             if cls._instance is None:
                 cls._instance = cls(path)
             return cls._instance
 
     def __init__(self, path: Path | str = DEFAULT_WATCHLIST_PATH) -> None:
+        """Set the storage path (creating its parent directory) and the lock."""
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._lock = threading.RLock()

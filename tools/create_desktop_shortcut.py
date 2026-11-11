@@ -26,6 +26,7 @@ def get_real_desktop_dir() -> Path:
             from ctypes import wintypes
 
             class GUID(ctypes.Structure):
+                """ctypes mirror of the Win32 GUID structure."""
                 _fields_ = [
                     ("Data1", wintypes.DWORD),
                     ("Data2", wintypes.WORD),
@@ -211,6 +212,8 @@ def create_windows_lnk(
 
 
 def main() -> int:
+    """Create the platform-appropriate launcher (.lnk, .app bundle or .desktop) on the
+    user's desktop. Returns a process exit code (0 on success)."""
     print("=" * 60)
     print("  🦇 ALFRED Desktop Shortcut Diagnostic & Deployment")
     print("=" * 60)

@@ -28,6 +28,7 @@ MAX_PY = (3, 13)        # highest version this is actually tested on
 
 
 def _run(label: str, args: list[str]) -> None:
+    """Print a step label and run the command, raising if it fails."""
     print(f"\n▶ {label}")
     subprocess.run(args, check=True)
 
@@ -125,6 +126,8 @@ def _check_and_install_linux_audio_deps() -> None:
 
 
 def main() -> None:
+    """Run the full setup: check Python, pip-install requirements, Playwright browsers,
+    asset and wake-word checks, then print OS-specific post-install notes."""
     print(f"⚙  MARK-IX setup — detected OS: {OS or 'unknown'}, "
           f"Python {sys.version_info[0]}.{sys.version_info[1]}")
     _check_python()

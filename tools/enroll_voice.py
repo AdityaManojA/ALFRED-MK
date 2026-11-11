@@ -223,16 +223,19 @@ def enroll_from_files(
 
 
 def list_enrolled_profiles(profile_store: Optional[SpeakerProfileStore] = None) -> List[SpeakerProfile]:
+    """Return all enrolled speaker profiles from the given or default store."""
     store = profile_store or get_default_profile_store()
     return store.list_profiles()
 
 
 def delete_enrolled_profile(user_name: str, profile_store: Optional[SpeakerProfileStore] = None) -> bool:
+    """Delete the user's speaker profile and return whether it succeeded."""
     store = profile_store or get_default_profile_store()
     return store.delete_profile(user_name)
 
 
 def main():
+    """CLI entry point to enroll, list, delete or benchmark voice profiles."""
     parser = argparse.ArgumentParser(description="ALFRED Voice Biometric Profile Manager")
     parser.add_argument("--enroll", metavar="NAME", help="Interactively enroll voice profile for NAME")
     parser.add_argument("--samples", type=int, choices=[3, 10], default=None,

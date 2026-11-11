@@ -32,6 +32,8 @@ from ui import HudCanvas, FRAME_TIME_BUDGET_MS
 
 
 def run_benchmark():
+    """Profile each pipeline stage under cProfile and write the top-10 cumulative
+    report to logs/perf/latency-benchmark-report.txt."""
     print("=== Running ALFRED-MK-IX Latency Profiling Benchmark ===")
     profile = cProfile.Profile()
     profile.enable()
@@ -81,6 +83,7 @@ def run_benchmark():
 
     # 3. Tool execution (fast path)
     async def sample_tool():
+        """Return a fixed result string for benchmarking tool execution."""
         return "Command completed"
 
     import asyncio

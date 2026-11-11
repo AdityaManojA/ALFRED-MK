@@ -32,6 +32,7 @@ class BootContext:
     """Thread-safe context dictionary shared across all boot stages."""
 
     def __init__(self) -> None:
+        """Initialise empty data, timing, status and error maps guarded by a lock."""
         self._data: Dict[str, Any] = {}
         self._timings: Dict[str, float] = {}
         self._statuses: Dict[str, str] = {}
@@ -39,14 +40,17 @@ class BootContext:
         self._lock = threading.Lock()
 
     def set(self, key: str, value: Any) -> None:
+        """Store a value under ``key`` (thread-safe)."""
         with self._lock:
             self._data[key] = value
 
     def get(self, key: str, default: Any = None) -> Any:
+        """Return the value stored under ``key``, or ``default`` (thread-safe)."""
         with self._lock:
             return self._data.get(key, default)
 
     def record_stage(self, name: str, status: str, duration_ms: float, error: Optional[Exception] = None) -> None:
+        """Record a stage's status, duration in ms and optional error."""
         with self._lock:
             self._statuses[name] = status
             self._timings[name] = duration_ms
@@ -54,14 +58,17 @@ class BootContext:
                 self._errors[name] = error
 
     def timings(self) -> Dict[str, float]:
+        """Return a copy of the recorded stage durations in ms."""
         with self._lock:
             return dict(self._timings)
 
     def errors(self) -> Dict[str, Exception]:
+        """Return a copy of the recorded stage errors."""
         with self._lock:
             return dict(self._errors)
 
     def is_successful(self, name: str) -> bool:
+        """Return True if the named stage was recorded as "success"."""
         with self._lock:
             return self._statuses.get(name) == "success"
 
@@ -70,6 +77,7 @@ class BootPipeline:
     """Topological boot orchestrator managing stage dependencies and parallel execution."""
 
     def __init__(self, max_workers: int = 4) -> None:
+        """Initialise an empty stage table and the worker pool size."""
         self._stages: Dict[str, BootStage] = {}
         self._max_workers = max_workers
 
@@ -178,6 +186,9 @@ class BootPipeline:
         return ctx
 
     def _run_single_stage(self, stage: BootStage, ctx: BootContext) -> Any:
+        """Run a stage's init function, record its status and timing on ``ctx``, and return its result.
+        Re-raises any exception after recording it as failed.
+        """
         t0 = time.perf_counter()
         try:
             result = stage.init_fn(ctx)
@@ -197,6 +208,7 @@ def build_standard_boot_pipeline() -> BootPipeline:
 
     # Stage 1: Config & Secrets
     def _init_config(ctx: BootContext):
+        """Import the config manager getters and mark the config as ready on the boot context."""
         from memory.config_manager import (
             get_brief_enabled, get_input_device, get_output_device,
             get_wake_word_enabled,
@@ -217,6 +229,7 @@ def build_standard_boot_pipeline() -> BootPipeline:
 
     # Stage 2: Audio Stream & Acoustic Gate
     def _init_audio(ctx: BootContext):
+        """Create the shared audio gate and audio stream and store them on the boot context."""
         from core.audio.gate import get_audio_gate
         from core.audio.stream import get_shared_audio_stream
         gate = get_audio_gate()
@@ -238,6 +251,7 @@ def build_standard_boot_pipeline() -> BootPipeline:
 
     # Stage 3: Tool & Action Registry
     def _init_tools(ctx: BootContext):
+        """Discover actions from the repo's actions/ folder and store them on the boot context."""
         from pathlib import Path
         from core.action_loader import discover_actions
         base_dir = Path(__file__).resolve().parent.parent.parent
@@ -259,6 +273,7 @@ def build_standard_boot_pipeline() -> BootPipeline:
 
     # Stage 4: Wake-word Warmup
     def _init_wakeword(ctx: BootContext):
+        """Record whether the wake-word engine is ready on the boot context."""
         from core.wake_word import is_ready
         ctx.set("wakeword_ready", is_ready())
         return True
@@ -276,6 +291,7 @@ def build_standard_boot_pipeline() -> BootPipeline:
 
     # Stage 5: Background Audio / Tron Score
     def _init_bg_audio(ctx: BootContext):
+        """Mark background audio as ready on the boot context."""
         ctx.set("bg_audio_ready", True)
         return True
 

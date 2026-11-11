@@ -18,6 +18,7 @@ _CACHE_TTL = 900  # 15 minutes
 
 
 def _cache_get(key: str) -> Optional[str]:
+    """Return a cached value if it is still within the TTL, evicting it otherwise."""
     if key in _CACHE:
         result, ts = _CACHE[key]  # type: ignore[misc]
         if time.monotonic() - ts < _CACHE_TTL:
@@ -27,6 +28,7 @@ def _cache_get(key: str) -> Optional[str]:
 
 
 def _cache_put(key: str, value: str) -> None:
+    """Store a value in the cache with the current monotonic timestamp."""
     _CACHE[key] = (value, time.monotonic())  # type: ignore[assignment]
 
 
@@ -59,6 +61,7 @@ def _fetch_headlines(topic: str, count: int) -> Optional[str]:
 
 
 def news_brief_action(parameters: dict, **kwargs) -> str:
+    """Return current headlines for an optional topic, clamping count to 1-10 and caching results for 15 minutes."""
     topic  = str(parameters.get("topic", "")).strip()
     count  = int(parameters.get("count", 5))
     count  = max(1, min(count, 10))

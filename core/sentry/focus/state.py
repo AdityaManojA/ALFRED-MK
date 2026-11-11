@@ -12,6 +12,7 @@ from enum import Enum
 
 
 class Cadence(str, Enum):
+    """How insistently focus drift is called out: normal, gentle or drill sergeant."""
     NORMAL = "normal"
     GENTLE = "gentle"
     DRILL_SERGEANT = "drill_sergeant"

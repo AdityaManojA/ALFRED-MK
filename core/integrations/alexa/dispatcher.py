@@ -32,11 +32,13 @@ class AlexaTypedDispatcher:
         background_task_runner: Optional[Callable[[str, Any], Coroutine[Any, Any, None]]] = None,
         hud_logger: Optional[Callable[[str], None]] = None,
     ) -> None:
+        """Store the action policy plus optional background-task runner and HUD logger."""
         self.policy = policy
         self.background_task_runner = background_task_runner
         self.hud_logger = hud_logger
 
     def _log_hud(self, message: str) -> None:
+        """Send an ``[ALEXA]``-prefixed message to the HUD logger, ignoring errors."""
         if self.hud_logger:
             try:
                 self.hud_logger(f"[ALEXA] {message}")
@@ -100,6 +102,7 @@ class AlexaTypedDispatcher:
     # ── Intent Handlers ─────────────────────────────────────────────────────
 
     async def _handle_status(self) -> str:
+        """Report CPU and RAM usage (via system_monitor, falling back to psutil) as a spoken reply."""
         cpu = 0
         ram = 0
         try:
@@ -119,12 +122,14 @@ class AlexaTypedDispatcher:
         return f"All ALFRED systems online, sir. CPU is at {cpu} percent, memory at {ram} percent."
 
     async def _handle_schedule_status(self) -> str:
+        """Return a privacy-safe schedule summary for today without calendar details."""
         # Privacy rule: Summary only, never expose attendee emails or private notes
         self._log_hud("Calendar summary requested via Alexa.")
         today_str = datetime.date.today().strftime("%A, %B %d")
         return f"Schedule status for {today_str}: all routines are proceeding as planned, sir."
 
     async def _handle_start_focus(self, args: dict[str, Any]) -> str:
+        """Start focus mode for the requested ISO duration (default 25 minutes) and return a reply."""
         raw_duration = args.get("duration", "")
         mins = parse_iso_duration_to_minutes(str(raw_duration)) if raw_duration else 25
         if not mins or mins <= 0:
@@ -140,6 +145,7 @@ class AlexaTypedDispatcher:
         return f"Focus mode engaged for {mins} minutes, sir."
 
     async def _handle_stop_focus(self) -> str:
+        """Stop focus mode and return a confirmation reply."""
         self._log_hud("Focus mode stopped.")
         try:
             from actions.sentry_focus import sentry_focus_action
@@ -150,6 +156,7 @@ class AlexaTypedDispatcher:
         return "Focus mode concluded, sir."
 
     async def _handle_media_pause(self) -> str:
+        """Pause media via the media arbiter if supported and return a confirmation."""
         self._log_hud("Media playback paused.")
         try:
             from core.media.arbiter import get_media_arbiter
@@ -161,6 +168,7 @@ class AlexaTypedDispatcher:
         return "Media playback paused, sir."
 
     async def _handle_media_resume(self) -> str:
+        """Resume media via the media arbiter if supported and return a confirmation."""
         self._log_hud("Media playback resumed.")
         try:
             from core.media.arbiter import get_media_arbiter
@@ -180,6 +188,7 @@ class AlexaTypedDispatcher:
         self._log_hud("Internet speed test triggered in background.")
 
         async def _run_speedtest_background():
+            """Run the network speed test in a thread and log the result or failure to the HUD."""
             try:
                 from actions.network_tools import network_tools_action
                 result_str = await asyncio.to_thread(network_tools_action, {"action": "speed_test"})
@@ -193,6 +202,7 @@ class AlexaTypedDispatcher:
         return "The speed test is running, sir. I’ll put the result in ALFRED."
 
     async def _handle_set_reminder(self, args: dict[str, Any]) -> str:
+        """Log the requested reminder to the HUD and return an acknowledgement (no reminder is scheduled here)."""
         text = str(args.get("reminder_text") or "check in").strip()
         time_spec = str(args.get("time") or "").strip()
         self._log_hud(f"Reminder created: '{text}' at {time_spec or 'default time'}")

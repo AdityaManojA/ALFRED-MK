@@ -44,6 +44,7 @@ class SharedAudioStream:
         preroll_s: float = PREROLL_S,
         max_subscribers: int = MAX_SUBSCRIBERS,
     ) -> None:
+        """Configure stream parameters and initialise preroll buffer, subscriber table and health counters."""
         self.sample_rate = sample_rate
         self.chunk_samples = chunk_samples
         self.preroll_s = preroll_s
@@ -172,6 +173,7 @@ class SharedAudioStream:
 
                 def _audio_callback(indata, frames, time_info, status):
                     # Sounddevice provides float32 or int16. We use int16.
+                    """Sounddevice input callback: forward each captured chunk's bytes to feed_chunk."""
                     chunk_bytes = indata.tobytes()
                     self.feed_chunk(chunk_bytes)
 

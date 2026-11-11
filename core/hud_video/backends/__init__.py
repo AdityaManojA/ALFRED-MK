@@ -19,22 +19,29 @@ class BackendBase:
     """
 
     def load(self, ref: PlayableRef) -> None:
+        """Load the given playable reference into the backend (abstract)."""
         raise NotImplementedError
 
     def play(self) -> None:
+        """Start or resume playback (abstract)."""
         raise NotImplementedError
 
     def pause(self) -> None:
+        """Pause playback (abstract)."""
         raise NotImplementedError
 
     def stop(self) -> None:
+        """Stop playback and release the current media (abstract)."""
         raise NotImplementedError
 
     def set_muted(self, muted: bool) -> None:
+        """Set the audio mute state (abstract)."""
         raise NotImplementedError
 
     def set_volume(self, volume: float) -> None:
+        """Set the playback volume (abstract)."""
         raise NotImplementedError
 
     def seek(self, position_s: float) -> None:
+        """Seek to the given position in seconds (abstract)."""
         raise NotImplementedError

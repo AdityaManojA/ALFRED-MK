@@ -13,7 +13,7 @@ import numpy as np
 from core.local_stt import LocalSTTManager, create_local_stt_engine
 from core.local_ttt import LocalTTSManager, create_local_tts_engine
 from core.llm_client import (
-    call_llm_stream, call_llm_text, get_llm_provider,
+    call_llm, call_llm_stream, call_llm_text, get_llm_provider,
     get_llm_settings, ensure_ollama_running
 )
 from core.echo import EchoGuard
@@ -26,6 +26,7 @@ class LocalLLMManager:
     """Manages local LLM interactions."""
 
     def __init__(self, config: dict):
+        """Store config, resolve LLM provider/settings and warm up Ollama if it is the provider."""
         self.config = config
         self.provider = get_llm_provider()
         self.url, self.model = get_llm_settings()
@@ -133,6 +134,7 @@ class LocalPipelineCoordinator:
     """Coordinates STT → LLM → TTS flow."""
 
     def __init__(self, config: dict, ui_interface):
+        """Store config and UI, create the STT, TTS and LLM components and the inter-component queues."""
         self.config = config
         self.ui = ui_interface
         self._loop = None
@@ -325,6 +327,7 @@ class LocalPipelineCoordinator:
 
             # Generate LLM response
             def stream_callback(text):
+                """Write streamed assistant text to the UI log and queue it for TTS."""
                 if text:
                     # Update UI with assistant response (overwriting for streaming effect)
                     if hasattr(self.ui, 'write_log'):

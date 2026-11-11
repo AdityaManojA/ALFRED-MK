@@ -57,6 +57,7 @@ class _SpinnerWidget(QWidget):
     """Minimal ALFRED-style spinner: rotating arc in theme primary colour."""
 
     def __init__(self, parent: QWidget | None = None) -> None:
+        """Create the fixed-size spinner and its rotation timer."""
         super().__init__(parent)
         self.setFixedSize(56, 56)
         self._angle: float = 0.0
@@ -66,19 +67,24 @@ class _SpinnerWidget(QWidget):
         self._color = QColor("#00D4FF")  # refreshed on theme change
 
     def start(self) -> None:
+        """Start the rotation timer."""
         self._timer.start()
 
     def stop(self) -> None:
+        """Stop the rotation timer."""
         self._timer.stop()
 
     def set_color(self, color: QColor) -> None:
+        """Set the arc colour used on the next paint."""
         self._color = color
 
     def _tick(self) -> None:
+        """Advance the spinner angle by 6 degrees and repaint."""
         self._angle = (self._angle + 6.0) % 360.0
         self.update()
 
     def paintEvent(self, _event) -> None:
+        """Paint a dim background ring and a spinning 240-degree arc."""
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         w, h = self.width(), self.height()
@@ -128,6 +134,7 @@ class HudVideoSurface(QWidget):
         controller: HudVideoController,
         parent: QWidget | None = None,
     ) -> None:
+        """Set up mute-badge and toast hide timers, build the UI, and connect the controller."""
         super().__init__(parent)
         self._controller = controller
         self._mute_hide_timer = QTimer(self)
@@ -166,6 +173,7 @@ class HudVideoSurface(QWidget):
         self._toast_timer.start(SURFACE_TOAST_DURATION_MS)
 
     def _hide_toast(self) -> None:
+        """Hide the toast label, re-dispatching to the GUI thread if needed."""
         from core.thread_safety import is_gui_thread, run_on_gui_thread
         if not is_gui_thread():
             run_on_gui_thread(self._hide_toast)
@@ -193,6 +201,7 @@ class HudVideoSurface(QWidget):
     # ------------------------------------------------------------------
 
     def _on_state_changed(self, state: VideoState) -> None:
+        """Switch panels, spinner, overlay, close button, and controls strip to match the video state."""
         if state == VideoState.RESOLVING:
             self._spinner.start()
             self._content_stack.setCurrentIndex(0)  # loading panel
@@ -239,6 +248,7 @@ class HudVideoSurface(QWidget):
                 self._controls_strip.hide()
 
     def _on_status_text(self, text: str) -> None:
+        """Show the status text in upper case on the status and error labels."""
         self._status_lbl.setText(text.upper())
         self._error_lbl.setText(text.upper())
 
@@ -248,6 +258,7 @@ class HudVideoSurface(QWidget):
 
     def _build_ui(self) -> None:
         # Default palette (overridden by apply_theme)
+        """Build the header, loading/video/error stack, controls strip, and overlay labels, then apply styles."""
         self._pri = "#00D4FF"
         self._pri_dim = "#007A9A"
         self._bg = "#000308"
@@ -293,6 +304,7 @@ class HudVideoSurface(QWidget):
         self._apply_stylesheet()
 
     def _build_header(self) -> QHBoxLayout:
+        """Build the header row with the title label and close button."""
         row = QHBoxLayout()
         row.setContentsMargins(10, 5, 10, 5)
         row.setSpacing(6)
@@ -313,6 +325,7 @@ class HudVideoSurface(QWidget):
         return row
 
     def _build_loading_panel(self) -> QWidget:
+        """Build the loading panel with the spinner and status label."""
         w = QWidget()
         v = QVBoxLayout(w)
         v.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -329,6 +342,7 @@ class HudVideoSurface(QWidget):
         return w
 
     def _build_video_panel(self) -> QWidget:
+        """Create the QVideoWidget used as the video panel."""
         self._video_widget = QVideoWidget()
         self._video_widget.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
@@ -337,6 +351,7 @@ class HudVideoSurface(QWidget):
         return self._video_widget
 
     def _build_error_panel(self) -> QWidget:
+        """Build the error panel with its message label."""
         w = QWidget()
         v = QVBoxLayout(w)
         v.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -348,11 +363,13 @@ class HudVideoSurface(QWidget):
         return w
 
     def _connect_controller(self) -> None:
+        """Connect controller state, status text, and toast signals to the surface."""
         self._controller.state_changed.connect(self._on_state_changed)
         self._controller.status_text_changed.connect(self._on_status_text)
         self._controller.toast_requested.connect(self.show_toast)
 
     def _apply_stylesheet(self) -> None:
+        """Apply stylesheets to the surface and its labels/buttons from the current palette."""
         pri = self._pri
         pri_dim = self._pri_dim
         bg = self._bg
@@ -419,6 +436,7 @@ class HudVideoSurface(QWidget):
             return f
 
     def _hide_mute_badge(self) -> None:
+        """Hide the mute badge, re-dispatching to the GUI thread if needed."""
         from core.thread_safety import is_gui_thread, run_on_gui_thread
         if not is_gui_thread():
             run_on_gui_thread(self._hide_mute_badge)
@@ -427,6 +445,7 @@ class HudVideoSurface(QWidget):
             self._mute_badge.hide()
 
     def resizeEvent(self, event) -> None:
+        """Reposition the mute badge, pause overlay, and visible toast on resize."""
         super().resizeEvent(event)
         # Keep mute badge top-right and pause overlay centred
         if hasattr(self, "_mute_badge"):

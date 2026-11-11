@@ -50,12 +50,14 @@ _SCHEDULING = ("WHEN_IDLE", "SILENT", "INTERRUPT")
 
 
 def _opt_upper(value, allowed: tuple[str, ...]) -> Optional[str]:
+    """Return the upper-cased value if it is in ``allowed``, else None."""
     v = str(value or "").strip().upper()
     return v if v in allowed else None
 
 
 @dataclass
 class ActionRecord:
+    """Metadata, handler and validation state for one discovered action module."""
     name: str
     description: str = ""
     parameters: dict = field(default_factory=lambda: dict(_DEFAULT_PARAMS))
@@ -71,18 +73,22 @@ from core.path_guard import is_heavenly_restricted, check_action_params
 
 
 def _is_heavenly_restricted_params(val) -> bool:
+    """Return whether ``val`` is a restricted parameter schema (delegates to is_heavenly_restricted)."""
     return is_heavenly_restricted(val)
 
 
 
 class ActionRegistry:
+    """Registry of valid discovered actions: exposes tool declarations and dispatches calls by name."""
     def __init__(self, actions: dict[str, ActionRecord], logger: Callable[[str], None]):
+        """Store the valid actions mapping and the logger callback."""
         self._actions = actions          # name -> ActionRecord, VALID entries only
         self._all_records: list[ActionRecord] = []
         self._logger = logger
 
     # -- called by main.py at LiveConnectConfig build time --
     def get_tool_declarations(self) -> list[dict]:
+        """Return a tool declaration dict (name, description, parameters, optional behavior) per valid action."""
         out = []
         for rec in self._actions.values():
             decl = {"name": rec.name, "description": rec.description,
@@ -93,6 +99,7 @@ class ActionRegistry:
         return out
 
     def has(self, name: str) -> bool:
+        """Return True if an action with this name is registered."""
         return name in self._actions
 
     def scheduling(self, name: str) -> Optional[str]:
@@ -101,10 +108,14 @@ class ActionRegistry:
         return rec.scheduling if rec else None
 
     def names(self) -> set[str]:
+        """Return the set of registered action names."""
         return set(self._actions.keys())
 
     # -- called by main.py from _execute_tool --
     def run(self, name: str, parameters: dict, ctx: dict | None = None) -> str:
+        """Validate parameters and run the named action's handler.
+        Returns the handler's result (or "Done."), or an error message if the action is unavailable, params are invalid, or it raises.
+        """
         rec = self._actions.get(name)
         if rec is None or not rec.valid:
             return f"Action '{name}' is not available."
@@ -256,8 +267,10 @@ def discover_actions(actions_dir: Path, reserved_names: set[str] | None = None,
 class ActionLoader:
     """Convenience class wrapper for action discovery."""
     def __init__(self, actions_dir: Path | None = None, logger: Callable[[str], None] | None = None):
+        """Set the actions directory (defaults to the repo's actions/ folder) and logger."""
         self.actions_dir = actions_dir or (Path(__file__).resolve().parent.parent / "actions")
         self.logger = logger or (lambda msg: None)
 
     def discover_actions(self, reserved_names: set[str] | None = None) -> ActionRegistry:
+        """Discover actions in ``actions_dir`` and return an ActionRegistry."""
         return discover_actions(self.actions_dir, reserved_names=reserved_names, logger=self.logger)

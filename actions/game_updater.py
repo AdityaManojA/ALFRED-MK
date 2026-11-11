@@ -60,12 +60,16 @@ _KNOWN_APPIDS: dict[str, tuple[str, str]] = {
 }
 
 def _find_steam_path() -> Path | None:
+    """Locate the Steam install directory using the current OS's lookup routine."""
     if is_windows(): return _find_steam_windows()
     if is_mac():     return _find_steam_mac()
     return _find_steam_linux()
 
 
 def _find_steam_windows() -> Path | None:
+    """Find the Steam install folder on Windows via the registry, then common install paths.
+    Returns the folder containing steam.exe, or None if not found.
+    """
     try:
         import winreg
         for hive, key_path in [
@@ -95,6 +99,7 @@ def _find_steam_windows() -> Path | None:
 
 
 def _find_steam_mac() -> Path | None:
+    """Return the first existing Steam directory on macOS, or None."""
     for p in [
         Path.home() / "Library" / "Application Support" / "Steam",
         Path("/Applications/Steam.app/Contents/MacOS"),
@@ -105,6 +110,7 @@ def _find_steam_mac() -> Path | None:
 
 
 def _find_steam_linux() -> Path | None:
+    """Return the first existing Steam directory from common Linux locations, or None."""
     for p in [
         Path.home() / ".steam" / "steam",
         Path.home() / ".steam" / "root",
@@ -118,12 +124,14 @@ def _find_steam_linux() -> Path | None:
 
 
 def _steam_exe(steam_path: Path) -> Path:
+    """Return the path to the Steam executable or launcher script for the current OS."""
     if is_windows(): return steam_path / "steam.exe"
     if is_mac():     return Path("/Applications/Steam.app/Contents/MacOS/steam_osx")
     return steam_path / "steam.sh"
 
 
 def _launch_steam_url(exe: Path, url: str) -> None:
+    """Open a steam:// URL via open (macOS), xdg-open (Linux) or the Steam executable."""
     if is_mac():
         subprocess.Popen(["open", url])
     elif is_linux():
@@ -132,6 +140,7 @@ def _launch_steam_url(exe: Path, url: str) -> None:
         subprocess.Popen([str(exe), url])
 
 def _get_steam_libraries(steam_path: Path) -> list[Path]:
+    """Return the steamapps folders of all Steam libraries listed in libraryfolders.vdf."""
     libraries = [steam_path / "steamapps"]
     vdf_path  = steam_path / "steamapps" / "libraryfolders.vdf"
     if not vdf_path.exists():
@@ -148,6 +157,9 @@ def _get_steam_libraries(steam_path: Path) -> list[Path]:
 
 
 def _get_steam_games(steam_path: Path) -> list[dict]:
+    """Parse appmanifest_*.acf files in every Steam library into game dicts.
+    Each dict holds id, name, state flags, size on disk, library and manifest path.
+    """
     games = []
     for lib in _get_steam_libraries(steam_path):
         for acf in lib.glob("appmanifest_*.acf"):
@@ -171,6 +183,7 @@ def _get_steam_games(steam_path: Path) -> list[dict]:
     return games
 
 def _is_steam_running() -> bool:
+    """Return True if a Steam process is currently running (tasklist or pgrep)."""
     try:
         if is_windows():
             out = subprocess.run(["tasklist", "/FI", "IMAGENAME eq steam.exe"],
@@ -183,6 +196,7 @@ def _is_steam_running() -> bool:
         return False
 
 def _get_steam_window_rect() -> tuple[int, int, int, int] | None:
+    """Return (left, top, width, height) of the first visible Steam window, or None."""
     try:
         import pygetwindow as gw
         for w in gw.getAllWindows():
@@ -194,6 +208,10 @@ def _get_steam_window_rect() -> tuple[int, int, int, int] | None:
 
 
 def _click_first_profile_by_screenshot() -> bool:
+    """Click the first profile avatar in Steam's account picker by scanning a screenshot.
+    Looks for the first colourful block in the window centre, falling back to a guessed
+    position; returns True if a click was made.
+    """
 
     try:
         import pyautogui
@@ -248,6 +266,9 @@ def _click_first_profile_by_screenshot() -> bool:
 
 
 def _handle_steam_profile_selection() -> bool:
+    """Detect Steam's profile-selection dialog and click the first profile if present.
+    Returns False when no dialog is detected or the Steam window is not found.
+    """
     print("[GameUpdater] 🔍 Checking profile-selection dialog...")
     win = _get_steam_window_rect()
     if not win:
@@ -277,6 +298,7 @@ def _handle_steam_profile_selection() -> bool:
     return _click_first_profile_by_screenshot()
 
 def _find_best_drive() -> dict | None:
+    """Return the Windows drive (letter, path, free_gb) with the most free space, or None."""
     import shutil, string
     drives = []
     for letter in string.ascii_uppercase:
@@ -292,6 +314,9 @@ def _find_best_drive() -> dict | None:
 
 
 def _select_drive_in_dialog(dialog, drive_letter: str) -> bool:
+    """Select the given drive letter in a pywinauto install dialog.
+    Tries list items, radio buttons, combo boxes, then any control; returns True on success.
+    """
     target = drive_letter.upper()
     for control_type in ("ListItem", "RadioButton"):
         try:
@@ -328,6 +353,9 @@ def _select_drive_in_dialog(dialog, drive_letter: str) -> bool:
 
 
 def _click_button(window, keywords: list[str]) -> bool:
+    """Click the first button in a pywinauto window whose text matches any keyword.
+    Returns True if a button was clicked.
+    """
     try:
         for btn in window.descendants(control_type="Button"):
             try:
@@ -343,6 +371,9 @@ def _click_button(window, keywords: list[str]) -> bool:
 
 
 def _handle_install_dialog_pyautogui(game_name: str, best_drive: dict) -> str:
+    """Fallback that drives Steam's install dialog with pyautogui by clicking fixed positions.
+    Types the drive letter and clicks Install; returns a status message for the user.
+    """
     try:
         import pyautogui
         import pygetwindow as gw
@@ -384,6 +415,9 @@ def _handle_install_dialog_pyautogui(game_name: str, best_drive: dict) -> str:
 
 
 def _handle_install_dialog(game_name: str) -> str:
+    """Drive Steam's install dialog with pywinauto, picking the drive with most free space.
+    Falls back to the pyautogui handler on failure; returns a status message.
+    """
     best_drive = _find_best_drive()
     if not best_drive:
         return f"Install dialog opened for '{game_name}'. Could not detect drives."
@@ -449,6 +483,9 @@ def _handle_install_dialog(game_name: str) -> str:
         return _handle_install_dialog_pyautogui(game_name, best_drive)
 
 def _ensure_steam_running(steam_path: Path) -> bool:
+    """Start Steam if it is not running and wait up to 20 seconds for it to come up.
+    On Windows also handles the profile-selection dialog; returns True if Steam is running.
+    """
     if _is_steam_running():
         return True
 
@@ -477,6 +514,10 @@ def _ensure_steam_running(steam_path: Path) -> bool:
     return False
 
 def _search_steam_appid(game_name: str) -> tuple[str | None, str | None]:
+    """Resolve a game name to (appid, canonical name).
+    Checks installed games, the known-appid table, then the Steam store search API;
+    returns (None, None) when nothing matches.
+    """
     name_lower = game_name.lower().strip()
 
 
@@ -513,6 +554,9 @@ def _search_steam_appid(game_name: str) -> tuple[str | None, str | None]:
     return None, None
 
 def _update_steam_games(steam_path: Path, game_name: str = None) -> str:
+    """Trigger steam://update for installed games, optionally filtered by name.
+    Returns a summary of started, in-progress, up-to-date and failed updates.
+    """
     if not _ensure_steam_running(steam_path):
         return "Could not start Steam."
 
@@ -566,6 +610,10 @@ def _update_steam_games(steam_path: Path, game_name: str = None) -> str:
 
 def _install_steam_game(steam_path: Path, game_name: str = None,
                         app_id: str = None) -> str:
+    """Install a Steam game by name or AppID, or update it if already installed.
+    Launches steam://install and, on Windows, automates the install dialog in a thread;
+    returns a status message.
+    """
     if not _ensure_steam_running(steam_path):
         return "Could not start Steam."
 
@@ -617,6 +665,7 @@ def _install_steam_game(steam_path: Path, game_name: str = None,
         return f"Install failed: {e}"
 
 def _get_download_status(steam_path: Path) -> str:
+    """Summarise Steam games currently downloading and those with pending updates."""
     games   = _get_steam_games(steam_path)
     active  = [g for g in games if g["state"] == 1026]
     pending = [g for g in games if g["state"] in (6, 516)]
@@ -631,6 +680,7 @@ def _get_download_status(steam_path: Path) -> str:
 
 
 def _system_shutdown() -> None:
+    """Shut down the computer using the platform's shutdown command."""
     if is_windows():
         subprocess.run(["shutdown", "/s", "/t", "10"], **_CNW)
     elif is_mac():
@@ -641,6 +691,10 @@ def _system_shutdown() -> None:
 
 def _watch_and_shutdown(steam_path: Path, speak=None,
                         check_interval: int = 30, timeout_hours: int = 12):
+    """Wait for a Steam download to start, then shut down the PC once downloads finish.
+    Gives up if no download starts within about two minutes or after timeout_hours;
+    announces progress through the optional speak callback.
+    """
     print("[GameUpdater]...")
     deadline = time.time() + timeout_hours * 3600
 
@@ -669,12 +723,14 @@ def _watch_and_shutdown(steam_path: Path, speak=None,
 
 
 def _find_epic_exe() -> Path | None:
+    """Locate the Epic Games launcher (or Heroic on Linux) for the current OS."""
     if is_windows(): return _find_epic_exe_windows()
     if is_mac():     return _find_epic_exe_mac()
     return _find_epic_exe_linux()
 
 
 def _find_epic_exe_windows() -> Path | None:
+    """Find EpicGamesLauncher.exe on Windows via the registry, then common install paths."""
     try:
         import winreg
         for hive, key_path in [
@@ -704,11 +760,13 @@ def _find_epic_exe_windows() -> Path | None:
 
 
 def _find_epic_exe_mac() -> Path | None:
+    """Return the Epic Games Launcher binary path on macOS if it exists, else None."""
     p = Path("/Applications/Epic Games Launcher.app/Contents/MacOS/EpicGamesLauncher")
     return p if p.exists() else None
 
 
 def _find_epic_exe_linux() -> Path | None:
+    """Return the path to the Heroic launcher on Linux if installed, else None."""
     for c in [Path.home() / ".local" / "bin" / "heroic", Path("/usr/bin/heroic")]:
         if c.exists():
             return c
@@ -716,6 +774,7 @@ def _find_epic_exe_linux() -> Path | None:
 
 
 def _epic_manifests_path() -> Path | None:
+    """Return the Epic launcher Manifests folder on Windows or macOS, or None."""
     if is_windows():
         p = Path(os.environ.get("PROGRAMDATA", "C:/ProgramData")) \
             / "Epic" / "EpicGamesLauncher" / "Data" / "Manifests"
@@ -728,6 +787,7 @@ def _epic_manifests_path() -> Path | None:
 
 
 def _get_epic_games() -> list[dict]:
+    """Read Epic .item manifests and return a list of {id, name} dicts for installed games."""
     manifests = _epic_manifests_path()
     if not manifests:
         return []
@@ -744,6 +804,7 @@ def _get_epic_games() -> list[dict]:
 
 
 def _is_epic_running() -> bool:
+    """Return True if the Epic Games Launcher (or Heroic on Linux) is running."""
     try:
         if is_windows():
             out = subprocess.run(
@@ -759,6 +820,9 @@ def _is_epic_running() -> bool:
 
 
 def _update_epic_games(epic_exe: Path, game_name: str = None) -> str:
+    """Open the Epic launcher to update one named game or check all installed games.
+    Returns a status message describing what was launched.
+    """
     games = _get_epic_games()
 
     if game_name:
@@ -804,12 +868,16 @@ def _update_epic_games(epic_exe: Path, game_name: str = None) -> str:
             return f"Epic launch failed: {e}"
 
 def _schedule_daily_update(hour: int = 3, minute: int = 0) -> str:
+    """Schedule a daily game-update run at the given time using the OS scheduler."""
     if is_windows(): return _schedule_windows(hour, minute)
     if is_mac():     return _schedule_mac(hour, minute)
     return _schedule_linux(hour, minute)
 
 
 def _schedule_windows(hour: int, minute: int) -> str:
+    """Create a daily Windows scheduled task that runs this script with --scheduled.
+    Removes any old ALFRED/JARVIS task first; returns a status message.
+    """
     task_name   = "ALFRED_GameUpdater"
     script_path = Path(__file__).resolve()
     subprocess.run(["schtasks", "/Delete", "/TN", task_name, "/F"], capture_output=True, **_CNW)
@@ -825,6 +893,7 @@ def _schedule_windows(hour: int, minute: int) -> str:
 
 
 def _schedule_mac(hour: int, minute: int) -> str:
+    """Install and load a launchd agent that runs this script daily with --scheduled."""
     plist_dir   = Path.home() / "Library" / "LaunchAgents"
     plist_dir.mkdir(parents=True, exist_ok=True)
     plist_path  = plist_dir / "com.alfred.gameupdater.plist"
@@ -860,6 +929,9 @@ def _schedule_mac(hour: int, minute: int) -> str:
 
 
 def _schedule_linux(hour: int, minute: int) -> str:
+    """Add a daily crontab entry that runs this script with --scheduled.
+    Replaces any existing ALFRED/JARVIS updater entries; returns a status message.
+    """
     script_path = Path(__file__).resolve()
     marker      = "# ALFRED_GameUpdater"
     cron_entry  = f"{minute} {hour} * * * {sys.executable} {script_path} --scheduled  {marker}"
@@ -879,6 +951,7 @@ def _schedule_linux(hour: int, minute: int) -> str:
 
 
 def _cancel_scheduled_update() -> str:
+    """Remove the scheduled game-update task, launchd agent or cron entry."""
     if is_windows():
         r1 = subprocess.run(
             ["schtasks", "/Delete", "/TN", "ALFRED_GameUpdater", "/F"],
@@ -911,6 +984,7 @@ def _cancel_scheduled_update() -> str:
 
 
 def _get_schedule_status() -> str:
+    """Report whether a daily game update is scheduled and, where available, its next run."""
     if is_windows():
         for tn in ("ALFRED_GameUpdater", "JARVIS_GameUpdater"):
             result = subprocess.run(
@@ -944,6 +1018,7 @@ def _get_schedule_status() -> str:
 
 
 def game_updater(parameters: dict, player=None, speak=None) -> str:
+    """Dispatch a Steam / Epic request: update, install, list, download_status, schedule, cancel_schedule or schedule_status."""
     p         = parameters or {}
     action    = p.get("action",    "update").lower().strip()
     platform  = p.get("platform",  "both").lower().strip()

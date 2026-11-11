@@ -34,6 +34,7 @@ class OrbIPCServer:
     """Unix Domain Socket server broadcasting ALFRED state to native frontends."""
 
     def __init__(self, socket_path: str = SOCKET_PATH):
+        """Store the socket path and initialise server, client set and callback state."""
         self.socket_path = socket_path
         self._server_sock: Optional[socket.socket] = None
         self._clients: set[socket.socket] = set()

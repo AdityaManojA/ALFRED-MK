@@ -48,6 +48,7 @@ def get_image_viewer(parent: Optional[QWidget] = None) -> ImageViewerWindow:
         viewer = ImageViewerWindow(parent=parent)
 
         def _handle_next():
+            """Advance the active reference-image session and show the next candidate in the viewer."""
             sess = lookup("reference_image_session")
             if sess is not None:
                 res = sess.next_candidate()
@@ -56,6 +57,7 @@ def get_image_viewer(parent: Optional[QWidget] = None) -> ImageViewerWindow:
                     viewer.show_image(res.file_path or res.data, caption=res.attribution, host=res.host, candidate_info=cand_info)
 
         def _handle_prev():
+            """Step the active reference-image session back and show the previous candidate in the viewer."""
             sess = lookup("reference_image_session")
             if sess is not None:
                 res = sess.previous_candidate()

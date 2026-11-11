@@ -37,6 +37,7 @@ def set_preferred_surface(provider_id: str, surface_id: str) -> None:
     sid = surface_id.strip()
 
     def _mutator(data: dict) -> None:
+        """Set the provider's preferred surface in the settings data, creating nested dicts as needed."""
         if "streaming" not in data or not isinstance(data["streaming"], dict):
             data["streaming"] = {}
         if pid not in data["streaming"] or not isinstance(data["streaming"][pid], dict):
@@ -53,6 +54,7 @@ def forget_preferred_surface(provider_id: str) -> bool:
     removed = [False]
 
     def _mutator(data: dict) -> None:
+        """Delete the provider's stored surface preference if present and flag that it was removed."""
         if "streaming" in data and isinstance(data["streaming"], dict):
             if pid in data["streaming"] and isinstance(data["streaming"][pid], dict):
                 if "surface" in data["streaming"][pid]:
@@ -86,6 +88,7 @@ def set_audio_preference(provider_id: str, audio_pref: str) -> None:
         pref = CRUNCHYROLL_DEFAULT_AUDIO
 
     def _mutator(data: dict) -> None:
+        """Set the provider's audio preference in the settings data, creating nested dicts as needed."""
         if "streaming" not in data or not isinstance(data["streaming"], dict):
             data["streaming"] = {}
         if pid not in data["streaming"] or not isinstance(data["streaming"][pid], dict):

@@ -16,7 +16,10 @@ from core.ui.themes.schema import PaletteDefinition
 
 
 class TwoFaceSplitMirrorVisual(SlotVisual):
+    """Slot 1: header plus a vertical divider splitting the panel in half."""
+
     def __init__(self) -> None:
+        """Initialise pens, font and geometry placeholders for this slot."""
         super().__init__()
         self.pen_clean = QPen()
         self.pen_dirty = QPen()
@@ -25,6 +28,7 @@ class TwoFaceSplitMirrorVisual(SlotVisual):
         self.mid_line = QLineF()
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build clean and dirty pens and lay out the vertical mid line."""
         c_pri = QColor(palette.pri)
         c_acc = QColor(palette.acc)
         self.pen_clean = QPen(c_pri, 1.0)
@@ -35,9 +39,11 @@ class TwoFaceSplitMirrorVisual(SlotVisual):
         self.mid_line.setLine(mid_x, by, mid_x, by + bh)
 
     def tick(self, dt: float, signals: HudSignals) -> None:
+        """No-op; this visual is static."""
         pass
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
+        """Draw the header and the vertical mid line."""
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_clean)
         painter.drawText(QRectF(rect.x() + 8, rect.y() + 4, rect.width() - 16, 14),
@@ -46,7 +52,10 @@ class TwoFaceSplitMirrorVisual(SlotVisual):
 
 
 class TwoFaceSilverDollarVisual(SlotVisual):
+    """Slot 2: coin ellipse whose width follows |cos(rotation)| to fake a spin."""
+
     def __init__(self) -> None:
+        """Initialise pens, font and geometry placeholders for this slot."""
         super().__init__()
         self.rot: float = 0.0
         self.pen_coin = QPen()
@@ -54,15 +63,18 @@ class TwoFaceSilverDollarVisual(SlotVisual):
         self.rect_inner = QRectF()
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build the coin pen and compute the inner panel rect."""
         c_pri = QColor(palette.pri)
         self.pen_coin = QPen(c_pri, 1.5)
         bx, by, bw, bh = rect.x() + 8.0, rect.y() + 20.0, rect.width() - 16.0, rect.height() - 28.0
         self.rect_inner = QRectF(bx, by, bw, bh)
 
     def tick(self, dt: float, signals: HudSignals) -> None:
+        """Advance the coin rotation."""
         self.rot = (self.rot + dt * 3.0) % (2.0 * math.pi)
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
+        """Draw the header and an ellipse whose width follows the coin rotation."""
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_coin)
         painter.drawText(QRectF(rect.x() + 8, rect.y() + 4, rect.width() - 16, 12),
@@ -74,22 +86,28 @@ class TwoFaceSilverDollarVisual(SlotVisual):
 
 
 class TwoFaceBisectedVisual(SlotVisual):
+    """Slot 3: header plus a static frame around the inner panel."""
+
     def __init__(self) -> None:
+        """Initialise pens, font and geometry placeholders for this slot."""
         super().__init__()
         self.pen_half = QPen()
         self.font_hdr = QFont("Consolas", 6, QFont.Weight.Bold)
         self.rect_inner = QRectF()
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build the pen and compute the inner panel rect."""
         c_pri = QColor(palette.pri)
         self.pen_half = QPen(c_pri, 1.2)
         bx, by, bw, bh = rect.x() + 8.0, rect.y() + 18.0, rect.width() - 16.0, rect.height() - 24.0
         self.rect_inner = QRectF(bx, by, bw, bh)
 
     def tick(self, dt: float, signals: HudSignals) -> None:
+        """No-op; this visual is static."""
         pass
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
+        """Draw the header and the panel outline."""
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_half)
         painter.drawText(QRectF(rect.x() + 8, rect.y() + 3, rect.width() - 16, 12),

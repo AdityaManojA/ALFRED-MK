@@ -219,6 +219,7 @@ class ReferenceImageSession:
         web_source: Optional[WebSource] = None,
         cache: Optional[ImageViewerCache] = None,
     ) -> None:
+        """Set up the local/web image sources and cache, with an empty candidate list."""
         self._local_source = local_source or LocalSource()
         self._web_source = web_source or WebSource()
         self._cache = cache or ImageViewerCache()
@@ -228,10 +229,12 @@ class ReferenceImageSession:
 
     @property
     def current_index(self) -> int:
+        """Index of the currently shown candidate."""
         return self._current_idx
 
     @property
     def total_candidates(self) -> int:
+        """Number of candidates from the last search."""
         return len(self._candidates)
 
     def search(self, query: str) -> FetchResult:

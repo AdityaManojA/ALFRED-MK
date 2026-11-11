@@ -20,6 +20,7 @@ _quota_lock          = threading.Lock()
 
 
 def _gemini_available() -> bool:
+    """Return True if Gemini grounding is not in quota cooldown."""
     with _quota_lock:
         return time.monotonic() >= _quota_blocked_until
 
@@ -55,6 +56,7 @@ def _run_bounded(fn, timeout: float, label: str = "task"):
     box = [None]
 
     def _run():
+        """Run fn and store its result in the shared box, logging any failure."""
         try:
             box[0] = fn()
         except Exception as e:
@@ -68,6 +70,7 @@ def _run_bounded(fn, timeout: float, label: str = "task"):
     return box[0]
 
 def _get_base_dir() -> Path:
+    """Return the app base directory, handling frozen (packaged) builds."""
     if getattr(sys, "frozen", False):
         return Path(sys.executable).parent
     return Path(__file__).resolve().parent.parent
@@ -78,11 +81,15 @@ API_CONFIG_PATH = BASE_DIR / "config" / "api_keys.json"
 
 
 def _get_api_key() -> str:
+    """Read the Gemini API key from the API config file."""
     with open(API_CONFIG_PATH, "r", encoding="utf-8") as f:
         return json.load(f)["gemini_api_key"]
 
 
 def _gemini_search(query: str) -> str:
+    """Run a Google-grounded Gemini search and return the response text.
+    Raises if in quota cooldown, if every model fails, or if the response is empty.
+    """
     if not _gemini_available():
         raise _QuotaCooldown("Gemini grounding is in quota cooldown")
 
@@ -132,6 +139,7 @@ def _get_ddgs():
 
 
 def _ddg_search(query: str, max_results: int = 6) -> list[dict]:
+    """Run a DuckDuckGo text search and return title, snippet, and URL dicts."""
     DDGS = _get_ddgs()
     results = []
     try:
@@ -170,6 +178,7 @@ def _ddg_news(query: str, max_results: int = 8) -> list[dict]:
 
 
 def _format_ddg(query: str, results: list[dict]) -> str:
+    """Format DDG text search results as a numbered plain-text list."""
     if not results:
         return f"No results found for: {query}"
 
@@ -183,6 +192,7 @@ def _format_ddg(query: str, results: list[dict]) -> str:
 
 
 def _format_news(query: str, results: list[dict]) -> str:
+    """Format news results as a numbered plain-text list with sources and links."""
     if not results:
         return f"No news found for: {query}"
 
@@ -290,6 +300,7 @@ def _news(query: str) -> str:
     ddg_query    = clean_query if clean_query else "world news today"
 
     def _ddg_attempt() -> str:
+        """Fetch and format DDG news for the query."""
         return _format_news(ddg_query, _ddg_news(ddg_query, max_results=8))
 
     text = _run_bounded(_ddg_attempt, timeout=5.0, label="DDG news")
@@ -342,6 +353,7 @@ def _price(query: str) -> str:
 
 
 def _compare(items: list[str], aspect: str) -> str:
+    """Compare items on an aspect via Gemini, falling back to parallel DDG searches."""
     query = (
         f"Compare {', '.join(items)} in terms of {aspect}. "
         "Give specific facts and data."
@@ -356,6 +368,7 @@ def _compare(items: list[str], aspect: str) -> str:
     all_results: dict[str, list] = {}
 
     def _fetch_item(it: str) -> tuple[str, list]:
+        """Fetch DDG results for one item and aspect, returning an empty list on error."""
         try:
             return it, _ddg_search(f"{it} {aspect}", max_results=3)
         except Exception:
@@ -390,6 +403,9 @@ def web_search(
     player=None,
     session_memory=None,
 ) -> str:
+    """Tool entry point that dispatches to search, news, research, price, or compare.
+    Returns the result text, or an error message if all backends fail.
+    """
     params = parameters or {}
     query  = params.get("query", "").strip()
     mode   = params.get("mode",  "search").lower().strip()

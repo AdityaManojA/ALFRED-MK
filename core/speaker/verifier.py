@@ -35,6 +35,7 @@ class SpeakerVerifier:
         embedding_extractor: Optional[SpeakerEmbeddingExtractor] = None,
         default_threshold: float = DEFAULT_VERIFICATION_THRESHOLD,
     ) -> None:
+        """Set up the profile store, embedding extractor and default match threshold."""
         self.profile_store = profile_store or SpeakerProfileStore()
         self.extractor = embedding_extractor or CampplusOnnxExtractor()
         self.default_threshold = default_threshold

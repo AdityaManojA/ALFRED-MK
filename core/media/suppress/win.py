@@ -16,6 +16,7 @@ SUPPRESS_TIMEOUT_MS = 500
 
 @dataclass(eq=False)
 class _WindowsHandle:
+    """A Windows media session handle (SMTC or pycaw) with saved volume/mute state."""
     session: Any
     kind: str
     original_volume: float | None = None
@@ -26,10 +27,12 @@ class WindowsSuppressor(Suppressor):
     """Keep all external identities inside this module."""
 
     def enumerate_players(self) -> list[Any]:
+        """Return handles for playing SMTC sessions, falling back to pycaw audio sessions."""
         handles = self._smtc_sessions()
         return handles or self._pycaw_sessions()
 
     def _smtc_sessions(self) -> list[Any]:
+        """Return handles for currently playing SMTC sessions, excluding this app; empty list on error."""
         try:
             from winsdk.windows.media.control import (
                 GlobalSystemMediaTransportControlsSessionManager,
@@ -37,6 +40,7 @@ class WindowsSuppressor(Suppressor):
             )
 
             async def collect() -> list[Any]:
+                """Collect playing SMTC sessions other than this executable's."""
                 manager = await GlobalSystemMediaTransportControlsSessionManager.request_async()
                 out = []
                 own_executable = os.path.basename(sys.executable).lower()
@@ -56,6 +60,7 @@ class WindowsSuppressor(Suppressor):
             return []
 
     def _pycaw_sessions(self) -> list[Any]:
+        """Return handles for pycaw audio sessions of other processes; empty list on error."""
         try:
             from pycaw.pycaw import AudioUtilities
             current_pid = os.getpid()
@@ -70,6 +75,7 @@ class WindowsSuppressor(Suppressor):
             return []
 
     def pause(self, handle: Any) -> bool:
+        """Pause an SMTC session, or mute a pycaw session and remember its volume."""
         if not isinstance(handle, _WindowsHandle):
             return False
         try:
@@ -86,6 +92,7 @@ class WindowsSuppressor(Suppressor):
             return False
 
     def resume(self, handle: Any) -> bool:
+        """Play an SMTC session, or restore the volume of a session ALFRED muted."""
         if not isinstance(handle, _WindowsHandle):
             return False
         try:
@@ -102,6 +109,7 @@ class WindowsSuppressor(Suppressor):
         return False
 
     def is_playing(self, handle: Any) -> bool:
+        """SMTC handles are assumed playing; pycaw handles play unless ALFRED muted them."""
         if not isinstance(handle, _WindowsHandle):
             return False
         if handle.kind == "pycaw":

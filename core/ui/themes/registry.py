@@ -29,11 +29,13 @@ class ThemeRegistry:
 
     @classmethod
     def instance(cls) -> ThemeRegistry:
+        """Return the process-wide registry, creating it on first use."""
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance
 
     def __init__(self):
+        """Initialise the lookup tables and register every theme in ALL_THEMES."""
         self._by_id: Dict[str, ThemeDefinition] = {}
         self._by_hex: Dict[str, ThemeDefinition] = {}
         self._order: List[ThemeDefinition] = []

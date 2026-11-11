@@ -52,20 +52,17 @@ class TestDesktopShortcut(unittest.TestCase):
         """Verify PowerShell fallback is invoked if both pywin32 and wscript fail."""
         from ui import MainWindow
 
-        # Both win32com and wscript fail, file only exists after PowerShell
-        exists_calls = [False, False, True]
+        # Both win32com and wscript fail; the .lnk only exists once PowerShell has run.
+        mock_ps_run = MagicMock(return_value=MagicMock(returncode=0))
 
         def fake_exists(_self):
-            if exists_calls:
-                return exists_calls.pop(0)
-            return True
+            return mock_ps_run.called
 
-        with patch("subprocess.run") as mock_ps_run, \
+        with patch("subprocess.run", mock_ps_run), \
              patch("subprocess.Popen") as mock_wscript, \
              patch("pathlib.Path.exists", autospec=True, side_effect=fake_exists):
 
             mock_wscript.side_effect = FileNotFoundError("wscript not found")
-            mock_ps_run.return_value = MagicMock(returncode=0)
 
             with patch.dict("sys.modules", {"win32com.client": None}):
                 MainWindow._create_lnk_windows(

@@ -23,6 +23,7 @@ _UNDO_CONTENT_LIMIT = 1_000_000
 def _undo_move(src: Path, dst: Path):
     """Reverse of a move: put it back where it came from."""
     def _fn():
+        """Move the file back from dst to src and return a status message."""
         if not dst.exists():
             return f"'{dst.name}' is no longer there — nothing moved back."
         src.parent.mkdir(parents=True, exist_ok=True)
@@ -37,6 +38,7 @@ def _undo_create(target: Path):
     Deliberately refuses to touch a directory that has since been filled: the
     undo for 'create a folder' is not 'delete whatever ended up in it'."""
     def _fn():
+        """Remove the created file or empty folder and return a status message."""
         if not target.exists():
             return f"'{target.name}' is already gone."
         if target.is_dir():
@@ -54,6 +56,7 @@ def _undo_write(target: Path, previous: str | None):
     """Reverse of a write: restore the old contents, or remove a file that did
     not exist before the write created it."""
     def _fn():
+        """Restore the previous contents, or delete the file if it did not exist before."""
         if previous is None:
             if target.exists():
                 target.unlink()
@@ -102,6 +105,7 @@ def _is_safe_path(target: Path) -> bool:
 
 
 def _get_desktop() -> Path:
+    """Return the Desktop directory, honouring XDG_DESKTOP_DIR on Linux."""
     if _OS == "Linux":
         xdg = os.environ.get("XDG_DESKTOP_DIR", "")
         if xdg and Path(xdg).exists():
@@ -109,6 +113,7 @@ def _get_desktop() -> Path:
     return Path.home() / "Desktop"
 
 def _get_downloads() -> Path:
+    """Return the Downloads directory, honouring XDG_DOWNLOAD_DIR on Linux."""
     if _OS == "Linux":
         xdg = os.environ.get("XDG_DOWNLOAD_DIR", "")
         if xdg and Path(xdg).exists():
@@ -116,6 +121,7 @@ def _get_downloads() -> Path:
     return Path.home() / "Downloads"
 
 def _get_documents() -> Path:
+    """Return the Documents directory, honouring XDG_DOCUMENTS_DIR on Linux."""
     if _OS == "Linux":
         xdg = os.environ.get("XDG_DOCUMENTS_DIR", "")
         if xdg and Path(xdg).exists():
@@ -123,6 +129,7 @@ def _get_documents() -> Path:
     return Path.home() / "Documents"
 
 def _get_pictures() -> Path:
+    """Return the Pictures directory, honouring XDG_PICTURES_DIR on Linux."""
     if _OS == "Linux":
         xdg = os.environ.get("XDG_PICTURES_DIR", "")
         if xdg and Path(xdg).exists():
@@ -130,6 +137,7 @@ def _get_pictures() -> Path:
     return Path.home() / "Pictures"
 
 def _get_music() -> Path:
+    """Return the Music directory, honouring XDG_MUSIC_DIR on Linux."""
     if _OS == "Linux":
         xdg = os.environ.get("XDG_MUSIC_DIR", "")
         if xdg and Path(xdg).exists():
@@ -137,6 +145,7 @@ def _get_music() -> Path:
     return Path.home() / "Music"
 
 def _get_videos() -> Path:
+    """Return the Videos directory, honouring XDG_VIDEOS_DIR on Linux."""
     if _OS == "Linux":
         xdg = os.environ.get("XDG_VIDEOS_DIR", "")
         if xdg and Path(xdg).exists():
@@ -145,6 +154,9 @@ def _get_videos() -> Path:
 
 
 def _resolve_path(raw: str) -> Path:
+    """Resolve a raw path string, expanding folder shortcuts like desktop or downloads.
+    Supports a shortcut followed by a sub-path; otherwise expands ~ and returns it.
+    """
     shortcuts: dict[str, Path] = {
         "desktop":   _get_desktop(),
         "downloads": _get_downloads(),
@@ -173,6 +185,7 @@ def _resolve_path(raw: str) -> Path:
     return Path(raw).expanduser()
 
 def _format_size(b: int) -> str:
+    """Format a byte count as a human-readable size string (B to TB)."""
     for unit in ["B", "KB", "MB", "GB", "TB"]:
         if b < 1024:
             return f"{b:.1f} {unit}"
@@ -180,6 +193,7 @@ def _format_size(b: int) -> str:
     return f"{b:.1f} TB"
 
 def _safe_trash(target: Path) -> str:
+    """Send a path to the OS trash via send2trash; refuses if send2trash is missing."""
 
     if not _SEND2TRASH:
         return (
@@ -192,6 +206,7 @@ def _safe_trash(target: Path) -> str:
 
 
 def list_files(path: str = "desktop", show_hidden: bool = False) -> str:
+    """List a directory's entries with sizes, optionally including hidden files."""
     try:
         target = _resolve_path(path)
         if not _is_safe_path(target):
@@ -223,6 +238,7 @@ def list_files(path: str = "desktop", show_hidden: bool = False) -> str:
 
 
 def create_file(path: str, name: str = "", content: str = "") -> str:
+    """Create (or overwrite) a file with content and push an undo entry."""
     try:
         base   = _resolve_path(path)
         target = (base / name) if name else base
@@ -245,6 +261,7 @@ def create_file(path: str, name: str = "", content: str = "") -> str:
 
 
 def create_folder(path: str, name: str = "") -> str:
+    """Create a folder (with parents) and push an undo entry if it is new."""
     try:
         base   = _resolve_path(path)
         target = (base / name) if name else base
@@ -263,6 +280,9 @@ def create_folder(path: str, name: str = "") -> str:
 
 
 def delete_file(path: str, name: str = "") -> str:
+    """Move a file or folder to the trash, refusing protected user folders.
+    Pushes an undo entry that tries to restore it from the trash.
+    """
     try:
         base   = _resolve_path(path)
         target = (base / name) if name else base
@@ -293,6 +313,7 @@ def delete_file(path: str, name: str = "") -> str:
 
 
 def move_file(path: str, name: str = "", destination: str = "") -> str:
+    """Move a file or folder to a destination and push an undo entry to move it back."""
     try:
         base   = _resolve_path(path)
         src    = (base / name) if name else base
@@ -322,6 +343,7 @@ def move_file(path: str, name: str = "", destination: str = "") -> str:
 
 
 def copy_file(path: str, name: str = "", destination: str = "") -> str:
+    """Copy a file or folder to a destination and push an undo that deletes the copy."""
     try:
         base = _resolve_path(path)
         src  = (base / name) if name else base
@@ -349,6 +371,7 @@ def copy_file(path: str, name: str = "", destination: str = "") -> str:
         # The undo for a copy is deleting the copy — never the original.
         _copy = dst.resolve()
         def _undo_copy():
+            """Delete the copied file or folder and return a status message."""
             if not _copy.exists():
                 return f"The copy '{_copy.name}' is already gone."
             if _copy.is_dir():
@@ -365,6 +388,7 @@ def copy_file(path: str, name: str = "", destination: str = "") -> str:
 
 
 def rename_file(path: str, name: str = "", new_name: str = "") -> str:
+    """Rename a file or folder in place and push an undo entry to rename it back."""
     try:
         base     = _resolve_path(path)
         target   = (base / name) if name else base
@@ -390,6 +414,7 @@ def rename_file(path: str, name: str = "", new_name: str = "") -> str:
 
 
 def read_file(path: str, name: str = "", max_chars: int = 4000) -> str:
+    """Return a text file's contents, truncated to max_chars with a size note."""
     try:
         base   = _resolve_path(path)
         target = (base / name) if name else base
@@ -413,6 +438,9 @@ def read_file(path: str, name: str = "", max_chars: int = 4000) -> str:
 
 def write_file(path: str, name: str = "", content: str = "",
                append: bool = False) -> str:
+    """Write or append content to a file, snapshotting old contents for undo.
+    Files over the undo size limit or unreadable ones are written without an undo.
+    """
     try:
         base   = _resolve_path(path)
         target = (base / name) if name else base
@@ -450,6 +478,9 @@ def write_file(path: str, name: str = "", content: str = "",
 
 def find_files(name: str = "", extension: str = "",
                path: str = "home", max_results: int = 20) -> str:
+    """Recursively search for files by name substring and/or extension.
+    Stops after max_results matches or 500 directories; returns a formatted list.
+    """
     try:
         search_path = _resolve_path(path)
         if not _is_safe_path(search_path):
@@ -489,6 +520,7 @@ def find_files(name: str = "", extension: str = "",
 
 
 def get_largest_files(path: str = "desktop", count: int = 10) -> str:
+    """Return a formatted list of the largest files under a path (at most 50)."""
     count = min(count, 50)  # maksimum 50
     try:
         search_path = _resolve_path(path)
@@ -522,6 +554,7 @@ def get_largest_files(path: str = "desktop", count: int = 10) -> str:
 
 
 def get_disk_usage(path: str = "desktop") -> str:
+    """Return total, used and free disk space for the drive holding a path."""
     try:
         target = _resolve_path(path)
         usage  = shutil.disk_usage(target)
@@ -537,6 +570,9 @@ def get_disk_usage(path: str = "desktop") -> str:
 
 
 def organize_desktop() -> str:
+    """Move loose Desktop files into type folders (Images, Documents, etc.).
+    Skips name conflicts and pushes one undo entry that reverses all moves.
+    """
     type_map = {
         "Images":    {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".svg", ".ico", ".heic"},
         "Documents": {".pdf", ".doc", ".docx", ".txt", ".xls", ".xlsx",
@@ -585,6 +621,7 @@ def organize_desktop() -> str:
         # ungated.
         if journal:
             def _undo_organize(entries=tuple(journal)):
+                """Move organized files back to the Desktop and remove now-empty type folders."""
                 restored = 0
                 for origin, moved_to in entries:
                     try:
@@ -620,6 +657,7 @@ def organize_desktop() -> str:
 
 
 def get_file_info(path: str, name: str = "") -> str:
+    """Return name, type, size, location, timestamps and extension of a path."""
     try:
         base   = _resolve_path(path)
         target = (base / name) if name else base
@@ -709,6 +747,7 @@ def explore_folder(path_str: str) -> str:
 
 
 def _is_restricted_path(p) -> bool:
+    """Return True if the path falls under the heavenly restriction rule."""
     return is_heavenly_restricted(p)
 
 
@@ -718,6 +757,9 @@ def file_controller(
     player=None,
     session_memory=None,
 ) -> str:
+    """Tool handler that validates paths and dispatches a file action.
+    Returns the action's status string or an error message.
+    """
     params = parameters or {}
     action = params.get("action", "").lower().strip()
     path   = params.get("path", "desktop")

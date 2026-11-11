@@ -43,6 +43,7 @@ class PrefetchRecord:
     created_at: float
 
     def is_expired(self, ttl_s: float = PREFETCH_TTL_S) -> bool:
+        """Return True if this record is older than ``ttl_s`` seconds."""
         return (time.monotonic() - self.created_at) > ttl_s
 
 
@@ -55,6 +56,7 @@ class SpeculativePrefetcher:
         max_entries: int = MAX_PREFETCH_ENTRIES,
         max_workers: int = PREFETCH_MAX_WORKERS,
     ) -> None:
+        """Set TTL and size limits, the LRU cache and the background resolver thread pool."""
         self.ttl_s = ttl_s
         self.max_entries = max_entries
         self._cache: collections.OrderedDict[str, PrefetchRecord] = collections.OrderedDict()
@@ -147,6 +149,10 @@ class SpeculativePrefetcher:
             self._dispatch_async("dns", "google.com", lambda: self._pure_dns_warm("www.google.com"))
 
     def _dispatch_async(self, intent_type: str, key: str, resolver_fn: Callable[[], Any]) -> None:
+        """Resolve ``resolver_fn`` on the thread pool and cache the result.
+
+        Skips if a fresh cached result exists or the same key is already in flight.
+        """
         cache_key = f"{intent_type}:{key}"
         with self._cache_lock:
             if cache_key in self._cache:
@@ -158,6 +164,7 @@ class SpeculativePrefetcher:
             self._inflight.add(cache_key)
 
         def _task():
+            """Run the resolver, store its result, and clear the in-flight marker."""
             try:
                 res = resolver_fn()
                 self.store(intent_type, key, res)

@@ -21,9 +21,11 @@ class WindowsPlatformBackend(PlatformBackend):
     """Windows implementation delegating to existing Win32, pycaw, and UI Automation mechanisms."""
 
     def platform_name(self) -> str:
+        """Return the platform identifier string 'windows'."""
         return "windows"
 
     def window_flags(self) -> Qt.WindowType:
+        """Return the Qt window flags for a frameless, always-on-top top-level window."""
         return (
             Qt.WindowType.Window
             | Qt.WindowType.FramelessWindowHint
@@ -31,10 +33,14 @@ class WindowsPlatformBackend(PlatformBackend):
         )
 
     def make_toplevel(self, widget: QWidget) -> None:
+        """Apply the platform window flags and a translucent background to the widget."""
         widget.setWindowFlags(self.window_flags())
         widget.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
 
     def tts_speak(self, text: str, voice: Optional[str] = None, speed: float = 1.0) -> bool:
+        """Speak text through System.Speech in a hidden PowerShell process.
+        Returns True if the process was launched; voice and speed are ignored.
+        """
         # Standard SAPI / PowerShell / pyttsx3 fallback
         try:
             cmd = f"Add-Type -AssemblyName System.speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak('{text.replace('\'', '\'\'')}')"
@@ -45,9 +51,11 @@ class WindowsPlatformBackend(PlatformBackend):
             return False
 
     def stt_listen(self) -> None:
+        """No-op placeholder for platform speech-to-text listening."""
         pass
 
     def frontmost(self) -> dict[str, Any]:
+        """Return app id, spoken label and browser/home-base flags of the frontmost surface, or {} on failure."""
         try:
             from core.sentry.focus.platform.win import WinPlatformReader
             reader = WinPlatformReader()
@@ -63,6 +71,9 @@ class WindowsPlatformBackend(PlatformBackend):
             return {}
 
     def capture_screen(self, save_path: Optional[Path] = None) -> Optional[Path]:
+        """Capture monitor 1 and save it to save_path or a timestamped Desktop file.
+        Returns the saved path, or None on failure.
+        """
         try:
             from actions.screen_processor import capture_screen
             dest = save_path or (Path.home() / "Desktop" / f"alfred_shot_{int(time.time())}.png")
@@ -75,6 +86,7 @@ class WindowsPlatformBackend(PlatformBackend):
         return None
 
     def set_volume(self, pct: int) -> bool:
+        """Set the master speaker volume (clamped to 0-100) via pycaw; returns success."""
         try:
             from ctypes import cast, POINTER
             from comtypes import CLSCTX_ALL
@@ -89,6 +101,7 @@ class WindowsPlatformBackend(PlatformBackend):
             return False
 
     def get_volume(self) -> Optional[int]:
+        """Return the master speaker volume percentage via pycaw, or None on failure."""
         try:
             from ctypes import cast, POINTER
             from comtypes import CLSCTX_ALL
@@ -101,6 +114,7 @@ class WindowsPlatformBackend(PlatformBackend):
             return None
 
     def pause_audio(self) -> bool:
+        """Broadcast a WM_APPCOMMAND media-pause message; returns success."""
         try:
             import ctypes
             ctypes.windll.user32.PostMessageW(0xFFFF, 0x0319, 0, 47 << 16) # WM_APPCOMMAND APPCOMMAND_MEDIA_PAUSE
@@ -109,6 +123,7 @@ class WindowsPlatformBackend(PlatformBackend):
             return False
 
     def resume_audio(self) -> bool:
+        """Broadcast a WM_APPCOMMAND media-play message; returns success."""
         try:
             import ctypes
             ctypes.windll.user32.PostMessageW(0xFFFF, 0x0319, 0, 46 << 16) # WM_APPCOMMAND APPCOMMAND_MEDIA_PLAY
@@ -117,6 +132,7 @@ class WindowsPlatformBackend(PlatformBackend):
             return False
 
     def paste(self, text: str) -> bool:
+        """Copy text to the clipboard and send Ctrl+V; returns False on any error."""
         try:
             import pyperclip
             import pyautogui
@@ -128,6 +144,7 @@ class WindowsPlatformBackend(PlatformBackend):
             return False
 
     def hotkey(self, *keys: str) -> bool:
+        """Press the given key combination with pyautogui; returns False on any error."""
         try:
             import pyautogui
             pyautogui.hotkey(*keys)

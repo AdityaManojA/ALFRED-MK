@@ -48,6 +48,7 @@ _YT_VIDEO_FILTER = "EgIQAQ%3D%3D"
 
 @dataclass
 class PlayableRef:
+    """A resolved playable media reference (kind, URI, display title, optional audio stream)."""
     kind: Literal["youtube", "direct_url", "local_file"]
     uri: str                          # playable URI
     title: str                        # display + TTS (never a raw URL)
@@ -62,21 +63,25 @@ class PlayableRef:
 # ---------------------------------------------------------------------------
 
 def _base_dir() -> Path:
+    """Return the app base directory (executable dir when frozen, else the repo root)."""
     if getattr(sys, "frozen", False):
         return Path(sys.executable).parent
     return Path(__file__).resolve().parent.parent.parent
 
 
 def _extract_yt_id(url: str) -> str | None:
+    """Extract the YouTube video ID from a URL, or None if not found."""
     m = _YT_PATTERN.search(url)
     return m.group(1) if m else None
 
 
 def _is_yt_url(text: str) -> bool:
+    """Return True if the text contains a YouTube URL."""
     return bool(_YT_PATTERN.search(text))
 
 
 def _is_http_url(text: str) -> bool:
+    """Return True if the text starts with http:// or https://."""
     return text.startswith(("http://", "https://"))
 
 

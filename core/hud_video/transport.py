@@ -70,6 +70,7 @@ class VideoState:
         return self
 
     def __eq__(self, other: Any) -> bool:
+        """Compare equal to a VideoStatus or its value/name string; otherwise use default equality."""
         if isinstance(other, VideoStatus):
             return self.status == other
         if isinstance(other, str):

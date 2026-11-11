@@ -15,7 +15,10 @@ from core.ui.themes.schema import PaletteDefinition
 
 
 class WatchtowerFluxRingVisual(SlotVisual):
+    """Slot 1: outer primary ring and inner dashed accent ring around the panel centre."""
+
     def __init__(self) -> None:
+        """Initialise pens, font and geometry placeholders for this slot."""
         super().__init__()
         self.rot: float = 0.0
         self.pen_ring = QPen()
@@ -24,6 +27,7 @@ class WatchtowerFluxRingVisual(SlotVisual):
         self.rect_inner = QRectF()
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build ring and reticle pens and compute the inner panel rect."""
         c_pri = QColor(palette.pri)
         c_acc = QColor(palette.acc)
         self.pen_ring = QPen(c_pri, 1.4)
@@ -32,9 +36,11 @@ class WatchtowerFluxRingVisual(SlotVisual):
         self.rect_inner = QRectF(bx, by, bw, bh)
 
     def tick(self, dt: float, signals: HudSignals) -> None:
+        """Advance the rotation value."""
         self.rot = (self.rot + dt * 1.5) % (2.0 * math.pi)
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
+        """Draw the header, outer ring and dashed inner reticle circle."""
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_ring)
         painter.drawText(QRectF(rect.x() + 8, rect.y() + 4, rect.width() - 16, 14),
@@ -48,22 +54,28 @@ class WatchtowerFluxRingVisual(SlotVisual):
 
 
 class WatchtowerPowerOutputVisual(SlotVisual):
+    """Slot 2: static 120-degree power arc above the panel centre."""
+
     def __init__(self) -> None:
+        """Initialise pens, font and geometry placeholders for this slot."""
         super().__init__()
         self.pen_arc = QPen()
         self.font_hdr = QFont("Consolas", 6, QFont.Weight.Bold)
         self.rect_inner = QRectF()
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build the arc pen and compute the inner panel rect."""
         c_pri = QColor(palette.pri)
         self.pen_arc = QPen(c_pri, 2.0)
         bx, by, bw, bh = rect.x() + 8.0, rect.y() + 20.0, rect.width() - 16.0, rect.height() - 28.0
         self.rect_inner = QRectF(bx, by, bw, bh)
 
     def tick(self, dt: float, signals: HudSignals) -> None:
+        """No-op; this visual is static."""
         pass
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
+        """Draw the header and a fixed power-output arc."""
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_arc)
         painter.drawText(QRectF(rect.x() + 8, rect.y() + 4, rect.width() - 16, 12),
@@ -74,22 +86,28 @@ class WatchtowerPowerOutputVisual(SlotVisual):
 
 
 class WatchtowerHoloManVisual(SlotVisual):
+    """Slot 3: header plus a static frame around the inner panel."""
+
     def __init__(self) -> None:
+        """Initialise pens, font and geometry placeholders for this slot."""
         super().__init__()
         self.pen_holo = QPen()
         self.font_hdr = QFont("Consolas", 6, QFont.Weight.Bold)
         self.rect_inner = QRectF()
 
     def prepare(self, palette: PaletteDefinition, rect: QRectF) -> None:
+        """Build the pen and compute the inner panel rect."""
         c_pri = QColor(palette.pri)
         self.pen_holo = QPen(c_pri, 1.2)
         bx, by, bw, bh = rect.x() + 8.0, rect.y() + 18.0, rect.width() - 16.0, rect.height() - 24.0
         self.rect_inner = QRectF(bx, by, bw, bh)
 
     def tick(self, dt: float, signals: HudSignals) -> None:
+        """No-op; this visual is static."""
         pass
 
     def paint(self, painter: QPainter, rect: QRectF) -> None:
+        """Draw the header and the panel outline."""
         painter.setFont(self.font_hdr)
         painter.setPen(self.pen_holo)
         painter.drawText(QRectF(rect.x() + 8, rect.y() + 3, rect.width() - 16, 12),

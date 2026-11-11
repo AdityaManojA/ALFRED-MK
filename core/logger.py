@@ -39,6 +39,7 @@ def redact_signed_urls(text: str) -> str:
         return text
 
     def _replace(match: re.Match) -> str:
+        """Reduce a matched URL to scheme://host/…, leaving it unchanged if it has no host."""
         url = match.group(0)
         try:
             parsed = urllib.parse.urlsplit(url)

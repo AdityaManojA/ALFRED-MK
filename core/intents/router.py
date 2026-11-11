@@ -83,6 +83,7 @@ class IntentRouter:
     ]
 
     def __init__(self, cache_size: int = PHRASE_CACHE_SIZE):
+        """Set the phrase-cache size and initialise the LRU cache and listener list."""
         self.cache_size = cache_size
         self._cache: collections.OrderedDict[str, IntentMatch] = collections.OrderedDict()
         self._listeners: List[Callable[[IntentMatch], None]] = []

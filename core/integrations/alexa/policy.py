@@ -9,6 +9,7 @@ from typing import Any, Dict, Optional, Set
 
 
 class AlexaRiskLevel(Enum):
+    """Risk tiers for Alexa actions, from read-only to denied."""
     READ_ONLY = 0
     REVERSIBLE = 1
     SENSITIVE = 2
@@ -17,6 +18,7 @@ class AlexaRiskLevel(Enum):
 
 @dataclass(frozen=True)
 class AuthorizationDecision:
+    """Result of an authorization check: allowed flag, risk level and reason."""
     allowed: bool
     risk_level: AlexaRiskLevel
     reason: str
@@ -24,6 +26,7 @@ class AuthorizationDecision:
 
 @dataclass(frozen=True)
 class AlexaContext:
+    """Request metadata for an Alexa command (request id, hashed user/device, timestamp)."""
     request_id: str
     user_hash: str = ""
     device_hash: str = ""
@@ -97,6 +100,7 @@ class AlexaActionPolicy:
     """Policy engine enforcing strict permission checks on all incoming Alexa requests."""
 
     def __init__(self, allowed_overrides: Optional[dict[str, bool]] = None) -> None:
+        """Initialise per-intent user permission toggles from ``allowed_overrides``."""
         # User toggles (e.g. from Manage Permissions panel)
         self._user_permissions: dict[str, bool] = dict(allowed_overrides or {})
 

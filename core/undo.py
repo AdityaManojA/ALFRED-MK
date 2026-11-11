@@ -48,6 +48,7 @@ MAX_DEPTH = 10
 
 @dataclass
 class _Entry:
+    """An undoable step: spoken label, undo callable and creation time."""
     label:   str                    # human sentence, spoken back to the user
     undo:    Callable[[], str]      # returns a short result string
     at:      float = field(default_factory=time.monotonic)
@@ -77,6 +78,7 @@ def push_undo(label: str, undo_fn: Callable[[], str]) -> None:
 
 
 def can_undo() -> bool:
+    """True if at least one reversible operation is on the stack."""
     with _lock:
         return bool(_stack)
 

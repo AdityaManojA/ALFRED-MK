@@ -255,7 +255,9 @@ def train_local() -> None:
     print(f"  Train: {len(train_idx)}  Val: {len(val_idx)}")
 
     class AlfredWakeNet(nn.Module):
+        """Small MLP that classifies wake-word feature windows with a sigmoid output."""
         def __init__(self):
+            """Build the 1536-64-32-1 layers with layer norm, dropout and ReLU."""
             super().__init__()
             self.fc1   = nn.Linear(1536, 64)
             self.norm1 = nn.LayerNorm(64)
@@ -269,6 +271,7 @@ def train_local() -> None:
             self.sig   = nn.Sigmoid()
 
         def forward(self, x):
+            """Flatten the input and return the wake-word probability per sample."""
             x = x.reshape(x.shape[0], -1)
             x = self.drop1(self.relu1(self.norm1(self.fc1(x))))
             x = self.drop2(self.relu2(self.norm2(self.fc2(x))))
@@ -388,6 +391,7 @@ def train_local() -> None:
 
 
 def main() -> None:
+    """CLI entry point: dispatch to recording, zip packaging or local training by flag."""
     parser = argparse.ArgumentParser(description="Multi-User Voice Dataset Recorder & Trainer")
     parser.add_argument("--speaker", type=str, default="user", help="Speaker name (e.g. aditya, friend)")
     parser.add_argument("--record-positive", action="store_true", help="Record positive wake-word utterances")

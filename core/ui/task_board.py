@@ -12,6 +12,9 @@ class TaskBoard(QFrame):
     """Compact HUD board for pending work, reminder acknowledgement, and macro abort."""
 
     def __init__(self, scheduler, parent: QWidget) -> None:
+        """Build the frameless task board with pause and close buttons, a notice label and a scrollable task list.
+        Starts a one-second timer that refreshes the board.
+        """
         super().__init__(parent)
         self.scheduler = scheduler
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
@@ -40,6 +43,7 @@ class TaskBoard(QFrame):
         self.refresh()
 
     def present_event(self, task: dict) -> None:
+        """Show an armed-macro or delivered-reminder notice for `task`, then refresh the rows."""
         if task.get("action_type") == "macro" and task.get("warned") and task.get("status") == "pending":
             self._notice.setText("AUTOMATION ARMED: executing in 10 seconds. Use ABORT to cancel.")
             self._notice.setStyleSheet("color:#ffbc5b; border:1px solid #9d6a1e; padding:5px;")
@@ -51,16 +55,19 @@ class TaskBoard(QFrame):
         self.refresh()
 
     def _toggle_pause(self) -> None:
+        """Toggle the scheduler's paused state and refresh the board."""
         self.scheduler.set_paused(not self.scheduler.paused)
         self.refresh()
 
     def _clear_rows(self) -> None:
+        """Remove all task rows from the list, deleting their widgets."""
         while self._rows.count():
             item = self._rows.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
 
     def refresh(self) -> None:
+        """Rebuild the task rows (sorted by trigger time) and the pause button label from the scheduler."""
         self._pause.setText("RESUME" if self.scheduler.paused else "PAUSE")
         self._clear_rows()
         tasks = self.scheduler.list_tasks()
@@ -87,13 +94,17 @@ class TaskBoard(QFrame):
         self._rows.addStretch()
 
     def _abort(self, task_id: str) -> None:
+        """Cancel the given task and refresh the board."""
         self.scheduler.cancel(task_id); self.refresh()
 
     def _ack(self, task_id: str) -> None:
+        """Acknowledge the given task and refresh the board."""
         self.scheduler.acknowledge(task_id); self.refresh()
 
     def _now(self, task_id: str) -> None:
+        """Trigger the given task immediately and refresh the board."""
         self.scheduler.trigger_now(task_id); self.refresh()
 
     def _delete(self, task_id: str) -> None:
+        """Delete the given task and refresh the board."""
         self.scheduler.delete(task_id); self.refresh()

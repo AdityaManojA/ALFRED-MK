@@ -20,6 +20,7 @@ class FileLogTarget(MonitorTarget):
         silence_timeout_min: float = 0.0,
         interval_s: float = 4.0,
     ) -> None:
+        """Store the log path, optional pattern and silence timeout, starting from the file's current end."""
         super().__init__(target_id, name, interval_s)
         self.file_path = Path(file_path).resolve()
         self.regex = re.compile(pattern, re.I) if pattern else None
@@ -35,9 +36,13 @@ class FileLogTarget(MonitorTarget):
                 pass
 
     def describe(self) -> str:
+        """Return a short description naming the log file."""
         return f"log file '{self.file_path.name}'"
 
     def poll(self) -> TargetStatus:
+        """Read newly appended log text and alert on a pattern match, or finish after the silence timeout.
+        Returns the resulting target status.
+        """
         self.last_poll_t = time.time()
         if not self.file_path.exists():
             self.status = TargetStatus.RUNNING

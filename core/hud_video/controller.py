@@ -96,6 +96,7 @@ class HudVideoController(QObject):
         parent: QObject | None = None,
         resolver_fn: Callable[[str], PlayableRef] | None = None,
     ) -> None:
+        """Initialise playback state, backend/surface callback slots, timers, and thread-marshalling signals."""
         super().__init__(parent)
         self._resolver_fn = resolver_fn
 
@@ -277,33 +278,39 @@ class HudVideoController(QObject):
         self._do_stop()
 
     def set_muted(self, muted: bool) -> None:
+        """Set the mute state, marshalling to the GUI thread if called off-thread."""
         if self._is_off_thread():
             self._sig_set_muted.emit(muted)
             return
         self._do_set_muted(muted)
 
     def _do_set_muted(self, muted: bool) -> None:
+        """Store the mute state and forward it to the backend callback (GUI thread only)."""
         assert_gui_thread()
         self._muted = muted
         if self._on_backend_set_muted:
             self._on_backend_set_muted(muted)
 
     def toggle_mute(self) -> None:
+        """Toggle the mute state."""
         self.set_muted(not self._muted)
 
     def set_volume(self, volume: float) -> None:
+        """Set the volume, marshalling to the GUI thread if called off-thread."""
         if self._is_off_thread():
             self._sig_set_volume.emit(volume)
             return
         self._do_set_volume(volume)
 
     def _do_set_volume(self, volume: float) -> None:
+        """Clamp and store the volume and forward it to the backend unless muted (GUI thread only)."""
         assert_gui_thread()
         self._volume = max(0.0, min(1.0, volume))
         if not self._muted and self._on_backend_set_volume:
             self._on_backend_set_volume(self._volume)
 
     def step_volume(self, delta: float) -> None:
+        """Change the volume by delta."""
         self.set_volume(self._volume + delta)
 
     def duck(self) -> None:
@@ -416,6 +423,7 @@ class HudVideoController(QObject):
         self._do_begin_resolve(status, source_query)
 
     def _do_begin_resolve(self, status: str, source_query: str) -> None:
+        """Reset playback state, enter RESOLVING, show the surface, and start the resolve timeout."""
         assert_gui_thread()
         self._stop_all_timers()
         self._ref = None
@@ -441,6 +449,7 @@ class HudVideoController(QObject):
         self._do_source_ready(ref, start_s)
 
     def _do_source_ready(self, ref: PlayableRef, start_s: float = 0.0) -> None:
+        """Accept a resolved ref while RESOLVING: queue any start offset, enter LOADING, and start the backend."""
         assert_gui_thread()
         self._resolve_timer.stop()
         if self._status != VideoStatus.RESOLVING:
@@ -461,6 +470,7 @@ class HudVideoController(QObject):
         self._do_signal_error(message)
 
     def _do_signal_error(self, message: str) -> None:
+        """Log the error, stop timers and backend, enter ERROR state, emit failed, and start the error-clear timer."""
         assert_gui_thread()
         log.warning("[HudVideo] error: %s", message)
         self._stop_all_timers()
@@ -483,6 +493,9 @@ class HudVideoController(QObject):
             return False
 
     def _do_play(self, ref: PlayableRef | None, muted: bool) -> None:
+        """Play a new ref (stopping any current one and resetting state), or with ref=None
+        replay if ENDED or resume if PAUSED.
+        """
         assert_gui_thread()
         if ref is not None:
             # New media reference: stop existing and load
@@ -517,6 +530,7 @@ class HudVideoController(QObject):
                 self._on_backend_resume()
 
     def _do_pause(self) -> None:
+        """Pause if PLAYING, update status, and start the idle-unload timer."""
         assert_gui_thread()
         if self._status == VideoStatus.PLAYING:
             self._set_state(VideoStatus.PAUSED)
@@ -526,6 +540,7 @@ class HudVideoController(QObject):
             self._idle_timer.start(VIDEO_IDLE_UNLOAD_S * 1000)
 
     def _do_toggle(self) -> None:
+        """Pause when playing; resume or replay when paused or ended."""
         assert_gui_thread()
         if self._status == VideoStatus.PLAYING:
             self._do_pause()
@@ -533,6 +548,7 @@ class HudVideoController(QObject):
             self._do_play(None, self._muted)
 
     def _do_replay(self) -> None:
+        """Seek to 0, set PLAYING, and resume the backend (or restart it from the stored ref)."""
         assert_gui_thread()
         self._idle_timer.stop()
         self._position_s = 0.0
@@ -546,6 +562,7 @@ class HudVideoController(QObject):
             self._on_backend_play(self._ref, self._muted)
 
     def _do_seek(self, abs_s: float) -> bool:
+        """Clamp the target to the duration (minus end margin), seek the backend, emit state; returns True."""
         assert_gui_thread()
         clamped = clamp_seek(abs_s, self._duration_s, END_MARGIN_S)
         self._position_s = clamped
@@ -555,11 +572,13 @@ class HudVideoController(QObject):
         return True
 
     def _do_seek_rel(self, delta_s: float) -> bool:
+        """Seek relative to the current position by delta_s seconds."""
         assert_gui_thread()
         target = self._position_s + delta_s
         return self._do_seek(target)
 
     def _do_stop(self) -> None:
+        """Stop timers and backend, reset all playback state to IDLE, and hide the surface."""
         assert_gui_thread()
         self._stop_all_timers()
         self._do_stop_backend()
@@ -582,6 +601,9 @@ class HudVideoController(QObject):
         self._set_status("Re-connecting stream…")
 
         def _worker():
+            """Thread body: re-resolve the query and post the new ref back via _sig_play;
+            signal an error if resolution fails.
+            """
             try:
                 resolver = self._resolver_fn
                 if resolver is None:
@@ -598,6 +620,7 @@ class HudVideoController(QObject):
         t.start()
 
     def _set_state(self, status: VideoStatus) -> None:
+        """Set the status, hold/release the audio gate for resolving/media states, and emit state."""
         assert_gui_thread()
         self._status = status
         try:
@@ -617,10 +640,12 @@ class HudVideoController(QObject):
         self._emit_state(time.monotonic())
 
     def _set_status(self, text: str) -> None:
+        """Emit the status text to listeners."""
         assert_gui_thread()
         self.status_text_changed.emit(text)
 
     def _emit_state(self, now: float | None = None) -> None:
+        """Record the emit time and emit the current state on video_state_changed and state_changed."""
         assert_gui_thread()
         self._last_emit_time = now if now is not None else time.monotonic()
         curr_state = self.state()
@@ -628,6 +653,7 @@ class HudVideoController(QObject):
         self.state_changed.emit(curr_state)
 
     def _do_stop_backend(self) -> None:
+        """Invoke the backend stop callback, logging and swallowing any exception."""
         assert_gui_thread()
         if self._on_backend_stop:
             try:
@@ -636,15 +662,18 @@ class HudVideoController(QObject):
                 log.debug("[HudVideo] backend stop error: %s", exc)
 
     def _stop_all_timers(self) -> None:
+        """Stop the idle, error, and resolve timers."""
         self._idle_timer.stop()
         self._error_timer.stop()
         self._resolve_timer.stop()
 
     def _on_idle_timeout(self) -> None:
+        """Stop playback when the idle timer fires while still paused."""
         if self._status == VideoStatus.PAUSED:
             self.stop()
 
     def _clear_error(self) -> None:
+        """Clear the error state back to IDLE and hide the surface."""
         self._ref = None
         self._loaded = False
         self._set_state(VideoStatus.IDLE)
@@ -653,5 +682,6 @@ class HudVideoController(QObject):
             self._on_hide_surface()
 
     def _on_resolve_timeout(self) -> None:
+        """Signal a resolve_timeout error if still resolving when the timer fires."""
         if self._status == VideoStatus.RESOLVING:
             self.signal_error("resolve_timeout")

@@ -31,6 +31,7 @@ from typing import Generator, Any, Callable, Tuple, List, Dict, Optional
 from core import gemini
 
 def _get_api_key() -> str:
+    """Read the Gemini API key from config/api_keys.json."""
     config_path = Path(__file__).resolve().parent.parent / "config" / "api_keys.json"
     with open(config_path, "r", encoding="utf-8") as f:
         return json.load(f)["gemini_api_key"]
@@ -40,7 +41,9 @@ def _gemini_client(tier: str = gemini.SMART):
     """Summarising documents and reading images — the reasoning tier, with a
     long deadline because the input can be a whole file."""
     class _W:
+        """Thin wrapper exposing generate_content over the shared Gemini model ladder."""
         def generate_content(self, contents):
+            """Call Gemini at the bound tier with a 90s deadline; raise if every model fails."""
             resp = gemini.call(contents, tier=tier, timeout_ms=90000)
             if resp is None:
                 raise RuntimeError("every Gemini model on the ladder failed")
@@ -50,6 +53,9 @@ def _gemini_client(tier: str = gemini.SMART):
 
 
 def _detect_type(path: Path) -> str:
+    """Map a file's extension to a processing category such as image, pdf, csv or code.
+    Returns unknown for unrecognised extensions.
+    """
     ext = path.suffix.lower().lstrip(".")
     image_exts = {"jpg", "jpeg", "png", "gif", "webp", "bmp", "tiff", "svg", "ico"}
     video_exts = {"mp4", "avi", "mov", "mkv", "wmv", "flv", "webm", "m4v", "3gp"}
@@ -76,6 +82,7 @@ def _detect_type(path: Path) -> str:
 
 
 def _file_size_str(path: Path) -> str:
+    """Return the file's size as a human-readable string (B, KB, MB or GB)."""
     size = path.stat().st_size
     if size < 1024:        return f"{size} B"
     if size < 1024**2:     return f"{size/1024:.1f} KB"
@@ -83,11 +90,15 @@ def _file_size_str(path: Path) -> str:
     return f"{size/1024**3:.1f} GB"
 
 def _output_path(src: Path, suffix: str, new_ext: str = None) -> Path:
+    """Build a sibling output path named <stem>_<suffix> with an optional new extension."""
     ext  = new_ext or src.suffix
     name = f"{src.stem}_{suffix}{ext}"
     return src.parent / name
 
 def _process_image(path: Path, action: str, params: dict, speak=None) -> str:
+    """Handle image actions: Gemini describe/OCR/analyze, resize, convert, compress or info.
+    Returns a result message; derived images are saved next to the source.
+    """
     try:
         from PIL import Image
     except ImportError:
@@ -180,9 +191,13 @@ def _process_image(path: Path, action: str, params: dict, speak=None) -> str:
     return _process_image(path, "describe", {"instruction": f"{action}: {params}"})
 
 def _process_pdf(path: Path, action: str, params: dict, speak=None) -> str:
+    """Handle PDF actions: Gemini summary/analysis, text extraction, info or Word export.
+    Returns a result message; extracted output is saved next to the source.
+    """
     action = action or "summarize"
 
     def _extract_pdf_text(max_chars=50000) -> str:
+        """Extract PDF text with pdfplumber or PyPDF2, truncated to max_chars."""
         text = ""
         try:
             import pdfplumber
@@ -516,6 +531,9 @@ def stream_json_array_to_csv(src_path: Path, dst_path: Path, chunk_size: int = C
 
 def _process_text_doc(path: Path, file_type: str, action: str,
                        params: dict, speak=None) -> str:
+    """Handle text and DOCX actions such as word count, text extraction and Gemini summaries.
+    Plain text is streamed where possible; returns a result message.
+    """
     action = action or "summarize"
 
     if action == "word_count" and file_type != "docx":
@@ -528,6 +546,7 @@ def _process_text_doc(path: Path, file_type: str, action: str,
         return f"Text extracted ({total:,} bytes). Saved: {out.name}"
 
     def _read_content_streamed(max_chars: int = 45000) -> str:
+        """Return the document text: all paragraphs for DOCX, or up to max_chars of a text file."""
         if file_type == "docx":
             try:
                 from docx import Document
@@ -588,6 +607,9 @@ def _process_text_doc(path: Path, file_type: str, action: str,
 
 def _process_data(path: Path, file_type: str, action: str,
                   params: dict, speak=None) -> str:
+    """Handle CSV and Excel actions: info, stats, analyze, filter, sort and conversion.
+    CSV operations stream in chunks; other actions go to Gemini with a data preview.
+    """
     action = action or "analyze"
 
     # 1. STREAMING CSV PATH: Zero memory accumulation for large CSV files
@@ -740,6 +762,7 @@ def _process_data(path: Path, file_type: str, action: str,
 
 
 def _process_json(path: Path, action: str, params: dict, speak=None) -> str:
+    """Handle JSON/XML actions: convert to CSV, validate, format, or Gemini analysis."""
     action = action or "analyze"
 
     if action == "to_csv":
@@ -791,6 +814,10 @@ def _process_json(path: Path, action: str, params: dict, speak=None) -> str:
     return _process_json(path, "analyze", {"instruction": action})
 
 def _process_code(path: Path, action: str, params: dict, speak=None) -> str:
+    """Handle source-file actions: run Python scripts, report info, or ask Gemini.
+    Gemini tasks include explain, review, fix, optimize, document, summarize and test;
+    fix, optimize and document results are saved as a sibling file by default.
+    """
     action  = action or "explain"
     content = path.read_text(encoding="utf-8", errors="ignore")
     ext     = path.suffix.lstrip(".")
@@ -849,6 +876,7 @@ def _process_code(path: Path, action: str, params: dict, speak=None) -> str:
         return f"AI processing failed: {e}"
 
 def _process_audio(path: Path, action: str, params: dict, speak=None) -> str:
+    """Handle audio actions: info, transcribe, convert or trim."""
     action = action or "transcribe"
 
     if action == "info":
@@ -920,10 +948,15 @@ def _process_audio(path: Path, action: str, params: dict, speak=None) -> str:
     return f"Unknown audio action: '{action}'. Try: transcribe, info, convert, trim"
 
 def _process_video(path: Path, action: str, params: dict, speak=None) -> str:
+    """Handle video actions via ffmpeg and Gemini.
+    Supports info, extract_audio, trim, extract_frame, compress, transcribe and convert;
+    returns a result message.
+    """
     action = action or "info"
 
 
     def _ffmpeg_available() -> bool:
+        """Return True if the ffmpeg executable can be run."""
         try:
             subprocess.run(["ffmpeg", "-version"], capture_output=True, timeout=3)
             return True
@@ -1049,6 +1082,7 @@ def _process_video(path: Path, action: str, params: dict, speak=None) -> str:
     return f"Unknown video action: '{action}'. Try: info, trim, extract_audio, extract_frame, compress, transcribe, convert"
 
 def _process_archive(path: Path, action: str, params: dict, speak=None) -> str:
+    """List the contents of a zip/tar archive or extract it."""
     action = action or "list"
 
     if action == "list":
@@ -1081,9 +1115,11 @@ def _process_archive(path: Path, action: str, params: dict, speak=None) -> str:
     return f"Unknown archive action: '{action}'. Try: list, extract"
 
 def _process_pptx(path: Path, action: str, params: dict, speak=None) -> str:
+    """Summarise, analyse or extract the text of a PowerPoint presentation."""
     action = action or "summarize"
 
     def _read_pptx_text() -> str:
+        """Return the text of every slide, grouped under slide headers."""
         try:
             from pptx import Presentation
             prs  = Presentation(path)
@@ -1115,6 +1151,9 @@ def _process_pptx(path: Path, action: str, params: dict, speak=None) -> str:
     return f"Unknown PPTX action: '{action}'. Try: summarize, extract_text, analyze"
 
 def file_processor(parameters: dict, player=None, speak=None) -> str:
+    """Entry point for the file processor tool: route a file to its type-specific handler.
+    Checks path access first; unknown types are described by Gemini from a content preview.
+    """
     from core.path_guard import check_path_access, is_heavenly_restricted
     if is_heavenly_restricted(parameters):
         return "Due to the heavenly restriction placed upon my creator, I cannot."

@@ -58,6 +58,7 @@ class HueWheel(QWidget):
     _RING = 16   # ring thickness (px)
 
     def __init__(self, initial_hex: str = DEFAULT_UI_COLOR, parent=None):
+        """Create the fixed-size hue wheel and set its initial colour."""
         super().__init__(parent)
         self.setFixedSize(148, 148)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -67,9 +68,11 @@ class HueWheel(QWidget):
 
     # ── API ──────────────────────────────────────────────────────────────────
     def color(self) -> str:
+        """Return the selected hue as a fully saturated, full-value '#rrggbb' string."""
         return QColor.fromHsvF(self._hue, 1.0, 1.0).name()
 
     def set_color(self, hex_str: str):
+        """Adopt the hue of hex_str; invalid or achromatic colours are ignored."""
         c = QColor((hex_str or "").strip())
         if c.isValid() and c.hsvHueF() >= 0:
             self._hue = c.hsvHueF()
@@ -77,10 +80,12 @@ class HueWheel(QWidget):
 
     # ── geometry helpers ─────────────────────────────────────────────────────
     def _ring_rect(self) -> QRectF:
+        """Return the widget rect inset to the centre line of the hue ring."""
         m = self._RING / 2 + 3
         return QRectF(self.rect()).adjusted(m, m, -m, -m)
 
     def _hue_from_pos(self, pos: QPointF) -> float:
+        """Return the hue (0 to 1) for the angle of a point around the widget centre."""
         c = QRectF(self.rect()).center()
         dx = pos.x() - c.x()
         dy = c.y() - pos.y()          # screen y goes down — flip to math axis
@@ -89,6 +94,7 @@ class HueWheel(QWidget):
 
     # ── drawing ──────────────────────────────────────────────────────────────
     def paintEvent(self, _):
+        """Draw the conical hue ring and the white drag handle at the current hue."""
         p = QPainter(self)
         if not p.isActive():
             return
@@ -119,18 +125,21 @@ class HueWheel(QWidget):
 
     # ── mouse events ─────────────────────────────────────────────────────────
     def mousePressEvent(self, e):
+        """Start a drag, jump the hue to the pressed angle and emit hue_picked."""
         self._drag = True
         self._hue = self._hue_from_pos(e.position())
         self.update()
         self.hue_picked.emit(self.color())
 
     def mouseMoveEvent(self, e):
+        """While dragging, track the hue under the cursor and emit hue_picked."""
         if self._drag:
             self._hue = self._hue_from_pos(e.position())
             self.update()
             self.hue_picked.emit(self.color())
 
     def mouseReleaseEvent(self, e):
+        """End a drag and emit hue_committed with the final colour."""
         if self._drag:
             self._drag = False
             self.hue_committed.emit(self.color())
@@ -148,6 +157,7 @@ class CustomizeOverlay(QWidget):
 
     def __init__(self, assistant_name="Alfred", user_name="",
                  ui_color=DEFAULT_UI_COLOR, voice="", current_icon="", voice_engine=None, parent=None):
+        """Build the customization overlay: persona names, voice and voice-engine pickers, colour controls and icon cards."""
         super().__init__(parent)
         self._current_icon = (current_icon or "").strip()
         self._initial_icon = self._current_icon
@@ -238,6 +248,7 @@ class CustomizeOverlay(QWidget):
         lay.setSpacing(8)
 
         def _lbl(txt, fs=8, bold=False, color=C.PRI, align=Qt.AlignmentFlag.AlignLeft):
+            """Return a transparent label with the given text, font size, weight, colour and alignment."""
             w = QLabel(txt); w.setAlignment(align)
             w.setFont(ui_font(fs + 1, QFont.Weight.Medium))
             w.setStyleSheet(f"color: {color}; background: transparent;")
@@ -556,6 +567,7 @@ class CustomizeOverlay(QWidget):
         outer_lay.addLayout(btn_row)
 
     def _apply_preset(self, name: str, user: str, color: str, voice: str):
+        """Fill the name, user, voice and colour controls from a preset and preview the colour."""
         self._name_input.setText(name)
         self._user_input.setText(user)
         self._sel_voice = voice
@@ -583,6 +595,7 @@ class CustomizeOverlay(QWidget):
         self._refresh_services_btn()
 
     def _refresh_services_btn(self) -> None:
+        """Update the services button text with the configured backend count, if the button exists."""
         if not hasattr(self, "_services_api_btn") or self._services_api_btn is None:
             return
         try:
@@ -594,6 +607,7 @@ class CustomizeOverlay(QWidget):
 
     # ── voice selection ──────────────────────────────────────────────────────
     def _on_voice_pick(self, name: str):
+        """Select the given voice and refresh the voice buttons."""
         self._sel_voice = name
         self._refresh_voice_btns()
 
@@ -616,6 +630,7 @@ class CustomizeOverlay(QWidget):
 
     # ── voice engine selection & verification ────────────────────────────────
     def _on_engine_pick(self, eid: str):
+        """Select a voice engine; if Jarvis is chosen but unusable, fall back to default and show a warning."""
         from core.tts.capability import check_jarvis_capability, Capability
         from memory.config_manager import get_jarvis_allow_cpu
 
@@ -630,6 +645,7 @@ class CustomizeOverlay(QWidget):
         self._refresh_engine_ui()
 
     def _refresh_engine_ui(self, warning_reason: str | None = None):
+        """Restyle the engine buttons and update the engine status label with Jarvis capability or a warning."""
         from core.tts.capability import check_jarvis_capability, Capability
         from memory.config_manager import get_jarvis_allow_cpu
 
@@ -663,6 +679,7 @@ class CustomizeOverlay(QWidget):
             self._lbl_engine_status.setStyleSheet(f"color: {C.TEXT_MED}; background: transparent;")
 
     def _preview_voice(self):
+        """Preview the selected voice engine via the custom handler if set, otherwise speak a test line on a background thread."""
         eng = self._sel_voice_engine
         if getattr(self, "on_preview_voice", None):
             try:
@@ -672,6 +689,7 @@ class CustomizeOverlay(QWidget):
                 print(f"[Voice Preview] Custom handler error: {e}")
 
         def _worker():
+            """Speak a test line with the selected TTS engine, printing any synthesis error."""
             try:
                 from core.tts import get_engine
                 engine = get_engine(eng)
@@ -737,15 +755,18 @@ class CustomizeOverlay(QWidget):
                 """)
 
     def _on_wheel_pick(self, hx: str):
+        """Record the colour picked on the wheel and mirror it into the hex field without triggering edits."""
         self._sel_color = hx
         self._hex_input.blockSignals(True)
         self._hex_input.setText(hx)
         self._hex_input.blockSignals(False)
 
     def _on_wheel_commit(self, hx: str):
+        """Apply the committed wheel colour without moving the wheel."""
         self._set_color(hx, update_wheel=False)
 
     def _on_hex_edited(self, text: str):
+        """Apply a typed hex colour once it is a valid #rrggbb value."""
         t = text.strip().lower()
         if t.startswith("#") and len(t) == 7:
             try:
@@ -755,6 +776,7 @@ class CustomizeOverlay(QWidget):
             self._set_color(t, update_wheel=True, preview=True)
 
     def _refresh_icon_cards(self):
+        """Restyle the icon cards to highlight the current icon, skipping work if nothing changed."""
         norm_cur = Path(self._current_icon).name.lower() if self._current_icon else ""
         style_key = (norm_cur, C.PRI, C.PANEL2, C.BORDER_A)
         if getattr(self, "_icon_style_key", None) == style_key:
@@ -786,6 +808,7 @@ class CustomizeOverlay(QWidget):
         self._icon_style_key = style_key
 
     def _on_icon_picked(self, path: str):
+        """Select the picked icon, refresh the cards and apply it live through on_icon_change."""
         self._current_icon = path
         self._refresh_icon_cards()
         if self.on_icon_change:
@@ -795,6 +818,7 @@ class CustomizeOverlay(QWidget):
                 print(f"[Icon] Realtime change error: {e}")
 
     def _cancel(self):
+        """Revert any previewed colour and icon changes and hide the overlay."""
         TacticalHoverHelpManager.instance().dismiss()
         if self.on_preview and self._sel_color != self._initial_color:
             self.on_preview(self._initial_color)
@@ -803,6 +827,7 @@ class CustomizeOverlay(QWidget):
         self.hide()
 
     def _save(self):
+        """Save the voice engine, emit saved with the chosen settings, apply the icon and hide the overlay."""
         TacticalHoverHelpManager.instance().dismiss()
         name = self._name_input.text().strip() or "Alfred"
         user = self._user_input.text().strip()
@@ -814,5 +839,6 @@ class CustomizeOverlay(QWidget):
         self.hide()
 
     def hideEvent(self, event):
+        """Dismiss any open hover-help tooltip when the overlay hides."""
         TacticalHoverHelpManager.instance().dismiss()
         super().hideEvent(event)

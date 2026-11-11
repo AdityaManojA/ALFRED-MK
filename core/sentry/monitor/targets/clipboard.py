@@ -16,14 +16,17 @@ class ClipboardTarget(MonitorTarget):
         pattern: str = "",
         interval_s: float = 2.0,
     ) -> None:
+        """Compile the optional case-insensitive pattern to match clipboard text against."""
         super().__init__(target_id, name, interval_s)
         self.regex = re.compile(pattern, re.I) if pattern else None
         self._last_text = ""
 
     def describe(self) -> str:
+        """Describe the watched clipboard pattern ("any" when no pattern is set)."""
         return f"clipboard pattern '{self.regex.pattern if self.regex else 'any'}'"
 
     def poll(self) -> TargetStatus:
+        """Read the clipboard; queue an alert when new text matches the pattern."""
         self.last_poll_t = time.time()
         try:
             import pyperclip

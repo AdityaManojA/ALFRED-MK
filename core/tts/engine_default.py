@@ -176,9 +176,11 @@ class EdgeTTSEngine:
     """Microsoft EdgeTTS – free, requires internet."""
 
     def __init__(self, voice: str = "en-GB-RyanNeural"):
+        """Store the Edge TTS voice name."""
         self.voice = voice
 
     def speak(self, text: str) -> None:
+        """Synthesise text with Edge TTS on a fresh event loop and play the result, logging progress."""
         loop = asyncio.new_event_loop()
         try:
             print(f"[TTS] [EdgeTTS] Synthesizing speech with voice '{self.voice}': \"{text[:60]}...\"")
@@ -196,6 +198,7 @@ class EdgeTTSEngine:
             print(f"[TTS] [EdgeTTS] [WARN] No audio returned for text: \"{text[:40]}\"")
 
     async def _synth(self, text: str) -> bytes:
+        """Stream Edge TTS output for text and return the concatenated audio bytes."""
         import edge_tts
         comm = edge_tts.Communicate(text, self.voice)
         buf  = bytearray()
@@ -217,6 +220,7 @@ def _import_kokoro_pipeline():
     import sys
 
     def _try_import():
+        """Import and return kokoro.KPipeline."""
         from kokoro import KPipeline  # noqa: PLC0415
         return KPipeline
 
@@ -277,6 +281,7 @@ class KokoroTTSEngine:
     """Fully offline Kokoro neural TTS."""
 
     def __init__(self, voice: str = "af_heart", speed: float = 1.0):
+        """Store voice and speed, set up a lock and initialise the Kokoro pipeline."""
         self.voice     = voice
         self.speed     = speed
         self._pipeline = None
@@ -285,10 +290,14 @@ class KokoroTTSEngine:
 
     @property
     def _lang_code(self) -> str:
+        """Kokoro language code derived from the voice name's first letter (default 'a')."""
         prefix = self.voice[0].lower() if self.voice else "a"
         return _KOKORO_LANG_CODES.get(prefix, "a")
 
     def _init(self) -> None:
+        """Create the Kokoro pipeline on CUDA or thread-limited CPU, retrying with HF offline
+        env vars cleared on cache/offline errors, then run a short warm-up synthesis.
+        """
         if self._pipeline is not None:
             return
 
@@ -311,6 +320,7 @@ class KokoroTTSEngine:
         KPipeline = _import_kokoro_pipeline()
 
         def _create_pipeline():
+            """Create a KPipeline with the device argument, falling back to no device if unsupported."""
             try:
                 return KPipeline(lang_code=lang, device=device)
             except TypeError:
@@ -339,6 +349,9 @@ class KokoroTTSEngine:
             print(f"[TTS] Kokoro warmup warning: {e}")
 
     def speak(self, text: str) -> None:
+        """Synthesise text with Kokoro on a background thread and play chunks as they arrive.
+        Re-raises the first synthesis error after playback finishes.
+        """
         with self._lock:
             if self._pipeline is None:
                 self._init()
@@ -347,6 +360,7 @@ class KokoroTTSEngine:
         synth_error: list[Exception] = []
 
         def _synth():
+            """Producer: push silence-compressed audio chunks to the queue, recording errors, then a None sentinel."""
             try:
                 for _, _, audio in self._pipeline(text, voice=self.voice, speed=self.speed):
                     if audio is not None:
@@ -378,10 +392,12 @@ class ElevenLabsTTSEngine:
     """ElevenLabs cloud TTS – API key required."""
 
     def __init__(self, api_key: str, voice_id: str = "pNInz6obpgDQGcFmaJgB"):
+        """Store the ElevenLabs API key and voice id."""
         self.api_key  = api_key
         self.voice_id = voice_id
 
     def speak(self, text: str) -> None:
+        """Synthesise text via the ElevenLabs API and play the returned audio; raises on HTTP errors."""
         import requests
         headers = {
             "xi-api-key":   self.api_key,
@@ -411,16 +427,19 @@ class TTSPlayer:
     """
 
     def __init__(self, engine):
+        """Wrap a TTS engine with playback state and a lock."""
         self._engine  = engine
         self._playing = False
         self._lock    = threading.Lock()
 
     @property
     def engine(self):
+        """The wrapped TTS engine."""
         return self._engine
 
     @property
     def is_playing(self) -> bool:
+        """Whether audio is currently playing."""
         return self._playing
 
     def speak(
@@ -445,6 +464,7 @@ class TTSPlayer:
                 on_done()
 
     def stop(self) -> None:
+        """Stop sounddevice playback and clear the playing flag."""
         sd.stop()
         with self._lock:
             self._playing = False
@@ -461,6 +481,7 @@ class EngineDefault(TTSEngine):
     """
 
     def __init__(self, config: Optional[dict] = None, concrete_engine=None):
+        """Use concrete_engine if given, else build an Edge, Kokoro or ElevenLabs engine from config."""
         self._config = config or {}
         if concrete_engine is not None:
             self._engine = concrete_engine
@@ -480,12 +501,15 @@ class EngineDefault(TTSEngine):
 
     @property
     def name(self) -> str:
+        """Engine name, always 'default'."""
         return "default"
 
     def is_available(self) -> Capability:
+        """Always report Capability.OK."""
         return Capability.OK
 
     def warm_up(self) -> None:
+        """Initialise the underlying engine if it exposes an _init method."""
         if hasattr(self._engine, "_init"):
             self._engine._init()
 
@@ -539,9 +563,11 @@ class EngineDefault(TTSEngine):
         self._engine.speak(text)
 
     def shutdown(self) -> None:
+        """No-op; nothing to release."""
         pass
 
 
 def create_tts_player(config: dict) -> TTSPlayer:
+    """Create a TTSPlayer wrapping an EngineDefault built from config."""
     engine = EngineDefault(config=config)
     return TTSPlayer(engine)

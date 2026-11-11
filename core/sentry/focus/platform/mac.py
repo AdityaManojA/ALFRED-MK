@@ -30,9 +30,11 @@ class MacPlatformReader(BasePlatformReader):
     """Inspects frontmost application on macOS via lsappinfo / osascript."""
 
     def __init__(self) -> None:
+        """Record this process's PID to recognise Alfred's own window."""
         self._own_pid = os.getpid()
 
     def get_frontmost_surface(self, from_card: bool = False) -> SurfaceIdentity:
+        """Identify the frontmost app via osascript, hashing the tab host for Chromium browsers."""
         # 1. Frontmost app bundle ID via lsappinfo
         bundle_id, app_name = self._get_frontmost_app()
         if not bundle_id:
@@ -73,6 +75,7 @@ class MacPlatformReader(BasePlatformReader):
         )
 
     def _get_frontmost_app(self) -> tuple[str, str]:
+        """Return (bundle id, name) of the frontmost macOS app via osascript, or empty strings on failure."""
         try:
             cmd = ["osascript", "-e", 'tell application "System Events" to get {bundle identifier, name} of first application process whose frontmost is true']
             res = subprocess.run(cmd, capture_output=True, text=True, timeout=CLI_TIMEOUT_S)
@@ -86,6 +89,7 @@ class MacPlatformReader(BasePlatformReader):
         return "", ""
 
     def _get_browser_url(self, app_name: str) -> str:
+        """Return the active tab URL of the named browser via osascript, or an empty string."""
         try:
             cmd = ["osascript", "-e", f'tell application "{app_name}" to get URL of active tab of front window']
             res = subprocess.run(cmd, capture_output=True, text=True, timeout=CLI_TIMEOUT_S)

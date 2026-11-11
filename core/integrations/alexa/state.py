@@ -10,6 +10,7 @@ from typing import Callable, List, Optional
 
 
 class AlexaConnectionStatus(Enum):
+    """Connection states of the Alexa integration."""
     NOT_CONFIGURED = "not_configured"
     READY_TO_LINK = "ready_to_link"
     LINK_PENDING = "link_pending"
@@ -44,6 +45,7 @@ class AlexaStateManager:
         relay_connected: bool = False,
         allowed_intent_count: int = 0,
     ) -> None:
+        """Initialise the lock, status flags and listener list."""
         self._lock = threading.RLock()
         self._status = initial_status
         self._configured = configured
@@ -54,6 +56,7 @@ class AlexaStateManager:
         self._listeners: List[Callable[[AlexaSnapshot], None]] = []
 
     def get_snapshot(self) -> AlexaSnapshot:
+        """Return an immutable snapshot of the current state."""
         with self._lock:
             return AlexaSnapshot(
                 status=self._status,
@@ -65,16 +68,19 @@ class AlexaStateManager:
             )
 
     def add_listener(self, callback: Callable[[AlexaSnapshot], None]) -> None:
+        """Register a state-change listener if not already registered."""
         with self._lock:
             if callback not in self._listeners:
                 self._listeners.append(callback)
 
     def remove_listener(self, callback: Callable[[AlexaSnapshot], None]) -> None:
+        """Unregister a state-change listener if present."""
         with self._lock:
             if callback in self._listeners:
                 self._listeners.remove(callback)
 
     def _notify(self) -> None:
+        """Call every listener with a fresh snapshot, ignoring listener errors."""
         snap = self.get_snapshot()
         for listener in list(self._listeners):
             try:
@@ -83,6 +89,7 @@ class AlexaStateManager:
                 pass
 
     def set_configured(self, configured: bool) -> None:
+        """Set the configured flag, resetting or advancing status accordingly, then notify."""
         with self._lock:
             self._configured = configured
             if not configured:
@@ -94,12 +101,14 @@ class AlexaStateManager:
         self._notify()
 
     def set_linking_pending(self) -> None:
+        """Mark linking as pending if configured, then notify."""
         with self._lock:
             if self._configured:
                 self._status = AlexaConnectionStatus.LINK_PENDING
         self._notify()
 
     def set_linked(self, linked: bool) -> None:
+        """Set the linked flag and derive CONNECTED/OFFLINE/READY_TO_LINK/NOT_CONFIGURED status, then notify."""
         with self._lock:
             self._linked = linked
             if linked:
@@ -112,6 +121,7 @@ class AlexaStateManager:
         self._notify()
 
     def set_relay_connected(self, connected: bool) -> None:
+        """Set relay connectivity and derive the resulting status, then notify."""
         with self._lock:
             self._relay_connected = connected
             if connected and self._linked:
@@ -125,22 +135,26 @@ class AlexaStateManager:
         self._notify()
 
     def set_error(self) -> None:
+        """Put the integration into ERROR status and mark the last request failed, then notify."""
         with self._lock:
             self._status = AlexaConnectionStatus.ERROR
             self._last_request_ok = False
         self._notify()
 
     def record_request_result(self, success: bool) -> None:
+        """Record whether the last request succeeded, then notify."""
         with self._lock:
             self._last_request_ok = success
         self._notify()
 
     def set_allowed_intent_count(self, count: int) -> None:
+        """Set the allowed-intent count (clamped at 0), then notify."""
         with self._lock:
             self._allowed_intent_count = max(0, count)
         self._notify()
 
     def reset(self) -> None:
+        """Reset to NOT_CONFIGURED with all flags cleared, then notify."""
         with self._lock:
             self._status = AlexaConnectionStatus.NOT_CONFIGURED
             self._configured = False

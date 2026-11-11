@@ -53,10 +53,12 @@ class ClientCache:
     """Thread-safe client instance cache with TTL."""
 
     def __init__(self, ttl_s: int = TOOL_INIT_CACHE_TTL_S):
+        """Create an empty client cache whose entries expire after ttl_s seconds."""
         self.ttl_s = ttl_s
         self._cache: Dict[str, tuple[Any, float]] = {}
 
     def get(self, key: str) -> Optional[Any]:
+        """Return the cached client for key if not expired, evicting it if stale; else None."""
         if key in self._cache:
             client, ts = self._cache[key]
             if time.monotonic() - ts < self.ttl_s:
@@ -65,9 +67,11 @@ class ClientCache:
         return None
 
     def set(self, key: str, client: Any) -> None:
+        """Cache client under key with the current timestamp."""
         self._cache[key] = (client, time.monotonic())
 
     def clear(self) -> None:
+        """Remove all cached clients."""
         self._cache.clear()
 
 
@@ -117,6 +121,7 @@ async def execute_bounded_tool(
 
         # Allow the task to finish in the background
         async def _finish_background():
+            """Await the backgrounded tool task, log the outcome and call on_background_finish on success."""
             try:
                 bg_res = await task
                 logger.info(f"[ToolRunner] Background {tool_name} completed: {str(bg_res)[:60]}")

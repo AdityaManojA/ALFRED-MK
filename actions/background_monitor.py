@@ -23,6 +23,7 @@ _BLOCKED = {
 }
 
 def _is_blocked(topic: str) -> bool:
+    """Return True if the topic contains any blocked (crypto/financial) keyword."""
     t = topic.lower()
     return any(word in t for word in _BLOCKED)
 
@@ -30,20 +31,24 @@ def _is_blocked(topic: str) -> bool:
 # ── Slug / hash helpers ────────────────────────────────────────────────────────
 
 def _slug(topic: str) -> str:
+    """Convert a topic into a lowercase underscore slug of at most 40 characters."""
     return re.sub(r"[^a-z0-9]+", "_", topic.lower().strip())[:40].strip("_")
 
 def _title_hash(title: str) -> str:
+    """Return a short 12-character MD5 hash of a headline title."""
     return hashlib.md5(title.encode("utf-8", errors="ignore")).hexdigest()[:12]
 
 
 # ── Memory I/O ─────────────────────────────────────────────────────────────────
 
 def _load() -> dict:
+    """Load the monitors dict from persistent memory, or an empty dict if missing."""
     from memory.memory_manager import load_memory
     data = load_memory().get("monitors", {})
     return data if isinstance(data, dict) else {}
 
 def _save(monitors: dict) -> None:
+    """Write the monitors dict back into the memory file under the memory lock."""
     from memory.memory_manager import load_memory, MEMORY_PATH, _lock
     memory = load_memory()
     memory["monitors"] = monitors
@@ -58,6 +63,9 @@ def _save(monitors: dict) -> None:
 # ── Public API ─────────────────────────────────────────────────────────────────
 
 def add_monitor(topic: str) -> str:
+    """Start monitoring a news topic and persist it to memory.
+    Rejects empty or blocked topics and duplicates; returns a user-facing status message.
+    """
     topic = topic.strip()
     if not topic:
         return "Please specify a topic to monitor."
@@ -79,6 +87,9 @@ def add_monitor(topic: str) -> str:
 
 
 def remove_monitor(topic: str) -> str:
+    """Stop monitoring a topic, matching by slug first and then by partial name.
+    Returns a user-facing status message.
+    """
     topic = topic.strip().lower()
     monitors = _load()
     # exact slug match first
@@ -97,6 +108,7 @@ def remove_monitor(topic: str) -> str:
 
 
 def list_monitors() -> list[str]:
+    """Return the display names of all monitored topics."""
     return [v.get("topic", k) for k, v in _load().items()]
 
 
@@ -122,6 +134,7 @@ def check_all() -> list[str]:
     ]
 
     def _fetch(item: tuple[str, str]) -> tuple[str, str, list[dict], Exception | None]:
+        """Fetch recent DDG news for one (slug, topic) pair, capturing any exception."""
         slug, topic = item
         try:
             return slug, topic, _ddg_news(topic, max_results=5), None

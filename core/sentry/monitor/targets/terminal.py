@@ -22,15 +22,20 @@ class TerminalTarget(MonitorTarget):
         pattern: str = "",
         interval_s: float = 3.0,
     ) -> None:
+        """Store the terminal app name and completion pattern (default completion patterns if none given)."""
         super().__init__(target_id, name, interval_s)
         self.terminal_app = terminal_app
         self.pattern = re.compile(pattern, re.I) if pattern else COMPLETION_PATTERNS
         self._target_found = False
 
     def describe(self) -> str:
+        """Return a short description naming the terminal target."""
         return f"terminal '{self.name}' ({self.terminal_app})"
 
     def poll(self) -> TargetStatus:
+        """Check the active window title for a completion or error pattern and finish with an alert when matched.
+        Returns the resulting target status.
+        """
         self.last_poll_t = time.time()
         try:
             from actions.screen_processor import get_active_window_info
@@ -58,6 +63,7 @@ class TerminalTarget(MonitorTarget):
             return self.status
 
     def _matches_terminal(self, app: str, title: str) -> bool:
+        """Whether the app or title looks like a terminal or matches the configured terminal app."""
         low_app = (app or "").lower()
         low_title = (title or "").lower()
         terms = ("terminal", "powershell", "cmd", "bash", "zsh", "alacritty", "iterm", "wt", "conhost", "code")

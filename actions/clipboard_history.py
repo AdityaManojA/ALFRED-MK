@@ -23,15 +23,17 @@ def _push(text: str) -> None:
     """Add an entry, deduplicating consecutive identical values."""
     if not text or not text.strip():
         return
+    text = text.strip()  # compare the same stripped form that is stored
     with _lock:
         if _history and _history[-1]["text"] == text:
             return
-        _history.append({"text": text.strip(), "ts": datetime.now().strftime("%H:%M")})
+        _history.append({"text": text, "ts": datetime.now().strftime("%H:%M")})
         if len(_history) > _MAX_ENTRIES:
             _history.pop(0)
 
 
 def _snapshot() -> list[dict]:
+    """Return a thread-safe copy of the clipboard history list."""
     with _lock:
         return list(_history)
 
@@ -39,6 +41,7 @@ def _snapshot() -> list[dict]:
 # ── Action handler ────────────────────────────────────────────────────────────
 
 def clipboard_history_action(parameters: dict, **kwargs) -> str:
+    """Handle show / clear / latest / push requests against the session clipboard history and return a spoken summary."""
     action = str(parameters.get("action", "show")).lower().strip()
 
     if action in ("show", "list", "history"):
